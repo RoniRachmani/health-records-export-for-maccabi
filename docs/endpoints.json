@@ -1,0 +1,369 @@
+{
+  "_note": "Endpoint map: every request the collector (src/core, built into the extension) makes, and the file each one produces. Verified live 2026-09-16. No medical data. {mid} = member id (cookie cookie_sessionId_0_<id>, or mem_id in the sessionStorage token when that cookie is absent, seen 2026-09-17); it never appears in export paths or stored endpoint strings.",
+  "bases": {
+    "rest": "https://online.maccabi4u.co.il/sonline/<Service>/webapi/mac/<version>/...",
+    "legacy": "https://online.maccabi4u.co.il/online/..."
+  },
+  "auth": {
+    "rest": "Session cookies + Authorization: Bearer <sessionStorage.token>. Only available on /sonline/ pages. The token belongs to the tab: a tab left open while someone logged out and in again in another tab keeps the previous member's token (and no cookie_sessionId_0_ cookie). Loading a /sonline/ page with the token removed makes the site issue the current one within about 2 s, so the extension does that on Start and Resume, and before pausing a run whose requests fail as logged out (the token is not renewed while the tab is on legacy /online/ pages). A page left running with an invalid token in sessionStorage got the session logged out within a few minutes (2026-09-17). Measured 2026-09-18: a freshly issued token carries exp about 10 h out (35,934 s left when read), alongside iat, nbf, mem_id, mem_code, gender and rem_codes claims, so an export never outlives its token -- a run that stops as logged out lost the site's session, not the token.",
+    "legacy": "Session cookies only. Returns empty results until an /online/ page has been opened in the session. Any legacy page registers it, and the page the request is sent from does not have to be the one the service belongs to: verified 2026-09-18 from a session that had loaded only /sonline/, where ajax.ashx returned 488 B, GetAllPurchasedPrescription 706 B and PHR SearchByDate 8 B ({\"d\":\"\"}); after loading /online/medicalfile/summary/ and nothing else, the same three returned 91,465 B, 111,793 B and 13,761 B, and the purchase table parsed to 7 columns / 51 rows. The extension therefore opens only the summary page, which the medical-file order needs anyway.",
+    "idle_logout": "The site logs the tab out 6 min after the last keydown or mousedown in the page, showing a warning dialog (IdleTimeOutPopup) with about 25 s to answer; ignoring it ends the session. Measured 2026-09-18 on /sonline/ by hooking window.setTimeout: a dispatched keydown or mousedown re-arms a 360000 ms timer, and firing that timer's callback raises the dialog. mousemove, click, keyup, scroll, wheel and touchstart do not re-arm it, nor does any request -- from the page or from the extension -- so an export is invisible to it and a run longer than 6 hands-off minutes would be cut off. The listener does not check isTrusted, so the extension dispatches a synthetic mousedown in the tab every 4 min while a run is in progress (keepSessionAlive). Being visible is not activity either, so this is separate from Chrome freezing hidden tabs.",
+    "signed_links": "PDF links carry per-session timestamp/hash from the same list response, or are minted by a UI click (see click_only).",
+    "extension": "Checked 2026-09-17 from the extension's service worker (host permission, credentials: include): REST GET and POST with Authorization: Bearer <sessionStorage.token> return the same results as the page (without the token: 401), and signed PDF links download without the Bearer header. Legacy /online/ services also answer after a legacy page was opened in the session (SearchByDate before that: empty {d}), but ajax.ashx returned a different, much shorter response to the extension than to the page, so the extension sends /online/ requests (and the medical-file order XHR) from the page and /sonline/ requests itself."
+  },
+  "conventions": {
+    "record_wrapper": "{endpoint: '<METHOD> <path with {mid}, no query>', [request_body], [extra ids], [omitted: fields left out of data, e.g. a report's base64], fetched_at, status, data: <raw response>}",
+    "unchanged_detection": "A JSON file is rewritten only if its content changed, ignoring list order and the fields fetched_at, hash, timestamp, time_stamp, t, corona_hash, corona_t, url, searchQueryId, token, file_name_title and any key ending in 'link'. A few more fields changed between runs minutes apart with nothing else changed (2026-09-17), but the same key names are real data elsewhere, so they are not ignored: my-doctor/eligibilities.json data.next_possible_assign_date, profile/member.json data.last_visit, profile/providers.json provider[].provider_id and provider[].order_visit_details.doc_id, visit-summaries/list.json results[].provider_id, and letters/list.json from_date of the letter_type 2 entry (the ordered range's start, not a time -- see the order entry; it changes when a new order uses a different range, which is what was seen on 2026-09-17, not on every run).",
+    "pacing": "300 ms between requests; 500/503 and requests without a response retried up to 3 times after 2.5 s.",
+    "binary_files": "Existing PDFs/images are kept; regenerated reports (purchase report, vaccination booklet) are replaced only when their source data changed.",
+    "file_names": "<date>_<id>_<title> for record files and their JSON, so a record's JSON in details/ and its document in files/ share one stem. <date> is YYYY-MM-DD; <id> is the API's own record id (a hash of stable fields where the API has none, and the member id is never used); <title> is a display string from the record, kept as the API sends it (Hebrew included, NFC-normalised, cut at 40 characters) and left out when the record has none. '_' separates the three parts and nothing else produces one, so a name always reads as date_id_title. Section lists are always list.json.",
+    "end_date": "Date ranges end at 2099-12-31, not today: the collector's today() is the UTC date (a day behind in Israel until 03:00), and a far end date returns the same records (checked 2026-09-17). The medical-file order is the exception and uses the Israel date (Asia/Jerusalem).",
+    "signed_links": "PDF links carry per-session timestamp/hash from the list or details response that describes the file. The site's view buttons build the same links from those fields, so no UI click is needed (verified 2026-09-17: test reports and visit summaries matched the saved PDFs byte for byte in size)."
+  },
+  "sections": {
+    "profile": [
+      {
+        "method": "GET",
+        "url": "MainAppAPI/v1/members/0/{mid}",
+        "output": "profile/member.json",
+        "notes": "birth_date is reused for vaccinations per-group requests. The popup also requests it (from the extension, once per member per browser session, cached in chrome.storage.session) to show first_name_english (or first_name_hebrew when empty)."
+      },
+      {
+        "method": "GET",
+        "url": "DirectorshipAPI/v1/members/0/{mid}/entitlement",
+        "output": "profile/entitlement.json"
+      },
+      {
+        "method": "GET",
+        "url": "DirectorshipAPI/v1/members/0/{mid}/insurance/seniority",
+        "output": "profile/insurance-seniority.json"
+      },
+      {
+        "method": "POST",
+        "url": "MainAppAPI/v1/members/0/{mid}/providers",
+        "output": "profile/providers.json",
+        "request_body": {
+          "retrieval_type": 5,
+          "service_providers": [
+            {
+              "object_type": "S",
+              "employee_id": "<assigned_practitioners[].employee_id>",
+              "object_id": "<assigned_practitioners[].position_id>"
+            }
+          ]
+        }
+      }
+    ],
+    "my-doctor": [
+      {
+        "method": "GET",
+        "url": "MedicalFileAPI/v1/members/0/{mid}/assigned_practitioners",
+        "output": "my-doctor/assigned-practitioners.json"
+      },
+      {
+        "method": "GET",
+        "url": "MedicalFileAPI/v1/practitioner_affiliation/0/{mid}/eligibilities",
+        "output": "my-doctor/eligibilities.json"
+      },
+      {
+        "method": "GET",
+        "url": "AppointmentOrderAPI/v1/members/0/{mid}/providers/ascribed?requested_association_date=<YYYY-MM-DD>T00:00:00",
+        "output": "my-doctor/ascribed.json",
+        "notes": "Needs a full timestamp; empty, date-only or missing value returns 204."
+      }
+    ],
+    "test-results": [
+      {
+        "method": "POST",
+        "url": "TestResultsAPI/v1/members/0/{mid}/tests",
+        "output": "test-results/list.json",
+        "request_body": {
+          "members": [],
+          "categories": []
+        },
+        "notes": "List item types: lab_result, external_test_result, imaging_study, imaging_result, cardiology_result."
+      },
+      {
+        "method": "GET",
+        "url": "TestResultsAPI/v1/members/0/{mid}/getlatestlabresults",
+        "output": "test-results/latest-lab-results.json"
+      },
+      {
+        "method": "GET",
+        "url": "TestResultsAPI/v1/members/0/{mid}/followed/counter",
+        "output": "test-results/followed-counter.json"
+      },
+      {
+        "method": "POST",
+        "url": "TestResultsAPI/v1/members/0/{mid}/getresultsbyid",
+        "output": "test-results/details/<execute_date>_<request_id>-<type>_<title>.json",
+        "request_body": {
+          "request_id": "<tests[].request_id>",
+          "doc_id": "<tests[].doc_id>",
+          "logged_user_gender": "<JWT gender claim>",
+          "current_user_gender": "<JWT gender claim>"
+        },
+        "notes": "doc_id contains the member's ID number, so it is not used in file names."
+      },
+      {
+        "method": "GET",
+        "url": "TestResultsAPI/v1/compare/0/{mid}/compare?test_id=<test_id>&date_of_result=<latest lab_date for that test>",
+        "output": "test-results/history/<test_id>_<test_desc>.json",
+        "notes": "Returns the full series for the test whichever date is asked; one file per test. Re-fetched only when a visit containing that test changed or the file is missing."
+      },
+      {
+        "method": "GET",
+        "url": "TestResultsAPI/pdf/openfile?memberidcode=0&memberid={mid}&data=<encodeURIComponent(item.doc_id)>&t=<item.time_stamp>&hash=<item.hash>&memberIdForHeader={mid}&memberIdCodeForHeader=0",
+        "output": "test-results/files/<execute_date>_<request_id>-<type>_<title>.pdf",
+        "notes": "Fields from the tests list item; hash inserted verbatim (already URL-encoded). Items with result_files and type != imaging_study. Sent without the Bearer header. The page also adds loggedInUserGender/currentUsergender; the server returns the same PDF with any value or none, so they are omitted."
+      }
+    ],
+    "visit-summaries": [
+      {
+        "method": "POST",
+        "url": "AppointmentOrderAPI/v1/members/0/{mid}/visits/history",
+        "output": "visit-summaries/list.json",
+        "request_body": {
+          "members": [
+            {
+              "member_id_code": "0",
+              "member_id": "{mid}"
+            }
+          ]
+        },
+        "notes": "Last 12 months only; members:[] returns an empty result."
+      },
+      {
+        "method": "GET",
+        "url": "AppointmentOrderAPI/v1/members/0/{mid}/visits/<appointment_id>",
+        "output": "visit-summaries/details/<appointment_date>_<appointment_id>_<title>.json",
+        "notes": "204 when the visit has no summary (saved with data null)."
+      },
+      {
+        "method": "GET",
+        "url": "AppointmentOrderAPI/v1/members/0/{mid}/pdf?path=<encodeURIComponent(details.visit_summary_pdf_link)>&timestamp=<details.timestamp>&hash=<details.hash>",
+        "output": "visit-summaries/files/<appointment_date>_<appointment_id>_<title>.pdf",
+        "notes": "Fields from the visit details response of the same run (each response has its own timestamp/hash). path must be URL-encoded (raw returns HTTP 400); hash inserted verbatim. Only for has_summery_file=true. Sent without the Bearer header."
+      }
+    ],
+    "medications-and-prescriptions": [
+      {
+        "method": "POST",
+        "url": "MedicalFileAPI/v1/members/0/{mid}/prescriptions",
+        "output": "medications-and-prescriptions/list.json",
+        "request_body": {
+          "members": [
+            {
+              "member_id_code": "0",
+              "member_id": "{mid}"
+            }
+          ]
+        }
+      },
+      {
+        "method": "GET",
+        "url": "MedicalFileAPI/v1/members/0/{mid}/getprescriptionpdf?timestamp=<item.timestamp>&hash=<item.hash>&data=<item.doc_id>&path=<encodeURIComponent(item.file_link)>",
+        "output": "medications-and-prescriptions/files/<from_date>_<prescription_number>_<title>.pdf"
+      },
+      {
+        "method": "POST",
+        "url": "/online/handlers/ajax.ashx",
+        "output": null,
+        "request_form": {
+          "StartDate": "1900-01-01",
+          "EndDate": "2099-12-31",
+          "IsByDoctor": "false",
+          "ControlPath": "DrugsManager/WcPurchasedDrugs",
+          "controller": "userControlFactory",
+          "action": "getControl"
+        },
+        "notes": "Legacy. Sets the purchase date range in the session and returns page 1 (8 rows) as HTML; the response is not kept. StartDate 1900-01-01 is read as 2000-01-01 (years 1900-1910 become 2000-2010); 1950-1999 return no rows."
+      },
+      {
+        "method": "POST",
+        "url": "/online/Ajax/DrugsManager/WsPurchasedDrugsManager.asmx/GetAllPurchasedPrescription",
+        "output": "medications-and-prescriptions/purchased-history.html",
+        "request_body": {},
+        "notes": "Legacy 'show all': {d: HTML table} with every row for the range set above. The table (d) is saved byte for byte in its original windows-1255 encoding, unwrapped from the JSON without re-encoding. It is not parsed. No JSON source exists."
+      },
+      {
+        "method": "GET",
+        "url": "MedicalFileAPI/v1/members/0/{mid}/prescriptions/purchased/report",
+        "output": "medications-and-prescriptions/purchased-report.json + medications-and-prescriptions/files/purchased-report.pdf",
+        "notes": "{type:'pdf', base64}; last 2 years only. The base64 is decoded to the PDF and removed from the saved JSON. Refreshed when missing or when the purchase table changed."
+      }
+    ],
+    "referrals": [
+      {
+        "method": "GET",
+        "url": "MedicalFileAPI/v1/members/0/{mid}/referrals?from_date=1900-01-01&to_date=2099-12-31",
+        "output": "referrals/list.json"
+      },
+      {
+        "method": "GET",
+        "url": "MedicalFileAPI/v1/members/0/{mid}/pdf?path=<item.pdf_link>&timestamp=<item.timestamp>&hash=<item.hash>",
+        "output": "referrals/files/<referral_date>_<referral_id>_<title>.pdf",
+        "notes": "pdf_link inserted verbatim (already URL-encoded). Same endpoint for approvals."
+      }
+    ],
+    "approvals": [
+      {
+        "method": "GET",
+        "url": "MedicalFileAPI/v1/members/0/{mid}/approvals?from_date=1900-01-01&to_date=2099-12-31",
+        "output": "approvals/list.json"
+      },
+      {
+        "method": "GET",
+        "url": "MedicalFileAPI/v1/members/0/{mid}/pdf?path=<item.pdf_link>&timestamp&hash",
+        "output": "approvals/files/<approval_date>_<hash8>_<title>.pdf",
+        "notes": "Approvals have no id; hash8 = sha256 of title, practitioner, specialization, dates and type code."
+      }
+    ],
+    "info-pages": [
+      {
+        "method": "GET",
+        "url": "MedicalFileAPI/v1/members/0/{mid}/tutorials?from_date=1900-01-01&to_date=2099-12-31",
+        "output": "info-pages/list.json"
+      },
+      {
+        "method": "GET",
+        "url": "MedicalFileAPI/v2/members/0/{mid}/pdf?url=<item.url>&timestamp&hash",
+        "output": "info-pages/files/<session_date>_<hash8>_<title>.pdf"
+      }
+    ],
+    "vaccinations": [
+      {
+        "method": "GET",
+        "url": "MedicalFileAPI/v1/members/0/{mid}/vaccinations_grouped",
+        "output": "vaccinations/list.json"
+      },
+      {
+        "method": "GET",
+        "url": "MedicalFileAPI/v1/members/0/{mid}/vaccinations?vaccine_group_code=<code>&birth_date=<YYYY-MM-DD>T00:00:00",
+        "output": "vaccinations/details/<code>_<title>.json"
+      },
+      {
+        "method": "GET",
+        "url": "AppointmentOrderAPI/v1/members/0/{mid}/eligibility/vaccines/flu",
+        "output": "vaccinations/flu-eligibility.json"
+      },
+      {
+        "method": "GET",
+        "url": "MedicalFileAPI/v1/members/0/{mid}/vaccination/certificates/report",
+        "output": "vaccinations/vaccination-booklet-report.json + vaccinations/files/vaccination-booklet-report.pdf",
+        "notes": "{type:'pdf', base64}. The base64 is decoded to the PDF and removed from the saved JSON. Refreshed when missing or when any vaccination file changed."
+      }
+    ],
+    "letters": [
+      {
+        "method": "POST",
+        "url": "/online/Ajax/Summary/WsSummaryPage.asmx/MedicalFileOrderAjax",
+        "body": "{'startDate':'1900-01-01','endDate':'<Israel date>'}",
+        "headers": {
+          "Content-Type": "application/json; charset=UTF-8",
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        "output": "none directly: creates a new letter_type 2 entry in letters/list.json, downloaded as <item_date>_medical-file.pdf at the root of the export",
+        "notes": "Orders the full medical file and sends an SMS. Same endpoint, headers and body shape as the site's own order button, but startDate 1900-01-01: the whole history, wider than the range the site's own form offers. Skipped, and the existing file used instead, when a ready letter_type 2 entry from today over the same range is already listed (placeOrder skipped_ready_today). Called by the orderMedicalFile step from /online/medicalfile/summary/ only, with XMLHttpRequest (Radware adds the uzlc header). Response {\"d\":\"{\\\"Success\\\":\\\"1\\\",...}\"} must be parsed twice; only Success 1 (ordered, SMS sent) counts, 2 is ordered without SMS, 3 is a failure. 2026-09-17: the same call without X-Requested-With and with startDate 2020-07-15 returned Success 1 and created the file, but no SMS arrived. The collector then polls letters_for_member every 15 s until the letter_type 2 entry with to_date = endDate has status 1 (2026-09-17: status 0 at once, ready within ~1 min), and downloads it. The order is placed first in the run so the file is built while everything else is collected, and collected last. Nothing in the entry identifies a rebuild, so a ready file from earlier the same day cannot be told from the one just ordered except by watching the status go pending first (placeOrder same_day_before -> waitMedicalFile mustSeePending, with a 2 min appearMs fallback). Measured 2026-09-18 on a ready entry: from_date is the range start 1900-01-01 with no clock, item_date and to_date are dates with no clock, original_item_date is midnight, and hash, link and timestamp change on every call (they sign the download link), so none of them can date the build. A same-day re-run normally skips the order outright (skipped_ready_today), so mustSeePending only applies when today's file was ordered from the site's own form over a narrower range."
+      },
+      {
+        "method": "GET",
+        "url": "DirectorshipAPI/v1/members/0/{mid}/letters_for_member?from_date=1900-01-01&to_date=2099-12-31",
+        "output": "letters/list.json",
+        "notes": "The POST all/letters_for_member variant returned 500; the GET returns the same letters."
+      },
+      {
+        "method": "GET",
+        "url": "DirectorshipAPI/v1/members/<recipient_id_code>/<recipient_id>/letters_for_member/<reference_id>/<name_document>/pdf?timestamp=<letter.timestamp>&hash=<letter.hash>",
+        "output": "letters/files/<item_date>_<reference_id>_<title>.pdf",
+        "notes": "letter_type 1."
+      },
+      {
+        "method": "GET",
+        "url": "MainAppAPI/v2/members/0/{mid}/pdf?file_path=<letter.link>&timestamp=<letter.timestamp>",
+        "output": "<item_date>_medical-file.pdf",
+        "notes": "letter_type 2 (an ordered full medical file). Saved at the root of the export, not in letters/files/: it is the export's main document. The letters step skips it, since each run orders a new one; the waitMedicalFile step downloads the new one, replacing a same-day file, or, when nothing was ordered, the one already listed. Only one letter_type 2 entry exists at a time: a new order replaces the old entry within ~25 s. While the letter's status is 0 (~2.5 min) this returns 500. Once status is 1, fetch the file: read the letters list for the current link and timestamp, then GET this URL and read the whole response. It is available right away. On 2026-09-16, probe requests that were aborted after the headers kept getting 202. The collector polls up to 8 times, 5 s apart."
+      }
+    ],
+    "communication-with-doctor": [
+      {
+        "method": "GET",
+        "url": "CommunicationWithDoctorAPI/v1/members/0/{mid}/inquiries",
+        "output": "communication-with-doctor/list.json"
+      },
+      {
+        "method": "GET",
+        "url": "CommunicationWithDoctorAPI/v1/members/0/{mid}/inquiries/<request_id>/details",
+        "output": "communication-with-doctor/details/<creation_date>_<request_id>_<title>.json",
+        "notes": "GET .../inquiries/<request_id> (without /details) returns 405."
+      },
+      {
+        "method": "GET",
+        "url": "AppointmentOrderAPI/v1/members/0/{mid}/pdf?path=<encodeURIComponent(medical_forms_documents[n].result_file)>&timestamp&hash",
+        "output": "communication-with-doctor/files/<creation_date>_<request_id>-<n+1>_<title>.pdf"
+      }
+    ],
+    "uploads": [
+      {
+        "method": "POST",
+        "url": "/online/Ajax/PHR/WsPHRManager.asmx/SearchByDate",
+        "output": null,
+        "request_body": "{'categoryId':'','dateFrom':'1/1/1900','dateTo':'1/1/2050'}",
+        "notes": "Legacy. {d: HTML grid}; file ids from [fileid] attributes, download names from PHR.OpenFile('<name>') onclick. Response not kept (HTML). Paging not seen so far (only tested with a few documents)."
+      },
+      {
+        "method": "POST",
+        "url": "/online/Ajax/PHR/WsPHRManager.asmx/GetFileDetails",
+        "output": "uploads/details/<DocumentDate>_<FileId>_<title>.json",
+        "request_body": {
+          "fileId": "<FileId>"
+        },
+        "notes": "windows-1255, stored as UTF-8."
+      },
+      {
+        "method": "GET",
+        "url": "/online/Pages/Popups/PHR/PHRDownloadDocument.aspx?fileid=<DocumentSystemName + extension, exactly as passed to PHR.OpenFile>",
+        "output": "uploads/files/<DocumentDate>_<FileId>_<title>.<ext>",
+        "notes": "Without the extension the server returns an empty ASP.NET page (200, text/html)."
+      }
+    ]
+  },
+  "checked_not_saved_when_empty": [
+    {
+      "method": "GET",
+      "url": "MedicalFileAPI/v1/members/0/{mid}/sensitivity",
+      "output": "allergies-sensitivity/list.json (only if intolerance is non-empty)"
+    },
+    {
+      "method": "POST",
+      "url": "AppointmentOrderAPI/v2/members/0/{mid}/appointments/future",
+      "output": "appointments/list.json (only if non-empty)",
+      "request_body": {
+        "members": [
+          {
+            "member_id_code": "0",
+            "member_id": "{mid}"
+          }
+        ],
+        "is_with_ascribed_doctor": false
+      }
+    },
+    {
+      "method": "POST",
+      "url": "RequestsAndApprovalsAPI/v1/members/0/{mid}/requests_and_cases",
+      "output": "requests-approvals/list.json (only if non-empty)",
+      "request_body": {
+        "members": [
+          {
+            "member_id_code": "0",
+            "member_id": "{mid}"
+          }
+        ]
+      }
+    }
+  ],
+  "manual_not_fetched": {
+    "test-results/images/*.zip": "DICOM studies. Viewer handoff GET TestResultsAPI/pdf/members/0/{mid}/meddream/token/<StudyInstanceUID>?checksum= works only as a top-level navigation; export by hand in MedDream (Format DICOM, Media ZIP)."
+  },
+  "not_called_by_design": "Only the requests listed in sections are made. Nothing that creates, changes or deletes data (apart from the medical-file order), marks items as read or viewed, returns session credentials, or touches payment or bank details."
+}

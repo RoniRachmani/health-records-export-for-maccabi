@@ -1,0 +1,22 @@
+node_modules/
+dist/
+dist-dev/
+dist-store/
+release/
+coverage/
+*.zip
+*.log
+.DS_Store
+.env*
+
+# Chrome's "Pack extension" writes the package and its private signing key
+# next to the folder it packs, which is this repo for dist/.
+*.crx
+*.pem
+
+# Never commit real exports or anything taken from a real account.
+maccabi-export-*/
+manifest.json
+*.token
+*.pdf
+*.raw.json

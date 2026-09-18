@@ -1,0 +1,30 @@
+{
+  "name": "health-records-export-for-maccabi",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Chrome extension that exports your Maccabi online medical records (raw JSON + PDFs) as one ZIP. Unofficial.",
+  "scripts": {
+    "dev": "vite build --watch --mode development",
+    "build": "tsc --noEmit && vite build",
+    "build:dev": "vite build --mode development",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "icons": "node scripts/make-icons.mjs",
+    "store-assets": "node scripts/store-assets.mjs",
+    "package": "npm run build && node scripts/package.mjs"
+  },
+  "dependencies": {
+    "fflate": "0.8.3"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "2.7.1",
+    "@fontsource-variable/heebo": "5.3.0",
+    "@types/chrome": "0.3.0",
+    "@types/node": "22.20.3",
+    "happy-dom": "20.14.5",
+    "typescript": "7.0.2",
+    "vite": "8.3.0",
+    "vitest": "5.0.1"
+  }
+}

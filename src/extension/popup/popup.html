@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Health Records Export for Maccabi</title>
+    <link rel="stylesheet" href="./popup.css" />
+  </head>
+  <body>
+    <header>
+      <img src="/icons/icon-128.png" width="36" height="36" alt="" />
+      <div>
+        <h1>Health Records Export</h1>
+        <p class="tagline">Unofficial · Not affiliated with Maccabi</p>
+      </div>
+    </header>
+    <main id="view">
+      <p class="loading"><span class="spinner" aria-hidden="true"></span>Checking this tab…</p>
+    </main>
+    <p id="announce" class="visually-hidden" role="status" aria-live="polite"></p>
+    <footer>
+      <p>No servers, no analytics.</p>
+      <nav aria-label="About the extension">
+        <a href="/privacy.html" target="_blank">Privacy</a>
+        <a href="/terms.html" target="_blank">Terms</a>
+        <span id="version" class="version"></span>
+      </nav>
+    </footer>
+    <script type="module" src="./popup.ts"></script>
+  </body>
+</html>

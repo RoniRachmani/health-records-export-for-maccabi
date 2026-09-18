@@ -1,0 +1,198 @@
+/* What the popup shows, as pure functions of the run state (unit-tested, no DOM). */
+import type { Problem } from '../../core';
+import { LABELS, PLAN, type PlanStep, type RunState, type StateReply } from '../shared/state';
+
+export interface Stage {
+  label: string;
+  steps: PlanStep[];
+}
+
+/**
+ * The run plan as the user sees it: page changes and bookkeeping steps belong to the section they
+ * serve, and one stage per collection step. A stage need not be one folder: the referrals step
+ * writes referrals/, approvals/ and info-pages/. Each stage's steps must be consecutive in PLAN, or
+ * stageStates would mark a stage current again after a later one is done.
+ */
+export const STAGES: Stage[] = [
+  // Ordering comes first so Maccabi can build the file while everything else is collected; the
+  // download of it is the last stage before the ZIP.
+  { label: 'Ordering your medical file', steps: ['openLegacyPage', 'orderMedicalFile'] },
+  // Prescriptions and purchases are one folder and one stage.
+  { label: 'Medications', steps: ['medications', 'purchases'] },
+  { label: 'Your uploads', steps: ['savedDocuments'] },
+  { label: 'Member profile and doctors', steps: ['returnToSonline', 'profileAndDoctors'] },
+  { label: 'Test results', steps: ['testResults'] },
+  { label: 'Visit summaries', steps: ['visits'] },
+  { label: 'Referrals, approvals and info pages', steps: ['referrals'] },
+  { label: 'Vaccinations', steps: ['vaccinations'] },
+  { label: 'Letters and communication with doctor', steps: ['letters', 'doctorCommunications', 'emptySections'] },
+  { label: 'Full medical file', steps: ['waitMedicalFile'] },
+  { label: 'Saving the ZIP', steps: ['save'] },
+];
+
+export type StageState = 'done' | 'current' | 'pending';
+
+/** next is the index into PLAN of the step to run next (PLAN.length once finished). */
+export function stageStates(next: number): StageState[] {
+  return STAGES.map((stage) => {
+    const idx = stage.steps.map((s) => PLAN.indexOf(s));
+    if (idx.every((i) => i < next)) return 'done';
+    if (idx.some((i) => i <= next)) return 'current';
+    return 'pending';
+  });
+}
+
+export function formatDuration(ms: number): string {
+  if (!(ms >= 60_000)) return 'under a minute';
+  const minutes = Math.round(ms / 60_000);
+  if (minutes < 60) return minutes + ' min';
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return h + ' h' + (m ? ' ' + m + ' min' : '');
+}
+
+/** Decimal units, as file managers show them: 227 KB, 3.2 MB, 12 MB. */
+export function formatBytes(n: number): string {
+  if (!(n >= 1000)) return Math.max(0, Math.round(n || 0)) + ' B';
+  const units = ['KB', 'MB', 'GB', 'TB'];
+  let v = n;
+  let u = -1;
+  do {
+    v /= 1000;
+    u++;
+  } while (v >= 999.95 && u < units.length - 1);
+  return (v < 9.95 ? v.toFixed(1) : String(Math.round(v))) + ' ' + units[u];
+}
+
+export function countOf(n: number, one: string, many: string): string {
+  return n.toLocaleString('en-US') + ' ' + (n === 1 ? one : many);
+}
+
+/** The running export's counters: files and size staged so far, and time since it started. */
+export function statsText(run: RunState, now: number): string {
+  const elapsed = now - Date.parse(run.startedAt);
+  return [
+    run.fileCount !== undefined && countOf(run.fileCount, 'file', 'files'),
+    run.byteCount !== undefined && formatBytes(run.byteCount),
+    elapsed >= 60_000 ? formatDuration(elapsed) + ' elapsed' : 'just started',
+  ].filter(Boolean).join(' · ');
+}
+
+/**
+ * What the line under the heading says, per step and per part of it: the key is the collector's progress detail
+ * ("lab histories"), and '' is the step before its first progress report. Kept short enough for one line.
+ */
+export const DESCRIPTIONS: Record<PlanStep, Record<string, string>> = {
+  profileAndDoctors: { '': 'Reading your member details and doctors' },
+  testResults: {
+    '': 'Reading your list of tests',
+    'test results': 'Downloading each test result and its PDF',
+    'lab histories': 'Saving how each lab value changed over time',
+  },
+  visits: { '': 'Reading your visit history', visits: 'Downloading visit details and summaries' },
+  medications: { '': 'Reading your prescriptions', prescriptions: 'Downloading prescription PDFs' },
+  referrals: {
+    '': 'Reading your referrals',
+    referrals: 'Downloading referrals and their PDFs',
+    approvals: 'Downloading approvals and their PDFs',
+    'information pages': 'Downloading your information pages',
+  },
+  vaccinations: { '': 'Reading your vaccinations', vaccinations: 'Reading vaccines and the vaccination booklet' },
+  letters: { '': 'Reading your letters', letters: 'Downloading your letters as PDFs' },
+  doctorCommunications: { '': 'Reading your inquiries to doctors', 'doctor inquiries': 'Downloading inquiries and attached forms' },
+  emptySections: { '': 'Checking sections that are often empty', 'other sections': 'Checking allergies, appointments and requests' },
+  openLegacyPage: { '': 'Needed for purchases, uploads and the order' },
+  purchases: {
+    '': 'Reading every medication purchase',
+    'purchase history': 'Reading every medication purchase',
+    'purchase report': 'Creating the 2-year purchase report PDF',
+  },
+  savedDocuments: { '': 'Reading the documents you uploaded', 'saved documents': 'Downloading the documents you uploaded' },
+  orderMedicalFile: { '': 'Requesting a fresh copy (Maccabi will text you)' },
+  returnToSonline: { '': 'Keeps your session alive during the wait' },
+  waitMedicalFile: {
+    '': 'Collecting the file Maccabi has been preparing',
+    'waiting for the medical file to appear': 'Waiting for Maccabi to list the new file',
+    'medical file status': 'Maccabi is preparing your file',
+    letters: 'Downloading your medical file',
+  },
+  save: { '': 'Packing all files into one ZIP' },
+};
+
+/** The current step's name, and a plain description of what it is collecting right now. */
+export function stepText(run: RunState): { title: string; detail: string } {
+  if (run.next >= PLAN.length) return { title: '', detail: '' };
+  const step = PLAN[run.next];
+  const title = LABELS[step];
+  const part = run.detail?.startsWith(title + ': ') ? run.detail.slice(title.length + 2) : '';
+  const described = DESCRIPTIONS[step][part.replace(/^medical file status .*/, 'medical file status')];
+  if (described) return { title, detail: described };
+  // A part added to the collector without a description here: show it as the collector names it.
+  const raw = part.toLowerCase() === title.toLowerCase() ? '' : part;
+  return { title, detail: raw && raw[0].toUpperCase() + raw.slice(1) };
+}
+
+const FOLDER_LABELS: Record<string, string> = {
+  profile: 'Member profile',
+  'my-doctor': 'My doctor',
+  'test-results': 'Test results',
+  'visit-summaries': 'Visit summaries',
+  'medications-and-prescriptions': 'Medications and prescriptions',
+  referrals: 'Referrals',
+  approvals: 'Approvals',
+  'info-pages': 'Information pages',
+  vaccinations: 'Vaccinations',
+  letters: 'Letters',
+  // Core's MEDICAL_FILE, spelled out: importing it would bundle the whole collector into the popup.
+  'medical-file': 'Full medical file',
+  'communication-with-doctor': 'Communication with doctor',
+  uploads: 'Your uploads',
+  'allergies-sensitivity': 'Allergies',
+  appointments: 'Appointments',
+  'requests-approvals': 'Requests and approvals',
+};
+
+export interface ProblemGroup {
+  label: string;
+  items: Problem[];
+}
+
+/**
+ * Problems grouped by section, in first-seen order. `where` is a path in the ZIP, `medical-file` for
+ * the full medical file, or, for a failed step, the step's name.
+ */
+export function groupProblems(problems: Problem[]): ProblemGroup[] {
+  const groups = new Map<string, Problem[]>();
+  for (const p of problems) {
+    const head = p.where.split('/')[0];
+    const label = FOLDER_LABELS[head] ?? (LABELS as Record<string, string>)[head] ?? head;
+    const items = groups.get(label);
+    if (items) items.push(p);
+    else groups.set(label, [p]);
+  }
+  return [...groups].map(([label, items]) => ({ label, items }));
+}
+
+export type Confirm = 'cancel' | 'discard';
+
+/** Popup-local interaction state. */
+export interface UiFlags {
+  /** The request being sent, while waiting for its reply. */
+  busy: string | null;
+  confirm: Confirm | null;
+  /** Cancel was accepted and the run is winding down. */
+  stopping: boolean;
+  error: string;
+}
+
+/**
+ * Changes only when the popup's structure must change. Progress updates (percent, detail,
+ * step) keep the key, so they are applied in place and never replace a button under the pointer.
+ */
+export function viewKey(st: StateReply, ui: UiFlags): string {
+  const r = st.run;
+  const base = r
+    ? ['run', r.id, r.status, r.message ?? '', r.status === 'error' ? r.next : '', st.tab.onMaccabi]
+    : ['idle', st.noticeAccepted, st.tab.onMaccabi, st.tab.loggedIn, st.tab.name ?? ''];
+  return [...base, ui.busy ?? '', ui.confirm ?? '', ui.stopping, ui.error].join('|');
+}

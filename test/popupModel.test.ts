@@ -1,0 +1,142 @@
+import { describe, expect, it } from 'vitest';
+import { DESCRIPTIONS, formatBytes, formatDuration, groupProblems, STAGES, stageStates, statsText, stepText, viewKey, type UiFlags } from '../src/extension/popup/model';
+import { PLAN, type RunState, type StateReply } from '../src/extension/shared/state';
+
+describe('STAGES', () => {
+  it('covers every plan step once, in plan order', () => {
+    expect(STAGES.flatMap((s) => s.steps)).toEqual([...PLAN]);
+  });
+});
+
+describe('stageStates', () => {
+  it('starts with the first stage current', () => {
+    const s = stageStates(0);
+    expect(s[0]).toBe('current');
+    expect(s.slice(1).every((x) => x === 'pending')).toBe(true);
+  });
+
+  it('keeps a grouped stage current through all its steps', () => {
+    const medications = STAGES.findIndex((s) => s.steps.includes('purchases'));
+    for (const step of ['medications', 'purchases'] as const) {
+      const s = stageStates(PLAN.indexOf(step));
+      expect(s[medications]).toBe('current');
+      expect(s.slice(0, medications).every((x) => x === 'done')).toBe(true);
+      expect(s.slice(medications + 1).every((x) => x === 'pending')).toBe(true);
+    }
+  });
+
+  it('marks everything but saving done at the save step, and everything done after it', () => {
+    expect(stageStates(PLAN.indexOf('save'))).toEqual([...Array(STAGES.length - 1).fill('done'), 'current']);
+    expect(stageStates(PLAN.length).every((x) => x === 'done')).toBe(true);
+  });
+});
+
+describe('formatDuration', () => {
+  it('rounds to minutes and hours', () => {
+    expect(formatDuration(0)).toBe('under a minute');
+    expect(formatDuration(59_999)).toBe('under a minute');
+    expect(formatDuration(NaN)).toBe('under a minute');
+    expect(formatDuration(60_000)).toBe('1 min');
+    expect(formatDuration(6.4 * 60_000)).toBe('6 min');
+    expect(formatDuration(59.6 * 60_000)).toBe('1 h');
+    expect(formatDuration(72 * 60_000)).toBe('1 h 12 min');
+  });
+});
+
+describe('formatBytes', () => {
+  it('uses decimal units, with one decimal below 10', () => {
+    expect(formatBytes(0)).toBe('0 B');
+    expect(formatBytes(999)).toBe('999 B');
+    expect(formatBytes(1000)).toBe('1.0 KB');
+    expect(formatBytes(227_400)).toBe('227 KB');
+    expect(formatBytes(999_960)).toBe('1.0 MB');
+    expect(formatBytes(3_240_000)).toBe('3.2 MB');
+    expect(formatBytes(9_960_000)).toBe('10 MB');
+    expect(formatBytes(1_500_000_000)).toBe('1.5 GB');
+  });
+});
+
+describe('statsText and stepText', () => {
+  const base: RunState = {
+    id: 'r1', status: 'running', tabId: 1, startedAt: '2026-01-01T00:00:00Z', next: PLAN.indexOf('testResults'),
+    ctx: {} as RunState['ctx'], stepDone: 0, stepTotal: 0, percent: 10,
+  };
+  const start = Date.parse(base.startedAt);
+
+  it('shows files, size and elapsed time once known', () => {
+    expect(statsText(base, start + 20_000)).toBe('just started');
+    expect(statsText({ ...base, fileCount: 1, byteCount: 512 }, start + 20_000)).toBe('1 file · 512 B · just started');
+    expect(statsText({ ...base, fileCount: 1234, byteCount: 3_240_000 }, start + 72 * 60_000)).toBe('1,234 files · 3.2 MB · 1 h 12 min elapsed');
+  });
+
+  it('describes what the current part of the step collects', () => {
+    expect(stepText({ ...base, detail: 'Test results' })).toEqual({ title: 'Test results', detail: 'Reading your list of tests' });
+    expect(stepText({ ...base, detail: 'Test results: test results' })).toEqual({ title: 'Test results', detail: 'Downloading each test result and its PDF' });
+    expect(stepText({ ...base, detail: 'Test results: lab histories' })).toEqual({ title: 'Test results', detail: 'Saving how each lab value changed over time' });
+    const referrals = { ...base, next: PLAN.indexOf('referrals') };
+    expect(stepText({ ...referrals, detail: 'Referrals, approvals and info pages: referrals' }).detail).toBe('Downloading referrals and their PDFs');
+    expect(stepText({ ...referrals, detail: 'Referrals, approvals and info pages: approvals' }).detail).toBe('Downloading approvals and their PDFs');
+    expect(stepText({ ...referrals, detail: 'Referrals, approvals and info pages: information pages' }).detail).toBe('Downloading your information pages');
+    const waiting = { ...base, next: PLAN.indexOf('waitMedicalFile') };
+    expect(stepText({ ...waiting, detail: 'Waiting for your medical file: medical file status 2' }).detail).toBe('Maccabi is preparing your file');
+    expect(stepText({ ...base, next: PLAN.length })).toEqual({ title: '', detail: '' });
+  });
+
+  it('falls back to the collector\'s own name for a part it has no description for', () => {
+    expect(stepText({ ...base, detail: 'Test results: imaging reports' }).detail).toBe('Imaging reports');
+    expect(stepText({ ...base, detail: 'Test results: Test results' }).detail).toBe('');
+  });
+
+  it('has a one-line description for the start of every step', () => {
+    for (const step of PLAN) {
+      expect(DESCRIPTIONS[step]['']).toBeTruthy();
+      for (const text of Object.values(DESCRIPTIONS[step])) expect(text.length).toBeLessThanOrEqual(48);
+    }
+  });
+});
+
+describe('groupProblems', () => {
+  const p = (where: string, what = 'HTTP 500') => ({ where, what, at: '2026-01-01T00:00:00Z' });
+
+  it('groups by folder with friendly names, in first-seen order', () => {
+    const groups = groupProblems([p('visit-summaries/details/1.json'), p('test-results/files/a.pdf'), p('visit-summaries/files/2.pdf')]);
+    expect(groups.map((g) => g.label)).toEqual(['Visit summaries', 'Test results']);
+    expect(groups[0].items.map((x) => x.where)).toEqual(['visit-summaries/details/1.json', 'visit-summaries/files/2.pdf']);
+  });
+
+  it('names failed steps and keeps unknown folders as they are', () => {
+    const groups = groupProblems([p('purchases', 'boom'), p('something-new/x.json'), p('letters/files/a.pdf'), p('letters'), p('medical-file')]);
+    expect(groups.map((g) => g.label)).toEqual(['Pharmacy purchases', 'something-new', 'Letters', 'Full medical file']);
+    expect(groups[2].items).toHaveLength(2);
+  });
+});
+
+describe('viewKey', () => {
+  const ui: UiFlags = { busy: null, confirm: null, stopping: false, error: '' };
+  const run: RunState = {
+    id: 'r1', status: 'running', tabId: 1, startedAt: '2026-01-01T00:00:00Z', next: 1,
+    ctx: {} as RunState['ctx'], stepDone: 1, stepTotal: 10, percent: 10, detail: 'Test results',
+  };
+  const st: StateReply = { run, noticeAccepted: true, tab: { onMaccabi: true, loggedIn: true, tabId: 1 } };
+
+  it('ignores progress', () => {
+    const later = { ...st, run: { ...run, next: 5, stepDone: 7, stepTotal: 9, percent: 55, detail: 'Referrals: approvals' } };
+    expect(viewKey(later, ui)).toBe(viewKey(st, ui));
+  });
+
+  it('changes with status, run, confirm, busy, stopping and error', () => {
+    const k = viewKey(st, ui);
+    expect(viewKey({ ...st, run: { ...run, status: 'paused_hidden' } }, ui)).not.toBe(k);
+    expect(viewKey({ ...st, run: { ...run, id: 'r2' } }, ui)).not.toBe(k);
+    expect(viewKey(st, { ...ui, confirm: 'cancel' })).not.toBe(k);
+    expect(viewKey(st, { ...ui, busy: 'cancel' })).not.toBe(k);
+    expect(viewKey(st, { ...ui, stopping: true })).not.toBe(k);
+    expect(viewKey(st, { ...ui, error: 'x' })).not.toBe(k);
+    expect(viewKey({ ...st, run: null }, ui)).not.toBe(k);
+  });
+
+  it('changes when the notice is accepted', () => {
+    const idle = { ...st, run: null };
+    expect(viewKey({ ...idle, noticeAccepted: false }, ui)).not.toBe(viewKey(idle, ui));
+  });
+});
