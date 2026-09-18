@@ -23,7 +23,19 @@ to your computer as one ZIP file: every PDF the site offers, plus the site's own
 
 ## Install
 
-You need Chrome 116 or newer, and Node.js 22 or newer to build.
+You need Chrome 116 or newer.
+
+1. Download `health-records-export-for-maccabi-<version>.zip` from the
+   [latest release](https://github.com/RoniRachmani/health-records-export-for-maccabi/releases/latest) and unzip it.
+2. Open `chrome://extensions` and turn on **Developer mode**.
+3. Click **Load unpacked** and select the unzipped folder, the one with `manifest.json` in it. Keep the folder: Chrome
+   loads the extension from it.
+
+The build isn't minified, so you can read exactly the code that runs.
+
+### Build from source
+
+You need Node.js 22 or newer.
 
 ```sh
 git clone https://github.com/RoniRachmani/health-records-export-for-maccabi.git
@@ -32,9 +44,7 @@ npm install
 npm run build
 ```
 
-Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and select the `dist/` folder.
-
-The build isn't minified, so you can read exactly the code that runs.
+Then load the `dist/` folder the same way.
 
 ## Export your records
 
@@ -258,7 +268,7 @@ Replies carry statuses, sizes and counts, never record contents. None of this is
 ### Releasing
 
 ```sh
-npm run package        # release/health-records-export-for-maccabi-<version>.zip for the Chrome Web Store
+npm run package        # release/health-records-export-for-maccabi-<version>.zip for the Chrome Web Store and GitHub release
 npm run store-assets   # store/ screenshots and promo tile (needs Chrome, Chromium or Edge; set CHROME_PATH if not found)
 npm run icons          # public/icons/ and store/icon-128.png
 ```
