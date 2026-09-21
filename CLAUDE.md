@@ -16,7 +16,8 @@ npm run typecheck                 # tsc --noEmit
 npm run dev                       # watch build into dist-dev/ (dev build, extra dev bridge)
 npm run build                     # typecheck + store build into dist/
 npm run package                   # build + release/<name>-<version>.zip (refuses a dev build)
-npm run store-assets              # re-render store/ screenshots (needs Chrome; CHROME_PATH)
+npm run store-assets              # re-render store/ images (needs Chrome; CHROME_PATH)
+npm run store-assets -- marquee   # just one, by shot name
 npm run icons                     # public/icons/ + store/icon-128.png
 ```
 
@@ -116,7 +117,7 @@ re-runs. Legacy steps don't get a 401, so `runner.ts` treats "Failed to fetch" i
   only request that changes anything. Don't add another, and don't call anything that marks items read,
   returns credentials or touches payments. Requests are paced `PACE_MS` (300 ms) apart, one at a time.
 - **Every request goes in `docs/endpoints.json`** with the file it produces — the privacy policy and the
-  store review depend on it being complete.
+  store review depend on it being complete. `test/endpoints.test.ts` fails if a path in `src/core` isn't there.
 - **Never write the member id into a path or a stored `endpoint` string**; `Collector.rec` keeps `{mid}`
   as a placeholder.
 - **Keep the policies in sync**: `docs/privacy.md` ↔ `public/privacy.html`, `docs/terms.md` ↔

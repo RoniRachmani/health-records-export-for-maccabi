@@ -7,6 +7,14 @@
     "node": ">=22"
   },
   "description": "Chrome extension that exports your Maccabi online medical records (raw JSON + PDFs) as one ZIP. Unofficial.",
+  "license": "MIT",
+  "author": "Roni Rachmani",
+  "homepage": "https://github.com/RoniRachmani/health-records-export-for-maccabi",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RoniRachmani/health-records-export-for-maccabi.git"
+  },
+  "bugs": "https://github.com/RoniRachmani/health-records-export-for-maccabi/issues",
   "scripts": {
     "dev": "vite build --watch --mode development",
     "build": "tsc --noEmit && vite build",

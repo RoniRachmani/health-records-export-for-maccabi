@@ -193,6 +193,8 @@ Read the full [Privacy Policy](docs/privacy.md) and [Terms of Use](docs/terms.md
 
 ## Development
 
+[![CI](https://github.com/RoniRachmani/health-records-export-for-maccabi/actions/workflows/ci.yml/badge.svg)](https://github.com/RoniRachmani/health-records-export-for-maccabi/actions/workflows/ci.yml)
+
 You need Node.js 22 or newer and Chrome.
 
 ```sh
@@ -244,6 +246,7 @@ REST API requests (`/sonline/`) go from the service worker, with the session tok
 | `docs/` | Endpoint map, privacy policy, terms, store listing |
 | `public/` | Icons, and the privacy policy, terms and third-party notices that ship in the extension |
 | `store/`, `scripts/` | Chrome Web Store images and the pages they're rendered from; build scripts |
+| `.github/` | The CI workflow that runs the gate, the issue forms, and Dependabot |
 
 ### The look
 

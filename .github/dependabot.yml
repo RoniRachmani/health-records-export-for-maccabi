@@ -1,0 +1,16 @@
+# fflate is the only dependency that ships in the extension, so it gets its own pull request and a
+# proper look. Everything else is build-time and arrives grouped, once a week.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      build:
+        dependency-type: development
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
