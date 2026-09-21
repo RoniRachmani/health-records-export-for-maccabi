@@ -189,6 +189,20 @@ function filesWindow(): HTMLElement {
   );
 }
 
+// The two tilted documents and the icon's own artwork (scripts/make-icons.mjs, on its 24-unit
+// grid), shared by both promo tiles so they read as one family.
+function paper(opacity: number): string {
+  return `<rect width="104" height="136" rx="10" fill="#ffffff" opacity="${opacity}"/>
+    <rect x="18" y="30" width="60" height="8" rx="4" fill="#083f92" opacity="0.35"/>
+    <rect x="18" y="48" width="44" height="8" rx="4" fill="#083f92" opacity="0.35"/>`;
+}
+const MARK = `<g fill="none" stroke="#2563c9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5.75 16V4.75a2 2 0 0 1 2-2H14L18.25 7v9z" fill="#ffffff"/>
+    <path d="M14 2.75V7h4.25M9 10h6M9 13h3.5"/>
+    <rect x="2.75" y="16" width="18.5" height="5.25" rx="1.75" fill="#ffffff"/>
+    <path d="M9.5 18.625h5"/>
+  </g>`;
+
 function promo(): HTMLElement {
   // The icon's page and tray, over two more documents; no text, as the store asks.
   return svg(`<svg viewBox="0 0 440 280" width="440" height="280">
@@ -197,23 +211,40 @@ function promo(): HTMLElement {
     <circle cx="70" cy="240" r="120" fill="#ffffff" opacity="0.06"/>
     <circle cx="400" cy="30" r="90" fill="#ffffff" opacity="0.07"/>
     <g transform="translate(220 144)">
-      <g transform="rotate(-14) translate(-118 -84)"><rect width="104" height="136" rx="10" fill="#ffffff" opacity="0.35"/><rect x="18" y="30" width="60" height="8" rx="4" fill="#083f92" opacity="0.35"/><rect x="18" y="48" width="44" height="8" rx="4" fill="#083f92" opacity="0.35"/></g>
-      <g transform="rotate(12) translate(18 -84)"><rect width="104" height="136" rx="10" fill="#ffffff" opacity="0.55"/><rect x="18" y="30" width="60" height="8" rx="4" fill="#083f92" opacity="0.35"/><rect x="18" y="48" width="44" height="8" rx="4" fill="#083f92" opacity="0.35"/></g>
-      <g transform="translate(-90 -94) scale(7.5)" fill="none" stroke="#2563c9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M5.75 16V4.75a2 2 0 0 1 2-2H14L18.25 7v9z" fill="#ffffff"/>
-        <path d="M14 2.75V7h4.25M9 10h6M9 13h3.5"/>
-        <rect x="2.75" y="16" width="18.5" height="5.25" rx="1.75" fill="#ffffff"/>
-        <path d="M9.5 18.625h5"/>
-      </g>
+      <g transform="rotate(-14) translate(-118 -84)">${paper(0.35)}</g>
+      <g transform="rotate(12) translate(18 -84)">${paper(0.55)}</g>
+      <g transform="translate(-90 -94) scale(7.5)">${MARK}</g>
     </g>
   </svg>`, 'promo');
 }
 
+// The marquee tile (1400x560): the same artwork, larger, beside the extension's name and its
+// one line. The store crops the right of this image on narrow screens, so the text stays left.
+function marquee(): HTMLElement {
+  const icon = h('img') as HTMLImageElement;
+  icon.src = '/icons/icon-128.png';
+  return h('div', 'mq',
+    h('section', 'mq-copy',
+      h('div', 'eyebrow', icon, 'Health Records Export for Maccabi'),
+      h('h1', '', 'Your Maccabi records in one ZIP'),
+      h('p', 'lead', 'Tests, visits, prescriptions, referrals, vaccinations, letters and your full medical file \u2014 every PDF, saved straight to your computer.'),
+      h('p', 'disclaimer', 'Unofficial. Not affiliated with Maccabi Healthcare Services.'),
+    ),
+    svg(`<svg viewBox="0 0 540 440" width="540" height="440">
+      <g transform="translate(270 220)">
+        <g transform="rotate(-14) translate(-186 -134) scale(1.6)">${paper(0.3)}</g>
+        <g transform="rotate(12) translate(28 -134) scale(1.6)">${paper(0.5)}</g>
+        <g transform="translate(-138 -144) scale(11.5)">${MARK}</g>
+      </g>
+    </svg>`, 'mq-art'),
+  );
+}
+
 async function main(): Promise<void> {
   const name = new URLSearchParams(location.search).get('shot') || 'start';
-  if (name === 'promo') {
-    document.body.className = 'tile';
-    document.body.append(promo());
+  if (name === 'promo' || name === 'marquee') {
+    document.body.className = name === 'promo' ? 'tile' : 'marquee';
+    document.body.append(name === 'promo' ? promo() : marquee());
   } else {
     const shot = SHOTS[name];
     if (!shot) throw new Error('unknown shot ' + name);

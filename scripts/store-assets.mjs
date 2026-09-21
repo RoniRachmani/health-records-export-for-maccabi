@@ -1,6 +1,8 @@
 // Renders the Chrome Web Store images into store/: screenshots of the real popup
-// fed made-up states (store/src/mock-chrome.ts, no real data) and the small promo
-// tile. Needs Chrome, Chromium or Edge; set CHROME_PATH if it isn't found.
+// fed made-up states (store/src/mock-chrome.ts, no real data) and the two promo
+// tiles. Name shots on the command line to render only those, e.g.
+// `npm run store-assets -- marquee`. Needs Chrome, Chromium or Edge; set
+// CHROME_PATH if it isn't found.
 import { spawn } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
@@ -19,7 +21,12 @@ const IMAGES = [
   { file: 'screenshot-4-contents.png', shot: 'contents', width: 1280, height: 800 },
   { file: 'screenshot-5-privacy.png', shot: 'privacy', width: 1280, height: 800 },
   { file: 'promo-small-440x280.png', shot: 'promo', width: 440, height: 280 },
+  { file: 'promo-marquee-1400x560.png', shot: 'marquee', width: 1400, height: 560 },
 ];
+
+const only = process.argv.slice(2);
+const images = only.length ? IMAGES.filter((img) => only.includes(img.shot)) : IMAGES;
+if (!images.length) throw new Error('No such shot: ' + only.join(', ') + '. Known: ' + IMAGES.map((i) => i.shot).join(', '));
 
 const BROWSERS = [
   process.env.CHROME_PATH,
@@ -106,7 +113,7 @@ try {
     return new Promise((res, rej) => pending.set(id, { resolve: res, reject: rej }));
   };
 
-  for (const img of IMAGES) {
+  for (const img of images) {
     const { targetId } = await send('Target.createTarget', { url: 'about:blank' });
     const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true });
     await send('Emulation.setDeviceMetricsOverride', { width: img.width, height: img.height, deviceScaleFactor: 1, mobile: false }, sessionId);

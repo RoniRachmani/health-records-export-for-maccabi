@@ -292,7 +292,7 @@ Replies carry statuses, sizes and counts, never record contents. None of this is
 
 ```sh
 npm run package        # release/health-records-export-for-maccabi-<version>.zip for the Chrome Web Store and GitHub release
-npm run store-assets   # store/ screenshots and promo tile (needs Chrome, Chromium or Edge; set CHROME_PATH if not found)
+npm run store-assets   # store/ screenshots and promo tiles (needs Chrome, Chromium or Edge; set CHROME_PATH if not found)
 npm run icons          # public/icons/ and store/icon-128.png
 ```
 

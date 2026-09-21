@@ -293,3 +293,59 @@ body.tile {
 .promo svg {
   display: block;
 }
+
+/* ---- marquee promo tile (1400x560) ---- */
+body.marquee {
+  position: relative;
+  width: 1400px;
+  height: 560px;
+  overflow: hidden;
+  color: #ffffff;
+  /* The small tile's soft circles, as glows behind the artwork: at this width a hard
+     edge would read as a seam, and the text stays on flat colour. */
+  background:
+    radial-gradient(460px 460px at 1180px 130px, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(620px 620px at 1070px 620px, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 70%),
+    linear-gradient(135deg, #052658 0%, #083f92 55%, #296bed 100%);
+}
+.mq-copy {
+  position: absolute;
+  left: 88px;
+  top: 0;
+  bottom: 0;
+  width: 700px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.mq-copy .eyebrow {
+  gap: 11px;
+  padding: 6px 18px 6px 6px;
+  font-size: 16px;
+}
+.mq-copy .eyebrow img {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+}
+.mq-copy h1 {
+  margin: 26px 0 18px;
+  font-size: 58px;
+}
+.mq-copy .lead {
+  margin: 0;
+  max-width: 660px;
+  font-size: 22px;
+}
+.mq-copy .disclaimer {
+  bottom: 46px;
+  font-size: 15px;
+}
+.mq-art {
+  position: absolute;
+  right: 72px;
+  top: 62px;
+}
+.mq-art svg {
+  display: block;
+}

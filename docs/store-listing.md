@@ -8,6 +8,7 @@ the extension changes, update this file along with it (see [Keeping it true](#ke
 1. Raise `version` in `package.json`. The store rejects a package whose version isn't higher than the published one.
 2. `npm test` and `npm run typecheck`.
 3. If the popup changed, run `npm run store-assets` and look at the images in `store/` before uploading them.
+   Name shots to render only some of them, e.g. `npm run store-assets -- promo marquee`.
 4. `npm run package`, which builds `dist/` and writes `release/health-records-export-for-maccabi-<version>.zip`.
    Upload that file on the **Package** tab. The script refuses to package a development build.
 
@@ -81,7 +82,7 @@ Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare 
 | Screenshot 4 | `store/screenshot-4-contents.png` | The folders inside the ZIP |
 | Screenshot 5 | `store/screenshot-5-privacy.png` | "Private by design", with the popup's list of what's included |
 | Small promo tile (440×280) | `store/promo-small-440x280.png` | The icon's artwork on a blue background, with no text |
-| Marquee promo tile (1400×560) | None | Optional. The store uses it only when it features the extension |
+| Marquee promo tile (1400×560) | `store/promo-marquee-1400x560.png` | The same artwork beside the name and one line of text. Optional: the store uses it only when it features the extension |
 | Global promo video | None | Optional |
 
 The screenshots are 1280×800 PNG files with no transparency. They show the real popup in made-up states over a
