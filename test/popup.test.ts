@@ -79,14 +79,14 @@ describe('popup', () => {
   it('applies progress in place, keeping the Stop button under the pointer', async () => {
     await openPopup({ run: running({ fileCount: 40, byteCount: 2_300_000 }), tab });
     const stop = buttonNamed('Stop');
-    expect(document.querySelector('.eyebrow')?.textContent).toBe('Exporting · 12%');
+    expect(document.querySelector('.status')?.textContent).toBe('Exporting · 12%');
     expect(document.querySelector('h2')?.textContent).toBe('Test results');
     expect(document.querySelector('.detail')?.textContent).toBe('Saving how each lab value changed over time');
     expect(document.querySelector('.stats')?.textContent).toBe('40 files · 2.3 MB · 6 min elapsed');
 
     storageChange(running({ next: PLAN.indexOf('referrals'), percent: 48, detail: 'Referrals, approvals and info pages: approvals', fileCount: 212, byteCount: 14_800_000 }));
     expect(buttonNamed('Stop')).toBe(stop);
-    expect(document.querySelector('.eyebrow')?.textContent).toBe('Exporting · 48%');
+    expect(document.querySelector('.status')?.textContent).toBe('Exporting · 48%');
     expect(document.querySelector('.detail')?.textContent).toBe('Downloading approvals and their PDFs');
     expect(document.querySelector('.stats')?.textContent).toBe('212 files · 15 MB · 6 min elapsed');
     expect(document.querySelector('[role=progressbar]')?.getAttribute('aria-valuenow')).toBe('48');

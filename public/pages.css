@@ -1,0 +1,78 @@
+/* The Privacy Policy and Terms pages shipped with the extension, on the same system as the popup
+   (src/extension/popup/popup.css): navy headings over white, magenta links, generous measure.
+   Kept as a separate file because public/ is copied verbatim and these pages are plain HTML. */
+
+:root {
+  --bg: #ffffff;
+  --surface: #fafdff;
+  --line: #e4eaf2;
+  --line-soft: #c4e5f8;
+  --fg: #24283f;
+  --heading: #083f92;
+  --muted: #5b6785;
+  --accent: #b83b7c;
+  --accent-hover: #a63370;
+  --focus: #296bed;
+  color-scheme: light;
+}
+body {
+  max-width: 43rem;
+  margin: 0 auto;
+  padding: 40px 24px 72px;
+  background: var(--bg);
+  color: var(--fg);
+  /* Roboto first, as in the popup; a local lookup only. */
+  font: 400 16px/1.6 Roboto, system-ui, -apple-system, 'Segoe UI', 'Noto Sans Hebrew', 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+h1 {
+  font-size: 32px;
+  line-height: 1.2;
+  font-weight: 500;
+  color: var(--heading);
+  margin: 0 0 6px;
+}
+h2 {
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 500;
+  color: var(--heading);
+  margin: 34px 0 8px;
+}
+p,
+ul {
+  margin: 0 0 14px;
+}
+ul {
+  padding-left: 22px;
+}
+li {
+  margin-bottom: 7px;
+}
+li::marker {
+  color: var(--accent);
+}
+a {
+  color: var(--accent);
+  text-underline-offset: 2px;
+  overflow-wrap: anywhere;
+}
+a:hover {
+  color: var(--accent-hover);
+}
+a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+/* The title block: product name and effective date under the heading. */
+.doc-head {
+  margin: 0 0 26px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+}
+.doc-head p {
+  margin: 0;
+  font-size: 15px;
+}

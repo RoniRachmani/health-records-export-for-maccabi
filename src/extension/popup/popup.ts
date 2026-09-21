@@ -17,7 +17,7 @@ let announced: string | null = null;
 
 /** Nodes that progress updates write to in place. */
 let live: {
-  eyebrow?: HTMLElement;
+  status?: HTMLElement;
   title?: HTMLElement;
   detail?: HTMLElement;
   bar?: HTMLElement;
@@ -100,12 +100,17 @@ function actions(...children: Child[]): HTMLElement {
   return h('div', { class: 'actions' }, ...children);
 }
 
-/** The small status line above a view's heading; kind colours it. */
-function eyebrow(text: string, kind: '' | 'ok' | 'warn' | 'err' = ''): HTMLElement {
-  return h('p', { class: 'eyebrow' + (kind ? ' ' + kind : '') }, text);
+/** actions() for a view taller than the popup: the row stays at the bottom edge while the text scrolls. */
+function stickyActions(...children: Child[]): HTMLElement {
+  return h('div', { class: 'actions sticky' }, ...children);
 }
 
-/** A remark set off by a rule on its left; warn and err tint it. */
+/** The small status pill above a view's heading; kind colours it. */
+function status(text: string, kind: '' | 'ok' | 'warn' | 'err' = ''): HTMLElement {
+  return h('p', { class: 'status' + (kind ? ' ' + kind : '') }, text);
+}
+
+/** A remark in a soft panel, set apart from the flow; warn and err tint it and give it a border. */
 function note(kind: '' | 'warn' | 'err', ...children: Child[]): HTMLElement {
   return h('div', { class: 'note' + (kind ? ' ' + kind : '') }, ...children);
 }
@@ -155,7 +160,7 @@ function hintFor(run: RunState): string {
 function noticeView(): Child[] {
   const link = (href: string, text: string) => h('a', { href, target: '_blank' }, text);
   return [
-    eyebrow('Before you start'),
+    status('Before you start'),
     h('h2', {}, 'How the export works'),
     h('ul', { class: 'points' },
       h('li', {}, 'It reads your records from Maccabi Online while you are logged in, and saves them as one ZIP file on this computer. Nothing is sent anywhere else.'),
@@ -167,7 +172,7 @@ function noticeView(): Child[] {
       ' new file replaces the previous one on the site. A copy already ordered today is used as it is.'),
     h('p', { class: 'consent small muted' },
       'By continuing, you agree to the ', link('/terms.html', 'Terms of Use'), ' and the ', link('/privacy.html', 'Privacy Policy'), '.'),
-    actions(actionButton('Agree and continue', { type: 'acceptNotice' }, 'primary block')),
+    stickyActions(actionButton('Agree and continue', { type: 'acceptNotice' }, 'primary block')),
   ];
 }
 
@@ -202,7 +207,7 @@ function idleView(st: StateReply): Child[] {
   if (!st.tab.onMaccabi || !st.tab.loggedIn) {
     return [
       accountRow(st),
-      eyebrow('Get started'),
+      status('Get started'),
       h('h2', {}, 'Log in to Maccabi Online'),
       h('ol', { class: 'numbered' },
         h('li', {}, st.tab.onMaccabi ? 'Log in to Maccabi Online in this tab.' : 'Open Maccabi Online and log in (or finish logging in).'),
@@ -212,7 +217,7 @@ function idleView(st: StateReply): Child[] {
   }
   return [
     accountRow(st),
-    eyebrow('Ready to export'),
+    status('Ready to export'),
     h('h2', {}, 'Your records, one ZIP'),
     h('p', { class: 'lead' }, 'Tests, visits, prescriptions, letters, your full medical file and more. Takes about 5 to 20 minutes.'),
     actions(actionButton('Start export', { type: 'start' }, 'primary block', 'Checking your login…')),
@@ -222,7 +227,7 @@ function idleView(st: StateReply): Child[] {
 }
 
 function progressView(run: RunState): Child[] {
-  const status = eyebrow('');
+  const pill = status('');
   const title = h('h2');
   const detail = h('p', { class: 'detail' });
   const { bar, fill } = progressBar(run.percent, true);
@@ -230,9 +235,9 @@ function progressView(run: RunState): Child[] {
   const hint = note('');
   const stages = STAGES.map((s) => h('li', {}, s.label));
   const stagesDone = h('span');
-  live = { eyebrow: status, title, detail, bar, fill, stats, stages, stagesDone, hint };
+  live = { status: pill, title, detail, bar, fill, stats, stages, stagesDone, hint };
   return [
-    status,
+    pill,
     title,
     detail,
     bar,
@@ -254,7 +259,7 @@ function pausedView(run: RunState, st: StateReply): Child[] {
   if (!hidden && st.tab.onMaccabi) primary = actionButton('Resume', { type: 'resume' }, 'primary', 'Reconnecting…');
   else primary = actionButton('Go to the Maccabi tab', { type: 'focusTab' }, 'primary');
   return [
-    eyebrow('Paused · ' + run.percent + '%', 'warn'),
+    status('Paused · ' + run.percent + '%', 'warn'),
     h('h2', {}, hidden ? 'Waiting for the Maccabi tab' : 'Export paused'),
     stage && h('p', { class: 'detail' }, 'During ' + stage),
     progressBar(run.percent, false).bar,
@@ -287,7 +292,7 @@ function doneView(run: RunState): Child[] {
   const icon = h('span', { class: 'file-icon', 'aria-hidden': 'true' });
   icon.innerHTML = ZIP_ICON;
   return [
-    eyebrow('Saved', 'ok'),
+    status('Saved', 'ok'),
     h('h2', {}, 'Your export is ready'),
     h('div', { class: 'file-card' },
       icon,
@@ -315,7 +320,7 @@ function errorView(run: RunState, st: StateReply): Child[] {
   else if (st.tab.onMaccabi) retry = actionButton('Try again', { type: 'resume' }, 'primary', 'Reconnecting…');
   else retry = actionButton('Go to the Maccabi tab', { type: 'focusTab' }, 'primary');
   return [
-    eyebrow(atSave ? 'Not saved' : 'Stopped', 'err'),
+    status(atSave ? 'Not saved' : 'Stopped', 'err'),
     h('h2', {}, atSave ? 'The ZIP was not saved' : 'Export stopped'),
     note('err',
       h('div', {}, run.message || 'The export failed.'),
@@ -330,7 +335,7 @@ function errorView(run: RunState, st: StateReply): Child[] {
 
 function stoppingView(): Child[] {
   return [
-    eyebrow('Stopping'),
+    status('Stopping'),
     h('p', { class: 'loading' }, h('span', { class: 'spinner', 'aria-hidden': 'true' }), 'Stopping the export…'),
     note('', 'The files collected so far are deleted once the current request finishes. This can take a few seconds.'),
   ];
@@ -345,7 +350,7 @@ function updateStats(): void {
 /** Applies progress to the current view without rebuilding it. */
 function updateLive(run: RunState): void {
   const { title, detail } = stepText(run);
-  if (live.eyebrow) live.eyebrow.textContent = run.status === 'saving' ? 'Saving' : 'Exporting · ' + run.percent + '%';
+  if (live.status) live.status.textContent = run.status === 'saving' ? 'Saving' : 'Exporting · ' + run.percent + '%';
   if (live.title) live.title.textContent = title;
   if (live.detail) {
     live.detail.textContent = detail;

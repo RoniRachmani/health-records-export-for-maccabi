@@ -239,6 +239,23 @@ REST API requests (`/sonline/`) go from the service worker, with the session tok
 | `public/` | Icons, and the privacy policy, terms and third-party notices that ship in the extension |
 | `store/`, `scripts/` | Chrome Web Store images and the pages they're rendered from; build scripts |
 
+### The look
+
+The popup and the two pages that ship with it share one design system: navy headings over white, one bright blue
+for actions and progress, magenta for links, pale-blue cards at a 20px radius, pill buttons, and a soft
+navy-tinted shadow. The register is meant to feel at home next to Maccabi Online rather than foreign to it, while
+staying plainly the extension's own — there is no Maccabi logo or wordmark anywhere, and the header says
+"Unofficial · Not affiliated with Maccabi" on every screen.
+
+The stylesheets ask for Roboto first and fall back to the system face. That is a local lookup only: the extension
+ships no fonts and downloads none.
+
+The tokens live at the top of `src/extension/popup/popup.css`, with `public/pages.css` repeating the ones the privacy
+and terms pages need (`public/` is copied verbatim, so it cannot import them). Both pin `color-scheme: light` —
+there is no dark theme, and pinning it keeps Chrome's auto-dark-mode from repainting controls and scrollbars
+against a light page. Every text colour meets WCAG AA on the surface it sits on. Chrome caps a popup at 600px
+tall, so keep the states that are not disclosures under it; `npm run store-assets` re-renders the store images.
+
 ### Driving a run from the console
 
 The development build adds a bridge content script, so you can run and inspect an export from the Maccabi page's

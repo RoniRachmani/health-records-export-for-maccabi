@@ -110,7 +110,6 @@ try {
     const { targetId } = await send('Target.createTarget', { url: 'about:blank' });
     const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true });
     await send('Emulation.setDeviceMetricsOverride', { width: img.width, height: img.height, deviceScaleFactor: 1, mobile: false }, sessionId);
-    await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'light' }] }, sessionId);
     await send('Page.navigate', { url: base + '/store/src/stage.html?shot=' + img.shot }, sessionId);
     for (let i = 0; ; i++) {
       const { result } = await send('Runtime.evaluate', { expression: 'document.documentElement.dataset.ready || ""', returnByValue: true }, sessionId);

@@ -94,6 +94,15 @@ re-runs. Legacy steps don't get a 401, so `runner.ts` treats "Failed to fetch" i
   is cleared. The session token lives only in `chrome.storage.session` (memory).
 - **Popup**: `popup/model.ts` is pure, unit-tested view logic; `popup.ts` is DOM only. Put anything with a
   decision in it in `model.ts`.
+- **Design system**: navy (`#083f92`) headings, one blue (`#296bed`) for actions and progress, magenta
+  (`#b83b7c`) for links, pale-blue cards at 20px, pill buttons — a register meant to sit comfortably next
+  to Maccabi Online while staying the extension's own. Never add Maccabi's logo, wordmark or any other
+  brand asset. The font stacks ask for `Roboto` first and fall back to the system face — a local lookup
+  only: never ship or fetch a font here. Tokens are at the top of `popup.css`; `public/pages.css` repeats
+  the ones the shipped policy pages need, since `public/` is copied verbatim. There is no dark theme: both
+  files pin `color-scheme: light`, which also keeps Chrome's auto-dark-mode off them, and every text colour
+  must stay at WCAG AA. Chrome caps a popup at 600px tall: keep every non-disclosure state under it
+  (`notice` and open `<details>` may scroll).
 - **Dev bridge**: `__DEV_BRIDGE__` (a Vite `define`) and the `mode === 'development'` branch in
   `manifest.config.ts` keep `background/dev.ts` and the content script out of the store build.
 - File names are `<date>_<id>_<title>`, built with `stem`/`iso`/`safe`/`titleOf` from `core/util.ts`;

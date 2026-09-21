@@ -1,57 +1,53 @@
-/* A neutral look: slate text, thin rules, one blue for the main action and progress.
-   Every text colour meets WCAG AA (4.5:1) on the background it sits on, in both themes. */
+/* The popup's design system: navy headings over white, one bright blue for actions and progress,
+   magenta for links and accents, pale-blue cards at a 20px radius, pill buttons and a soft
+   navy-tinted shadow. The register is chosen so the popup feels at home next to Maccabi Online
+   rather than foreign to it, while staying plainly its own — no logo, no wordmark, and the header
+   says it is unofficial on every screen.
+   Every text colour meets WCAG AA (4.5:1) on the surface it sits on, in both themes. */
+
 :root {
+  /* Surfaces: white page, a pale-blue card fill, a blue wash for tinted areas. */
   --bg: #ffffff;
-  --fg: #2b3446;
-  --heading: #16233b;
-  --muted: #5d6778;
-  --faint: #9aa3b2;
-  --line: #e3e7ee;
-  --line-strong: #cfd6e0;
-  --surface: #f5f7fa;
-  --surface-hover: #eceff4;
-  --primary: #2563c9;
-  --primary-hover: #1d4fa3;
-  --primary-soft: #e8effb;
+  --surface: #fafdff;
+  --surface-2: #f1f9fe;
+  --surface-hover: #e8f3fd;
+  --tint: #e3effd;
+  /* Lines: a soft blue for cards, and a neutral for plain rules. */
+  --line: #e4eaf2;
+  --line-soft: #c4e5f8;
+  /* Text. --heading is the deep navy; --brand-text is that navy used on a tint. */
+  --fg: #24283f;
+  --heading: #083f92;
+  --brand-text: #083f92;
+  --muted: #5b6785;
+  --faint: #9ba8c2;
+  /* Actions: the one blue, used for buttons and progress. */
+  --primary: #296bed;
+  --primary-hover: #1f5bd6;
   --on-primary: #ffffff;
-  --ok: #1a7a48;
-  --ok-dot: #22a060;
-  --warn: #93550a;
-  --warn-rule: #e19a2b;
-  --warn-bg: #fff7ea;
-  --err: #b8263c;
-  --err-rule: #d64057;
-  --err-bg: #fdf1f3;
-  --danger: #c62a41;
-  --danger-hover: #a8213a;
-  --focus: #2563c9;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #151a23;
-    --fg: #d5dae3;
-    --heading: #f2f4f8;
-    --muted: #9ea7b6;
-    --faint: #5f6878;
-    --line: #2a313d;
-    --line-strong: #3b4351;
-    --surface: #1b212b;
-    --surface-hover: #242b37;
-    --primary: #2f6bd6;
-    --primary-hover: #2760c4;
-    --primary-soft: #1f2b40;
-    --ok: #57c794;
-    --ok-dot: #3fb97c;
-    --warn: #f0b560;
-    --warn-rule: #c9831b;
-    --warn-bg: #2a2216;
-    --err: #ff8f9e;
-    --err-rule: #e05467;
-    --err-bg: #2d1a20;
-    --danger: #c43a50;
-    --danger-hover: #ad3045;
-    --focus: #8fb4f5;
-  }
+  /* Magenta, for links and accent marks — never for danger. */
+  --accent: #b83b7c;
+  --accent-hover: #a63370;
+  /* Semantic colours, in the same deep, low-chroma register. */
+  --ok: #0e7c5a;
+  --ok-bg: #e7f6f0;
+  --ok-dot: #12a074;
+  --warn: #8a5a0b;
+  --warn-rule: #d9922a;
+  --warn-bg: #fdf4e4;
+  --err: #c0243b;
+  --err-rule: #d9455b;
+  --err-bg: #fdeef0;
+  --danger: #c0243b;
+  --danger-hover: #a51e32;
+  --focus: #296bed;
+  /* Shape: 20px cards, 999px pills, and a soft navy shadow. */
+  --r-card: 20px;
+  --r-panel: 16px;
+  --r-pill: 999px;
+  --shadow: 0 6px 11px rgb(8 63 146 / 0.04);
+  /* Light only: this also keeps Chrome's auto-dark-mode off the popup. */
+  color-scheme: light;
 }
 * {
   box-sizing: border-box;
@@ -61,46 +57,50 @@ body {
   width: 360px;
   background: var(--bg);
   color: var(--fg);
-  font: 14px/1.45 system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans Hebrew', 'Helvetica Neue', Arial, sans-serif;
+  /* Roboto first: widely installed, legible at small sizes, and it sits naturally beside the
+     Hebrew UI type shown next to it. A local lookup only — no font is shipped or fetched. */
+  font: 400 14px/1.5 Roboto, system-ui, -apple-system, 'Segoe UI', 'Noto Sans Hebrew', 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+/* ---- frame ---- */
 header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px 12px;
+  gap: 11px;
+  padding: 11px 16px 9px;
 }
 header img {
   flex: none;
-  width: 40px;
-  height: 40px;
-  padding: 7px;
-  border-radius: 10px;
-  background: var(--primary-soft);
+  width: 38px;
+  height: 38px;
+  padding: 6px;
+  border-radius: 12px;
+  background: var(--tint);
 }
 h1 {
-  font-size: 15.5px;
+  font-size: 15px;
   line-height: 1.25;
   margin: 0;
-  font-weight: 650;
+  font-weight: 500;
   color: var(--heading);
 }
 .tagline {
   margin: 1px 0 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11.5px;
 }
 main {
-  padding: 2px 16px 18px;
+  padding: 3px 16px 14px;
 }
 footer {
   display: flex;
   align-items: baseline;
   gap: 12px;
   border-top: 1px solid var(--line);
-  padding: 10px 16px 11px;
+  padding: 9px 16px 10px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11.5px;
 }
 footer p {
   margin: 0;
@@ -113,27 +113,30 @@ footer nav {
 }
 footer a,
 .consent a {
-  color: inherit;
+  color: var(--accent);
   text-underline-offset: 2px;
 }
 footer a:hover,
 .consent a:hover {
-  color: var(--heading);
+  color: var(--accent-hover);
 }
 .version {
+  color: var(--faint);
   font-variant-numeric: tabular-nums;
 }
+
+/* ---- text ---- */
 h2 {
-  font-size: 20px;
-  line-height: 1.25;
-  font-weight: 650;
-  letter-spacing: -0.01em;
+  font-size: 21px;
+  line-height: 1.2;
+  font-weight: 500;
   color: var(--heading);
   margin: 0 0 4px;
 }
 h3 {
   font-size: 12.5px;
-  font-weight: 600;
+  font-weight: 500;
+  color: var(--heading);
   margin: 6px 0 2px;
 }
 p {
@@ -144,6 +147,9 @@ p {
 }
 .small {
   font-size: 12.5px;
+}
+.lead {
+  color: var(--fg);
 }
 .visually-hidden {
   position: absolute;
@@ -169,30 +175,37 @@ summary:focus-visible {
   outline-offset: 2px;
 }
 
-/* ---- status line, account, notes ---- */
-.eyebrow {
-  margin: 0 0 4px;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 650;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+/* ---- status pill, account, notes ---- */
+/* Status reads as a pill rather than an uppercase eyebrow. */
+.status {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0 6px;
+  padding: 3px 11px;
+  border-radius: var(--r-pill);
+  background: var(--tint);
+  color: var(--brand-text);
+  font-size: 11.5px;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
-.eyebrow.ok {
+.status.ok {
+  background: var(--ok-bg);
   color: var(--ok);
 }
-.eyebrow.warn {
+.status.warn {
+  background: var(--warn-bg);
   color: var(--warn);
 }
-.eyebrow.err {
+.status.err {
+  background: var(--err-bg);
   color: var(--err);
 }
 .account {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 0 0 16px;
+  margin: 0 0 12px;
   color: var(--fg);
   font-size: 13px;
 }
@@ -205,56 +218,58 @@ summary:focus-visible {
 }
 .account.on .dot {
   background: var(--ok-dot);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok-dot) 22%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok-dot) 20%, transparent);
 }
-.lead {
-  color: var(--fg);
-}
+/* A remark in a soft panel, set apart from the flow. */
 .note {
-  margin: 14px 0 0;
-  padding: 1px 0 1px 11px;
-  border-left: 3px solid var(--line-strong);
+  margin: 13px 0 0;
+  padding: 9px 12px;
+  border-radius: var(--r-panel);
+  background: var(--surface-2);
   color: var(--muted);
   font-size: 12.5px;
   overflow-wrap: anywhere;
 }
 .note strong {
-  color: var(--fg);
-  font-weight: 600;
+  color: var(--heading);
+  font-weight: 500;
 }
+/* Warn and err take the bordered-card treatment, in their own colour. */
 .note.warn,
 .note.err {
-  padding: 9px 12px 9px 11px;
-  border-radius: 0 8px 8px 0;
   color: var(--fg);
+  border: 1px solid color-mix(in srgb, var(--warn-rule) 45%, transparent);
 }
 .note.warn {
-  border-left-color: var(--warn-rule);
   background: var(--warn-bg);
 }
 .note.err {
-  border-left-color: var(--err-rule);
   background: var(--err-bg);
+  border-color: color-mix(in srgb, var(--err-rule) 45%, transparent);
+}
+.note.warn strong,
+.note.err strong {
+  color: var(--fg);
 }
 .note .small {
   margin-top: 4px;
   color: var(--muted);
 }
 
-/* ---- buttons ---- */
+/* ---- buttons: pills ---- */
 button {
   font: inherit;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   min-height: 40px;
-  padding: 0 16px;
-  border-radius: 8px;
-  border: 1px solid var(--line-strong);
+  padding: 0 20px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-soft);
   background: var(--bg);
   color: var(--heading);
   white-space: nowrap;
@@ -263,6 +278,7 @@ button {
 }
 button:not([aria-disabled='true']):hover {
   background: var(--surface-hover);
+  border-color: var(--primary);
 }
 button.primary {
   background: var(--primary);
@@ -284,7 +300,7 @@ button.danger:not([aria-disabled='true']):hover {
 }
 button.block {
   width: 100%;
-  min-height: 44px;
+  min-height: 46px;
   font-size: 15px;
 }
 button.grow {
@@ -292,9 +308,8 @@ button.grow {
 }
 button.small {
   min-height: 30px;
-  padding: 0 12px;
-  font-size: 13px;
-  border-radius: 7px;
+  padding: 0 14px;
+  font-size: 12.5px;
 }
 button[aria-disabled='true'] {
   cursor: progress;
@@ -322,18 +337,31 @@ button[aria-disabled='true']:not(.busy) {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  margin: 16px 0 0;
+  margin: 14px 0 0;
+}
+/* The first-use notice is longer than the 600px Chrome gives a popup, and its text is the
+   thing being agreed to. Rather than cut it, its action stays pinned within reach. */
+.actions.sticky {
+  position: sticky;
+  bottom: 0;
+  padding-bottom: 4px;
+  background: linear-gradient(to bottom, transparent, var(--bg) 14px);
+}
+/* ---- cards ---- */
+.confirm,
+.file-card {
+  border: 1px solid var(--line-soft);
+  background: var(--surface);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow);
 }
 .confirm {
-  border: 1px solid var(--line);
-  background: var(--surface);
-  border-radius: 10px;
-  padding: 12px;
+  padding: 14px;
   margin: 12px 0 0;
 }
 .confirm p {
   margin: 0;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--heading);
 }
 .confirm .actions {
@@ -352,7 +380,7 @@ summary {
   gap: 10px;
   cursor: pointer;
   list-style: none;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--heading);
   border-radius: 4px;
 }
@@ -422,7 +450,7 @@ details.more summary {
   margin-bottom: 6px;
 }
 .points li::marker {
-  color: var(--faint);
+  color: var(--accent);
 }
 .consent {
   margin: 14px 0 0;
@@ -450,17 +478,16 @@ details.more summary {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  color: var(--heading);
+  background: var(--tint);
+  color: var(--brand-text);
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 500;
 }
 
 /* ---- progress ---- */
 .detail {
-  min-height: 1.45em;
-  margin: 0 0 12px;
+  min-height: 1.5em;
+  margin: 0 0 11px;
   color: var(--muted);
   font-size: 13px;
   overflow: hidden;
@@ -468,16 +495,16 @@ details.more summary {
   white-space: nowrap;
 }
 .bar {
-  height: 6px;
-  background: var(--primary-soft);
-  border-radius: 999px;
+  height: 8px;
+  background: var(--tint);
+  border-radius: var(--r-pill);
   overflow: hidden;
 }
 .bar > .fill {
   height: 100%;
-  min-width: 6px;
+  min-width: 8px;
   background: var(--primary);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   transition: width 0.3s;
 }
 .bar.active > .fill {
@@ -500,8 +527,8 @@ details.more summary {
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  min-height: 30px;
-  margin: 10px 0 0;
+  min-height: 28px;
+  margin: 9px 0 0;
 }
 .stats {
   color: var(--muted);
@@ -509,19 +536,17 @@ details.more summary {
   font-variant-numeric: tabular-nums;
 }
 .sections {
-  margin: 14px 0 0;
-  padding-top: 10px;
+  margin: 12px 0 0;
+  padding-top: 9px;
   border-top: 1px solid var(--line);
 }
 .sections-label {
   display: flex;
   justify-content: space-between;
-  margin: 0 0 6px;
+  margin: 0 0 5px;
   color: var(--muted);
-  font-size: 11px;
-  font-weight: 650;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+  font-size: 11.5px;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 .stages {
@@ -532,10 +557,10 @@ details.more summary {
 .stages li {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 1.5px 0;
+  gap: 9px;
+  padding: 0.5px 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12.5px;
 }
 .stages li::before {
   content: '';
@@ -544,10 +569,10 @@ details.more summary {
   place-items: center;
   width: 15px;
   height: 15px;
-  border: 1.5px solid var(--line-strong);
+  border: 1.5px solid var(--line-soft);
   border-radius: 50%;
   font-size: 9px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
 }
 .stages li.done {
@@ -561,7 +586,7 @@ details.more summary {
 }
 .stages li.current {
   color: var(--heading);
-  font-weight: 600;
+  font-weight: 500;
 }
 .stages li.current::before {
   border-color: var(--primary);
@@ -580,20 +605,17 @@ details.more summary {
   align-items: center;
   gap: 12px;
   margin: 12px 0 0;
-  padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--surface);
+  padding: 14px;
 }
 .file-icon {
   flex: none;
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 8px;
-  background: var(--primary-soft);
-  color: var(--primary);
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--tint);
+  color: var(--brand-text);
 }
 .file-card > div {
   min-width: 0;
@@ -601,7 +623,7 @@ details.more summary {
 .filename {
   display: block;
   color: var(--heading);
-  font-weight: 600;
+  font-weight: 500;
   overflow-wrap: anywhere;
 }
 .file-card .small {
@@ -609,9 +631,9 @@ details.more summary {
 }
 details.problems {
   margin: 12px 0 0;
-  padding: 10px 12px;
-  border: 1px solid color-mix(in srgb, var(--warn-rule) 45%, transparent);
-  border-radius: 10px;
+  padding: 11px 14px;
+  border: 1px solid color-mix(in srgb, var(--warn-rule) 40%, transparent);
+  border-radius: var(--r-panel);
   background: var(--warn-bg);
 }
 details.problems summary {
