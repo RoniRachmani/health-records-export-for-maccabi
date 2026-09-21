@@ -251,7 +251,7 @@ REST API requests (`/sonline/`) go from the service worker, with the session tok
 | `docs/` | Endpoint map, privacy policy, terms, store listing |
 | `public/` | Icons, and the privacy policy, terms and third-party notices that ship in the extension |
 | `store/`, `scripts/` | Chrome Web Store images and the pages they're rendered from; build scripts |
-| `.github/` | The CI workflow that runs the gate, the issue forms, and Dependabot |
+| `.github/` | The CI workflow that runs the gate, the issue forms, the security policy, and Dependabot |
 
 ### The look
 
