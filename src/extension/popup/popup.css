@@ -124,6 +124,19 @@ footer a:hover,
   color: var(--faint);
   font-variant-numeric: tabular-nums;
 }
+/* The repository link: the GitHub mark, muted until hovered. */
+.gh {
+  align-self: center;
+  color: var(--faint);
+  line-height: 0;
+}
+.gh:hover {
+  color: var(--accent);
+}
+.gh svg {
+  display: block;
+  fill: currentColor;
+}
 
 /* ---- text ---- */
 h2 {
