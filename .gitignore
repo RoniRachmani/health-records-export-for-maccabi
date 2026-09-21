@@ -9,6 +9,10 @@ coverage/
 .DS_Store
 .env*
 
+# The extension manifest is generated from manifest.config.ts into the build
+# folders; one at the root is a stray.
+/manifest.json
+
 # Chrome's "Pack extension" writes the package and its private signing key
 # next to the folder it packs, which is this repo for dist/.
 *.crx
@@ -16,7 +20,6 @@ coverage/
 
 # Never commit real exports or anything taken from a real account.
 maccabi-export-*/
-manifest.json
 *.token
 *.pdf
 *.raw.json
