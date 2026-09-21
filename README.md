@@ -13,10 +13,12 @@ to your computer as one ZIP file: every PDF the site offers, plus the site's own
 - **Thorough.** Test results, visit summaries, prescriptions and purchases, referrals, vaccinations, letters, doctor
   inquiries and saved documents, plus a freshly ordered copy of your full medical file. Some things
   [aren't included](#not-included).
-- **Private.** Talks only to `online.maccabi4u.co.il`. No servers, no analytics, no remote code. Never sees your password.
+- **Private.** Talks only to `online.maccabi4u.co.il`. No servers, no analytics, no remote code. Never sees your
+  password.
 - **Raw.** One JSON file per record, exactly as the site sent it, named so you can read it: `<date>_<id>_<title>`,
   with a `README.md` in the ZIP explaining the lot.
-- **Resumable.** If your session ends partway through, log in again and press **Resume**. Files collected so far are kept.
+- **Resumable.** If your session ends partway through, log in again and press **Resume**. Files collected so far
+  are kept.
 
 [Install](#install) · [Export your records](#export-your-records) · [What's in the ZIP](#whats-in-the-zip) ·
 [Privacy and safety](#privacy-and-safety) · [Development](#development)
@@ -26,7 +28,8 @@ to your computer as one ZIP file: every PDF the site offers, plus the site's own
 You need Chrome 116 or newer.
 
 **[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp)**, and
-Chrome keeps it up to date. However you install it, the build isn't minified, so you can read exactly the code that runs.
+Chrome keeps it up to date. However you install it, the build isn't minified, so you can read exactly the code that
+runs.
 
 ### Load it unpacked instead
 
@@ -125,12 +128,12 @@ The date and id come from the record; the title is a display string the site ret
 out when a record has none.
 
 > Hebrew names are flagged UTF-8 in the ZIP, so Finder, Windows Explorer and 7-Zip read them correctly. macOS's
-> bundled `unzip` command is Info-ZIP 6.00, which predates that flag and garbles them - use `ditto -x -k <zip> <dir>`
+> bundled `unzip` command is Info-ZIP 6.00, which predates that flag and garbles them — use `ditto -x -k <zip> <dir>`
 > there instead.
 
 `README.md` is written for whoever reads the export next, an AI assistant included. It points at your full medical
-file PDF as the one document to start from, then says what the export doesn't contain - no DICOM images, no visit
-data over 12 months - so a reader doesn't take an omission for an absence in your history. It then goes folder by
+file PDF as the one document to start from, then says what the export doesn't contain — no DICOM images, no visit
+data over 12 months — so a reader doesn't take an omission for an absence in your history. It then goes folder by
 folder through the fields, including the ones that mislead: a lab `result` of 0 that is really a text answer,
 placeholder dates, and fields that change on every request.
 
@@ -148,7 +151,7 @@ file paths or `endpoint` values:
 
 Two exceptions: `medications-and-prescriptions/purchased-history.html` is the site's purchase table as sent
 (windows-1255; the site has no JSON version of it), and the two report files leave out the base64 PDF, which is saved
-in `files/` instead - those say so in their own `omitted` field.
+in `files/` instead — those say so in their own `omitted` field.
 
 [docs/endpoints.json](docs/endpoints.json) maps every request to the file it produces.
 
@@ -166,12 +169,13 @@ in `files/` instead - those say so in their own `omitted` field.
   The session token is kept in Chrome's in-memory session storage and never written to disk.
 - Collected files are staged in the extension's IndexedDB and deleted as soon as the ZIP is saved, or when you stop
   the export.
-- Apart from the medical file order, it only reads. Requests go one at a time, 300 ms apart -- a few hundred over an
-  export, more for a long history -- and all of them are listed in [docs/endpoints.json](docs/endpoints.json). It never
+- Apart from the medical file order, it only reads. Requests go one at a time, 300 ms apart — a few hundred over an
+  export, more for a long history — and all of them are listed in [docs/endpoints.json](docs/endpoints.json). It never
   calls anything that changes or deletes data, marks items as read, returns session credentials, or touches payment
   details.
-- If Maccabi answers 429, the extension waits exactly as long as the response asks and stops the export rather than
-  keep knocking. Files collected so far are kept, so you can try again later.
+- If Maccabi answers 429, the extension waits exactly as long as the response asks and tries once more. If Maccabi
+  asks again, or asks for a wait longer than two minutes, the export stops rather than keep knocking. Files collected
+  so far are kept, so you can try again later.
 
 > [!WARNING]
 > The ZIP isn't encrypted. Anyone who can open it can read your health information. Keep it somewhere safe, and take
@@ -242,6 +246,7 @@ REST API requests (`/sonline/`) go from the service worker, with the session tok
 | `src/extension/offscreen/` | HTML parsing and ZIP building, which the service worker can't do |
 | `src/extension/shared/` | Run state and plan, IndexedDB staging |
 | `src/extension/popup/` | The popup |
+| `src/extension/dev/` | The bridge content script, injected by the development build only |
 | `test/` | Vitest tests against a fake Maccabi Online (`fakes.ts`) |
 | `docs/` | Endpoint map, privacy policy, terms, store listing |
 | `public/` | Icons, and the privacy policy, terms and third-party notices that ship in the extension |
