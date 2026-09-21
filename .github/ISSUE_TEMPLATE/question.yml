@@ -1,0 +1,26 @@
+name: Question or suggestion
+description: Ask how something works, or suggest a change
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Issues here are public.** Never paste health information, your ID number, a member id, or files from
+        an export.
+
+        Reading first: [what's in the ZIP](https://github.com/RoniRachmani/health-records-export-for-maccabi#whats-in-the-zip)
+        describes every folder and field, and [what isn't included](https://github.com/RoniRachmani/health-records-export-for-maccabi#not-included)
+        says what the site doesn't offer.
+  - type: textarea
+    id: body
+    attributes:
+      label: What's on your mind?
+    validations:
+      required: true
+  - type: checkboxes
+    id: clean
+    attributes:
+      label: Before you post
+      options:
+        - label: This post has no health information, ID number or export files in it.
+          required: true

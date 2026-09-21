@@ -25,13 +25,19 @@ to your computer as one ZIP file: every PDF the site offers, plus the site's own
 
 You need Chrome 116 or newer.
 
+**[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp)**, and
+Chrome keeps it up to date. However you install it, the build isn't minified, so you can read exactly the code that runs.
+
+### Load it unpacked instead
+
 1. Download `health-records-export-for-maccabi-<version>.zip` from the
    [latest release](https://github.com/RoniRachmani/health-records-export-for-maccabi/releases/latest) and unzip it.
 2. Open `chrome://extensions` and turn on **Developer mode**.
 3. Click **Load unpacked** and select the unzipped folder, the one with `manifest.json` in it. Keep the folder: Chrome
    loads the extension from it.
 
-The build isn't minified, so you can read exactly the code that runs.
+Chrome doesn't update an unpacked extension. To move to a newer one, download it again over the same folder and press
+the reload arrow on `chrome://extensions`. Finish or stop an export first: a reload ends it.
 
 ### Build from source
 

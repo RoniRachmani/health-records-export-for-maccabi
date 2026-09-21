@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security or privacy vulnerability
+    url: https://github.com/RoniRachmani/health-records-export-for-maccabi/security/advisories/new
+    about: Report it privately here, never as a public issue.
+  - name: Privacy Policy and Terms of Use
+    url: https://github.com/RoniRachmani/health-records-export-for-maccabi/blob/main/docs/privacy.md
+    about: What the extension reads, where it goes, and what it never touches.
