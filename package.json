@@ -3,6 +3,9 @@
   "version": "0.2.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "description": "Chrome extension that exports your Maccabi online medical records (raw JSON + PDFs) as one ZIP. Unofficial.",
   "scripts": {
     "dev": "vite build --watch --mode development",
