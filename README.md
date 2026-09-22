@@ -7,7 +7,7 @@ to your computer as one ZIP file: every PDF the site offers, plus the site's own
 > Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare Services.
 
 <p align="center">
-  <img src="store/screenshot-1-start.png" alt="The extension's popup on Maccabi Online, ready to start an export" width="720">
+  <img src="docs/screenshot-running.png" alt="The extension's popup on Maccabi Online, partway through an export" width="720">
 </p>
 
 <p align="center">

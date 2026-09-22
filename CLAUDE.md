@@ -132,7 +132,11 @@ re-runs. Legacy steps don't get a 401, so `runner.ts` treats "Failed to fetch" i
 ## Rules this repo enforces
 
 - **Never commit real data.** No responses, exports, PDFs or anything from a real account; fixtures in
-  `test/fakes.ts` are synthetic. `.gitignore` blocks `*.pdf`, `*.raw.json`, `maccabi-export-*/`.
+  `test/fakes.ts` are synthetic. `.gitignore` blocks `*.pdf`, `*.raw.json`, `maccabi-export-*/`. The one
+  picture of a real session is the README's `docs/screenshot-running.png`, and it passes that bar only because
+  nothing in it identifies anyone: no name, no member id, no record content, an empty content area. Hold a
+  replacement to the same check, and strip the file's metadata. Everything under `store/` stays on the
+  placeholder page — the store's screenshots must not carry Maccabi's site or brand.
 - **Read-only, except one call.** The medical-file order (`core/sections/letters.ts` `placeOrder`) is the
   only request that changes anything. Don't add another, and don't call anything that marks items read,
   returns credentials or touches payments. Requests are paced `PACE_MS` (300 ms) apart, one at a time.
