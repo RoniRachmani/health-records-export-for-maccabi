@@ -8,7 +8,8 @@ the extension changes, update this file along with it (see [Keeping it true](#ke
 1. Raise `version` in `package.json`. The store rejects a package whose version isn't higher than the published one.
 2. `npm test` and `npm run typecheck`.
 3. If the popup changed, run `npm run store-assets` and look at the images in `store/` before uploading them.
-   Name shots to render only some of them, e.g. `npm run store-assets -- promo marquee`.
+   Name shots to render only some of them, e.g. `npm run store-assets -- promo marquee`. The promo video shows
+   the popup too: re-render it with `npm run store-video` and re-upload it to YouTube (see [Promo video](#promo-video)).
 4. `npm run package`, which builds `dist/` and writes `release/health-records-export-for-maccabi-<version>.zip`.
    Upload that file on the **Package** tab. The script refuses to package a development build.
 
@@ -85,10 +86,29 @@ Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare 
 | Screenshot 5 | `store/screenshot-5-privacy.png` | "Private by design", with the popup's list of what's included |
 | Small promo tile (440×280) | `store/promo-small-440x280.png` | The icon's artwork on a blue background, with no text |
 | Marquee promo tile (1400×560) | `store/promo-marquee-1400x560.png` | The same artwork beside the name and one line of text. Optional: the store uses it only when it features the extension |
-| Global promo video | None | Optional |
+| Global promo video | A YouTube link | Optional. See [Promo video](#promo-video) below |
 
 The screenshots are 1280×800 PNG files with no transparency. They show the real popup in made-up states over a
 placeholder page, never a real account. The text around the popup comes from `SHOTS` in `store/src/stage.ts`.
+
+### Promo video
+
+The store's video field takes a **YouTube link**, not a file. `npm run store-video` renders the video to
+`store/promo-video.mp4` (1920×1080, 30 fps, 49 seconds, silent); upload that to YouTube and paste the link.
+
+It is not committed — it is rebuilt from `store/src/video.ts`, which draws it a frame at a time in headless
+Chrome. Like the screenshots, it shows the real popup fed made-up states (`store/src/mock-chrome.ts`), driven
+through a whole export by run states built from the real `PLAN` and `WEIGHTS`, so the bar, the step names and the
+section list move as they do in an export. Nothing in it comes from a real account.
+
+What it shows, in order: the name and what the extension does · the two clicks that start an export · the export
+running, sped up, with the progress badge on the toolbar icon · the finished ZIP in the Downloads folder · the
+folders inside the ZIP · "Private by design" · the closing card with the repository's address. The disclaimer is
+on the first and last cards, and the popup's own "Unofficial · Not affiliated with Maccabi" is visible throughout.
+
+On YouTube: upload it as **Unlisted** or Public (the store cannot show a private video), give it the extension's
+name, and turn off ads and end screens so nothing is suggested over the last frame. There is no sound, so no
+music licence is involved.
 
 ### Additional fields
 
@@ -226,7 +246,7 @@ of this page:
 
 | Change | Also update |
 |---|---|
-| Popup layout or wording | Run `npm run store-assets`. Check the description and the test instructions. |
+| Popup layout or wording | Run `npm run store-assets` and `npm run store-video`. Check the description and the test instructions. |
 | A section is added, renamed or dropped | Description list, `FOLDERS` in `store/src/stage.ts`, README |
 | A permission is added or removed | Permission justifications here, the manifest, `docs/privacy.md`, `public/privacy.html`, README |
 | A new kind of data or request | Data usage here, the privacy policy, `docs/endpoints.json` |

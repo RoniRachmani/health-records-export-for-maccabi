@@ -18,6 +18,8 @@ npm run build                     # typecheck + store build into dist/
 npm run package                   # build + release/<name>-<version>.zip (refuses a dev build)
 npm run store-assets              # re-render store/ images (needs Chrome; CHROME_PATH)
 npm run store-assets -- marquee   # just one, by shot name
+npm run store-video               # re-render store/promo-video.mp4 (not committed; ffmpeg or macOS)
+npm run store-video -- 8 12       # just those seconds of it, while working on a scene
 npm run icons                     # public/icons/ + store/icon-128.png
 ```
 
@@ -106,11 +108,19 @@ re-runs. Legacy steps don't get a 401, so `runner.ts` treats "Failed to fetch" i
   files pin `color-scheme: light`, which also keeps Chrome's auto-dark-mode off them, and every text colour
   must stay at WCAG AA. Chrome caps a popup at 600px tall: keep every non-disclosure state under it
   (`notice` and open `<details>` may scroll).
+- **Store assets**: `store/src/stage.ts` draws the images (one layout per `?shot=`), `store/src/video.ts` draws the
+  promo video a frame at a time (`window.video.at(n)`, nothing animates by itself, so the render is the same
+  everywhere). Both are built around the **real popup** in an iframe, fed made-up states by `mock-chrome.ts`;
+  the video drives a whole run through it with `demoRun`, which fires the popup's own `storage.onChanged`
+  listener with states built from `PLAN` and `WEIGHTS`. What both draw lives in `store/src/parts.ts` and
+  `parts.css`; `scripts/stage.mjs` builds, serves and photographs them in headless Chrome. The video is encoded
+  by `ffmpeg` if it is on `PATH`, else by `scripts/encode-mp4.swift` (macOS); the MP4 is gitignored, because the
+  store's video field takes a YouTube link.
 - **The mark** is a folder with a download arrow, drawn in Maccabi Online's own illustration register:
   a navy (`#083f92`) outline of even weight with round joins, and a pale-pink (`#f1c1cd`) echo of that
   outline offset up and left, so it reads as slightly off-register print. The folder is filled white so
   the navy survives a dark Chrome toolbar. Its geometry lives twice — as a rounded polygon in
-  `scripts/make-icons.mjs` and as `MARK_PATH` in `store/src/stage.ts` — so change both together. 16 and
+  `scripts/make-icons.mjs` and as `MARK_PATH` in `store/src/parts.ts` — so change both together. 16 and
   32px have hand-tuned layouts in `PIXEL`, on the pixel grid; at 16px the arrow is a solid staircase,
   because a 1px chevron there just makes a cross.
 - **Dev bridge**: `__DEV_BRIDGE__` (a Vite `define`) and the `mode === 'development'` branch in
@@ -134,5 +144,6 @@ re-runs. Legacy steps don't get a 401, so `runner.ts` treats "Failed to fetch" i
   in `shared/state.ts`, which makes the popup ask everyone to accept again.
 - **Keep `public/third-party-notices.txt` current** when a runtime dependency changes (only `fflate`
   today, plus Vite's module preload polyfill).
-- **Re-run `npm run store-assets`** when the popup's appearance changes.
+- **Re-run `npm run store-assets`** when the popup's appearance changes, and `npm run store-video` if the video's
+  own copy or the popup states it shows go stale; a re-rendered video has to be re-uploaded to YouTube.
 - Builds are deliberately **not minified** so reviewers and users can read what ships.

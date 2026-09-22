@@ -1,0 +1,210 @@
+/* What the store images and the promo video both paint: the page's base, the fake browser
+   window and its toolbar, the placeholder page behind the popup, and the ZIP's file list.
+   Only how they look — each page's own stylesheet places them. */
+
+html,
+body {
+  margin: 0;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  font-family: 'Heebo Variable', Heebo, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-weight: 450;
+}
+
+/* ---- a window: the browser, or a folder of files ---- */
+.window {
+  overflow: hidden;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #24283f;
+  box-shadow: 0 30px 80px rgba(5, 38, 88, 0.45);
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 48px;
+  padding: 0 16px;
+  background: #f1f3f4;
+  border-bottom: 1px solid #e5e7eb;
+}
+.dots {
+  display: flex;
+  gap: 7px;
+}
+.dots i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ff5f57;
+}
+.dots i:nth-child(2) {
+  background: #febc2e;
+}
+.dots i:nth-child(3) {
+  background: #28c840;
+}
+.address {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 15px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 13.5px;
+}
+.address svg {
+  display: block;
+}
+.ext {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #dde2e6;
+}
+.ext img {
+  width: 18px;
+  height: 18px;
+}
+.badge {
+  position: absolute;
+  right: -7px;
+  bottom: -3px;
+  min-width: 16px;
+  height: 15px;
+  padding: 0 4px;
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 10px;
+  line-height: 15px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ---- a generic page behind the popup: no real site ---- */
+.page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 24px;
+  border-bottom: 1px solid #eef0f2;
+}
+.logo-block {
+  width: 110px;
+  height: 22px;
+  border-radius: 6px;
+  background: #e5e7eb;
+}
+.nav {
+  display: flex;
+  gap: 14px;
+}
+.nav i,
+.side i {
+  display: block;
+  width: 56px;
+  height: 10px;
+  border-radius: 5px;
+  background: #eceff1;
+}
+.page-body {
+  display: flex;
+  gap: 20px;
+  padding: 22px 24px;
+}
+.side {
+  width: 150px;
+}
+.side i {
+  width: auto;
+  height: 12px;
+  margin-bottom: 16px;
+}
+.cards {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.card {
+  height: 150px;
+  padding: 16px;
+  border: 1px solid #eef0f2;
+  border-radius: 10px;
+}
+.line {
+  height: 10px;
+  margin-bottom: 12px;
+  border-radius: 5px;
+  background: #eef0f2;
+}
+.line.strong {
+  width: 55%;
+  height: 12px;
+  background: #e2e8f0;
+}
+.line.short {
+  width: 40%;
+}
+
+/* ---- the real popup, in an iframe ---- */
+iframe.popup {
+  position: absolute;
+  border: 0;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  transform-origin: top right;
+}
+
+/* ---- the ZIP's contents ---- */
+.files-title {
+  flex: 1;
+  margin-right: 50px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #24283f;
+}
+.files-list {
+  padding: 8px 0;
+}
+.file-row {
+  display: grid;
+  grid-template-columns: 24px 196px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  /* Tuned so every folder in FOLDERS fits inside .window, which clips. */
+  padding: 8px 22px;
+  border-bottom: 1px solid #f1f3f4;
+  font-size: 14px;
+}
+.folder svg {
+  display: block;
+}
+.file-name {
+  font-weight: 600;
+  color: #083f92;
+}
+.file-what {
+  color: #72758c;
+}
+.file-kinds {
+  padding: 3px 9px;
+  border: 1px solid #c4e5f8;
+  border-radius: 999px;
+  background: #f1f9fe;
+  color: #083f92;
+  font-size: 12px;
+  white-space: nowrap;
+}

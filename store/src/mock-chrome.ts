@@ -1,4 +1,4 @@
-/* Store images only: stands in for the extension APIs the real popup uses, so
+/* Store images and the promo video only: stands in for the extension APIs the real popup uses, so
    it renders a made-up state (?state=notice|ready|login|running|paused|error|done|problems). No real data. */
 import pkg from '../../package.json';
 import { PLAN, type RunState, type StateReply } from '../../src/extension/shared/state';
@@ -76,11 +76,21 @@ const STATES: Record<string, Omit<StateReply, 'noticeAccepted'> & { noticeAccept
 
 const state: StateReply = { noticeAccepted: true, ...STATES[new URLSearchParams(location.search).get('state') || 'ready'] };
 
+type Changed = (changes: Record<string, { newValue?: unknown }>, area: string) => void;
+let onChanged: Changed | null = null;
+
 (globalThis as unknown as { chrome: unknown }).chrome = {
   runtime: {
     getManifest: () => ({ version: pkg.version }),
     sendMessage: async (req: { type: string }) => (req.type === 'getState' ? state : { ok: true }),
   },
   tabs: { query: async () => [{ id: 1 }] },
-  storage: { onChanged: { addListener: () => undefined } },
+  storage: { onChanged: { addListener: (fn: Changed) => (onChanged = fn) } },
+};
+
+/* The promo video (store/src/video.ts) plays a whole export in this popup: from the parent frame it
+   pushes one run state per video frame, exactly as the background writes them, and the popup updates
+   itself. Passing null ends the run, which sends the popup back to the state above. */
+(globalThis as unknown as { demoRun: (run: RunState | null) => void }).demoRun = (run) => {
+  onChanged?.({ run: { newValue: run ?? undefined } }, 'local');
 };

@@ -1,0 +1,300 @@
+/* The promo video's stage: 1920x1080, one frame at a time (video.ts drives it, and
+   scripts/store-video.mjs photographs it). Same register as the store images — navy ground,
+   one blue, the pale-pink echo on the mark — at the size a video asks for. */
+@import './parts.css';
+
+body.video {
+  position: relative;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  color: #ffffff;
+  /* The marquee tile's glows, so a still from the video sits beside it as the same thing. */
+  background:
+    radial-gradient(620px 620px at 1560px 180px, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(820px 820px at 1420px 980px, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 70%),
+    linear-gradient(135deg, #052658 0%, #083f92 55%, #296bed 100%);
+}
+
+/* Every scene sits in the same place and is faded in and out by video.ts. */
+.scene {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+/* ---- the name, as on the store images ---- */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 20px 7px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  font-size: 20px;
+  font-weight: 600;
+}
+.eyebrow img {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: #ffffff;
+}
+
+/* ---- the opening and closing cards ---- */
+/* Not .card: parts.css already has one, in the page behind the popup. */
+.slate {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  text-align: center;
+}
+.slate .art svg {
+  display: block;
+}
+.slate h1 {
+  max-width: 1280px;
+  margin: 38px 0 0;
+  font-size: 82px;
+  line-height: 1.08;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.slate .sub {
+  max-width: 1120px;
+  margin: 26px 0 0;
+  font-size: 30px;
+  line-height: 1.45;
+  opacity: 0.92;
+}
+.slate .eyebrow {
+  margin-top: 40px;
+}
+.slate .link {
+  margin: 30px 0 0;
+  font-size: 26px;
+  color: #f1c1cd;
+}
+
+/* ---- the running scenes: words on the left, a window on the right ---- */
+.caption {
+  position: absolute;
+  left: 110px;
+  top: 100px;
+  width: 700px;
+  height: 880px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.caption .eyebrow {
+  align-self: flex-start;
+  margin-bottom: 34px;
+}
+.caption h2 {
+  margin: 0 0 22px;
+  font-size: 54px;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.caption p {
+  margin: 0;
+  font-size: 25px;
+  line-height: 1.5;
+  opacity: 0.92;
+}
+.chip {
+  align-self: flex-start;
+  margin-top: 30px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  font-size: 19px;
+  opacity: 0.86;
+}
+
+/* ---- the window, in the same rectangle from the first click to the last folder ---- */
+.window {
+  position: absolute;
+  left: 880px;
+  top: 100px;
+  width: 940px;
+  height: 880px;
+  opacity: 0;
+}
+.toolbar {
+  gap: 18px;
+  height: 58px;
+  padding: 0 20px;
+}
+.dots i {
+  width: 14px;
+  height: 14px;
+}
+.address {
+  height: 36px;
+  border-radius: 18px;
+  font-size: 16px;
+}
+.ext {
+  width: 40px;
+  height: 40px;
+}
+.ext img {
+  width: 23px;
+  height: 23px;
+}
+.badge {
+  right: -9px;
+  bottom: -4px;
+  min-width: 20px;
+  height: 19px;
+  padding: 0 5px;
+  border-radius: 5px;
+  font-size: 12px;
+  line-height: 19px;
+}
+/* The ring that answers the click on the toolbar icon; video.ts sets the two properties. */
+.ext::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 3px solid #296bed;
+  opacity: var(--ring-o, 0);
+  transform: scale(var(--ring-s, 1));
+}
+iframe.popup {
+  top: 66px;
+  right: 18px;
+  width: 360px;
+  opacity: 0;
+}
+
+.files-title {
+  font-size: 17px;
+}
+.file-row {
+  grid-template-columns: 30px 300px 1fr auto;
+  gap: 16px;
+  padding: 13px 30px;
+  font-size: 18px;
+}
+.file-row .folder svg {
+  width: 30px;
+  height: 25px;
+}
+.file-kinds {
+  padding: 4px 12px;
+  font-size: 15px;
+}
+
+/* The saved ZIP, as the browser announces it. It sits at the window's other corner, clear of
+   the popup, which is drawn over the page. */
+.download {
+  opacity: 0;
+  position: absolute;
+  left: 22px;
+  bottom: 22px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 400px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #24283f;
+  box-shadow: 0 14px 44px rgba(5, 38, 88, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.07);
+}
+.download .zip {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #e3effd;
+  flex: none;
+}
+.download strong {
+  display: block;
+  font-size: 16px;
+  color: #083f92;
+}
+.download span {
+  font-size: 14px;
+  color: #72758c;
+}
+
+/* ---- the pointer ---- */
+.cursor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  filter: drop-shadow(0 3px 6px rgba(5, 38, 88, 0.5));
+  opacity: 0;
+}
+.cursor svg {
+  display: block;
+}
+.ripple {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 88px;
+  height: 88px;
+  margin: -44px 0 0 -44px;
+  border-radius: 50%;
+  border: 3px solid #ffffff;
+  opacity: 0;
+}
+
+/* ---- private by design ---- */
+.privacy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.privacy h2 {
+  margin: 0 0 50px;
+  font-size: 68px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.privacy ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+.privacy li {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 31px;
+}
+.privacy .check svg {
+  display: block;
+  width: 34px;
+  height: 34px;
+}
+
+.disclaimer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 52px;
+  margin: 0;
+  text-align: center;
+  font-size: 19px;
+  opacity: 0.72;
+}

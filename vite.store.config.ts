@@ -1,6 +1,6 @@
 import { defineConfig, type Plugin } from 'vite';
 
-/** Loads the stand-in extension APIs before the real popup script (store images only). */
+/** Loads the stand-in extension APIs before the real popup script (store assets only). */
 function mockChrome(): Plugin {
   return {
     name: 'store-mock-chrome',
@@ -14,7 +14,7 @@ function mockChrome(): Plugin {
   };
 }
 
-// Built and captured by scripts/store-assets.mjs.
+// Built and captured by scripts/store-assets.mjs (the images) and scripts/store-video.mjs (the video).
 export default defineConfig({
   plugins: [mockChrome()],
   define: {
@@ -28,6 +28,7 @@ export default defineConfig({
       input: {
         popup: 'src/extension/popup/popup.html',
         stage: 'store/src/stage.html',
+        video: 'store/src/video.html',
       },
     },
   },

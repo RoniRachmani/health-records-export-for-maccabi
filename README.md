@@ -301,11 +301,20 @@ Replies carry statuses, sizes and counts, never record contents. None of this is
 ```sh
 npm run package        # release/health-records-export-for-maccabi-<version>.zip for the Chrome Web Store and GitHub release
 npm run store-assets   # store/ screenshots and promo tiles (needs Chrome, Chromium or Edge; set CHROME_PATH if not found)
+npm run store-video    # store/promo-video.mp4, the promo video (same browser; ffmpeg if you have it)
 npm run icons          # public/icons/ and store/icon-128.png
 ```
 
-`package` builds `dist/` first, and refuses a development build. The store images show the real popup with made-up
-states. [docs/store-listing.md](docs/store-listing.md) has everything to fill in on the store dashboard.
+`package` builds `dist/` first, and refuses a development build. The store images and the video show the real
+popup with made-up states. [docs/store-listing.md](docs/store-listing.md) has everything to fill in on the store
+dashboard.
+
+The video is drawn frame by frame in the same headless browser (`store/src/video.ts`), so nothing depends on the
+speed of the machine rendering it: the export it plays is the real popup, driven through a whole run by states
+built from the real plan and its weights. It is encoded with `ffmpeg` when that is on `PATH`, and otherwise, on
+macOS, with `scripts/encode-mp4.swift`, compiled on the spot. Give two times in seconds to render one part of it
+while working on it, e.g. `npm run store-video -- 8 12`. The MP4 is not committed — the store's video field takes
+a YouTube link, so upload it there and paste the link on the dashboard.
 
 ### Ground rules
 

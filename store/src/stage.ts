@@ -2,6 +2,7 @@
    which runs in an iframe with a made-up state (mock-chrome.ts). The page sets
    <html data-ready="1"> when it has finished rendering, for scripts/store-assets.mjs. */
 import '@fontsource-variable/heebo';
+import { CHECK, LOCK, MARK, dots, fileRows, h, img, pageSkeleton, paper, svg } from './parts';
 
 interface Shot {
   title: string;
@@ -49,7 +50,7 @@ const SHOTS: Record<string, Shot> = {
     badge: { text: '✓', color: '#1a7a48' },
   },
   contents: {
-    title: 'Every record, every\u00a0PDF',
+    title: 'Every record, every PDF',
     text: 'One folder per part of Maccabi Online. JSON files are the site’s own responses, exactly as sent.',
     points: ['Open formats: JSON and PDF', 'Opens offline, without any account', 'Same layout every time, easy to compare'],
   },
@@ -66,68 +67,13 @@ const SHOTS: Record<string, Shot> = {
   },
 };
 
-const FOLDERS: [string, string, string][] = [
-  ['profile', 'Member details and entitlements', 'JSON'],
-  ['my-doctor', 'Assigned doctors and eligibilities', 'JSON'],
-  ['test-results', 'Tests, lab histories and result PDFs', 'JSON · PDF'],
-  ['visit-summaries', 'Visits of the last 12 months', 'JSON · PDF'],
-  ['medications-and-prescriptions', 'Prescriptions, purchases and purchase report', 'JSON · PDF'],
-  ['referrals', 'Referrals and their PDFs', 'JSON · PDF'],
-  ['approvals', 'Approvals and their PDFs', 'JSON · PDF'],
-  ['info-pages', 'Information pages from your visits', 'JSON · PDF'],
-  ['vaccinations', 'Vaccinations and vaccination booklet', 'JSON · PDF'],
-  ['letters', 'Letters and their PDFs', 'JSON · PDF'],
-  ['communication-with-doctor', 'Inquiries to doctors and attached forms', 'JSON · PDF'],
-  ['uploads', 'Documents you uploaded', 'JSON · files'],
-];
-
-type Child = Node | string | null | undefined | false;
-function h(tag: string, cls = '', ...children: Child[]): HTMLElement {
-  const e = document.createElement(tag);
-  if (cls) e.className = cls;
-  for (const c of children) if (c) e.append(c);
-  return e;
-}
-
-function svg(markup: string, cls = ''): HTMLElement {
-  const span = h('span', cls);
-  span.innerHTML = markup;
-  return span;
-}
-
-const CHECK = '<svg viewBox="0 0 20 20" width="20" height="20"><circle cx="10" cy="10" r="10" fill="#ffffff"/><path d="M6 10.5l2.6 2.6L14.2 7.5" fill="none" stroke="#083f92" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-const LOCK = '<svg viewBox="0 0 16 16" width="13" height="13"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="#72758c"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="#72758c" stroke-width="1.6"/></svg>';
-const DOC = '<svg viewBox="0 0 24 20" width="24" height="20"><path d="M5 0h10l5 5v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2z" fill="#296bed"/><path d="M15 0v3a2 2 0 0 0 2 2h3z" fill="#c4e5f8"/><path d="M7 10h10M7 13h10M7 16h6" stroke="#ffffff" stroke-width="1.4" stroke-linecap="round"/></svg>';
-const FOLDER = '<svg viewBox="0 0 24 20" width="24" height="20"><path d="M1 3a2 2 0 0 1 2-2h6l2 2.5h10a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2z" fill="#c4e5f8"/><path d="M1 7h22v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2z" fill="#296bed"/></svg>';
-
-function dots(): HTMLElement {
-  return h('span', 'dots', h('i'), h('i'), h('i'));
-}
-
 function copy(shot: Shot): HTMLElement {
-  const icon = h('img') as HTMLImageElement;
-  icon.src = '/icons/icon-32.png';
   return h('section', 'copy',
-    h('div', 'eyebrow', icon, 'Health Records Export for Maccabi'),
+    h('div', 'eyebrow', img('/icons/icon-32.png'), 'Health Records Export for Maccabi'),
     h('h1', '', shot.title),
     h('p', 'lead', shot.text),
     h('ul', '', ...shot.points.map((p) => h('li', '', svg(CHECK, 'check'), h('span', '', p)))),
     h('p', 'disclaimer', 'Unofficial. Not affiliated with Maccabi Healthcare Services.'),
-  );
-}
-
-function pageSkeleton(): HTMLElement {
-  const card = (width: string) => {
-    const last = h('div', 'line');
-    last.style.width = width;
-    return h('div', 'card', h('div', 'line strong'), h('div', 'line'), h('div', 'line short'), last);
-  };
-  return h('div', 'page',
-    h('div', 'page-head', h('div', 'logo-block'), h('div', 'nav', h('i'), h('i'), h('i'), h('i'))),
-    h('div', 'page-body',
-      h('div', 'side', h('i'), h('i'), h('i'), h('i'), h('i')),
-      h('div', 'cards', card('60%'), card('45%'), card('70%'), card('35%')),
-    ),
   );
 }
 
@@ -151,9 +97,7 @@ async function popupFrame(state: string, parent: HTMLElement, open?: string): Pr
 }
 
 async function browserWindow(shot: Shot): Promise<HTMLElement> {
-  const icon = h('img') as HTMLImageElement;
-  icon.src = '/icons/icon-32.png';
-  const ext = h('span', 'ext', icon);
+  const ext = h('span', 'ext', img('/icons/icon-32.png'));
   if (shot.badge) {
     const badge = h('span', 'badge', shot.badge.text);
     badge.style.background = shot.badge.color;
@@ -172,38 +116,9 @@ async function browserWindow(shot: Shot): Promise<HTMLElement> {
 function filesWindow(): HTMLElement {
   return h('div', 'window files',
     h('div', 'toolbar', dots(), h('div', 'files-title', 'maccabi-export-2026-09-17')),
-    h('div', 'files-list',
-      // The full medical file sits beside the folders, and sorts ahead of them.
-      h('div', 'file-row',
-        svg(DOC, 'folder'),
-        h('span', 'file-name', '2026-09-17_medical-file.pdf'),
-        h('span', 'file-what', 'Your full medical file'),
-        h('span', 'file-kinds', 'PDF'),
-      ),
-      ...FOLDERS.map(([name, what, kinds]) => h('div', 'file-row',
-        svg(FOLDER, 'folder'),
-        h('span', 'file-name', name),
-        h('span', 'file-what', what),
-        h('span', 'file-kinds', kinds),
-      ))),
+    h('div', 'files-list', ...fileRows()),
   );
 }
-
-// The two tilted documents and the icon's own artwork (scripts/make-icons.mjs, on its 24-unit
-// grid), shared by both promo tiles so they read as one family.
-function paper(opacity: number): string {
-  return `<rect width="104" height="136" rx="10" fill="#ffffff" opacity="${opacity}"/>
-    <rect x="18" y="30" width="60" height="8" rx="4" fill="#083f92" opacity="0.35"/>
-    <rect x="18" y="48" width="44" height="8" rx="4" fill="#083f92" opacity="0.35"/>`;
-}
-// The folder outline, as scripts/make-icons.mjs rounds it: the tab's corners at r 0.8, the rest at
-// r 2.75. Keep the two in step — this is the same mark, drawn twice.
-const MARK_PATH = 'M2.75 7A2.75 2.75 0 0 1 5.5 4.25L9.031 4.25A0.8 0.8 0 0 1 9.64 4.53L11.51 6.72A0.8 0.8 0 0 0 12.119 7L18.5 7A2.75 2.75 0 0 1 21.25 9.75L21.25 18.25A2.75 2.75 0 0 1 18.5 21L5.5 21A2.75 2.75 0 0 1 2.75 18.25Z';
-const MARK = `<g fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path d="${MARK_PATH}" transform="translate(-1.1 -1.1)" stroke="#f1c1cd" stroke-width="2.55"/>
-    <path d="${MARK_PATH}" fill="#ffffff" stroke="#083f92" stroke-width="1.6"/>
-    <path d="M12 11.25v5.5M9.4 14.15L12 16.75l2.6-2.6" stroke="#083f92" stroke-width="1.6"/>
-  </g>`;
 
 function promo(): HTMLElement {
   // The icon's folder, over two documents; no text, as the store asks.
@@ -223,13 +138,11 @@ function promo(): HTMLElement {
 // The marquee tile (1400x560): the same artwork, larger, beside the extension's name and its
 // one line. The store crops the right of this image on narrow screens, so the text stays left.
 function marquee(): HTMLElement {
-  const icon = h('img') as HTMLImageElement;
-  icon.src = '/icons/icon-128.png';
   return h('div', 'mq',
     h('section', 'mq-copy',
-      h('div', 'eyebrow', icon, 'Health Records Export for Maccabi'),
+      h('div', 'eyebrow', img('/icons/icon-128.png'), 'Health Records Export for Maccabi'),
       h('h1', '', 'Your Maccabi records in one ZIP'),
-      h('p', 'lead', 'Tests, visits, prescriptions, referrals, vaccinations, letters and your full medical file \u2014 every PDF, saved straight to your computer.'),
+      h('p', 'lead', 'Tests, visits, prescriptions, referrals, vaccinations, letters and your full medical file — every PDF, saved straight to your computer.'),
       h('p', 'disclaimer', 'Unofficial. Not affiliated with Maccabi Healthcare Services.'),
     ),
     svg(`<svg viewBox="0 0 540 440" width="540" height="440">
