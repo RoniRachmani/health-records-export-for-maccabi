@@ -10,6 +10,10 @@ to your computer as one ZIP file: every PDF the site offers, plus the site's own
   <img src="store/screenshot-1-start.png" alt="The extension's popup on Maccabi Online, ready to start an export" width="720">
 </p>
 
+<p align="center">
+  <a href="https://youtu.be/bMO8CJFN0ig">Watch an export, start to finish</a> · 49 seconds, no sound
+</p>
+
 - **Thorough.** Test results, visit summaries, prescriptions and purchases, referrals, vaccinations, letters, doctor
   inquiries and saved documents, plus a freshly ordered copy of your full medical file. Some things
   [aren't included](#not-included).
