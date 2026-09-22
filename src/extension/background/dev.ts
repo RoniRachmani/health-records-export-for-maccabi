@@ -5,6 +5,7 @@
 import { jwtClaims, type Json } from '../../core';
 import { getFile, listMeta, listProblems } from '../shared/staging';
 import { cancel, dismiss, loadRun, resume, retrySave, start } from './runner';
+import { rawDumpOn, setRawDump } from './rawDump';
 import { DEFAULT_ROUTES, extensionFetch, sessionOf, snapshot, tabTransport, type Routes } from './tab';
 
 type DevMsg = { type: string; [k: string]: Json };
@@ -97,6 +98,11 @@ async function handleDevImpl(msg: DevMsg, sender: chrome.runtime.MessageSender):
       if (msg.step) await chrome.storage.local.set({ devStopBefore: msg.step });
       else await chrome.storage.local.remove('devStopBefore');
       return { ok: true };
+    case 'dev:rawDump':
+      // Every response of the next run is staged under _raw/ in the ZIP, byte for byte, beside
+      // the export itself. Set it before dev:start: it is read once per step.
+      await setRawDump(!!msg.on);
+      return { on: await rawDumpOn() };
     case 'dev:routes':
       if (msg.routes) await chrome.storage.local.set({ routes: msg.routes });
       else await chrome.storage.local.remove('routes');

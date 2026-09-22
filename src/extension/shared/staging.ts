@@ -118,6 +118,11 @@ export async function putTextDirect(rel: string, text: string): Promise<void> {
   await putFile(rel, new TextEncoder().encode(text));
 }
 
+/** Stages bytes as they are, past the write rules. For files that are not part of the collection (see background/rawDump.ts). */
+export async function putBinDirect(rel: string, bytes: Uint8Array): Promise<void> {
+  await putFile(rel, bytes);
+}
+
 /** The ZIP sink: the write rules in core/sinkRules.ts, applied to the staged files. */
 export const stagingSink: Sink = {
   async exists(rel) {

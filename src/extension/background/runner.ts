@@ -14,6 +14,7 @@ import {
 } from '../shared/staging';
 import { exportReadme } from '../shared/readme';
 import { callOffscreen, closeOffscreen, offscreenHtml } from './offscreenClient';
+import { capturingTransport, rawDumpOn } from './rawDump';
 import { currentSession, DEFAULT_ROUTES, isVisible, keepSessionAlive, navigate, routedTransport, snapshot, type Routes } from './tab';
 import { updateBadge, notify } from './ui';
 
@@ -303,9 +304,10 @@ async function collector(): Promise<Collector> {
   const run = state as RunState;
   const session = await getSession();
   if (!session) throw new SessionEndedError('no session token');
+  const transport = routedTransport(run.tabId, await routes(), waitVisible);
   return new Collector(
     {
-      transport: routedTransport(run.tabId, await routes(), waitVisible),
+      transport: __DEV_BRIDGE__ && (await rawDumpOn()) ? capturingTransport(transport, session.mid) : transport,
       sink: stagingSink,
       html: offscreenHtml,
       clock: { now: () => Date.now(), sleep: (ms) => new Promise((r) => setTimeout(r, ms)) },
