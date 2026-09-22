@@ -170,9 +170,11 @@ function noticeView(): Child[] {
     note('warn', h('strong', {}, 'Each export orders a fresh copy of your full medical file.'),
       ' It asks for your whole history, a wider range than the site’s own form offers. Maccabi texts you about it, and the' +
       ' new file replaces the previous one on the site. A copy already ordered today is used as it is.'),
-    h('p', { class: 'consent small muted' },
-      'By continuing, you agree to the ', link('/terms.html', 'Terms of Use'), ' and the ', link('/privacy.html', 'Privacy Policy'), '.'),
-    stickyActions(actionButton('Agree and continue', { type: 'acceptNotice' }, 'primary block')),
+    // Pinned with the button: what the click agrees to must be in view when it is clicked.
+    stickyActions(
+      h('p', { class: 'consent small muted' },
+        'By continuing, you agree to the ', link('/terms.html', 'Terms of Use'), ' and the ', link('/privacy.html', 'Privacy Policy'), '.'),
+      actionButton('Agree and continue', { type: 'acceptNotice' }, 'primary block')),
   ];
 }
 

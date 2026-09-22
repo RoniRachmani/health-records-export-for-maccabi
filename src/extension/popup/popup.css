@@ -353,12 +353,18 @@ button[aria-disabled='true']:not(.busy) {
   margin: 14px 0 0;
 }
 /* The first-use notice is longer than the 600px Chrome gives a popup, and its text is the
-   thing being agreed to. Rather than cut it, its action stays pinned within reach. */
+   thing being agreed to. Rather than cut it, its action stays pinned within reach, and the
+   consent line with it. The top padding is where the scrolling text fades out behind them. */
 .actions.sticky {
   position: sticky;
   bottom: 0;
-  padding-bottom: 4px;
+  margin-top: 0;
+  padding: 14px 0 4px;
   background: linear-gradient(to bottom, transparent, var(--bg) 14px);
+}
+.actions.sticky .consent {
+  flex-basis: 100%;
+  margin: 0;
 }
 /* ---- cards ---- */
 .confirm,
@@ -464,9 +470,6 @@ details.more summary {
 }
 .points li::marker {
   color: var(--accent);
-}
-.consent {
-  margin: 14px 0 0;
 }
 .numbered {
   list-style: none;
