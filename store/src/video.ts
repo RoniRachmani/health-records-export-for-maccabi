@@ -132,7 +132,9 @@ function doneRun(): RunState {
 
 // ---- the stage ----------------------------------------------------------
 const ZIP_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#296bed" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><rect x="10.5" y="15" width="3" height="3" rx=".8"/></svg>';
-const PLAY = '<svg viewBox="0 0 48 48" width="74" height="74"><path d="M19 13.5l17 10.5-17 10.5z" fill="#ffffff" stroke="#ffffff" stroke-width="3.5" stroke-linejoin="round"/></svg>';
+// Drawn so the triangle's centre of gravity sits on the middle of its box (a triangle centred by its
+// box looks pushed left), which is the whole of its optical centring - the circle then just centres it.
+const PLAY = '<svg viewBox="0 0 48 48" width="74" height="74"><path d="M18.5 13.5l17 10.5-17 10.5z" fill="#ffffff" stroke="#ffffff" stroke-width="3.5" stroke-linejoin="round"/></svg>';
 const POINTER = '<svg viewBox="0 0 24 32" width="30" height="40"><path d="M3 2l17.5 13.2-7.7.7 4.4 9.1-3.6 1.7-4.4-9.2-5.4 5z" fill="#ffffff" stroke="#083f92" stroke-width="1.6" stroke-linejoin="round"/></svg>';
 
 /** The mark over its two tilted documents, as on the promo tiles. */
@@ -373,14 +375,14 @@ async function main(): Promise<void> {
     },
   };
   // The poster the README shows: one frame of the film with a play badge over it, because a still
-  // that looks like a screenshot doesn't tell anyone there is a video behind it. A number in the
-  // query picks another second, for looking at candidates (scripts/store-assets.mjs asks for the one
-  // above). Nothing here is on screen while the film itself is being rendered.
+  // that looks like a screenshot doesn't tell anyone there is a video behind it. `?poster` is the
+  // second above, which is what scripts/store-assets.mjs asks for; `?poster=12` is that second
+  // instead, for looking at candidates. Nothing here is on screen while the film is being rendered.
   const poster = new URLSearchParams(location.search).get('poster');
   if (poster === null) {
     applyAt(0);
   } else {
-    applyAt(Number(poster) || POSTER_AT);
+    applyAt(poster === '' ? POSTER_AT : Number(poster));
     document.body.append(h('div', 'scrim'), h('div', 'play', svg(PLAY)));
     await new Promise((r) => requestAnimationFrame(() => r(undefined)));
   }

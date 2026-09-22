@@ -15,7 +15,7 @@ const IMAGES = [
   { file: 'promo-small-440x280.png', shot: 'promo', width: 440, height: 280 },
   { file: 'promo-marquee-1400x560.png', shot: 'marquee', width: 1400, height: 560 },
   // Not a store field: the README's poster, drawn by the video's own page at the size it plays.
-  { file: 'video-poster.png', shot: 'poster', page: '/store/src/video.html?poster=1', width: 1920, height: 1080 },
+  { file: 'video-poster.png', shot: 'poster', page: '/store/src/video.html?poster', width: 1920, height: 1080 },
 ];
 
 const only = process.argv.slice(2);
