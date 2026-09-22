@@ -106,6 +106,13 @@ re-runs. Legacy steps don't get a 401, so `runner.ts` treats "Failed to fetch" i
   files pin `color-scheme: light`, which also keeps Chrome's auto-dark-mode off them, and every text colour
   must stay at WCAG AA. Chrome caps a popup at 600px tall: keep every non-disclosure state under it
   (`notice` and open `<details>` may scroll).
+- **The mark** is a folder with a download arrow, drawn in Maccabi Online's own illustration register:
+  a navy (`#083f92`) outline of even weight with round joins, and a pale-pink (`#f1c1cd`) echo of that
+  outline offset up and left, so it reads as slightly off-register print. The folder is filled white so
+  the navy survives a dark Chrome toolbar. Its geometry lives twice — as a rounded polygon in
+  `scripts/make-icons.mjs` and as `MARK_PATH` in `store/src/stage.ts` — so change both together. 16 and
+  32px have hand-tuned layouts in `PIXEL`, on the pixel grid; at 16px the arrow is a solid staircase,
+  because a 1px chevron there just makes a cross.
 - **Dev bridge**: `__DEV_BRIDGE__` (a Vite `define`) and the `mode === 'development'` branch in
   `manifest.config.ts` keep `background/dev.ts` and the content script out of the store build.
 - File names are `<date>_<id>_<title>`, built with `stem`/`iso`/`safe`/`titleOf` from `core/util.ts`;

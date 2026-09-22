@@ -1,12 +1,15 @@
-// Draws the extension icon into public/icons/icon-<size>.png: a page with a folded corner and two lines of
-// text, standing in a tray with a slot. Round-capped blue lines (1.5 units on a 24-unit grid, the popup's
-// #2563c9) on a transparent background; the page and tray are filled white so the icon stays visible on
-// dark toolbars. No image libraries: each pixel is sampled 8x8 against the lines' distances and written as
-// an RGBA PNG with node:zlib.
+// Draws the extension icon into public/icons/icon-<size>.png: a folder with a download arrow in it.
+// The register is Maccabi Online's own illustration set — a navy (#083f92) outline of even weight with
+// round joins, and a pale-pink (#f1c1cd) echo of the same outline offset up and to the left, so the mark
+// reads as slightly off-register print. The folder is filled white so the navy stays visible on a dark
+// toolbar. No image libraries: the outline is a polygon with a radius per corner, flattened to a
+// polyline; each pixel is sampled 8x8 against that polyline's distance and written as an RGBA PNG with
+// node:zlib.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { deflateSync } from 'node:zlib';
 
-const BLUE = [37, 99, 201];
+const NAVY = [8, 63, 146];
+const PINK = [241, 193, 205];
 const WHITE = [255, 255, 255];
 
 function crc32(buf) {
@@ -49,104 +52,191 @@ function png(size, rgba) {
   ]);
 }
 
-// Distances in pixels.
-function segment(px, py, ax, ay, bx, by) {
-  const dx = bx - ax;
-  const dy = by - ay;
-  const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)));
-  return Math.hypot(px - ax - t * dx, py - ay - t * dy);
-}
-
-// A quarter circle from angle a0 to a0 + 90 degrees (screen coordinates, y down).
-function quarter(px, py, cx, cy, r, a0) {
-  let a = Math.atan2(py - cy, px - cx);
-  while (a < a0) a += 2 * Math.PI;
-  if (a <= a0 + Math.PI / 2) return Math.abs(Math.hypot(px - cx, py - cy) - r);
-  const a1 = a0 + Math.PI / 2;
-  return Math.min(
-    Math.hypot(px - cx - r * Math.cos(a0), py - cy - r * Math.sin(a0)),
-    Math.hypot(px - cx - r * Math.cos(a1), py - cy - r * Math.sin(a1)),
-  );
-}
-
-// Signed: negative inside the rounded rectangle.
-function roundedBox(px, py, x0, y0, x1, y1, r) {
-  const qx = Math.abs(px - (x0 + x1) / 2) - ((x1 - x0) / 2 - r);
-  const qy = Math.abs(py - (y0 + y1) / 2) - ((y1 - y0) / 2 - r);
-  return Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - r;
-}
-
-// Line centres. page: its sides, top (with a rounded top-left corner of radius r), the fold (a diagonal edge
-// from foldX on the top to foldY on the right, and the fold's own two edges) and its text lines, which run
-// from x0 to x1. The page's sides end at the tray's top edge. The 24-unit design is scaled for 48 px and up;
-// 16 and 32 px have their own, placed on the pixel grid so their lines stay sharp.
+// The mark on a 24-unit grid. `folder` is [x, y, corner radius] per vertex, clockwise from the tab's
+// top-left; `arrow` is a list of segments. `echo` is the pink copy's offset and its (heavier) weight.
+// The design is scaled for 48 px and up.
 const DESIGN = {
-  w: 1.5,
-  page: { x0: 5.75, x1: 18.25, y0: 2.75, r: 2, foldX: 14, foldY: 7 },
-  text: [
-    { y: 10, x0: 9, x1: 15 },
-    { y: 13, x0: 9, x1: 12.5 },
+  w: 1.6,
+  folder: [
+    [2.75, 4.25, 2.75],
+    [9.4, 4.25, 0.8],
+    [11.75, 7, 0.8],
+    [21.25, 7, 2.75],
+    [21.25, 21, 2.75],
+    [2.75, 21, 2.75],
   ],
-  tray: { x0: 2.75, y0: 16, x1: 21.25, y1: 21.25, r: 1.75 },
-  slot: { y: 18.625, x0: 9.5, x1: 14.5 },
+  arrow: [
+    [[12, 11.25], [12, 16.75]],
+    [[9.4, 14.15], [12, 16.75]],
+    [[12, 16.75], [14.6, 14.15]],
+  ],
+  echo: { dx: -1.1, dy: -1.1, w: 2.55 },
 };
+
+// 16 and 32 px have their own layouts, already in device pixels and placed on the pixel grid so the
+// lines stay sharp: a stroke reads crisply when its centre sits on a half-pixel at width 1, and on a
+// whole pixel at width 2. The arrow is off the folder's centre by half a pixel at 16 px, which is
+// invisible at that size and buys a clean shaft. 16 px drops the echo — it lands under a pixel wide
+// there and only muddies the outline — and loses the tab's small radii, which cannot survive anyway.
 const PIXEL = {
   16: {
     w: 1,
-    page: { x0: 3.5, x1: 12.5, y0: 2.5, r: 0, foldX: 9.5, foldY: 5.5 },
-    text: [{ y: 7.5, x0: 6.5, x1: 9.5 }],
-    tray: { x0: 1.5, y0: 10.5, x1: 14.5, y1: 14.5, r: 1.5 },
-    slot: { y: 12.5, x0: 6.5, x1: 9.5 },
+    folder: [
+      [1.5, 3.5, 1.75],
+      [6.5, 3.5, 0],
+      [8.5, 5.5, 0],
+      [14.5, 5.5, 1.75],
+      [14.5, 13.5, 1.75],
+      [1.5, 13.5, 1.75],
+    ],
+    // Drawn solid rather than stroked: a 1 px chevron cannot read as an arrowhead at this size, it
+    // just makes a cross. Nor can a sloped head — its half-covered pixels wash out and leave the same
+    // cross — so the head is a staircase of whole pixels, 6 wide then 4 then 2, under a 2 px shaft.
+    // A fill lands on whole pixels when its edges are whole numbers, where a stroke wants its centre
+    // on a half; these are integers, symmetric about the folder's centre at x 8.
+    arrow: [],
+    solid: [[
+      [7, 7], [9, 7], [9, 9], [11, 9], [11, 10], [10, 10], [10, 11], [9, 11],
+      [9, 12], [7, 12], [7, 11], [6, 11], [6, 10], [5, 10], [5, 9], [7, 9],
+    ]],
+    echo: null,
   },
   32: {
     w: 2,
-    page: { x0: 7, x1: 25, y0: 3, r: 2, foldX: 19, foldY: 9 },
-    text: [
-      { y: 13, x0: 12, x1: 20 },
-      { y: 17, x0: 12, x1: 16 },
+    folder: [
+      [4, 6, 3.5],
+      [13, 6, 1],
+      [16, 9, 1],
+      [28, 9, 3.5],
+      [28, 28, 3.5],
+      [4, 28, 3.5],
     ],
-    tray: { x0: 3, y0: 21, x1: 29, y1: 29, r: 2.5 },
-    slot: { y: 25, x0: 13, x1: 19 },
+    arrow: [
+      [[16, 14], [16, 23]],
+      [[11, 18], [16, 23]],
+      [[16, 23], [21, 18]],
+    ],
+    echo: { dx: -1.5, dy: -1.5, w: 3.4 },
   },
 };
 
-const LENGTHS = new Set(['r', 'w']);
+const norm = (x, y) => {
+  const h = Math.hypot(x, y);
+  return [x / h, y / h];
+};
 
-function layout(art, pad) {
-  if (PIXEL[art]) return PIXEL[art];
-  const k = art / 24;
-  const place = (o) => Object.fromEntries(Object.entries(o).map(([key, v]) => [key, v * k + (LENGTHS.has(key) ? 0 : pad)]));
-  return { w: DESIGN.w * k, page: place(DESIGN.page), text: DESIGN.text.map(place), tray: place(DESIGN.tray), slot: place(DESIGN.slot) };
+// A polygon with a radius per corner, flattened to a closed polyline: each corner becomes its two
+// tangent points and the arc between them, stepped fine enough that the curve is smooth at 128 px.
+function flatten(pts) {
+  const out = [];
+  for (let i = 0; i < pts.length; i++) {
+    const [vx, vy, r] = pts[i];
+    const [px, py] = pts[(i - 1 + pts.length) % pts.length];
+    const [nx, ny] = pts[(i + 1) % pts.length];
+    if (r <= 0) {
+      out.push([vx, vy]);
+      continue;
+    }
+    const u = norm(px - vx, py - vy);
+    const w = norm(nx - vx, ny - vy);
+    const half = Math.acos(Math.max(-1, Math.min(1, u[0] * w[0] + u[1] * w[1]))) / 2;
+    const t = r / Math.tan(half);
+    const bis = norm(u[0] + w[0], u[1] + w[1]);
+    const d = r / Math.sin(half);
+    const cx = vx + bis[0] * d;
+    const cy = vy + bis[1] * d;
+    const a0 = Math.atan2(vy + u[1] * t - cy, vx + u[0] * t - cx);
+    let sweep = Math.atan2(vy + w[1] * t - cy, vx + w[0] * t - cx) - a0;
+    while (sweep > Math.PI) sweep -= 2 * Math.PI;
+    while (sweep < -Math.PI) sweep += 2 * Math.PI;
+    const steps = Math.max(2, Math.ceil((Math.abs(sweep) * r) / 0.2));
+    for (let s = 0; s <= steps; s++) {
+      const a = a0 + (sweep * s) / steps;
+      out.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+    }
+  }
+  return out;
 }
 
-function sample(x, y, shape) {
-  const { page: p, text, tray: t, slot } = shape;
-  const inTray = roundedBox(x, y, t.x0, t.y0, t.x1, t.y1, t.r);
-  const d = Math.min(
-    Math.abs(inTray),
-    segment(x, y, slot.x0, slot.y, slot.x1, slot.y),
-    // Page outline, left side up and round to the right side.
-    segment(x, y, p.x0, t.y0, p.x0, p.y0 + p.r),
-    p.r ? quarter(x, y, p.x0 + p.r, p.y0 + p.r, p.r, Math.PI) : Infinity,
-    segment(x, y, p.x0 + p.r, p.y0, p.foldX, p.y0),
-    segment(x, y, p.foldX, p.y0, p.x1, p.foldY),
-    segment(x, y, p.x1, p.foldY, p.x1, t.y0),
-    // The fold.
-    segment(x, y, p.foldX, p.y0, p.foldX, p.foldY),
-    segment(x, y, p.foldX, p.foldY, p.x1, p.foldY),
-    ...text.map((l) => segment(x, y, l.x0, l.y, l.x1, l.y)),
-  );
-  if (d <= shape.w / 2) return BLUE;
-  if (inTray < 0) return WHITE;
-  const inCorner = x < p.x0 + p.r && y < p.y0 + p.r && Math.hypot(x - p.x0 - p.r, y - p.y0 - p.r) > p.r;
-  const pastFold = x - p.foldX > y - p.y0;
-  return x > p.x0 && x < p.x1 && y > p.y0 && y < t.y0 && !inCorner && !pastFold ? WHITE : null;
+// Segments packed flat as [ax, ay, dx, dy, 1/len^2], so the inner loop stays in one typed array.
+function pack(segments) {
+  const e = new Float64Array(segments.length * 5);
+  segments.forEach(([ax, ay, bx, by], i) => {
+    const dx = bx - ax;
+    const dy = by - ay;
+    e.set([ax, ay, dx, dy, 1 / (dx * dx + dy * dy || 1)], i * 5);
+  });
+  return e;
+}
+
+const closed = (poly) => pack(poly.map((a, i) => [...a, ...poly[(i + 1) % poly.length]]));
+
+// Squared distance, so the whole sample runs without a square root.
+function dist2(px, py, e) {
+  let best = Infinity;
+  for (let i = 0; i < e.length; i += 5) {
+    const ax = e[i];
+    const ay = e[i + 1];
+    const dx = e[i + 2];
+    const dy = e[i + 3];
+    let t = ((px - ax) * dx + (py - ay) * dy) * e[i + 4];
+    if (t < 0) t = 0;
+    else if (t > 1) t = 1;
+    const qx = px - ax - t * dx;
+    const qy = py - ay - t * dy;
+    const d2 = qx * qx + qy * qy;
+    if (d2 < best) best = d2;
+  }
+  return best;
+}
+
+// Ray casting, so the white fill follows whatever the outline happens to be.
+function inside(px, py, poly) {
+  let hit = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i];
+    const [xj, yj] = poly[j];
+    if ((yi > py) !== (yj > py) && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) hit = !hit;
+  }
+  return hit;
+}
+
+// art: the artwork's size in pixels; pad: the transparent margin around it. A PIXEL layout is already
+// in device pixels, so it is used as-is — but only when it is being drawn at its own size, unpadded.
+function layout(art, pad) {
+  const k = art / 24;
+  const place = (d, s, off) => ({
+    folder: d.folder.map(([x, y, r]) => [x * s + off, y * s + off, r * s]),
+    arrow: d.arrow.map(([a, b]) => [a[0] * s + off, a[1] * s + off, b[0] * s + off, b[1] * s + off]),
+    solid: (d.solid || []).map((p) => p.map(([x, y]) => [x * s + off, y * s + off])),
+    echo: d.echo && { dx: d.echo.dx * s, dy: d.echo.dy * s, w: d.echo.w * s },
+    w: d.w * s,
+  });
+  const d = !pad && PIXEL[art] ? place(PIXEL[art], 1, 0) : place(DESIGN, k, pad);
+  const poly = flatten(d.folder);
+  return {
+    poly,
+    edges: closed(poly),
+    echo: d.echo && closed(poly.map(([x, y]) => [x + d.echo.dx, y + d.echo.dy])),
+    arrow: pack(d.arrow),
+    solid: d.solid,
+    r2: (d.w / 2) ** 2,
+    echoR2: d.echo ? (d.echo.w / 2) ** 2 : 0,
+  };
+}
+
+// Painted back to front: the pink echo, the folder's white fill, then the navy outline and arrow.
+function sample(x, y, s) {
+  if (dist2(x, y, s.edges) <= s.r2 || dist2(x, y, s.arrow) <= s.r2) return NAVY;
+  for (const p of s.solid) if (inside(x, y, p)) return NAVY;
+  if (inside(x, y, s.poly)) return WHITE;
+  if (s.echo && dist2(x, y, s.echo) <= s.echoR2) return PINK;
+  return null;
 }
 
 // pad: transparent margin in pixels on each side, around the artwork.
 function render(size, pad = 0) {
-  const art = size - 2 * pad;
-  const shape = layout(art, pad);
+  const shape = layout(size - 2 * pad, pad);
   const rgba = Buffer.alloc(size * size * 4);
   const S = 8;
   for (let py = 0; py < size; py++) {
