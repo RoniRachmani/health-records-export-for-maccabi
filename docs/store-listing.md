@@ -139,7 +139,7 @@ Saves the signed-in member's own medical records from Maccabi Online (online.mac
 **Host permission** (`https://online.maccabi4u.co.il/*`):
 
 ```
-Reads the signed-in member's records and their PDFs from Maccabi Online, using the session the member is already logged in with. Each export also orders the member's full medical file, which the member is told about before starting. The extension accesses no other site.
+Reads the signed-in member's records and their PDFs from Maccabi Online, using the session the member is already logged in with. Each export also orders the member's full medical file, which the member is told about before starting. The extension accesses no other site. activeTab isn't enough: its access ends when the tab navigates, and an export moves the tab between the site's pages and runs for 5 to 20 minutes.
 ```
 
 **scripting:**
