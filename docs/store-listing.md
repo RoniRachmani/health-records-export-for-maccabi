@@ -7,7 +7,7 @@ the extension changes, update this file along with it (see [Keeping it true](#ke
 
 1. Raise `version` in `package.json`. The store rejects a package whose version isn't higher than the published one.
 2. `npm test` and `npm run typecheck`.
-3. If the popup changed, run `npm run store-assets` and look at the images in `store/` before uploading them.
+3. If the popup changed, run `npm run store-assets` and look at the images in `store/assets/` before uploading them.
    Name shots to render only some of them, e.g. `npm run store-assets -- promo marquee`. The promo video shows
    the popup too: re-render it with `npm run store-video` and re-upload it to YouTube (see [Promo video](#promo-video)).
 4. `npm run package`, which builds `dist/` and writes `release/health-records-export-for-maccabi-<version>.zip`.
@@ -78,14 +78,14 @@ Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare 
 
 | Field | File | Shows |
 |---|---|---|
-| Store icon (128×128) | `store/icon-128.png` | The toolbar icon: 96×96 artwork with 16 px of transparent padding |
-| Screenshot 1 | `store/screenshot-1-start.png` | The popup, ready to start: "Your Maccabi records in one ZIP" |
-| Screenshot 2 | `store/screenshot-2-progress.png` | An export in progress, with the badge on the toolbar icon |
-| Screenshot 3 | `store/screenshot-3-done.png` | The finished export: "One file in your Downloads folder" |
-| Screenshot 4 | `store/screenshot-4-contents.png` | The folders inside the ZIP |
-| Screenshot 5 | `store/screenshot-5-privacy.png` | "Private by design", with the popup's list of what's included |
-| Small promo tile (440×280) | `store/promo-small-440x280.png` | The icon's artwork on a blue background, with no text |
-| Marquee promo tile (1400×560) | `store/promo-marquee-1400x560.png` | The same artwork beside the name and one line of text. Optional: the store uses it only when it features the extension |
+| Store icon (128×128) | `store/assets/icon-128.png` | The toolbar icon: 96×96 artwork with 16 px of transparent padding |
+| Screenshot 1 | `store/assets/screenshot-1-start.png` | The popup, ready to start: "Your Maccabi records in one ZIP" |
+| Screenshot 2 | `store/assets/screenshot-2-progress.png` | An export in progress, with the badge on the toolbar icon |
+| Screenshot 3 | `store/assets/screenshot-3-done.png` | The finished export: "One file in your Downloads folder" |
+| Screenshot 4 | `store/assets/screenshot-4-contents.png` | The folders inside the ZIP |
+| Screenshot 5 | `store/assets/screenshot-5-privacy.png` | "Private by design", with the popup's list of what's included |
+| Small promo tile (440×280) | `store/assets/promo-small-440x280.png` | The icon's artwork on a blue background, with no text |
+| Marquee promo tile (1400×560) | `store/assets/promo-marquee-1400x560.png` | The same artwork beside the name and one line of text. Optional: the store uses it only when it features the extension |
 | Global promo video | https://youtu.be/bMO8CJFN0ig | Optional. See [Promo video](#promo-video) below |
 
 The screenshots are 1280×800 PNG files with no transparency. They show the real popup in made-up states over a
@@ -96,7 +96,7 @@ placeholder page, never a real account. The text around the popup comes from `SH
 The store's video field takes a **YouTube link**, not a file. The one to paste is
 **https://youtu.be/bMO8CJFN0ig** — "Export your Maccabi Online medical records to one ZIP — Chrome extension",
 on the [Hey Roni](https://www.youtube.com/@Hey-Roni-Dev) channel. `npm run store-video` renders the video to
-`store/promo-video.mp4` (1920×1080, 30 fps, 49 seconds, silent); a re-render replaces that video on YouTube, so
+`store/assets/promo-video.mp4` (1920×1080, 30 fps, 49 seconds, silent); a re-render replaces that video on YouTube, so
 the link on the dashboard stays the one above.
 
 It is not committed — it is rebuilt from `store/src/video.ts`, which draws it a frame at a time in headless
@@ -109,7 +109,7 @@ running, sped up, with the progress badge on the toolbar icon · the finished ZI
 folders inside the ZIP · "Private by design" · the closing card with the repository's address. The disclaimer is
 on the first and last cards, and the popup's own "Unofficial · Not affiliated with Maccabi" is visible throughout.
 
-The README shows the video as a poster that links to it: `store/video-poster.png`, one frame of the same film
+The README shows the video as a poster that links to it: `store/assets/video-poster.png`, one frame of the same film
 with a play badge over it, drawn by `npm run store-assets -- poster`. Re-render it whenever the video changes.
 
 On YouTube: upload it as **Unlisted** or Public (the store cannot show a private video), give it the extension's

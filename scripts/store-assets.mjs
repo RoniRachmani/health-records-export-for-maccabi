@@ -1,4 +1,4 @@
-// Renders the Chrome Web Store images into store/: screenshots of the real popup fed made-up
+// Renders the Chrome Web Store images into store/assets/: screenshots of the real popup fed made-up
 // states (store/src/mock-chrome.ts, no real data), the two promo tiles, and the poster the README
 // shows for the promo video, which is a frame of the film itself (store/src/video.ts). Name shots
 // on the command line to render only those, e.g. `npm run store-assets -- marquee`.
@@ -26,9 +26,9 @@ const stage = await openStage();
 try {
   for (const img of images) {
     const page = await stage.open(img.page || '/store/src/stage.html?shot=' + img.shot, img.width, img.height);
-    writeFileSync(join(root, 'store', img.file), await page.screenshot());
+    writeFileSync(join(root, 'store', 'assets', img.file), await page.screenshot());
     await page.close();
-    console.log('wrote store/' + img.file);
+    console.log('wrote store/assets/' + img.file);
   }
 } finally {
   await stage.close();

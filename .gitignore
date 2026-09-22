@@ -20,7 +20,7 @@ coverage/
 
 # The promo video is rendered on demand (npm run store-video) and uploaded to YouTube, which is
 # what the store's video field takes; the repo keeps the source that draws it, not the megabytes.
-store/*.mp4
+store/assets/*.mp4
 
 # Never commit real exports or anything taken from a real account.
 maccabi-export-*/

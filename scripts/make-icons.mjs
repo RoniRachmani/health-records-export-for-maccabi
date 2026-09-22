@@ -271,5 +271,5 @@ for (const size of [16, 32, 48, 128]) {
 }
 // The store icon: 96x96 artwork with 16 px of transparent padding, as the Chrome Web Store asks.
 mkdirSync(new URL('../store/', import.meta.url), { recursive: true });
-writeFileSync(new URL('../store/icon-128.png', import.meta.url), render(128, 16));
-console.log('wrote public/icons/icon-{16,32,48,128}.png and store/icon-128.png');
+writeFileSync(new URL('../store/assets/icon-128.png', import.meta.url), render(128, 16));
+console.log('wrote public/icons/icon-{16,32,48,128}.png and store/assets/icon-128.png');

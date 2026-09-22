@@ -1,4 +1,4 @@
-// Renders the Chrome Web Store's promo video into store/promo-video.mp4: store/src/video.ts draws
+// Renders the Chrome Web Store's promo video into store/assets/promo-video.mp4: store/src/video.ts draws
 // one frame at a time in headless Chrome (no real data, the same made-up popup states as the store
 // images), and the frames are encoded to H.264. Give two times in seconds to render only that
 // slice while working on it, e.g. `npm run store-video -- 8 12`.
@@ -14,7 +14,7 @@ import { isFile, openStage, root } from './stage.mjs';
 
 const WIDTH = 1920;
 const HEIGHT = 1080;
-const OUT = join(root, 'store', 'promo-video.mp4');
+const OUT = join(root, 'store', 'assets', 'promo-video.mp4');
 // Frames per browser. The stage draws frame n from n alone, so the browser can be replaced at any
 // point without the film changing — and a render of a thousand frames then doesn't rest on one
 // browser process staying healthy (and small) to the end.
@@ -95,7 +95,7 @@ try {
 
   const encoder = encode(frames, fps);
   const mb = (statSync(OUT).size / 1e6).toFixed(1);
-  console.log('wrote store/promo-video.mp4 (' + seconds + 's, ' + mb + ' MB, ' + encoder + ')');
+  console.log('wrote store/assets/promo-video.mp4 (' + seconds + 's, ' + mb + ' MB, ' + encoder + ')');
 } finally {
   await stage.close();
   rmSync(work, { recursive: true, force: true });

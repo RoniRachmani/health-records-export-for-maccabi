@@ -16,11 +16,11 @@ npm run typecheck                 # tsc --noEmit
 npm run dev                       # watch build into dist-dev/ (dev build, extra dev bridge)
 npm run build                     # typecheck + store build into dist/
 npm run package                   # build + release/<name>-<version>.zip (refuses a dev build)
-npm run store-assets              # re-render store/ images (needs Chrome; CHROME_PATH)
+npm run store-assets              # re-render store/assets/ images (needs Chrome; CHROME_PATH)
 npm run store-assets -- marquee   # just one, by shot name
-npm run store-video               # re-render store/promo-video.mp4 (not committed; ffmpeg or macOS)
+npm run store-video               # re-render store/assets/promo-video.mp4 (not committed; ffmpeg or macOS)
 npm run store-video -- 8 12       # just those seconds of it, while working on a scene
-npm run icons                     # public/icons/ + store/icon-128.png
+npm run icons                     # public/icons/ + store/assets/icon-128.png
 ```
 
 There is no linter or formatter configured; `typecheck` and `test` are the whole gate you can run
@@ -133,7 +133,7 @@ re-runs. Legacy steps don't get a 401, so `runner.ts` treats "Failed to fetch" i
 
 - **Never commit real data.** No responses, exports, PDFs or anything from a real account; fixtures in
   `test/fakes.ts` are synthetic. `.gitignore` blocks `*.pdf`, `*.raw.json`, `maccabi-export-*/`. The one
-  picture of a real session is the README's `docs/screenshot.png`, and it passes that bar only because
+  picture of a real session is the README's `docs/images/screenshot.png`, and it passes that bar only because
   nothing in it identifies anyone: no name, no member id, no record content, an empty content area. Hold a
   replacement to the same check, and strip the file's metadata. Everything under `store/` stays on the
   placeholder page — the store's screenshots must not carry Maccabi's site or brand.
@@ -148,7 +148,7 @@ re-runs. Legacy steps don't get a 401, so `runner.ts` treats "Failed to fetch" i
   `public/terms.html`, and change their effective date. For a material change also bump `TERMS_EFFECTIVE`
   in `shared/state.ts`, which makes the popup ask everyone to accept again.
 - **Keep `public/third-party-notices.txt` current** when a runtime dependency changes (only `fflate`
-  today, plus Vite's module preload polyfill). The README's `docs/chrome-web-store-badge.png` isn't one of
+  today, plus Vite's module preload polyfill). The README's `docs/images/chrome-web-store-badge.png` isn't one of
   them: it is Google's own badge, committed byte for byte as it is served from
   [their branding page](https://developer.chrome.com/docs/webstore/branding), and their terms allow resizing
   it and nothing else. It has to keep linking to the listing. It is the bordered version, whose fill is opaque

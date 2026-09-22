@@ -8,17 +8,17 @@ to your computer as one ZIP file: every PDF the site offers, plus the site's own
 
 <p align="center">
   <a href="https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp">
-    <img src="docs/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="206">
+    <img src="docs/images/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="206">
   </a>
 </p>
 
 <p align="center">
-  <img src="docs/screenshot.png" alt="The extension's popup on Maccabi Online, partway through an export, with the progress badge on the toolbar icon" width="720">
+  <img src="docs/images/screenshot.png" alt="The extension's popup on Maccabi Online, partway through an export, with the progress badge on the toolbar icon" width="720">
 </p>
 
 <p align="center">
   <a href="https://youtu.be/bMO8CJFN0ig">
-    <img src="store/video-poster.png" alt="Watch an export, start to finish: a 49-second video" width="720">
+    <img src="store/assets/video-poster.png" alt="Watch an export, start to finish: a 49-second video" width="720">
   </a>
 </p>
 
@@ -265,9 +265,10 @@ REST API requests (`/sonline/`) go from the service worker, with the session tok
 | `src/extension/popup/` | The popup |
 | `src/extension/dev/` | The bridge content script, injected by the development build only |
 | `test/` | Vitest tests against a fake Maccabi Online (`fakes.ts`) |
-| `docs/` | Endpoint map, privacy policy, terms, store listing |
+| `docs/` | Endpoint map, privacy policy, terms, store listing; the README's images in `images/` |
 | `public/` | Icons, and the privacy policy, terms and third-party notices that ship in the extension |
-| `store/`, `scripts/` | Chrome Web Store images and the pages they're rendered from; build scripts |
+| `store/` | Chrome Web Store images in `assets/`, and the pages they're rendered from in `src/` |
+| `scripts/` | Build scripts: icons, store images and video, the release ZIP |
 | `.github/` | The CI workflow that runs the gate, the issue forms, the security policy, and Dependabot |
 
 ### The look
@@ -318,9 +319,9 @@ Replies carry statuses, sizes and counts, never record contents. None of this is
 
 ```sh
 npm run package        # release/health-records-export-for-maccabi-<version>.zip for the Chrome Web Store and GitHub release
-npm run store-assets   # store/ screenshots, promo tiles and the video's poster (needs Chrome, Chromium or Edge; set CHROME_PATH if not found)
-npm run store-video    # store/promo-video.mp4, the promo video (same browser; ffmpeg if you have it)
-npm run icons          # public/icons/ and store/icon-128.png
+npm run store-assets   # store/assets/ screenshots, promo tiles and the video's poster (needs Chrome, Chromium or Edge; set CHROME_PATH if not found)
+npm run store-video    # store/assets/promo-video.mp4, the promo video (same browser; ffmpeg if you have it)
+npm run icons          # public/icons/ and store/assets/icon-128.png
 ```
 
 `package` builds `dist/` first, and refuses a development build. The store images and the video show the real
