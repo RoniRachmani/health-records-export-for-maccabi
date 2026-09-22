@@ -7,6 +7,12 @@ to your computer as one ZIP file: every PDF the site offers, plus the site's own
 > Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare Services.
 
 <p align="center">
+  <a href="https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp">
+    <img src="docs/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="206">
+  </a>
+</p>
+
+<p align="center">
   <img src="docs/screenshot.png" alt="The extension's popup on Maccabi Online, partway through an export, with the progress badge on the toolbar icon" width="720">
 </p>
 
@@ -37,12 +43,9 @@ to your computer as one ZIP file: every PDF the site offers, plus the site's own
 
 You need Chrome 116 or newer.
 
-<a href="https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp">
-  <img src="docs/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="206">
-</a>
-
-Installed from the store, it stays up to date by itself. However you install it, the build isn't minified, so you can
-read exactly the code that runs.
+**[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp)**, and
+Chrome keeps it up to date. However you install it, the build isn't minified, so you can read exactly the code that
+runs.
 
 ### Load it unpacked instead
 
