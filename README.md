@@ -11,7 +11,13 @@ to your computer as one ZIP file: every PDF the site offers, plus the site's own
 </p>
 
 <p align="center">
-  <a href="https://youtu.be/bMO8CJFN0ig">Watch an export, start to finish</a> · 49 seconds, no sound
+  <a href="https://youtu.be/bMO8CJFN0ig">
+    <img src="https://i.ytimg.com/vi/bMO8CJFN0ig/maxresdefault.jpg" alt="Watch an export, start to finish: a 49-second video" width="720">
+  </a>
+</p>
+
+<p align="center">
+  ▶︎ <a href="https://youtu.be/bMO8CJFN0ig">Watch an export, start to finish</a> · 49 seconds, no sound
 </p>
 
 - **Thorough.** Test results, visit summaries, prescriptions and purchases, referrals, vaccinations, letters, doctor
@@ -294,6 +300,7 @@ await dev({ type: 'dev:stopBefore', step: 'orderMedicalFile' });   // test a ful
 | `dev:titleFields` | Which response fields hold a display string, and in which language. Field names only. |
 | `dev:stopBefore` `{step}` | Pause before a plan step. Without `step`, clears it. |
 | `dev:breakSession` | Invalidate the stored token, to test reconnecting |
+| `dev:rawDump` `{on}` | Stage every response of the next run under `_raw/` in the ZIP, byte for byte, beside the export. Set it before `dev:start`. |
 | `dev:routes` `{routes}` | Choose whether `/sonline/` and `/online/` requests go from the extension or the tab |
 | `dev:spike` `{url, method, route, auth}` | Send one request and report its status and shape |
 | `dev:reload` | Reload the extension |
