@@ -12,7 +12,7 @@ to your computer as one ZIP file: every PDF the site offers, plus the site's own
 
 <p align="center">
   <a href="https://youtu.be/bMO8CJFN0ig">
-    <img src="https://i.ytimg.com/vi/bMO8CJFN0ig/maxresdefault.jpg" alt="Watch an export, start to finish: a 49-second video" width="720">
+    <img src="store/video-poster.png" alt="Watch an export, start to finish: a 49-second video" width="720">
   </a>
 </p>
 
@@ -311,7 +311,7 @@ Replies carry statuses, sizes and counts, never record contents. None of this is
 
 ```sh
 npm run package        # release/health-records-export-for-maccabi-<version>.zip for the Chrome Web Store and GitHub release
-npm run store-assets   # store/ screenshots and promo tiles (needs Chrome, Chromium or Edge; set CHROME_PATH if not found)
+npm run store-assets   # store/ screenshots, promo tiles and the video's poster (needs Chrome, Chromium or Edge; set CHROME_PATH if not found)
 npm run store-video    # store/promo-video.mp4, the promo video (same browser; ffmpeg if you have it)
 npm run icons          # public/icons/ and store/icon-128.png
 ```
@@ -325,7 +325,8 @@ speed of the machine rendering it: the export it plays is the real popup, driven
 built from the real plan and its weights. It is encoded with `ffmpeg` when that is on `PATH`, and otherwise, on
 macOS, with `scripts/encode-mp4.swift`, compiled on the spot. Give two times in seconds to render one part of it
 while working on it, e.g. `npm run store-video -- 8 12`. The MP4 is not committed — the store's video field takes
-a YouTube link, so upload it there and paste the link on the dashboard.
+a YouTube link, so upload it there and paste the link on the dashboard. The poster above it is one frame of the same
+film, drawn by the same page: `npm run store-assets -- poster`.
 
 ### Ground rules
 

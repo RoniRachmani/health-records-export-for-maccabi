@@ -112,10 +112,11 @@ re-runs. Legacy steps don't get a 401, so `runner.ts` treats "Failed to fetch" i
   promo video a frame at a time (`window.video.at(n)`, nothing animates by itself, so the render is the same
   everywhere). Both are built around the **real popup** in an iframe, fed made-up states by `mock-chrome.ts`;
   the video drives a whole run through it with `demoRun`, which fires the popup's own `storage.onChanged`
-  listener with states built from `PLAN` and `WEIGHTS`. What both draw lives in `store/src/parts.ts` and
-  `parts.css`; `scripts/stage.mjs` builds, serves and photographs them in headless Chrome. The video is encoded
-  by `ffmpeg` if it is on `PATH`, else by `scripts/encode-mp4.swift` (macOS); the MP4 is gitignored, because the
-  store's video field takes a YouTube link.
+  listener with states built from `PLAN` and `WEIGHTS`. The README's poster is that page again, asked for one
+  frame with a play badge over it (`?poster=`, taken by `store-assets` as the `poster` shot). What all of them
+  draw lives in `store/src/parts.ts` and `parts.css`; `scripts/stage.mjs` builds, serves and photographs them
+  in headless Chrome. The video is encoded by `ffmpeg` if it is on `PATH`, else by `scripts/encode-mp4.swift`
+  (macOS); the MP4 is gitignored, because the store's video field takes a YouTube link.
 - **The mark** is a folder with a download arrow, drawn in Maccabi Online's own illustration register:
   a navy (`#083f92`) outline of even weight with round joins, and a pale-pink (`#f1c1cd`) echo of that
   outline offset up and left, so it reads as slightly off-register print. The folder is filled white so
@@ -145,5 +146,6 @@ re-runs. Legacy steps don't get a 401, so `runner.ts` treats "Failed to fetch" i
 - **Keep `public/third-party-notices.txt` current** when a runtime dependency changes (only `fflate`
   today, plus Vite's module preload polyfill).
 - **Re-run `npm run store-assets`** when the popup's appearance changes, and `npm run store-video` if the video's
-  own copy or the popup states it shows go stale; a re-rendered video has to be re-uploaded to YouTube.
+  own copy or the popup states it shows go stale; a re-rendered video has to be re-uploaded to YouTube, and its
+  poster (`store-assets -- poster`) re-rendered with it.
 - Builds are deliberately **not minified** so reviewers and users can read what ships.

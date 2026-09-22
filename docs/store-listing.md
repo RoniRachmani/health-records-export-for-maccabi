@@ -109,6 +109,9 @@ running, sped up, with the progress badge on the toolbar icon · the finished ZI
 folders inside the ZIP · "Private by design" · the closing card with the repository's address. The disclaimer is
 on the first and last cards, and the popup's own "Unofficial · Not affiliated with Maccabi" is visible throughout.
 
+The README shows the video as a poster that links to it: `store/video-poster.png`, one frame of the same film
+with a play badge over it, drawn by `npm run store-assets -- poster`. Re-render it whenever the video changes.
+
 On YouTube: upload it as **Unlisted** or Public (the store cannot show a private video), give it the extension's
 name, and turn off ads and end screens so nothing is suggested over the last frame. There is no sound, so no
 music licence is involved.

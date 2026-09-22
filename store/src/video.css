@@ -298,3 +298,30 @@ iframe.popup {
   font-size: 19px;
   opacity: 0.72;
 }
+
+/* ---- the poster (video.ts, ?poster=), only ever on a still ----
+   A frame of the film under a slight veil, with the play badge the eye looks for. The badge is
+   the one blue with a white ring, so it carries over both the navy ground and the white window. */
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 38, 88, 0.26);
+}
+.play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 170px;
+  height: 170px;
+  margin: -85px 0 0 -85px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #296bed;
+  box-shadow: 0 0 0 9px rgba(255, 255, 255, 0.94), 0 20px 52px rgba(5, 38, 88, 0.5);
+}
+/* The triangle's weight sits left of its box; nudge it back to the middle of the circle. */
+.play svg {
+  display: block;
+  margin-left: 9px;
+}
