@@ -122,7 +122,8 @@
       <li>Access to online.maccabi4u.co.il: to read your records from the site you are logged in to.</li>
       <li>
         scripting: to read the login session from the Maccabi tab (and clear the old token there so the site issues a
-        fresh one), and send the requests the site accepts only from its own pages.
+        fresh one), send the requests the site accepts only from its own pages, and, while an export is running, signal
+        activity in that tab every few minutes so Maccabi's six-minute idle logout does not end the export partway.
       </li>
       <li>downloads: to save the ZIP file.</li>
       <li>storage and unlimitedStorage: to keep export progress and collected files until the ZIP is saved (PDF files can be large).</li>
