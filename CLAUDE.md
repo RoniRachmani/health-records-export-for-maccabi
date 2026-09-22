@@ -110,12 +110,13 @@ re-runs. Legacy steps don't get a 401, so `runner.ts` treats "Failed to fetch" i
   (`notice` and open `<details>` may scroll).
 - **Store assets**: `store/src/stage.ts` draws the images (one layout per `?shot=`), `store/src/video.ts` draws the
   promo video a frame at a time (`window.video.at(n)`, nothing animates by itself, so the render is the same
-  everywhere). Both are built around the **real popup** in an iframe, fed made-up states by `mock-chrome.ts`;
-  the video drives a whole run through it with `demoRun`, which fires the popup's own `storage.onChanged`
-  listener with states built from `PLAN` and `WEIGHTS`. The README's poster is that page again, asked for one
-  frame with a play badge over it (`?poster=`, taken by `store-assets` as the `poster` shot). What all of them
-  draw lives in `store/src/parts.ts` and `parts.css`; `scripts/stage.mjs` builds, serves and photographs them
-  in headless Chrome. The video is encoded by `ffmpeg` if it is on `PATH`, else by `scripts/encode-mp4.swift`
+  everywhere: every value is a function of the second, shaped by the helpers in `motion.ts`). Both are built
+  around the **real popup** in an iframe, fed made-up states by `mock-chrome.ts`; the video drives a whole run
+  through it with `demoRun`, which fires the popup's own `storage.onChanged` listener with states built from
+  `PLAN` and `WEIGHTS`. The README's poster is that page again, asked for one frame with a play badge over it
+  (`?poster=`, taken by `store-assets` as the `poster` shot). What all of them draw lives in
+  `store/src/parts.ts` and `parts.css`; `scripts/stage.mjs` builds, serves and photographs them in headless
+  Chrome. The video is encoded by `ffmpeg` if it is on `PATH`, else by `scripts/encode-mp4.swift`
   (macOS); the MP4 is gitignored, because the store's video field takes a YouTube link.
 - **The mark** is a folder with a download arrow, drawn in Maccabi Online's own illustration register:
   a navy (`#083f92`) outline of even weight with round joins, and a pale-pink (`#f1c1cd`) echo of that

@@ -18,12 +18,12 @@ to your computer as one ZIP file: every PDF the site offers, plus the site's own
 
 <p align="center">
   <a href="https://youtu.be/bMO8CJFN0ig">
-    <img src="store/assets/video-poster.png" alt="Watch an export, start to finish: a 49-second video" width="720">
+    <img src="store/assets/video-poster.png" alt="Watch an export, start to finish: a 46-second video" width="720">
   </a>
 </p>
 
 <p align="center">
-  ▶︎ <a href="https://youtu.be/bMO8CJFN0ig">Watch an export, start to finish</a> · 49 seconds, no sound
+  ▶︎ <a href="https://youtu.be/bMO8CJFN0ig">Watch an export, start to finish</a> · 46 seconds, no sound
 </p>
 
 - **Thorough.** Test results, visit summaries, prescriptions and purchases, referrals, vaccinations, letters, doctor

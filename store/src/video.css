@@ -1,6 +1,7 @@
 /* The promo video's stage: 1920x1080, one frame at a time (video.ts drives it, and
    scripts/store-video.mjs photographs it). Same register as the store images — navy ground,
-   one blue, the pale-pink echo on the mark — at the size a video asks for. */
+   one blue, the pale-pink echo on the mark — at the size a video asks for. Everything that moves
+   sits at left 0, top 0 and is put in place by a transform from video.ts. */
 @import './parts.css';
 
 body.video {
@@ -9,143 +10,243 @@ body.video {
   height: 1080px;
   overflow: hidden;
   color: #ffffff;
-  /* The marquee tile's glows, so a still from the video sits beside it as the same thing. */
-  background:
-    radial-gradient(620px 620px at 1560px 180px, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 70%),
-    radial-gradient(820px 820px at 1420px 980px, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 70%),
-    linear-gradient(135deg, #052658 0%, #083f92 55%, #296bed 100%);
+  background: linear-gradient(135deg, #052658 0%, #083f92 55%, #296bed 100%);
 }
 
-/* Every scene sits in the same place and is faded in and out by video.ts. */
-.scene {
+/* ---- the ground: slow glows over a faint dot grid ---- */
+.grid {
+  position: absolute;
+  left: -80px;
+  top: -80px;
+  width: 2080px;
+  height: 1240px;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.085) 1.3px, transparent 1.9px);
+  background-size: 40px 40px;
+  -webkit-mask-image: radial-gradient(ellipse 58% 58% at 50% 50%, #000 0%, transparent 100%);
+  mask-image: radial-gradient(ellipse 58% 58% at 50% 50%, #000 0%, transparent 100%);
+}
+.glow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0));
+}
+
+/* Every scene fills the frame and is faded in and out by video.ts. */
+.layer {
   position: absolute;
   inset: 0;
-  opacity: 0;
 }
 
-/* ---- the name, as on the store images ---- */
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  padding: 7px 20px 7px 7px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  font-size: 20px;
-  font-weight: 600;
+/* ---- words that rise into place (motion.ts, kinetic) ---- */
+.w {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  /* Room for descenders, taken back so the line doesn't move. */
+  padding: 0 0.05em 0.16em;
+  margin: 0 -0.05em -0.16em;
 }
-.eyebrow img {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  background: #ffffff;
+.w > span {
+  display: inline-block;
 }
-
-/* ---- the opening and closing cards ---- */
-/* Not .card: parts.css already has one, in the page behind the popup. */
-.slate {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  text-align: center;
-}
-.slate .art svg {
-  display: block;
-}
-.slate h1 {
-  max-width: 1280px;
-  margin: 38px 0 0;
-  font-size: 82px;
-  line-height: 1.08;
-  font-weight: 600;
-  letter-spacing: -0.025em;
-}
-.slate .sub {
-  max-width: 1120px;
-  margin: 26px 0 0;
-  font-size: 30px;
-  line-height: 1.45;
-  opacity: 0.92;
-}
-.slate .eyebrow {
-  margin-top: 40px;
-}
-.slate .link {
-  margin: 30px 0 0;
-  font-size: 26px;
+.accent {
   color: #f1c1cd;
 }
 
-/* ---- the running scenes: words on the left, a window on the right ---- */
-.caption {
+/* ---- 1 · the opening: record cards round the edge ---- */
+.rec {
   position: absolute;
-  left: 110px;
-  top: 100px;
-  width: 700px;
-  height: 880px;
+  left: 0;
+  top: 0;
+  width: 300px;
+  height: 150px;
+  padding: 20px 22px;
+  border-radius: 20px;
+  background: #ffffff;
+  color: #24283f;
+  box-shadow: 0 24px 60px rgba(5, 38, 88, 0.4), 0 0 0 1px rgba(8, 63, 146, 0.06);
+}
+.rec-head {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  align-items: center;
+  gap: 12px;
 }
-.caption .eyebrow {
-  align-self: flex-start;
-  margin-bottom: 34px;
+.rec-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #e3effd;
 }
-.caption h2 {
-  margin: 0 0 22px;
-  font-size: 54px;
-  line-height: 1.1;
+.rec-icon.pink {
+  background: #fbe9ef;
+}
+.rec-icon svg {
+  display: block;
+}
+.rec-kind {
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5b6785;
 }
-.caption p {
+.rec-title {
+  margin-top: 14px;
+  font-size: 23px;
+  line-height: 1.15;
+  font-weight: 600;
+  color: #083f92;
+  white-space: nowrap;
+}
+.rec-meta {
+  margin-top: 6px;
+  font-size: 16px;
+  color: #5b6785;
+}
+.hook-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 474px;
   margin: 0;
-  font-size: 25px;
-  line-height: 1.5;
-  opacity: 0.92;
-}
-.chip {
-  align-self: flex-start;
-  margin-top: 30px;
-  padding: 8px 18px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  font-size: 19px;
-  opacity: 0.86;
+  text-align: center;
+  font-size: 108px;
+  line-height: 1.1;
+  font-weight: 650;
+  letter-spacing: -0.03em;
 }
 
-/* ---- the window, in the same rectangle from the first click to the last folder ---- */
-.window {
+/* ---- the mark over its two documents ---- */
+.art {
   position: absolute;
-  left: 880px;
-  top: 100px;
-  width: 940px;
-  height: 880px;
-  opacity: 0;
+  left: 0;
+  top: 0;
+  width: 540px;
+  height: 440px;
 }
-.toolbar {
+.art svg {
+  display: block;
+}
+
+/* ---- 2 · the name and the promise ---- */
+.lock-name {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 518px;
+  margin: 0;
+  text-align: center;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #f1c1cd;
+}
+.lock-title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 562px;
+  margin: 0;
+  text-align: center;
+  font-size: 98px;
+  line-height: 1.1;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+.lock-sub {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 708px;
+  max-width: 1240px;
+  margin: 0 auto;
+  text-align: center;
+  font-size: 31px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.9);
+}
+.disclaimer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 52px;
+  margin: 0;
+  text-align: center;
+  font-size: 19px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* ---- 3 and 4 · the browser, under the camera ---- */
+.world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: 0 0;
+}
+/* Not .window: parts.css's clips and paints itself in one piece, and this one comes apart. */
+.browser {
+  position: absolute;
+  left: 160px;
+  top: 186px;
+  width: 1600px;
+  height: 850px;
+}
+.win-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 40px 100px rgba(5, 38, 88, 0.5);
+}
+.toolbar-bg {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 58px;
+  border-radius: 16px 16px 0 0;
+  background: #f1f3f4;
+  border-bottom: 1px solid #e5e7eb;
+}
+.browser .toolbar {
+  position: relative;
   gap: 18px;
   height: 58px;
   padding: 0 20px;
+  background: transparent;
+  border-bottom: 0;
 }
-.dots i {
+.browser .dots i {
   width: 14px;
   height: 14px;
 }
-.address {
+.browser .address {
   height: 36px;
   border-radius: 18px;
   font-size: 16px;
+}
+.page-clip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 58px;
+  bottom: 0;
+  overflow: hidden;
+  border-radius: 0 0 16px 16px;
 }
 .ext {
   width: 40px;
   height: 40px;
 }
 .ext img {
+  position: relative;
   width: 23px;
   height: 23px;
 }
@@ -158,6 +259,15 @@ body.video {
   border-radius: 5px;
   font-size: 12px;
   line-height: 19px;
+}
+/* A soft halo while the export runs; video.ts sets --glow. */
+.ext::before {
+  content: '';
+  position: absolute;
+  inset: -16px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(41, 107, 237, 0.6), rgba(41, 107, 237, 0));
+  opacity: var(--glow, 0);
 }
 /* The ring that answers the click on the toolbar icon; video.ts sets the two properties. */
 .ext::after {
@@ -176,67 +286,12 @@ iframe.popup {
   opacity: 0;
 }
 
-.files-title {
-  font-size: 17px;
-}
-.file-row {
-  grid-template-columns: 30px 300px 1fr auto;
-  gap: 16px;
-  padding: 13px 30px;
-  font-size: 18px;
-}
-.file-row .folder svg {
-  width: 30px;
-  height: 25px;
-}
-.file-kinds {
-  padding: 4px 12px;
-  font-size: 15px;
-}
-
-/* The saved ZIP, as the browser announces it. It sits at the window's other corner, clear of
-   the popup, which is drawn over the page. */
-.download {
-  opacity: 0;
-  position: absolute;
-  left: 22px;
-  bottom: 22px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  width: 400px;
-  padding: 16px 18px;
-  border-radius: 12px;
-  background: #ffffff;
-  color: #24283f;
-  box-shadow: 0 14px 44px rgba(5, 38, 88, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.07);
-}
-.download .zip {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
-  background: #e3effd;
-  flex: none;
-}
-.download strong {
-  display: block;
-  font-size: 16px;
-  color: #083f92;
-}
-.download span {
-  font-size: 14px;
-  color: #72758c;
-}
-
 /* ---- the pointer ---- */
 .cursor {
   position: absolute;
   left: 0;
   top: 0;
   filter: drop-shadow(0 3px 6px rgba(5, 38, 88, 0.5));
-  opacity: 0;
 }
 .cursor svg {
   display: block;
@@ -253,50 +308,470 @@ iframe.popup {
   opacity: 0;
 }
 
-/* ---- private by design ---- */
-.privacy {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+/* ---- the words: numbered steps over the browser, captions beside the popup ---- */
+.num {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #296bed;
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.16);
+  font-size: 28px;
+  font-weight: 700;
+  color: #ffffff;
 }
-.privacy h2 {
-  margin: 0 0 50px;
-  font-size: 68px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-.privacy ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 26px;
-}
-.privacy li {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  font-size: 31px;
-}
-.privacy .check svg {
-  display: block;
-  width: 34px;
-  height: 34px;
-}
-
-.disclaimer {
+.stepcap {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 52px;
+  top: 62px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.caption {
+  position: absolute;
+  left: 110px;
+  width: 740px;
+}
+.caption .num {
+  display: grid;
+  margin: 0 0 30px 6px;
+}
+.caption h2 {
+  margin: 0;
+  text-wrap: balance;
+  font-size: 68px;
+  line-height: 1.08;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+.caption p {
+  margin: 28px 0 0;
+  text-wrap: pretty;
+  font-size: 27px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+}
+.chip {
+  display: inline-block;
+  margin-top: 26px;
+  padding: 9px 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+/* ---- 4 · the files, as the export writes them ---- */
+.feed {
+  position: absolute;
+  left: 110px;
+  top: 440px;
+  width: 900px;
+  height: 500px;
+  padding: 24px 28px 0;
+  border-radius: 22px;
+  background: rgba(3, 24, 66, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+.feed-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 0 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.72);
+}
+.feed-head strong {
+  font-size: 28px;
+  font-weight: 600;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+.feed-list {
+  position: relative;
+  height: 390px;
+  margin-top: 12px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(transparent, #000 28px, #000 62%, transparent);
+  mask-image: linear-gradient(transparent, #000 28px, #000 62%, transparent);
+}
+.feed-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, var(--flash, 0));
+  font-size: 21px;
+  white-space: nowrap;
+}
+.feed-icon svg {
+  display: block;
+}
+.path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.path .dir {
+  color: rgba(255, 255, 255, 0.55);
+}
+.path .name {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+/* ---- 5 · the ZIP, opened ---- */
+.files-win {
+  position: absolute;
+  overflow: hidden;
+  background: #ffffff;
+  color: #24283f;
+  box-shadow: 0 30px 80px rgba(5, 38, 88, 0.45);
+}
+.files-inner {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 930px;
+  height: 880px;
+}
+.files-inner .toolbar {
+  gap: 18px;
+  height: 58px;
+  padding: 0 20px;
+}
+.files-inner .dots i {
+  width: 14px;
+  height: 14px;
+}
+.files-title {
+  font-size: 17px;
+}
+.files-list {
+  padding: 6px 0;
+}
+.file-row {
+  position: relative;
+  grid-template-columns: 30px 290px 1fr auto;
+  gap: 16px;
+  padding: 12px 28px;
+  font-size: 18px;
+}
+/* The folder about to open; video.ts sets --hl. */
+.file-row::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #e3effd;
+  opacity: var(--hl, 0);
+}
+.file-row > * {
+  position: relative;
+}
+.file-row .folder svg {
+  width: 30px;
+  height: 25px;
+}
+.file-what {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.file-kinds {
+  padding: 4px 12px;
+  font-size: 15px;
+}
+.drill {
+  height: 0;
+  overflow: hidden;
+  background: #fafdff;
+  border-bottom: 1px solid #e4eaf2;
+}
+.drill-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 44px;
+  padding: 0 28px 0 74px;
+  font-size: 17px;
+  white-space: nowrap;
+}
+.drill-icon svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+.drill-path .dir {
+  color: #72758c;
+}
+.drill-path .stem {
+  color: #083f92;
+  font-weight: 500;
+}
+/* One record's JSON and its PDF: the name they share, marked once the folder is open. */
+.drill-row.pair .stem {
+  margin: 0 3px;
+  padding: 3px 7px;
+  border-radius: 7px;
+  background: rgb(241 193 205 / calc(var(--pair, 0) * 0.6));
+}
+/* The popup's file card, which the window grows out of. */
+.ghost {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 26px;
+  white-space: nowrap;
+}
+.ghost .zip {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 66px;
+  height: 66px;
+  border-radius: 20px;
+  background: #e3effd;
+}
+.ghost .zip svg {
+  display: block;
+  width: 36px;
+  height: 36px;
+}
+.ghost strong {
+  display: block;
+  font-size: 25px;
+  font-weight: 500;
+  color: #083f92;
+}
+.ghost span {
+  font-size: 20px;
+  color: #5b6785;
+}
+
+/* ---- 6 · private by design ---- */
+.privacy-title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 118px;
   margin: 0;
   text-align: center;
-  font-size: 19px;
-  opacity: 0.72;
+  font-size: 88px;
+  line-height: 1.1;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+.privacy-sub {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 250px;
+  max-width: 1300px;
+  margin: 0 auto;
+  text-align: center;
+  font-size: 30px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.9);
+}
+/* The two ends of the line: their middles sit on video.ts's WIRE. */
+.node {
+  position: absolute;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.site {
+  left: 330px;
+  top: 430px;
+}
+.home {
+  left: 1250px;
+  top: 440px;
+}
+.mini {
+  width: 340px;
+  height: 220px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 24px 60px rgba(5, 38, 88, 0.45);
+}
+.mini-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 12px;
+  background: #f1f3f4;
+  border-bottom: 1px solid #e5e7eb;
+}
+.mini-bar .dots {
+  gap: 6px;
+}
+.mini-bar .dots i {
+  width: 10px;
+  height: 10px;
+}
+.mini-address {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 12.5px;
+}
+.mini-address svg {
+  display: block;
+}
+.mini-body {
+  padding: 22px 20px;
+}
+.mini-body i {
+  display: block;
+  height: 12px;
+  margin-bottom: 16px;
+  border-radius: 6px;
+  background: #eef0f2;
+}
+.mini-body i:nth-child(1) {
+  width: 55%;
+  height: 14px;
+  background: #e2e8f0;
+}
+.mini-body i:nth-child(2) {
+  width: 90%;
+}
+.mini-body i:nth-child(3) {
+  width: 75%;
+}
+.mini-body i:nth-child(4) {
+  width: 60%;
+}
+.laptop svg {
+  display: block;
+  filter: drop-shadow(0 24px 40px rgba(5, 38, 88, 0.45));
+}
+.node-label {
+  margin: 22px 0 0;
+  font-size: 28px;
+  font-weight: 600;
+}
+.home .node-label {
+  margin-top: 32px;
+}
+.wire {
+  position: absolute;
+  left: 700px;
+  top: 538px;
+  width: 520px;
+  height: 4px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.55) 0 14px, transparent 14px 26px);
+  transform-origin: left center;
+}
+.packet {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 36px;
+  height: 46px;
+  padding: 14px 8px 0;
+  border-radius: 7px;
+  background: #ffffff;
+  box-shadow: 0 6px 16px rgba(5, 38, 88, 0.4);
+}
+.packet i {
+  display: block;
+  height: 4px;
+  margin-bottom: 6px;
+  border-radius: 2px;
+  background: #c4e5f8;
+}
+.pills {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 790px;
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+}
+.pills.second {
+  top: 872px;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 26px 12px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 26px;
+  font-weight: 500;
+}
+.pill-icon svg {
+  display: block;
+  width: 30px;
+  height: 30px;
+}
+
+/* ---- 7 · where to get it ---- */
+.end-title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 540px;
+  margin: 0;
+  text-align: center;
+  font-size: 84px;
+  line-height: 1.1;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+.end-sub {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 668px;
+  margin: 0;
+  text-align: center;
+  font-size: 34px;
+  white-space: pre;
+  color: rgba(255, 255, 255, 0.92);
+}
+.end-link {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 740px;
+  margin: 0;
+  text-align: center;
+  font-size: 27px;
+  color: #f1c1cd;
 }
 
 /* ---- the poster (video.ts, ?poster=), only ever on a still ----
@@ -306,6 +781,7 @@ iframe.popup {
   position: absolute;
   inset: 0;
   background: rgba(5, 38, 88, 0.26);
+  opacity: 0;
 }
 .play {
   position: absolute;

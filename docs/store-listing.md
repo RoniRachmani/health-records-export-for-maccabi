@@ -96,18 +96,22 @@ placeholder page, never a real account. The text around the popup comes from `SH
 The store's video field takes a **YouTube link**, not a file. The one to paste is
 **https://youtu.be/bMO8CJFN0ig** — "Export your Maccabi Online medical records to one ZIP — Chrome extension",
 on the [Hey Roni](https://www.youtube.com/@Hey-Roni-Dev) channel. `npm run store-video` renders the video to
-`store/assets/promo-video.mp4` (1920×1080, 30 fps, 49 seconds, silent); a re-render replaces that video on YouTube, so
+`store/assets/promo-video.mp4` (1920×1080, 30 fps, 46 seconds, silent); a re-render replaces that video on YouTube, so
 the link on the dashboard stays the one above.
 
 It is not committed — it is rebuilt from `store/src/video.ts`, which draws it a frame at a time in headless
 Chrome. Like the screenshots, it shows the real popup fed made-up states (`store/src/mock-chrome.ts`), driven
 through a whole export by run states built from the real `PLAN` and `WEIGHTS`, so the bar, the step names and the
-section list move as they do in an export. Nothing in it comes from a real account.
+section list move as they do in an export. Nothing in it comes from a real account: the record cards, and the
+file names that stream past while the export runs, are made up, in the collector's own `<date>_<id>_<title>` form.
 
-What it shows, in order: the name and what the extension does · the two clicks that start an export · the export
-running, sped up, with the progress badge on the toolbar icon · the finished ZIP in the Downloads folder · the
-folders inside the ZIP · "Private by design" · the closing card with the repository's address. The disclaimer is
-on the first and last cards, and the popup's own "Unofficial · Not affiliated with Maccabi" is visible throughout.
+What it shows, in order: record cards from all over the site pulled into the extension's folder · the name and
+what the extension does · the clicks that start an export, on a placeholder page, then the camera closing in on the
+popup · the export running, sped up, beside the files it writes and the progress badge on the toolbar icon · the
+finished ZIP, which opens into its folders, and `test-results/` opened to show a record's JSON and PDF sharing a
+name · "Private by design", with records travelling from the site to a computer and nothing in between · the
+closing card with the repository's address. The disclaimer is on the title and closing cards, and the popup's own
+"Unofficial · Not affiliated with Maccabi" is on screen whenever the popup is.
 
 The README shows the video as a poster that links to it: `store/assets/video-poster.png`, one frame of the same film
 with a play badge over it, drawn by `npm run store-assets -- poster`. Re-render it whenever the video changes.
