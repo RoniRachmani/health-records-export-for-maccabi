@@ -18,16 +18,16 @@ the extension changes, update this file along with it (see [Keeping it true](#ke
 
 **Title** comes from the manifest's `name`: Health Records Export for Maccabi
 
-**Summary** comes from the manifest's `description` in `manifest.config.ts`. It has 104 characters, and the limit is 132:
+**Summary** comes from the manifest's `description` in `manifest.config.ts`. It has 119 characters, and the limit is 132:
 
-> Save your Maccabi Online medical records (tests, visits, prescriptions, letters) as one ZIP. Unofficial.
+> Save your Maccabi Online medical records (tests, visits, prescriptions, letters) and their PDFs as one ZIP. Unofficial.
 
 **Description** (plain text. The store shows line breaks but doesn't render Markdown):
 
 ```
-Save a copy of your Maccabi Online medical records on your computer, as one ZIP file.
+Save a copy of your Maccabi Online medical records on your computer, as one ZIP file: every PDF the site offers, plus the site's own data as JSON. Free and open source, with no servers of its own.
 
-Health Records Export for Maccabi collects the records that Maccabi Online shows you, along with every PDF the site offers, and saves them to your Downloads folder:
+Health Records Export for Maccabi collects the records that Maccabi Online shows you and saves them to your Downloads folder:
 
 • Test results, lab histories and result PDFs
 • Visit summaries from the last 12 months, with their PDFs
@@ -35,8 +35,9 @@ Health Records Export for Maccabi collects the records that Maccabi Online shows
 • Referrals, approvals and information pages
 • Vaccinations and the vaccination booklet
 • Letters
-• Communication with doctor: your inquiries and the forms attached to them
+• Messages with your doctor, and the forms attached to them
 • Documents you uploaded
+• Your member details, entitlements and assigned doctors
 • Your full medical file, freshly ordered to cover your whole history
 
 HOW IT WORKS
@@ -47,18 +48,19 @@ HOW IT WORKS
 While the export runs, the tab moves to the site's medical-file page and back. The extension keeps your Maccabi session from timing out until the export finishes. If the session ends anyway, the export pauses. Log in again and press Resume. Files collected so far are kept.
 
 BEFORE YOU START
-Each export orders a fresh copy of your full medical file. It covers your whole history, which is more than the site's own form lets you choose. Maccabi texts you about the order, and the new file replaces the previous one on the site. If an export already ordered one earlier the same day, the extension uses that copy. Ordering this file is the only change the extension makes to your account.
+Each export orders a fresh copy of your full medical file. It covers your whole history, which is wider than the range the site's own form offers. Maccabi texts you about the order, and the new file replaces the previous one on the site. If an export already ordered one earlier the same day, the extension uses that copy. Ordering this file is the only change the extension makes to your account.
 
 WHAT YOU GET
 The ZIP has one folder for each part of the site. Every record is saved as the site's own data (JSON), exactly as the site sent it. If a record has a PDF, the PDF has the same name: the record's date, ID and title. The full medical file is at the top level of the ZIP, and it's the best place to start. A README in the ZIP explains what each folder holds and what the export leaves out.
 
-Not included: imaging studies (DICOM), which the site only opens in its own viewer, and visits older than 12 months, which the site doesn't show. If an item fails to download, the export carries on, and the popup lists the failed items when the export finishes.
+Not included: imaging studies (DICOM), which the site only opens in its own viewer, and visits older than 12 months, which the site doesn't show. The purchase report PDF covers the last 2 years, though the purchase history itself covers everything. If an item fails to download, the export carries on, and the popup lists the failed items when the export finishes.
 
 PRIVATE BY DESIGN
 • Connects only to online.maccabi4u.co.il. No servers, analytics, tracking or remote code.
+• Reads nothing from the tab until you've read the notice and agreed.
 • Uses the session you're already logged in with. It never sees your password or one-time codes.
 • Deletes its own copy of your files as soon as the ZIP is saved.
-• Open source: https://github.com/RoniRachmani/health-records-export-for-maccabi
+• Open source, and what ships isn't minified, so you can read exactly what runs: https://github.com/RoniRachmani/health-records-export-for-maccabi
 
 The ZIP isn't encrypted, and it contains your health information. Keep it somewhere safe.
 
