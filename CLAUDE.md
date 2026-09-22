@@ -148,7 +148,11 @@ re-runs. Legacy steps don't get a 401, so `runner.ts` treats "Failed to fetch" i
   `public/terms.html`, and change their effective date. For a material change also bump `TERMS_EFFECTIVE`
   in `shared/state.ts`, which makes the popup ask everyone to accept again.
 - **Keep `public/third-party-notices.txt` current** when a runtime dependency changes (only `fflate`
-  today, plus Vite's module preload polyfill).
+  today, plus Vite's module preload polyfill). The README's `docs/chrome-web-store-badge.png` isn't one of
+  them: it is Google's own badge, committed byte for byte as it is served from
+  [their branding page](https://developer.chrome.com/docs/webstore/branding), and their terms allow resizing
+  it and nothing else. It has to keep linking to the listing. It is the bordered version, whose fill is opaque
+  white, because the borderless one is transparent and would be dark text on dark in GitHub's dark theme.
 - **Re-run `npm run store-assets`** when the popup's appearance changes, and `npm run store-video` if the video's
   own copy or the popup states it shows go stale; a re-rendered video has to be re-uploaded to YouTube, and its
   poster (`store-assets -- poster`) re-rendered with it.

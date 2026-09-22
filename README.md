@@ -37,9 +37,12 @@ to your computer as one ZIP file: every PDF the site offers, plus the site's own
 
 You need Chrome 116 or newer.
 
-**[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp)**, and
-Chrome keeps it up to date. However you install it, the build isn't minified, so you can read exactly the code that
-runs.
+<a href="https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp">
+  <img src="docs/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="206">
+</a>
+
+Installed from the store, it stays up to date by itself. However you install it, the build isn't minified, so you can
+read exactly the code that runs.
 
 ### Load it unpacked instead
 
