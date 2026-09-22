@@ -3,7 +3,7 @@ import { doctorCommunications, emptySections, savedDocuments } from './sections/
 import { letters } from './sections/letters';
 import { medications, purchases } from './sections/medications';
 import { profileAndDoctors } from './sections/profile';
-import { referrals } from './sections/referrals';
+import { approvals, infoPages, referrals } from './sections/referrals';
 import { testResults } from './sections/testResults';
 import { vaccinations } from './sections/vaccinations';
 import { visits } from './sections/visits';
@@ -19,6 +19,8 @@ export const STEPS = {
   medications,
   purchases,
   referrals,
+  approvals,
+  infoPages,
   vaccinations,
   letters,
   doctorCommunications,

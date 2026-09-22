@@ -46,6 +46,8 @@ export const PLAN = [
   'testResults',
   'visits',
   'referrals',
+  'approvals',
+  'infoPages',
   'vaccinations',
   'letters',
   'doctorCommunications',
@@ -55,16 +57,26 @@ export const PLAN = [
 ] as const;
 export type PlanStep = (typeof PLAN)[number];
 
-/** Rough share of the run's time per step, for the progress bar. */
+/**
+ * Rough share of the run's time per step, for the progress bar. Only the ratios matter; percentOf
+ * divides by their sum. What makes a step slow is the number of requests it sends, one every
+ * PACE_MS, so the steps whose list has no date cap — referrals, approvals and the doctor messages,
+ * which are asked for from 1900 and so grow with how long someone has been a member — weigh more
+ * than the ones the server caps (visits: 12 months) or that hold only what is current
+ * (medications: prescriptions in force). Tuned for a long-standing member: that is where a
+ * mis-weighted step stalls the bar long enough to look like a hang.
+ */
 export const WEIGHTS: Record<PlanStep, number> = {
   profileAndDoctors: 2,
   testResults: 30,
-  visits: 8,
-  medications: 5,
-  referrals: 5,
+  visits: 7,
+  medications: 3,
+  referrals: 6,
+  approvals: 2,
+  infoPages: 1,
   vaccinations: 4,
-  letters: 3,
-  doctorCommunications: 3,
+  letters: 2,
+  doctorCommunications: 8,
   emptySections: 1,
   openLegacyPage: 1,
   purchases: 3,
@@ -78,17 +90,19 @@ export const WEIGHTS: Record<PlanStep, number> = {
 };
 
 export const LABELS: Record<PlanStep, string> = {
-  profileAndDoctors: 'Member profile and doctors',
+  profileAndDoctors: 'Your details and doctor',
   testResults: 'Test results',
   visits: 'Visit summaries',
   medications: 'Prescriptions',
-  referrals: 'Referrals, approvals and info pages',
+  referrals: 'Referrals',
+  approvals: 'Approvals',
+  infoPages: 'Information pages',
   vaccinations: 'Vaccinations',
   letters: 'Letters',
-  doctorCommunications: 'Communication with doctor',
+  doctorCommunications: 'Messages with your doctor',
   emptySections: 'Allergies, appointments and requests',
   openLegacyPage: 'Opening the medical file page',
-  purchases: 'Pharmacy purchases',
+  purchases: 'Medication purchases',
   savedDocuments: 'Your uploads',
   orderMedicalFile: 'Ordering your medical file',
   returnToSonline: 'Back to the new site',

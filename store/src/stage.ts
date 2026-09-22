@@ -35,7 +35,7 @@ const SHOTS: Record<string, Shot> = {
       'Session timed out? Log in again and press Resume',
     ],
     popup: 'running',
-    badge: { text: '34%', color: '#2563c9' },
+    badge: { text: '34%', color: '#296bed' },
   },
   done: {
     title: 'One file in your Downloads folder',
@@ -196,15 +196,17 @@ function paper(opacity: number): string {
     <rect x="18" y="30" width="60" height="8" rx="4" fill="#083f92" opacity="0.35"/>
     <rect x="18" y="48" width="44" height="8" rx="4" fill="#083f92" opacity="0.35"/>`;
 }
-const MARK = `<g fill="none" stroke="#2563c9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M5.75 16V4.75a2 2 0 0 1 2-2H14L18.25 7v9z" fill="#ffffff"/>
-    <path d="M14 2.75V7h4.25M9 10h6M9 13h3.5"/>
-    <rect x="2.75" y="16" width="18.5" height="5.25" rx="1.75" fill="#ffffff"/>
-    <path d="M9.5 18.625h5"/>
+// The folder outline, as scripts/make-icons.mjs rounds it: the tab's corners at r 0.8, the rest at
+// r 2.75. Keep the two in step — this is the same mark, drawn twice.
+const MARK_PATH = 'M2.75 7A2.75 2.75 0 0 1 5.5 4.25L9.031 4.25A0.8 0.8 0 0 1 9.64 4.53L11.51 6.72A0.8 0.8 0 0 0 12.119 7L18.5 7A2.75 2.75 0 0 1 21.25 9.75L21.25 18.25A2.75 2.75 0 0 1 18.5 21L5.5 21A2.75 2.75 0 0 1 2.75 18.25Z';
+const MARK = `<g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="${MARK_PATH}" transform="translate(-1.1 -1.1)" stroke="#f1c1cd" stroke-width="2.55"/>
+    <path d="${MARK_PATH}" fill="#ffffff" stroke="#083f92" stroke-width="1.6"/>
+    <path d="M12 11.25v5.5M9.4 14.15L12 16.75l2.6-2.6" stroke="#083f92" stroke-width="1.6"/>
   </g>`;
 
 function promo(): HTMLElement {
-  // The icon's page and tray, over two more documents; no text, as the store asks.
+  // The icon's folder, over two documents; no text, as the store asks.
   return svg(`<svg viewBox="0 0 440 280" width="440" height="280">
     <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#296bed"/><stop offset="1" stop-color="#083f92"/></linearGradient></defs>
     <rect width="440" height="280" fill="url(#bg)"/>

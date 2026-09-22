@@ -9,23 +9,31 @@ export interface Stage {
 
 /**
  * The run plan as the user sees it: page changes and bookkeeping steps belong to the section they
- * serve, and one stage per collection step. A stage need not be one folder: the referrals step
- * writes referrals/, approvals/ and info-pages/. Each stage's steps must be consecutive in PLAN, or
- * stageStates would mark a stage current again after a later one is done.
+ * serve, and a stage per collection step wherever there is room for one. Room is the constraint:
+ * Chrome caps the popup at 600px, which leaves about 13 lines here, so steps that take little time
+ * and write little (the often-empty sections, the three referral resources) share a stage with the
+ * one beside them. Each stage's steps must be consecutive in PLAN, or stageStates would mark a
+ * stage current again after a later one is done.
  */
 export const STAGES: Stage[] = [
   // Ordering comes first so Maccabi can build the file while everything else is collected; the
   // download of it is the last stage before the ZIP.
   { label: 'Ordering your medical file', steps: ['openLegacyPage', 'orderMedicalFile'] },
-  // Prescriptions and purchases are one folder and one stage.
-  { label: 'Medications', steps: ['medications', 'purchases'] },
+  // One folder, medications-and-prescriptions/, but two stages: the REST API's prescriptions, then
+  // the legacy purchase history and its report, which fail in quite different ways.
+  { label: 'Prescriptions', steps: ['medications'] },
+  { label: 'Medication purchases', steps: ['purchases'] },
   { label: 'Your uploads', steps: ['savedDocuments'] },
-  { label: 'Member profile and doctors', steps: ['returnToSonline', 'profileAndDoctors'] },
+  { label: 'Your details and doctor', steps: ['returnToSonline', 'profileAndDoctors'] },
   { label: 'Test results', steps: ['testResults'] },
   { label: 'Visit summaries', steps: ['visits'] },
-  { label: 'Referrals, approvals and info pages', steps: ['referrals'] },
+  // Three steps and three folders under one line: the step title names each as it runs.
+  { label: 'Referrals, approvals and information pages', steps: ['referrals', 'approvals', 'infoPages'] },
   { label: 'Vaccinations', steps: ['vaccinations'] },
-  { label: 'Letters and communication with doctor', steps: ['letters', 'doctorCommunications', 'emptySections'] },
+  { label: 'Letters', steps: ['letters'] },
+  // emptySections is three requests for sections that are usually empty; it rides along here
+  // rather than taking a line of its own.
+  { label: 'Messages with your doctor', steps: ['doctorCommunications', 'emptySections'] },
   { label: 'Full medical file', steps: ['waitMedicalFile'] },
   { label: 'Saving the ZIP', steps: ['save'] },
 ];
@@ -83,7 +91,7 @@ export function statsText(run: RunState, now: number): string {
  * ("lab histories"), and '' is the step before its first progress report. Kept short enough for one line.
  */
 export const DESCRIPTIONS: Record<PlanStep, Record<string, string>> = {
-  profileAndDoctors: { '': 'Reading your member details and doctors' },
+  profileAndDoctors: { '': 'Reading your details and your doctor' },
   testResults: {
     '': 'Reading your list of tests',
     'test results': 'Downloading each test result and its PDF',
@@ -91,15 +99,12 @@ export const DESCRIPTIONS: Record<PlanStep, Record<string, string>> = {
   },
   visits: { '': 'Reading your visit history', visits: 'Downloading visit details and summaries' },
   medications: { '': 'Reading your prescriptions', prescriptions: 'Downloading prescription PDFs' },
-  referrals: {
-    '': 'Reading your referrals',
-    referrals: 'Downloading referrals and their PDFs',
-    approvals: 'Downloading approvals and their PDFs',
-    'information pages': 'Downloading your information pages',
-  },
+  referrals: { '': 'Reading your referrals', referrals: 'Downloading each referral as a PDF' },
+  approvals: { '': 'Reading your approvals', approvals: 'Downloading each approval as a PDF' },
+  infoPages: { '': 'Reading your information pages', 'information pages': 'Downloading each page as a PDF' },
   vaccinations: { '': 'Reading your vaccinations', vaccinations: 'Reading vaccines and the vaccination booklet' },
   letters: { '': 'Reading your letters', letters: 'Downloading your letters as PDFs' },
-  doctorCommunications: { '': 'Reading your inquiries to doctors', 'doctor inquiries': 'Downloading inquiries and attached forms' },
+  doctorCommunications: { '': 'Reading your messages to your doctor', 'doctor inquiries': 'Downloading messages and attached forms' },
   emptySections: { '': 'Checking sections that are often empty', 'other sections': 'Checking allergies, appointments and requests' },
   openLegacyPage: { '': 'Needed for purchases, uploads and the order' },
   purchases: {
@@ -145,7 +150,7 @@ const FOLDER_LABELS: Record<string, string> = {
   letters: 'Letters',
   // Core's MEDICAL_FILE, spelled out: importing it would bundle the whole collector into the popup.
   'medical-file': 'Full medical file',
-  'communication-with-doctor': 'Communication with doctor',
+  'communication-with-doctor': 'Messages with your doctor',
   uploads: 'Your uploads',
   'allergies-sensitivity': 'Allergies',
   appointments: 'Appointments',

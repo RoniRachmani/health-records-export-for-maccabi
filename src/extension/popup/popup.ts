@@ -177,8 +177,8 @@ function noticeView(): Child[] {
 }
 
 const INCLUDED = [
-  'Test results', 'Lab histories', 'Visit summaries', 'Prescriptions', 'Pharmacy purchases', 'Referrals',
-  'Approvals', 'Info pages', 'Vaccinations', 'Letters', 'Full medical file', 'Communication with doctor', 'Your uploads',
+  'Test results', 'Lab histories', 'Visit summaries', 'Prescriptions', 'Medication purchases', 'Referrals',
+  'Approvals', 'Information pages', 'Vaccinations', 'Letters', 'Full medical file', 'Messages with your doctor', 'Your uploads',
 ];
 
 function accountRow(st: StateReply): HTMLElement {

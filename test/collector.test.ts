@@ -181,6 +181,6 @@ describe('full run against the fake site', () => {
     expect(s.stoppedAt).toBe('visits');
     expect(s.problems[0]).toMatch(/^visits PROBLEM: SESSION ENDED/);
     expect([...(sink as MemorySink).files.keys()]).toEqual([]);
-    expect(STEP_ORDER).toHaveLength(11);
+    expect(STEP_ORDER).toHaveLength(13);
   });
 });

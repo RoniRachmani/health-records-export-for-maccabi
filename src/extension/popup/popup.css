@@ -571,9 +571,11 @@ details.more summary {
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 0.5px 0;
   color: var(--muted);
+  /* 17px a line: thirteen sections, the tallest the run has, keep the popup under Chrome's 600px
+     cap without crowding the 15px marks. */
   font-size: 12.5px;
+  line-height: 1.35;
 }
 .stages li::before {
   content: '';

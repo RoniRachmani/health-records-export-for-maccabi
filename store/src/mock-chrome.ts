@@ -48,7 +48,7 @@ const STATES: Record<string, Omit<StateReply, 'noticeAccepted'> & { noticeAccept
     run: run({
       status: 'paused_session',
       next: PLAN.indexOf('visits'),
-      percent: 41,
+      percent: 55,
       fileCount: 355,
       byteCount: 24_100_000,
       message: 'Your Maccabi session ended (HTTP 401). Log in to Maccabi Online again, then click this extension\'s icon on that tab and press Resume. Files collected so far are kept.',
@@ -56,7 +56,7 @@ const STATES: Record<string, Omit<StateReply, 'noticeAccepted'> & { noticeAccept
     tab,
   },
   error: {
-    run: run({ status: 'error', next: PLAN.indexOf('purchases'), percent: 62, message: 'Unexpected error in "Pharmacy purchases": the purchase table has an unknown layout' }),
+    run: run({ status: 'error', next: PLAN.indexOf('purchases'), percent: 8, message: 'Unexpected error in "Medication purchases": the purchase table has an unknown layout' }),
     tab,
   },
   done: { run: done, tab },

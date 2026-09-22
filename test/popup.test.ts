@@ -84,15 +84,15 @@ describe('popup', () => {
     expect(document.querySelector('.detail')?.textContent).toBe('Saving how each lab value changed over time');
     expect(document.querySelector('.stats')?.textContent).toBe('40 files · 2.3 MB · 6 min elapsed');
 
-    storageChange(running({ next: PLAN.indexOf('referrals'), percent: 48, detail: 'Referrals, approvals and info pages: approvals', fileCount: 212, byteCount: 14_800_000 }));
+    storageChange(running({ next: PLAN.indexOf('approvals'), percent: 48, detail: 'Approvals: approvals', fileCount: 212, byteCount: 14_800_000 }));
     expect(buttonNamed('Stop')).toBe(stop);
     expect(document.querySelector('.status')?.textContent).toBe('Exporting · 48%');
-    expect(document.querySelector('.detail')?.textContent).toBe('Downloading approvals and their PDFs');
+    expect(document.querySelector('.detail')?.textContent).toBe('Downloading each approval as a PDF');
     expect(document.querySelector('.stats')?.textContent).toBe('212 files · 15 MB · 6 min elapsed');
     expect(document.querySelector('[role=progressbar]')?.getAttribute('aria-valuenow')).toBe('48');
-    expect(document.querySelector('.stages [aria-current=step]')?.textContent).toBe('Referrals, approvals and info pages');
-    expect(document.querySelectorAll('.stages li.done')).toHaveLength(6);
-    expect(document.querySelector('.sections-label')?.textContent).toBe('Sections6 of 11 done');
+    expect(document.querySelector('.stages [aria-current=step]')?.textContent).toBe('Referrals, approvals and information pages');
+    expect(document.querySelectorAll('.stages li.done')).toHaveLength(7);
+    expect(document.querySelector('.sections-label')?.textContent).toBe('Sections7 of 13 done');
   });
 
   it('confirms Stop inline, then shows Stopping until the run is gone', async () => {

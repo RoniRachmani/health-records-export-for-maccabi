@@ -16,12 +16,12 @@ describe('stageStates', () => {
   });
 
   it('keeps a grouped stage current through all its steps', () => {
-    const medications = STAGES.findIndex((s) => s.steps.includes('purchases'));
-    for (const step of ['medications', 'purchases'] as const) {
+    const profile = STAGES.findIndex((s) => s.steps.includes('referrals'));
+    for (const step of ['referrals', 'approvals', 'infoPages'] as const) {
       const s = stageStates(PLAN.indexOf(step));
-      expect(s[medications]).toBe('current');
-      expect(s.slice(0, medications).every((x) => x === 'done')).toBe(true);
-      expect(s.slice(medications + 1).every((x) => x === 'pending')).toBe(true);
+      expect(s[profile]).toBe('current');
+      expect(s.slice(0, profile).every((x) => x === 'done')).toBe(true);
+      expect(s.slice(profile + 1).every((x) => x === 'pending')).toBe(true);
     }
   });
 
@@ -73,10 +73,10 @@ describe('statsText and stepText', () => {
     expect(stepText({ ...base, detail: 'Test results' })).toEqual({ title: 'Test results', detail: 'Reading your list of tests' });
     expect(stepText({ ...base, detail: 'Test results: test results' })).toEqual({ title: 'Test results', detail: 'Downloading each test result and its PDF' });
     expect(stepText({ ...base, detail: 'Test results: lab histories' })).toEqual({ title: 'Test results', detail: 'Saving how each lab value changed over time' });
-    const referrals = { ...base, next: PLAN.indexOf('referrals') };
-    expect(stepText({ ...referrals, detail: 'Referrals, approvals and info pages: referrals' }).detail).toBe('Downloading referrals and their PDFs');
-    expect(stepText({ ...referrals, detail: 'Referrals, approvals and info pages: approvals' }).detail).toBe('Downloading approvals and their PDFs');
-    expect(stepText({ ...referrals, detail: 'Referrals, approvals and info pages: information pages' }).detail).toBe('Downloading your information pages');
+    expect(stepText({ ...base, next: PLAN.indexOf('referrals'), detail: 'Referrals: referrals' }))
+      .toEqual({ title: 'Referrals', detail: 'Downloading each referral as a PDF' });
+    expect(stepText({ ...base, next: PLAN.indexOf('approvals'), detail: 'Approvals: approvals' }).detail).toBe('Downloading each approval as a PDF');
+    expect(stepText({ ...base, next: PLAN.indexOf('infoPages'), detail: 'Information pages: information pages' }).detail).toBe('Downloading each page as a PDF');
     const waiting = { ...base, next: PLAN.indexOf('waitMedicalFile') };
     expect(stepText({ ...waiting, detail: 'Waiting for your medical file: medical file status 2' }).detail).toBe('Maccabi is preparing your file');
     expect(stepText({ ...base, next: PLAN.length })).toEqual({ title: '', detail: '' });
@@ -106,7 +106,7 @@ describe('groupProblems', () => {
 
   it('names failed steps and keeps unknown folders as they are', () => {
     const groups = groupProblems([p('purchases', 'boom'), p('something-new/x.json'), p('letters/files/a.pdf'), p('letters'), p('medical-file')]);
-    expect(groups.map((g) => g.label)).toEqual(['Pharmacy purchases', 'something-new', 'Letters', 'Full medical file']);
+    expect(groups.map((g) => g.label)).toEqual(['Medication purchases', 'something-new', 'Letters', 'Full medical file']);
     expect(groups[2].items).toHaveLength(2);
   });
 });
