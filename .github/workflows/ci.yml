@@ -1,5 +1,6 @@
-# The whole gate: the types check, the tests pass against the fake Maccabi, and the store build comes out.
-# There is no linter or formatter in this repo on purpose.
+# The gate that lives in this repo: the types check, the tests pass against the fake Maccabi, and the
+# store build comes out. There is no linter or formatter in this repo on purpose. CodeQL scans on top
+# of this, from GitHub's default setup, so it has no workflow file here.
 name: CI
 
 on:

@@ -21,7 +21,9 @@ npm run store-assets -- marquee   # just one, by shot name
 npm run icons                     # public/icons/ + store/icon-128.png
 ```
 
-There is no linter or formatter configured; `typecheck` and `test` are the whole gate. Load `dist-dev/`
+There is no linter or formatter configured; `typecheck` and `test` are the whole gate you can run
+here. GitHub adds one more: CodeQL default setup scans pull requests and runs weekly, and it has no
+workflow file in the repo — it is configured in the repository's settings. Load `dist-dev/`
 (or `dist/`) unpacked at `chrome://extensions` to run it; the dev build is named "… (dev)" and can be
 driven from the Maccabi page's console (see *Driving a run from the console* in the README).
 
