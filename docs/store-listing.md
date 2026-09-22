@@ -86,15 +86,18 @@ Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare 
 | Screenshot 5 | `store/screenshot-5-privacy.png` | "Private by design", with the popup's list of what's included |
 | Small promo tile (440×280) | `store/promo-small-440x280.png` | The icon's artwork on a blue background, with no text |
 | Marquee promo tile (1400×560) | `store/promo-marquee-1400x560.png` | The same artwork beside the name and one line of text. Optional: the store uses it only when it features the extension |
-| Global promo video | A YouTube link | Optional. See [Promo video](#promo-video) below |
+| Global promo video | https://youtu.be/bMO8CJFN0ig | Optional. See [Promo video](#promo-video) below |
 
 The screenshots are 1280×800 PNG files with no transparency. They show the real popup in made-up states over a
 placeholder page, never a real account. The text around the popup comes from `SHOTS` in `store/src/stage.ts`.
 
 ### Promo video
 
-The store's video field takes a **YouTube link**, not a file. `npm run store-video` renders the video to
-`store/promo-video.mp4` (1920×1080, 30 fps, 49 seconds, silent); upload that to YouTube and paste the link.
+The store's video field takes a **YouTube link**, not a file. The one to paste is
+**https://youtu.be/bMO8CJFN0ig** — "Export your Maccabi Online medical records to one ZIP — Chrome extension",
+on the [Hey Roni](https://www.youtube.com/@Hey-Roni-Dev) channel. `npm run store-video` renders the video to
+`store/promo-video.mp4` (1920×1080, 30 fps, 49 seconds, silent); a re-render replaces that video on YouTube, so
+the link on the dashboard stays the one above.
 
 It is not committed — it is rebuilt from `store/src/video.ts`, which draws it a frame at a time in headless
 Chrome. Like the screenshots, it shows the real popup fed made-up states (`store/src/mock-chrome.ts`), driven
