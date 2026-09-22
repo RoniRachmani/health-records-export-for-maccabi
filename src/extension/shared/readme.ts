@@ -1,13 +1,19 @@
 /* The README.md written at the root of the ZIP. It is the export's data dictionary, aimed at
    whoever -- or whatever -- reads the export next: where to start, what the export does not
-   contain, what each file holds, and the fields that do not mean what they appear to mean. It is
-   written from real exports; every claim about a field was checked against one. */
+   contain, how it is laid out, and the fields that do not mean what they appear to mean. It is
+   written from real exports; every claim about a field was checked against one.
+
+   It is read with the export, most often by an AI assistant whose context it shares with the
+   records themselves, so it is kept short on purpose. It says only what a reader cannot get by
+   opening a file -- the layout, the gaps, the traps, the join keys -- and leaves the field names to
+   the JSON, which carries them already. Before adding a line, ask whether a record would be read
+   wrongly without it; if not, leave it out. */
 
 interface Folder {
   name: string;
-  /** One line in the contents table. */
+  /** One line: what the folder holds. */
   summary: string;
-  /** Its entry under "Folder by folder": what each file holds and the fields worth knowing. */
+  /** Only what a reader would get wrong without it: layout that is not obvious, and fields that mislead. */
   detail: string;
 }
 
@@ -15,173 +21,88 @@ interface Folder {
 const FOLDERS: Folder[] = [
   {
     name: 'profile',
-    summary: "The member's details, entitlements, insurance seniority, and their doctors' directory entries.",
-    detail: `- \`member.json\` — the member: name in Hebrew and English (\`first_name_hebrew\`,
-  \`last_name_english\`, ...), \`birth_date\`, \`sex\`, \`age\`, home address (\`living_*\`), phone
-  numbers, \`email\`, the family doctor (\`linked_doc_first_name\`, \`linked_doc_last_name\`), and
-  supplementary insurance (\`ins_group_N\`, joined \`ins_date_N\`, paid until
-  \`ins_payed_until_date_N\`). Flags such as \`is_diabetes\` and \`is_cardio\` are undocumented; do
-  not read them as diagnoses.
-- \`entitlement.json\` — the member's current eligibility for services, and who pays.
-- \`insurance-seniority.json\` — \`insurance_groups[]\`: each insurance plan (\`ins_type_code\`),
-  when it began (\`ins_seniority_date\`), and whether it is \`active\` or \`cancelled\`.
-- \`providers.json\` — the site's directory entry for each of the member's assigned doctors:
-  clinic address, phones (\`contacts[]\`), specialities, and reception hours
-  (\`schedules.schedule[]\`).`,
+    summary: "the member, entitlements, insurance seniority, their doctors' directory entries",
+    detail: 'Flags in `member.json` such as `is_diabetes` and `is_cardio` are undocumented — not diagnoses.',
   },
   {
     name: 'my-doctor',
-    summary: "The member's assigned doctors, and whether they may change them.",
-    detail: `- \`assigned-practitioners.json\` — \`data[]\`: the doctors the member is assigned to, with
-  \`practitioner_name\`, \`clinic_address\` and their ids.
-- \`ascribed.json\` — the member's family doctor as of the export day: name, \`license_number\`,
-  clinic address and phones. Present only when the site named one.
-- \`eligibilities.json\` — whether the member may change doctor now, and \`last_visit_date\` with
-  the assigned doctor.`,
+    summary: 'the assigned doctors, and whether the member may change them',
+    detail: '`ascribed.json` is the family doctor on the export day, present only when the site named one.',
   },
   {
     name: 'test-results',
-    summary: 'Lab, imaging, cardiology and external results: the list, each result, each lab measurement over time, and result PDFs.',
-    detail: `- \`list.json\` — \`tests[]\`: every test the site lists, of every \`type\`: \`lab_result\`,
-  \`imaging_result\` (a radiologist's report), \`imaging_study\` (the images, not exported),
-  \`cardiology_result\`, \`external_test_result\` (done at another institute), and possibly
-  others. Each has \`execute_date\`, \`result_date\`, \`category_name\`, \`referrer_name\` (who
-  ordered it) and \`executing_institute\`; anything but a lab test is named in \`test_category[]\`
-  and \`procedures[]\`.
-- \`details/<date>_<request_id>-<type>.json\` — one test. For a lab test, \`results[]\` holds groups
-  (\`group_name\`, in Hebrew: blood chemistry, blood count, urine, ...) of \`group_values[]\`, one
-  per measurement; see *Reading lab values*. For any other type \`results\` is empty: the finding
-  is only in the PDF.
-- \`files/\` — the result PDF, under the same name as its details file, for tests that have one.
-  Lab tests have none: their values are the data.
-- \`history/<test_id>_<name>.json\` — one measurement over time: \`current_result\` (the latest)
-  and \`other_results[]\` (every earlier one), each with the ordering doctor (\`doc_first_name\`,
-  \`doc_last_name\`). History reaches years further back than \`details/\`.
-- \`latest-lab-results.json\` — the latest value of each measurement.
-- \`followed-counter.json\` — how many results the member follows on the site. Not medical.`,
+    summary: 'lab, imaging, cardiology and external results',
+    detail: `\`list.json\` is \`tests[]\`, each with a \`type\`: \`lab_result\`, \`imaging_result\` (a
+radiologist's report), \`imaging_study\` (the images — never exported, no file),
+\`cardiology_result\`, \`external_test_result\`. A lab test keeps its values in
+\`details/\` (\`results[]\` → groups → \`group_values[]\`, see *Lab values*) and has no PDF; **every
+other type has \`results\` empty** and its finding only in the PDF in \`files/\`.
+\`history/<test_id>_<name>.json\` is one measurement over time and reaches years further back than
+\`details/\`; \`latest-lab-results.json\` is the latest of each.`,
   },
   {
     name: 'visit-summaries',
-    summary: 'Visits of the last 12 months, and their summary PDFs.',
-    detail: `- \`list.json\` — \`results[]\`: each visit of the last 12 months, with \`appointment_id\`,
-  \`appointment_date\`, the practitioner (\`service_provider_name\`), the speciality
-  (\`service_name\`), and \`has_summery_file\` (sic).
-- \`details/<date>_<appointment_id>_<speciality>.json\` — one visit: \`visit_summary_date\`, the
-  practitioner and \`service_provider_specialization\`, the doctor's own words in
-  \`visit_recommendations\` and \`online_requests\`, and what the visit produced: \`referrals[]\`,
-  \`drugs[]\` (with \`instructions\`), \`approvals\`, \`tutorials\`. \`diagnosis[]\` may hold only
-  nulls; the diagnosis is then in the PDF and the medical file. A visit with no summary is
-  \`status\` 204 with \`data\` null.
-- \`files/\` — the visit summary PDF, for visits that have one.`,
+    summary: 'the last 12 months of visits, with their summary PDFs',
+    detail: `\`details/\` holds the doctor's own words (\`visit_recommendations\`, \`online_requests\`)
+and what the visit produced (\`referrals[]\`, \`drugs[]\`, \`approvals\`, \`tutorials\`).
+**\`diagnosis[]\` may hold only nulls** — the diagnosis is then in the PDF and the medical file only.
+A visit with no summary is \`status\` 204 with \`data\` null; \`has_summery_file\` (sic) says which.`,
   },
   {
     name: 'medications-and-prescriptions',
-    summary: 'Recent prescriptions and their PDFs, the full purchase history, and a 2-year purchase report.',
-    detail: `- \`list.json\` — \`results[]\`: the prescriptions the site lists, which are recent ones:
-  \`drug_name\`, \`drug_instructions\`, validity \`from_date\`–\`to_date\`, \`prescriber_name\`,
-  \`specialization\`, \`prescription_number\`, and the drug's code \`drug_largo_code\`.
-- \`files/<date>_<prescription_number>_<drug>.pdf\` — each prescription.
-- \`purchased-history.html\` — every purchase, as the site's own HTML table, headed in Hebrew:
-  purchase date (\`DD-MM-YYYY\`), drug or product, doctor, units, pharmacy, price, price for
-  members. It is in **windows-1255**, not UTF-8; the site has no JSON version of it.
-- \`purchased-report.json\` and \`files/purchased-report.pdf\` — the site's purchase report, for
-  the last 2 years.`,
+    summary: 'prescriptions, the full purchase history, a 2-year purchase report',
+    detail: `\`list.json\` lists recent prescriptions only, one PDF each.
+\`purchased-history.html\` is every purchase, as the site's own Hebrew table, encoded
+**windows-1255**, with no JSON equivalent; \`purchased-report.json\` and its PDF cover 2 years.`,
   },
   {
     name: 'referrals',
-    summary: 'Referrals, with their diagnoses and ordered tests, and their PDFs.',
-    detail: `- \`list.json\` — \`referrals[]\`: \`title_name\` and \`displaying_name\`, \`referral_date\`,
-  validity \`referral_date_from\`–\`referral_date_to\`, the referring doctor
-  (\`service_provider_full_name\`, \`service_provider_specialization_Description\`), and the
-  reason as \`diagnoses[]\` (\`diagnosis_name\`, in English). A lab referral lists the tests
-  ordered in \`lab_tests[]\`; others list procedures in \`actions[]\`. Referrals are one of the few
-  places the JSON names diagnoses.
-- \`files/<date>_<referral_id>_<title>.pdf\` — each referral.`,
+    summary: 'referrals, with their diagnoses and ordered tests, and their PDFs',
+    detail: `The reason is \`diagnoses[]\` (\`diagnosis_name\`, in English) — one of the few places the
+JSON names a diagnosis; what was ordered is \`lab_tests[]\`, or \`actions[]\` for other referrals.`,
   },
   {
     name: 'approvals',
-    summary: 'Medical certificates and approvals, and their PDFs.',
-    detail: `- \`list.json\` — \`approval[]\`: \`title_name\`, \`approval_date\`, the practitioner and
-  speciality, \`approval_type_code\`. \`approval_date_from\` and \`approval_date_to\` are
-  \`1900-01-01\` when the approval has no validity period.
-- \`files/<date>_<hash>_<title>.pdf\` — each approval. The site gives approvals no id, so the name
-  carries a hash of the approval's fields.`,
+    summary: 'medical certificates and approvals, and their PDFs',
+    detail: `\`approval_date_from\` and \`approval_date_to\` of \`1900-01-01\` mean no validity period.
+Approvals have no id, so their file names carry a hash of the record's fields.`,
   },
   {
     name: 'info-pages',
-    summary: 'Information pages practitioners gave the member, and their PDFs.',
-    detail: `- \`list.json\` — \`tutorials[]\`: information pages a practitioner gave the member:
-  \`display_text\` (the title), \`session_datetime\`, \`practitioner_name\`, \`specialization\`.
-- \`files/<date>_<hash>_<title>.pdf\` — each page, named like approvals. They are general health
-  information, not about the member, except that they were given to them.`,
+    summary: 'pages a practitioner gave the member, with their PDFs',
+    detail: 'They are general health information, **not about the member** — only being given them is.',
   },
   {
     name: 'vaccinations',
-    summary: 'Vaccinations by vaccine, flu vaccine eligibility, and the vaccination booklet PDF.',
-    detail: `- \`list.json\` — \`timeline[]\`: one entry per vaccine, with \`vaccine_group_name\`,
-  \`vaccinations_amount\`, \`first_date\` and \`last_date\`.
-- \`details/<vaccine_group_code>_<name>.json\` — \`data[]\`, one per dose: \`vaccination_date\`,
-  \`vaccine_name\`, \`vaccine_code\`, \`age_on_vaccination\` (in years), \`vaccination_place\`,
-  \`operator_name\`.
-- \`flu-eligibility.json\` — whether the member can have a flu vaccine now.
-- \`vaccination-booklet-report.json\` and \`files/vaccination-booklet-report.pdf\` — the vaccination
-  booklet as the site prints it.
-
-Older vaccinations may be missing here and appear only in the medical file, or in documents the
-member uploaded.`,
+    summary: 'vaccinations by vaccine, flu eligibility, the vaccination booklet PDF',
+    detail: `\`list.json\` is one entry per vaccine, \`details/<vaccine_group_code>_<name>.json\` one
+per dose. Older doses may be missing here and appear only in the medical file or the uploads.`,
   },
   {
     name: 'letters',
-    summary: 'Letters Maccabi sent the member, and their PDFs. Also lists the full medical file.',
-    detail: `- \`list.json\` — \`letters[]\`. \`letter_type\` 1 is a letter Maccabi sent the member, such
-  as an insurance notice (\`letter_desc\`, \`original_item_date\`); its PDF is in \`files/\`.
-  \`letter_type\` 2 is the full medical file: \`from_date\`–\`to_date\` is the range it covers,
-  \`status\` 1 means it is ready, and its PDF is the one beside this README, not in \`files/\`. Use
-  \`original_item_date\`: \`item_date\` is a display string such as \`היום\` ("today").
-- \`files/<date>_<reference_id>_<title>.pdf\` — each letter.`,
+    summary: 'letters Maccabi sent the member; also lists the full medical file',
+    detail: `\`letter_type\` 1 is a letter, its PDF in \`files/\`; \`letter_type\` 2 is the full medical
+file — \`from_date\`–\`to_date\` is the range it covers, \`status\` 1 means ready, and its PDF is the
+one beside this README. Use \`original_item_date\`: \`item_date\` is a display string (\`היום\`, "today").`,
   },
   {
     name: 'communication-with-doctor',
-    summary: 'Questions and requests to doctors, their replies, and the forms attached.',
-    detail: `- \`list.json\` — \`inquiries[]\`: every exchange with a doctor through the site, both the
-  member's questions and requests and forms a doctor sent on their own initiative:
-  \`service_provider_name\`, \`creation_date\`, \`request_status\` (in Hebrew),
-  \`request_subjects[]\`, and the forms attached (\`medical_forms_documents[]\`).
-- \`details/<date>_<request_id>_<doctor>.json\` — one exchange: what the member wrote
-  (\`general_question_subject\`, \`patient_remark\`,
-  \`approval_request_details[].approval_additional_text\`), the doctor's reply (\`doctor_remark\`,
-  \`personal_doctor_remark\`), and the forms (\`medical_forms_details[]\`: a referral, drug
-  instructions or an approval by \`document_description\`, valid \`valid_from\`–\`valid_until\`).
-- \`files/<date>_<request_id>-<n>_<doctor>.pdf\` — the forms, numbered in the order the list gives
-  them. **Most are also in their own folder**: a referral in \`referrals/files/\` (the referral
-  number printed on the form is its \`referral_id\`), drug instructions in
-  \`medications-and-prescriptions/files/\`, sometimes as the very same file. Count each document
-  once.`,
+    summary: 'exchanges with doctors, both ways, and the forms attached',
+    detail: `\`details/\` holds what the member wrote (\`general_question_subject\`, \`patient_remark\`)
+and the reply (\`doctor_remark\`, \`personal_doctor_remark\`); \`files/\` holds the forms, numbered in
+list order. **Most forms are also in their own folder** — a referral in \`referrals/files/\`, drug
+instructions in \`medications-and-prescriptions/files/\`, sometimes the very same file. Count each
+document once.`,
   },
   {
     name: 'uploads',
-    summary: 'Documents the member uploaded to the site.',
-    detail: `- \`details/<date>_<FileId>_<title>.json\` — one document the member uploaded:
-  \`DocumentTitle\`, \`DocumentDescription\`, \`DocumentDate\` (\`DD/MM/YYYY\`), and
-  \`DocumentOriginName\`, the file's name when it was uploaded. There is no \`list.json\`: the
-  site's list is a web page, not data.
-- \`files/\` — the document itself, in the format it was uploaded in, often a photo or a scan.`,
+    summary: 'documents the member uploaded to the site',
+    detail: `\`files/\` holds each document in the format it was uploaded in, often a photo or a scan.
+There is no \`list.json\`: the site's list is a web page, not data.`,
   },
-  {
-    name: 'allergies-sensitivity',
-    summary: 'Recorded sensitivities and intolerances.',
-    detail: '- `list.json` — the sensitivities and intolerances Maccabi has recorded (`intolerance[]`).',
-  },
-  {
-    name: 'appointments',
-    summary: 'Future appointments only. Past ones are in visit-summaries/.',
-    detail: '- `list.json` — future appointments. Past appointments are visits, in `visit-summaries/`.',
-  },
-  {
-    name: 'requests-approvals',
-    summary: 'Open requests and cases.',
-    detail: '- `list.json` — requests and cases the member has open with Maccabi.',
-  },
+  { name: 'allergies-sensitivity', summary: 'recorded sensitivities and intolerances (`intolerance[]`)', detail: '' },
+  { name: 'appointments', summary: 'future appointments only — past ones are visits, in `visit-summaries/`', detail: '' },
+  { name: 'requests-approvals', summary: 'requests and cases the member has open with Maccabi', detail: '' },
 ];
 
 /** "a", "a and b", "a, b and c". */
@@ -192,24 +113,18 @@ function inWords(items: string[]): string {
 function medicalFileSection(file: string | null): string {
   if (!file) {
     return `**This export has no full medical file.** Ordering or downloading it failed, and the
-extension said why in its popup. That file is where the member's whole history is: without it,
-this export reaches back only as far as the structured data below.`;
+extension said why in its popup. Without it, this export reaches back only as far as the data below.`;
   }
-  return `\`${file}\`, beside this file, is the member's **full medical file**,
-as Maccabi produced it on ${file.slice(0, 10)}. It is Maccabi's printout of the member's record.
-It opens with personal details, known problems (diagnoses, with the date each began),
-sensitivities and lifestyle, then goes through the visits in date order back to the earliest
-entry — reason, findings, diagnosis, medications, referrals, vaccinations — and ends with copies
-of documents filed in the record: referrals, lab printouts, imaging and ECG reports, letters,
-certificates. It is the best place to start by a wide margin. Maccabi's own heading calls it
-partial (חלקי), so even this is not everything Maccabi holds.
-
-At the start of every export the extension orders one over the member's whole history, or uses
-one already ordered that day over the same range. If the order fails, the file is the last one
-Maccabi made, which can be older or cover less. The range this one covers is the \`from_date\`–\`to_date\` of the \`letter_type\` 2 entry in
-\`letters/list.json\`. It can run to hundreds of pages. It has a text layer, but its Hebrew often
-comes out of text extractors scrambled, a letter per line or words in reverse order. If extracted
-text reads as nonsense, read the pages as images instead.`;
+  return `\`${file}\`, beside this file, is Maccabi's own printout of the member's record
+as of ${file.slice(0, 10)}: personal details, known problems (diagnoses, with the date each began),
+sensitivities and lifestyle, then every visit back to the earliest — reason, findings, diagnosis,
+medications, referrals, vaccinations — then copies of the documents filed in the record. **Start
+there**: it reaches far further back than the JSON, which holds a few years. Maccabi's own heading
+still calls it partial (חלקי), and if the fresh order this run makes failed, this is an older
+file covering less. Its range is the \`from_date\`–\`to_date\` of the \`letter_type\` 2 entry in
+\`letters/list.json\`. It runs to hundreds of pages, and extractors often get its Hebrew out
+scrambled — a letter per line, or words reversed. If that text reads as nonsense, read the pages
+as images.`;
 }
 
 /**
@@ -224,125 +139,88 @@ export function exportReadme(exportedOn: string, present: Record<string, number>
     ? '\n  This export has no ' + inWords(missing) + ': the site returned nothing for ' +
       (missing.length > 1 ? 'them' : 'it') + ', or the request failed.'
     : '';
-  const rows = here.map((f) => '| `' + f.name + '/` | ' + present[f.name] + ' | ' + f.summary + ' |').join('\n');
-  const folders = here.map((f) => '### `' + f.name + '/`\n\n' + f.detail).join('\n\n');
+  const folders = here
+    .map((f) => '**`' + f.name + '/`** · ' + present[f.name] + ' files — ' + f.summary + '.' +
+      (f.detail ? '\n' + f.detail : ''))
+    .join('\n\n');
   return `# Maccabi health records export
 
 Exported ${exportedOn} from online.maccabi4u.co.il with the Health Records Export for Maccabi
-browser extension. Everything here belongs to one member.
-
-This file is the data dictionary for the export: where to start, what the export leaves out,
-what each file holds, and how to read its values. If you are an AI assistant working from these
-records, read all of it before the records themselves: several fields do not mean what they
-appear to mean.
+browser extension; everything here belongs to one member. This is the export's data dictionary —
+where to start, what is missing, what misleads. Read it before the records.
 
 ## Start with the full medical file
 
 ${medicalFileSection(medicalFile)}
 
-The JSON files are the other half: the site's own data, exact where the medical file is
-narrative (lab values with their reference ranges, dates, ids, the doctors' notes from recent
-visits) but reaching back only a few years. Use the medical file for the history, and the JSON
-for the numbers.
-
 ## What this export does not contain
 
-**Something missing here is not evidence that it never happened.** The export holds what the
-Maccabi member site returns, which is less than Maccabi holds, which is less than the member's
-whole medical history.
+**Something missing here is not evidence that it never happened.** The export holds what the member
+site returns, which is less than Maccabi holds, which is less than the member's medical history.
 
-- **Visits older than 12 months, as data.** \`visit-summaries/\` covers the last 12 months only,
-  because that is all the site returns. Earlier visits are in the medical file.
-- **Older tests, as data.** \`test-results/list.json\` and \`details/\` reach back only as far as
-  the site lists tests. \`history/\` goes further back, but only for measurements taken in at
-  least one listed test. The medical file holds more.
-- **Older prescriptions.** \`medications-and-prescriptions/list.json\` has only the prescriptions
-  the site lists, which are recent ones. \`purchased-history.html\` and the medical file go further
-  back.
-- **Images.** No DICOM image is exported: the site opens imaging studies only in its own viewer.
-  An \`imaging_study\` record is a placeholder with no file. The written report, when there is one,
-  is a separate \`imaging_result\` with a PDF.
-- **Findings of anything but lab tests, as data.** For imaging, cardiology and external results the
-  JSON holds no values: the finding is only in the PDF in \`test-results/files/\`.
-- **Purchases older than 2 years, in the report.**
-  \`medications-and-prescriptions/files/purchased-report.pdf\` covers 2 years.
-  \`purchased-history.html\` covers the whole history.
-- **Care outside Maccabi**, except documents about it that were filed with Maccabi: external test
-  results, documents copied into the medical file, and the member's own uploads.
-- **Sections the site had nothing for, and anything that failed.** A folder exists only when the
-  site returned something for it, so a missing folder means "nothing was returned",
-  not "this was not checked".${absent}
-  A single failed request does not stop an export; the extension lists failures in its popup
-  when it finishes, not in this ZIP.
+- Visits over 12 months old, and tests older than the site's list — as data. \`history/\` goes
+  further back, but only for measurements taken in at least one listed test.
+- Prescriptions beyond the recent ones the site lists, and purchases over 2 years old in
+  \`purchased-report.pdf\`. \`purchased-history.html\` still covers every purchase.
+- Images: no DICOM, ever — the site opens studies only in its own viewer.
+- Values for anything but lab tests: imaging, cardiology and external findings are only in a PDF.
+- Care outside Maccabi, except what was filed with Maccabi: external results, documents copied into
+  the medical file, the member's own uploads.
+- Sections the site had nothing for. A folder exists only when the site returned something, so a
+  missing folder means "nothing was returned", not "this was not checked".${absent}
+  A failed request does not stop an export; failures are listed in the extension's popup, not here.
 
 ## What is in this export
 
-| Folder | Files | Contents |
-|---|---|---|
-${rows}
-
-Most folders keep the list as the site shows it in \`list.json\`, one JSON file per list item in
-\`details/\`, and documents in \`files/\`. A record's JSON and its PDF share a file name.
-
-## Folder by folder
-
-Fields are named as the site names them. Values are mostly Hebrew.
+Each folder holds the site's list in \`list.json\`, one JSON file per item in \`details/\`, and
+documents in \`files/\`; a record's JSON and its PDF share a file name. The files carry their own
+field names, so only what would be read wrongly is spelled out here.
 
 ${folders}
 
-## Reading lab values
+## Lab values
 
 Every value in \`group_values[]\`, \`current_result\`, \`other_results[]\` and
-\`latest-lab-results.json\` has the same fields:
+\`latest-lab-results.json\` has the same fields: \`test_id\` and \`test_desc\` (the measurement),
+\`result\`, \`units\`, the reference range \`min_lim\`–\`max_lim\` (all numbers) and \`lab_date\`.
 
-- \`test_id\` and \`test_desc\` name the measurement. Two measurements can share a name and differ
-  only by a symbol: \`Eosinophils #\` is a count, \`Eosinophils %\` a share. File names in
-  \`history/\` drop the symbol; \`test_desc\` and \`units\` keep it.
-- \`result\` and \`units\`, with the reference range \`min_lim\`–\`max_lim\`, all as numbers.
-- **\`min_lim\` and \`max_lim\` both 0 means no range was given**, not a range of 0 to 0.
+- **\`min_lim\` and \`max_lim\` both 0 means no range was given**, not a range of 0 to 0. Then
+  \`numeric_percentage\` — where \`result\` sits in the range, 0 at \`min_lim\` and 100 at \`max_lim\` —
+  is 0 and means nothing.
 - **A \`result\` of 0 is often not a measurement.** When the answer is text, \`result\` is 0 and the
-  text is in \`message\` (\`NEGATIVE\`) or, when \`is_messages\` is \`"2"\`, only in
-  \`message_list\` (\`Undetectable\`, or a note that the test was not done). Read both before
-  trusting a 0.
-- \`message_list\` is one note split into display lines, such as reference ranges, method changes
-  or interpretation, in Hebrew and English. Join the lines to read it. Hebrew lines are sometimes in
-  visual order, with numbers and punctuation at the wrong end: \`.60 ערך רצוי מעל\` reads "a
-  value above 60 is desirable."
-- \`numeric_percentage\` is where \`result\` sits in the range: 0 at \`min_lim\`, 100 at
-  \`max_lim\`, above 100 above the range. Without a range it is 0 and means nothing.
-- \`lab_date\` is the test's date; the time is in the details file's \`execute_date\`.
-- **The same values appear up to three times:** in \`details/\` by test, in \`history/\` by
-  measurement, and the latest in \`latest-lab-results.json\`. Count each (\`test_id\`, \`lab_date\`)
-  once. \`history/\` holds the most.
+  text is in \`message\` (\`NEGATIVE\`) or, when \`is_messages\` is \`"2"\`, only in \`message_list\`
+  (\`Undetectable\`, or a note that the test was not done). Read both before trusting a 0.
+- \`message_list\` is one note split into display lines (a reference range, a method change, an
+  interpretation); join them. Its Hebrew is sometimes in visual order, numbers and punctuation at the
+  wrong end: \`.60 ערך רצוי מעל\` reads "a value above 60 is desirable".
+- Two measurements can share a name and differ only by a symbol — \`Eosinophils #\` is a count,
+  \`Eosinophils %\` a share. \`history/\` file names drop the symbol; \`test_desc\` and \`units\` keep it.
+- **The same values appear up to three times:** in \`details/\` by test, in \`history/\` by measurement,
+  and the latest in \`latest-lab-results.json\`. Count each (\`test_id\`, \`lab_date\`) once;
+  \`history/\` holds the most.
 
-## Dates
+## Dates, text and ids
 
-- Most dates are ISO 8601 in Israel local time with no offset (\`2026-02-25T11:09:00\`); a few
-  carry one (\`+02:00\`). \`fetched_at\` is UTC and ends in \`Z\`. \`T00:00:00\` means the date
-  has no time of day.
-- Some are not ISO: \`DD/MM/YY\` (\`item_date\` in \`letters/\`, \`next_month_date\` in
-  \`profile/entitlement.json\`), \`DD/MM/YYYY\` (\`DocumentDate\` in \`uploads/\`), \`YYYYMMDD\`
-  and \`YYYYMM\` (the insurance dates in \`profile/member.json\`), and \`DD-MM-YYYY\`
-  (\`purchased-history.html\`).
-- **Some dates are placeholders:** \`0001-01-01T00:00:00\` means never set, and
-  \`1900-01-01T00:00:00\` in a validity range (\`approval_date_from\`, \`referral_date_to\`, ...)
-  means there is none. The one real \`1900-01-01\` is the medical file's \`from_date\` in
-  \`letters/list.json\`: it means the file covers everything.
-
-## Text, names and ids
-
-- **Field names are English, values Hebrew.** Field names are the site's own, misspellings
-  included (\`has_summery_file\`, \`scpecializations\`, \`orginal_package_count\`), so search for
-  them as spelled.
-- Strings are often padded with spaces (\`vaccine_group_name\`, \`orginal_package_count\`). Trim
-  them before comparing.
-- People's names come first name first or last name first, with titles spelled several ways
-  (\`ד"ר\`, \`דר'\`, \`ד'ר\`). Match people by id, not by name.
-- The same id can be a number in one file and a zero-padded string in another (\`12345678\`,
-  \`"012345678"\`). Compare ids as numbers.
-- In text fields, \`""\`, \`"0"\` and \`null\` usually mean none.
-- Codes (status, type, insurance, speciality) are Maccabi's own and documented nowhere. Where a
-  record has both a code and a description, trust the description.
+- Dates are ISO 8601 in Israel local time, usually without an offset (\`2026-02-25T11:09:00\`);
+  \`fetched_at\` is UTC. \`T00:00:00\` means no time of day. A few are not ISO: \`DD/MM/YY\`
+  (\`item_date\`, \`next_month_date\`), \`DD/MM/YYYY\` (\`DocumentDate\`), \`YYYYMMDD\` and \`YYYYMM\`
+  (insurance dates), \`DD-MM-YYYY\` (\`purchased-history.html\`).
+- **Some dates are placeholders:** \`0001-01-01T00:00:00\` means never set, \`1900-01-01T00:00:00\` in
+  a validity range means there is none. The one real \`1900-01-01\` is the medical file's
+  \`from_date\` in \`letters/list.json\`: it means the file covers everything.
+- Field names are English and keep the site's misspellings (\`has_summery_file\`,
+  \`scpecializations\`, \`orginal_package_count\`) — search for them as spelled. Values are mostly
+  Hebrew, often padded with spaces; \`""\`, \`"0"\` and \`null\` usually mean none. Codes (status,
+  type, insurance, speciality) are Maccabi's own and documented nowhere: trust the description beside them.
+- Match people by id, never by name: names run either way round and titles are spelled several ways
+  (\`ד"ר\`, \`דר'\`, \`ד'ר\`). An id can be a number in one file and a zero-padded string in another
+  (\`12345678\`, \`"012345678"\`) — compare ids as numbers.
+- **Fields that say nothing about the record**, re-signed or re-stamped on every request: \`hash\`,
+  \`timestamp\`, \`time_stamp\`, \`t\`, \`corona_hash\`, \`corona_t\`, \`token\`, \`searchQueryId\`,
+  \`file_name_title\`, \`url\`, and every field whose name ends in \`link\` (expiring signed paths, not
+  stable references). A \`timestamp\` is the request moment in .NET ticks, not the record's time —
+  \`timestamp_sequence\` is a real time. \`is_read\`, \`is_advertised\` and \`fetched_at\` describe the
+  site and the export, not the member.
 
 ## Joining records across files
 
@@ -354,70 +232,32 @@ Every value in \`group_values[]\`, \`current_result\`, \`other_results[]\` and
 | A referral's lab tests to their results | \`lab_tests[].lab_test_number\` is often a \`test_id\` padded with zeros (\`06291\` is \`6291\`) |
 | A doctor across files | Employee number: \`employee_id\`, \`emp_number\`, \`employee_number\`, \`pernr\`. Position: \`position_id\`, \`position_number\`, \`object_id\`. Practitioner id: \`practitioner_id\`, \`service_provider_id\`, \`doctor_id\` |
 
-## Fields to ignore
-
-These are re-signed or re-stamped on every request and carry no information about the record:
-\`hash\`, \`timestamp\`, \`time_stamp\`, \`t\`, \`corona_hash\`, \`corona_t\`, \`token\`,
-\`searchQueryId\`, \`file_name_title\`, \`url\`, and every field whose name ends in \`link\`
-(expiring signed paths, not stable references). A \`timestamp\` is the moment of the request in
-.NET ticks, not the record's time; \`timestamp_sequence\`, by contrast, is a real time. \`is_read\`,
-\`is_advertised\` and \`fetched_at\` describe the site and the export, not the member.
-
-## How each JSON file is wrapped
+## How files are shaped
 
 Every JSON file is one response from the site, kept as it was sent, wrapped in where it came from:
 
-    {
-      "endpoint": "GET MainAppAPI/v1/members/0/{mid}",
-      "fetched_at": "2026-09-17T08:12:03.512Z",
-      "status": 200,
-      "data": { "...": "the response, unchanged" }
-    }
+    { "endpoint": "GET MainAppAPI/v1/members/0/{mid}", "fetched_at": "2026-09-17T08:12:03.512Z",
+      "status": 200, "data": { "...": "the response, unchanged" } }
 
-- \`{mid}\` stands for the member id, which is never written into \`endpoint\`. Query strings are
-  left out of it.
-- \`status\` is 200, or 204 when the site had nothing to return; \`data\` is then \`null\`.
-- \`request_body\` is the body of a POST request.
-- A details file repeats the list fields it was fetched with, so it stands on its own:
-  \`request_id\` and \`type\` in \`test-results/details/\`; \`test_id\`, \`test_desc\` and
-  \`date_of_result\` in \`test-results/history/\`; \`appointment_date\` in
-  \`visit-summaries/details/\`; \`vaccine_group_code\` in \`vaccinations/details/\`.
-- \`omitted\` lists what was left out of \`data\`: the two report files carry their PDF in
-  \`files/\` instead of as base64.
-- \`uploads/details/\` files also carry \`content_type\` and \`decoded_from\`: the site sent them in
-  windows-1255, and they are stored as UTF-8.
+\`{mid}\` stands for the member id, never written into \`endpoint\`. \`status\` is 200, or 204 when the
+site had nothing — \`data\` is then null. \`omitted\` names what was left out of \`data\` (a report's
+PDF, kept in \`files/\` instead of as base64). A details file repeats the list fields it was fetched
+with, so it stands on its own.
 
-Two files are not JSON: \`medications-and-prescriptions/purchased-history.html\`, described above,
-and the documents in each \`files/\`, which are the site's own.
-
-## How files are named
-
-\`<date>_<id>_<title>.<ext>\`, so a record's JSON and its document share a name:
-
-    test-results/details/2026-02-01_41234567-imaging-result.json
-    test-results/files/2026-02-01_41234567-imaging-result.pdf
-    referrals/files/2026-02-01_412345678_בדיקות-מעבדה.pdf
-
-- \`<date>\` is the record's own date, always \`YYYY-MM-DD\`, or \`undated\` when it had none.
-- \`<id>\` is the site's id for the record, reduced to ASCII; an id that had to be shortened ends in
-  an 8-character digest. Where the site gives no id (approvals, info pages), it is a hash of the
-  record's fields. Test results use \`<request_id>-<type>\`, and several documents under one
-  record are numbered \`-1\`, \`-2\`, ...
-- \`<title>\` is a display string from the record as the site sent it: Hebrew kept, spaces and
-  punctuation turned into \`-\`, at most 40 characters. It is left out when the record has none.
-- \`_\` separates those parts and appears nowhere else.
-- Two folders name files by what they hold, with no date: \`test-results/history/\` as
-  \`<test_id>_<name>\`, and \`vaccinations/details/\` as \`<vaccine_group_code>_<name>\`.
-
-File names are UTF-8. macOS's \`unzip\` command garbles the Hebrew in them; \`ditto -x -k\` does not.
+File names are \`<date>_<id>_<title>.<ext>\`, so a record's JSON and its document share a name
+(\`details/2026-02-01_41234567-imaging-result.json\`, and the same name \`.pdf\` in \`files/\`).
+\`<date>\` is the record's own date or \`undated\`; \`<id>\` is the site's id, or a hash where the site
+gives none, plus \`-1\`, \`-2\` when a record has several documents; \`<title>\` is a display string,
+Hebrew kept and punctuation turned into \`-\`, left out when there is none. \`_\` appears nowhere else,
+and \`test-results/history/\` and \`vaccinations/details/\` name files by what they hold, with no date.
+Names are UTF-8: macOS's \`unzip\` garbles the Hebrew in them, \`ditto -x -k\` does not.
 
 ## Before sharing this export
 
-The member's national ID number runs through the data: in \`id_number\`, \`member_id\`,
-\`user_id\` and \`recipient_id\`, inside \`doc_id\`, \`virtual_key\` and \`name_document\`, and
-printed on nearly every page of the medical file and on most PDFs. File names never carry it.
-\`profile/member.json\` also holds the member's address, phone numbers and email. This ZIP is not
-encrypted, and it is health information: anyone who can open it can read it, including any
-service it is uploaded to.
+The member's national ID number runs through the data — \`id_number\`, \`member_id\`, \`user_id\`,
+\`recipient_id\`, inside \`doc_id\`, \`virtual_key\` and \`name_document\` — and is printed on nearly
+every page of the medical file and on most PDFs. File names never carry it. \`profile/member.json\`
+also holds the address, phone numbers and email. This ZIP is not encrypted, and it is health
+information: anyone who can open it can read it, including any service it is uploaded to.
 `;
 }

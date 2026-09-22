@@ -150,8 +150,9 @@ out when a record has none.
 `README.md` is written for whoever reads the export next, an AI assistant included. It points at your full medical
 file PDF as the one document to start from, then says what the export doesn't contain — no DICOM images, no visit
 data over 12 months — so a reader doesn't take an omission for an absence in your history. It then goes folder by
-folder through the fields, including the ones that mislead: a lab `result` of 0 that is really a text answer,
-placeholder dates, and fields that change on every request.
+folder, and through the values that mislead: a lab `result` of 0 that is really a text answer, placeholder dates,
+and fields that change on every request. It shares a reader's context with the records themselves, so it is kept
+to what the files don't say for themselves, and the field names are left to the JSON.
 
 Each JSON file is the site's response as sent, wrapped with where it came from. Your member ID is never written into
 file paths or `endpoint` values:

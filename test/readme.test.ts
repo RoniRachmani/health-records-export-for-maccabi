@@ -7,12 +7,10 @@ const FILE = '2026-09-18_medical-file.pdf';
 describe('exportReadme', () => {
   it('describes only the folders this export has', () => {
     const md = exportReadme('2026-09-18', PRESENT, FILE);
-    expect(md).toContain('| `test-results/` | 6 |');
-    expect(md).toContain('| `letters/` | 2 |');
-    expect(md).toContain('### `test-results/`');
+    expect(md).toContain('**`test-results/`** · 6 files');
+    expect(md).toContain('**`letters/`** · 2 files');
     // A section the site had nothing for is not described as if it were there.
-    expect(md).not.toContain('`appointments/` |');
-    expect(md).not.toContain('### `appointments/`');
+    expect(md).not.toContain('**`appointments/`** ·');
   });
 
   it('names the folders this export does not have', () => {
@@ -24,6 +22,7 @@ describe('exportReadme', () => {
   it('starts from the full medical file, by its name', () => {
     const md = exportReadme('2026-09-18', PRESENT, FILE);
     expect(md).toContain('`2026-09-18_medical-file.pdf`, beside this file');
+    expect(md).toContain('as of 2026-09-18');
     expect(md.indexOf('full medical file')).toBeLessThan(md.indexOf('What this export does not contain'));
   });
 
@@ -36,7 +35,7 @@ describe('exportReadme', () => {
   it('says what the export does not contain before what it does', () => {
     const md = exportReadme('2026-09-18', PRESENT, FILE);
     expect(md.indexOf('What this export does not contain')).toBeLessThan(md.indexOf('What is in this export'));
-    for (const gap of ['DICOM', 'older than 12 months', 'older than 2 years', 'not "this was not checked"']) {
+    for (const gap of ['DICOM', 'over 12 months old', 'over 2 years old', 'not "this was not checked"']) {
       expect(md).toContain(gap);
     }
   });
@@ -64,5 +63,10 @@ describe('exportReadme', () => {
 
   it('is dated', () => {
     expect(exportReadme('2026-09-18', PRESENT, FILE)).toContain('Exported 2026-09-18 from online.maccabi4u.co.il');
+  });
+
+  // It shares an AI reader's context with the records themselves, so its length is part of its job.
+  it('stays short enough to read beside the records', () => {
+    expect(exportReadme('2026-09-18', PRESENT, FILE).length).toBeLessThan(14000);
   });
 });
