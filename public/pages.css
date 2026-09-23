@@ -1,4 +1,4 @@
-/* The Privacy Policy and Terms pages shipped with the extension, on the same system as the popup
+/* The Privacy Policy, Terms and AI assistant pages shipped with the extension, on the same system as the popup
    (src/extension/popup/popup.css): navy headings over white, magenta links, generous measure.
    Kept as a separate file because public/ is copied verbatim and these pages are plain HTML. */
 
@@ -12,6 +12,8 @@
   --muted: #5b6785;
   --accent: #b83b7c;
   --accent-hover: #a63370;
+  --warn-rule: #d9922a;
+  --warn-bg: #fdf4e4;
   --focus: #296bed;
   color-scheme: light;
 }
@@ -75,4 +77,19 @@ a:focus-visible {
 .doc-head p {
   margin: 0;
   font-size: 15px;
+}
+code {
+  font: 0.9em ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+/* A caution, as the popup's .note.warn. */
+.warn {
+  margin: 20px 0;
+  padding: 14px 18px;
+  border: 1px solid color-mix(in srgb, var(--warn-rule) 45%, transparent);
+  border-radius: 16px;
+  background: var(--warn-bg);
 }

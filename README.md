@@ -349,8 +349,8 @@ staying plainly the extension's own — there is no Maccabi Healthcare Services 
 The stylesheets ask for Roboto first and fall back to the system face. That is a local lookup only: the extension
 ships no fonts and downloads none.
 
-The tokens live at the top of `src/extension/popup/popup.css`, with `public/pages.css` repeating the ones the privacy
-and terms pages need (`public/` is copied verbatim, so it cannot import them). Both pin `color-scheme: light` —
+The tokens live at the top of `src/extension/popup/popup.css`, with `public/pages.css` repeating the ones the privacy,
+terms and AI assistant pages need (`public/` is copied verbatim, so it cannot import them). Both pin `color-scheme: light` —
 there is no dark theme, and pinning it keeps Chrome's auto-dark-mode from repainting controls and scrollbars
 against a light page. Every text colour meets WCAG AA on the surface it sits on. Chrome caps a popup at 600px
 tall, so keep the states that are not disclosures under it; `npm run store-assets` re-renders the store images.
@@ -422,6 +422,7 @@ film, drawn by the same page: `npm run store-assets -- poster`.
 - **Keep the policies in sync.** `docs/privacy.md` goes with `public/privacy.html`, and `docs/terms.md` with
   `public/terms.html`. Change the effective date when you change either. For a material change, also set
   `TERMS_EFFECTIVE` in `src/extension/shared/state.ts` to the new date, so the popup asks users to accept again.
+  Likewise *Hand it to an AI assistant* above goes with `public/ai-assistant.html`, the page the popup's "See how" opens.
 - **Keep [public/third-party-notices.txt](public/third-party-notices.txt) current.** It carries the licenses of
   third-party code bundled into the package (fflate, and Vite's module preload polyfill). Update it when a runtime
   dependency is added or upgraded.

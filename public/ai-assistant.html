@@ -1,0 +1,90 @@
+<!doctype html>
+<!-- Shipped at chrome-extension://<id>/ai-assistant.html, the popup's "See how". Keep in sync with the README's
+     "Hand it to an AI assistant". -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Hand it to an AI assistant - Health Records Export for Maccabi</title>
+    <link rel="stylesheet" href="pages.css" />
+  </head>
+  <body>
+    <h1>Hand it to an AI assistant</h1>
+    <div class="doc-head">
+      <p>Health Records Export for Maccabi</p>
+    </div>
+
+    <p>
+      The export is made to be worked on with an AI assistant. Assistants that connect to medical records reach U.S.
+      providers, not Maccabi Healthcare Services, so this export is how your records get to one. Unzip it and open the
+      folder in Claude Cowork, Claude Code, ChatGPT Work or Codex: <code>README.md</code> is the assistant's saved
+      instructions, and the records are its project files. Claude Code reads <code>CLAUDE.md</code> and Codex reads
+      <code>AGENTS.md</code> on their own, and both lead to <code>README.md</code>; elsewhere, add <code>README.md</code>
+      as the project's instructions, or ask the assistant to read it first.
+    </p>
+
+    <h2>What it helps you do</h2>
+    <ul>
+      <li>
+        <strong>See your whole history.</strong> The full medical file reaches back to the earliest visit on record, far
+        beyond the few years the site's data covers.
+      </li>
+      <li>
+        <strong>Ask in your own language.</strong> The records are mostly in Hebrew; ask, and get answers, in English or
+        whatever you speak.
+      </li>
+      <li><strong>Track changes over time.</strong> Each lab measurement has its own history, often years long.</li>
+      <li>
+        <strong>Prepare for your next visit.</strong> Known problems, the latest results, recent visits and open
+        referrals, in one place.
+      </li>
+      <li>
+        <strong>Check every answer.</strong> The assistant is asked to name the file, and the page of a PDF, behind each
+        fact.
+      </li>
+    </ul>
+    <p>
+      It supports your doctor and doesn't replace them. For urgent symptoms, call a doctor or emergency services, not an
+      assistant.
+    </p>
+
+    <h2>Things to ask</h2>
+    <p>The first is a good place to start.</p>
+    <ul>
+      <li><em>Summarize my health history from my full medical file.</em></li>
+      <li><em>Help me understand my latest blood test.</em></li>
+      <li><em>How has my HbA1c changed over the years?</em></li>
+      <li><em>What should I raise at my next appointment?</em></li>
+      <li><em>Translate my latest letter from the clinic into English.</em></li>
+      <li><em>Which referrals and approvals are still open?</em></li>
+      <li><em>What did the cardiologist write at my last visit?</em></li>
+      <li><em>When was my last tetanus shot?</em></li>
+      <li><em>Which medications have I bought this year, and how often?</em></li>
+      <li><em>Make a one-page summary to bring to a new doctor.</em></li>
+    </ul>
+
+    <h2>The assistant's guardrails</h2>
+    <p>
+      The instructions ask it to start from your full medical file, to say which file (and which page of a PDF) each fact
+      comes from and give it a date, to write its own notes into a new folder rather than change the export, and to keep
+      your name, ID number and contact details out of web searches and other tools unless you ask. They have it say
+      plainly when a record suggests something needs a doctor soon, and explain in plain language rather than diagnose,
+      and they say where to look for the common questions: a lab value's trend, the latest results, what changed since
+      your last visit, what to raise at an appointment, your allergies.
+    </p>
+    <p class="warn">
+      <strong>Before you open it.</strong> The extension sends your records nowhere, but an AI service you open them in
+      can read them. Before you give it your health information, check what it keeps and for how long. Where the service
+      lets you, turn off training on your chats, keep each person's records in a project of their own with memory kept to
+      that project, and delete the project when you're done with it.
+    </p>
+
+    <h2>What about ChatGPT Health?</h2>
+    <p>
+      As of September 2026, OpenAI offers Health in ChatGPT to users in the U.S., and it connects medical records from
+      U.S. providers only, so it can't reach Maccabi Healthcare Services. Open the export in ChatGPT Work, or in any of the
+      assistants above, instead.
+    </p>
+  </body>
+</html>

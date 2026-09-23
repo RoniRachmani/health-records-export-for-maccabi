@@ -114,7 +114,7 @@ re-runs. Legacy steps don't get a 401, so `runner.ts` treats "Failed to fetch" i
   to Maccabi Online while staying the extension's own. Never add Maccabi's logo, wordmark or any other
   brand asset. The font stacks ask for `Roboto` first and fall back to the system face — a local lookup
   only: never ship or fetch a font here. Tokens are at the top of `popup.css`; `public/pages.css` repeats
-  the ones the shipped policy pages need, since `public/` is copied verbatim. There is no dark theme: both
+  the ones the shipped pages need, since `public/` is copied verbatim. There is no dark theme: both
   files pin `color-scheme: light`, which also keeps Chrome's auto-dark-mode off them, and every text colour
   must stay at WCAG AA. Chrome caps a popup at 600px tall: keep every non-disclosure state under it
   (`notice` and open `<details>` may scroll).
@@ -166,7 +166,8 @@ re-runs. Legacy steps don't get a 401, so `runner.ts` treats "Failed to fetch" i
   as a placeholder.
 - **Keep the policies in sync**: `docs/privacy.md` ↔ `public/privacy.html`, `docs/terms.md` ↔
   `public/terms.html`, and change their effective date. For a material change also bump `TERMS_EFFECTIVE`
-  in `shared/state.ts`, which makes the popup ask everyone to accept again.
+  in `shared/state.ts`, which makes the popup ask everyone to accept again. Likewise the README's *Hand it to an
+  AI assistant* ↔ `public/ai-assistant.html` (the popup's "See how").
 - **Keep `public/third-party-notices.txt` current** when a runtime dependency changes (only `fflate`
   today, plus Vite's module preload polyfill). The README's `docs/images/chrome-web-store-badge.png` isn't one of
   them: it is Google's own badge, committed byte for byte as it is served from

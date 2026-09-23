@@ -287,8 +287,8 @@ function runView(run: RunState, st: StateReply): Child[] {
 
 const ZIP_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M11 6h1M12 8.5h1M11 11h1M12 13.5h1"/><rect x="10.5" y="16" width="3" height="3" rx=".8"/></svg>';
 
-/** The README's section on opening the export in an AI assistant. */
-const AI_HELP = 'https://github.com/RoniRachmani/health-records-export-for-maccabi#hand-it-to-an-ai-assistant';
+/** The shipped page on opening the export in an AI assistant (the README's section of the same name). */
+const AI_HELP = '/ai-assistant.html';
 
 function doneView(run: RunState): Child[] {
   const shown = run.problems || [];
