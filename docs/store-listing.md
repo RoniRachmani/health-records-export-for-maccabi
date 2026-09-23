@@ -96,7 +96,7 @@ placeholder page, never a real account. The text around the popup comes from `SH
 The store's video field takes a **YouTube link**, not a file. The one to paste is
 **https://youtu.be/bMO8CJFN0ig** — "Export your Maccabi Online medical records to one ZIP — Chrome extension",
 on the [Hey Roni](https://www.youtube.com/@Hey-Roni-Dev) channel. `npm run store-video` renders the video to
-`store/assets/promo-video.mp4` (1920×1080, 30 fps, 46 seconds, silent); a re-render replaces that video on YouTube, so
+`store/assets/promo-video.mp4` (3840×2160, 60 fps, 49 seconds, with narration); a re-render replaces that video on YouTube, so
 the link on the dashboard stays the one above.
 
 It is not committed — it is rebuilt from `store/src/video.ts`, which draws it a frame at a time in headless
@@ -116,9 +116,19 @@ closing card with the repository's address. The disclaimer is on the title and c
 The README shows the video as a poster that links to it: `store/assets/video-poster.png`, one frame of the same film
 with a play badge over it, drawn by `npm run store-assets -- poster`. Re-render it whenever the video changes.
 
+The soundtrack is made the same way, from the same timeline (`scripts/soundtrack.mjs`). The music and effects are
+synthesized by that script, from oscillators and noise, so no music licence is involved. The narration is
+`NARRATION` in `store/src/video.ts`, spoken by ElevenLabs in "Vino – Warm Leadership Narrator", a Voice Library
+voice, which needs ElevenLabs' Creator plan or above to speak again. To re-record it, make one take of the text `npm run store-video -- --script` prints (ElevenLabs' web app,
+or its connector for Claude; model `eleven_multilingual_v2`), then `npm run store-video -- --import <take.mp3>`:
+the take is cut into lines at the second's pause the script leaves between them. With `ELEVENLABS_API_KEY` in
+`.env` the lines are asked for one by one instead. Either way they are cached in `.cache/narration/`. The render
+stops before the first frame if a line would run into the next one. ElevenLabs' free plan is for non-commercial
+use only and asks to be credited; a paid plan is what allows commercial use of what it speaks.
+
 On YouTube: upload it as **Unlisted** or Public (the store cannot show a private video), give it the extension's
-name, and turn off ads and end screens so nothing is suggested over the last frame. There is no sound, so no
-music licence is involved.
+name, and turn off ads and end screens so nothing is suggested over the last frame. Say in the description that
+the narration is an AI voice.
 
 ### Additional fields
 

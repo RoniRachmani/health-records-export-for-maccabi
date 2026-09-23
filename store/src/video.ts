@@ -20,7 +20,7 @@ import {
 } from './motion';
 import { CHECK, DOC, FOLDER, FOLDERS, LOCK, MARK, dots, fileRow, h, img, pageSkeleton, paper, svg } from './parts';
 
-const FPS = 30;
+const FPS = 60;
 
 /** When each part of the film starts, in seconds. The last one is the end. */
 const T = {
@@ -40,14 +40,14 @@ const T = {
   runFrom: 12.7,
   runTo: 23.3,
   saved: 23.7,
-  // 5 · The ZIP, opened.
+  // 5 · The ZIP, opened. Its two parts are as long as their narration needs.
   open: 27.2,
-  drill: 31.2,
+  drill: 32.7,
   // 6 · Private by design.
-  privacy: 35.2,
+  privacy: 37.4,
   // 7 · Where to get it.
-  close: 40.6,
-  end: 46,
+  close: 42.6,
+  end: 48.6,
 };
 
 /** The second the README's poster is taken from: the export running, which is what the film is about. */
@@ -351,10 +351,10 @@ interface Caption {
 }
 
 const CAPTIONS: Caption[] = [
-  { from: 10.9, to: 12.95, top: 400, step: '3', title: 'Press Start export' },
-  { from: 12.95, to: 23.95, top: 118, title: 'It works through your records on its own', chip: 'Sped up · a real export takes 5 to 20 minutes' },
+  { from: T.zoom + 0.9, to: T.runFrom + 0.25, top: 400, step: '3', title: 'Press Start export' },
+  { from: T.runFrom + 0.25, to: T.saved + 0.25, top: 118, title: 'It works through your records on its own', chip: 'Sped up · a real export takes 5 to 20 minutes' },
   {
-    from: 23.95, to: T.open, top: 360, title: 'One ZIP in your Downloads folder', accent: [1],
+    from: T.saved + 0.25, to: T.open, top: 360, title: 'One ZIP in your Downloads folder', accent: [1],
     text: 'Everything it collected, in one dated file. The extension then deletes its own copy, and lists anything it could not export.',
   },
   {
@@ -369,8 +369,45 @@ const CAPTIONS: Caption[] = [
 
 /** The two steps shown over the browser before the camera moves in. */
 const STEPS: { from: number; to: number; step: string; text: string }[] = [
-  { from: 8.2, to: 9.45, step: '1', text: 'Log in to Maccabi Online as usual' },
-  { from: 9.45, to: 10.55, step: '2', text: 'Click the extension’s icon' },
+  { from: T.browser + 0.6, to: T.clickIcon - 0.05, step: '1', text: 'Log in to Maccabi Online as usual' },
+  { from: T.clickIcon - 0.05, to: T.zoom + 0.55, step: '2', text: 'Click the extension’s icon' },
+];
+
+/**
+ * What the narrator says, and when each line starts. scripts/soundtrack.mjs has each line spoken
+ * (ElevenLabs), places it at its second and fails the render if one runs into the next, so a line
+ * that grows has to be cut or given room here. Numbers are spelled out, as they are to be said.
+ */
+const NARRATION: { at: number; text: string }[] = [
+  { at: T.hookLine, text: 'Years of test results, visits, prescriptions and letters.' },
+  { at: T.title + 0.5, text: 'All in one ZIP, saved to your own computer.' },
+  { at: T.browser + 0.7, text: 'Log in as usual, click the icon, and press Start export.' },
+  { at: T.runFrom + 0.5, text: 'It works through every section on its own, saving every PDF, and the data behind it.' },
+  { at: T.runFrom + 6.9, text: 'A real export takes five to twenty minutes.' },
+  { at: T.saved + 0.3, text: 'When it’s done, one dated ZIP lands in your Downloads folder.' },
+  { at: T.open + 0.7, text: 'Inside: every record, every PDF, and your full medical file.' },
+  { at: T.drill + 0.4, text: 'Each record’s data sits right beside its PDF, under the same name.' },
+  { at: T.privacy + 0.4, text: 'It’s private by design: nothing between Maccabi and your computer.' },
+  { at: T.close + 0.4, text: 'Health Records Export for Maccabi. Free, on the Chrome Web Store.' },
+];
+
+/** The sound effects, by kind (scripts/soundtrack.mjs draws each one) and second. */
+const SOUNDS: { at: number; kind: string; dur?: number }[] = [
+  { at: T.cards, kind: 'whoosh', dur: 1.3 },
+  { at: T.swallow - 1.0, kind: 'riser', dur: 1.0 },
+  { at: T.swallow, kind: 'impact' },
+  { at: T.swallow + 0.1, kind: 'suck', dur: 1.0 },
+  { at: T.browser + 0.2, kind: 'whoosh', dur: 0.8 },
+  { at: T.clickIcon, kind: 'click' },
+  { at: T.popupIn, kind: 'pop' },
+  { at: T.zoom, kind: 'whoosh', dur: 1.3 },
+  { at: T.clickStart, kind: 'click' },
+  { at: T.saved, kind: 'chime' },
+  { at: T.open, kind: 'whoosh', dur: 0.8 },
+  { at: T.drill + 0.35, kind: 'pop' },
+  { at: T.privacy - 0.3, kind: 'whoosh', dur: 0.9 },
+  ...[0, 1, 2, 3, 4].map((i) => ({ at: T.privacy + 2.2 + i * 0.2, kind: 'pop' })),
+  { at: T.close + 0.1, kind: 'shimmer' },
 ];
 
 const PRIVACY_PILLS: { no: boolean; text: string }[] = [
@@ -409,7 +446,8 @@ async function main(): Promise<void> {
   const dotsEl = dots();
   const address = h('div', 'address', svg(LOCK), h('span', '', 'online.maccabi4u.co.il'));
   const badge = h('span', 'badge');
-  const ext = h('span', 'ext', img('/icons/icon-32.png'), badge);
+  // The 128px icon, drawn small: the camera and the 4K render take this one to about 80 pixels.
+  const ext = h('span', 'ext', img('/icons/icon-128.png'), badge);
   const page = h('div', 'page-clip', pageSkeleton(4));
   const browser = h('div', 'browser', winBg, toolbarBg, h('div', 'toolbar', dotsEl, address, ext), page);
   const cursor = h('span', 'cursor', svg(POINTER));
@@ -662,6 +700,18 @@ async function main(): Promise<void> {
       shownHeight = tall;
       frame.style.height = tall + 'px';
     }
+    // The popup's own animations (the sheen on the bar, the pulse on the current step) run on the
+    // wall clock, which has nothing to do with the film's: each frame would catch them at a random
+    // point, and the bar would flicker. They run on the film's clock instead, and its transitions
+    // land at once, since the states pushed in already move a frame at a time.
+    for (const a of doc.getAnimations()) {
+      if ('transitionProperty' in a) {
+        a.finish();
+      } else {
+        a.pause();
+        a.currentTime = t * 1000;
+      }
+    }
     const opened = ramp(t, T.popupIn, 0.3, out);
     fade(frame, opened * (1 - ramp(t, T.open, 0.25)));
     frame.style.transform = 'scale(' + (POPUP * lerp(0.94, 1, opened)).toFixed(4) + ')';
@@ -825,6 +875,8 @@ async function main(): Promise<void> {
   (window as unknown as { video: unknown }).video = {
     fps: FPS,
     frames: Math.round(T.end * FPS),
+    /** What scripts/soundtrack.mjs scores the film from: its parts, its narration and its effects. */
+    soundtrack: { duration: T.end, scenes: T, narration: NARRATION, sounds: SOUNDS },
     /** Puts the stage where it belongs at this frame, and waits until it is drawn. */
     async at(n: number): Promise<void> {
       applyAt(n / FPS);

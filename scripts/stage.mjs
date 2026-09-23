@@ -160,9 +160,19 @@ export async function openStage() {
   async function kill() {
     stopping = true;
     ws.close();
+    // The profile can only go once the browser has: until it exits it is still writing to it, and
+    // a busy 4K browser takes a while. Asked to stop, then told to, then its folder removed — with
+    // retries, for the files it was still closing.
+    const gone = browser.exitCode !== null || browser.signalCode !== null
+      ? Promise.resolve()
+      : new Promise((r) => browser.once('exit', r));
     browser.kill();
-    await sleep(500);
-    rmSync(profile, { recursive: true, force: true });
+    await Promise.race([gone, sleep(5000)]);
+    if (browser.exitCode === null && browser.signalCode === null) {
+      browser.kill('SIGKILL');
+      await Promise.race([gone, sleep(2000)]);
+    }
+    rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   }
 
   await launch();
@@ -171,12 +181,14 @@ export async function openStage() {
     base,
     /**
      * Opens `path` at this size and waits until the page says it has finished rendering
-     * (`<html data-ready="1">`, or `data-ready="error: …"` when it gave up).
+     * (`<html data-ready="1">`, or `data-ready="error: …"` when it gave up). `scale` is the device
+     * pixel ratio: the page lays out at width x height and is drawn, and photographed, `scale` times
+     * as large, which is how the video comes out in 4K from a 1920x1080 stage.
      */
-    async open(path, width, height) {
+    async open(path, width, height, scale = 1) {
       const { targetId } = await send('Target.createTarget', { url: 'about:blank' });
       const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true });
-      await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false }, sessionId);
+      await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: scale, mobile: false }, sessionId);
       await send('Page.navigate', { url: base + path }, sessionId);
       const page = {
         /** Evaluates an expression in the page; awaits it when it returns a promise. */
@@ -186,9 +198,12 @@ export async function openStage() {
           if (exceptionDetails) throw new Error(exceptionDetails.exception?.description || exceptionDetails.text);
           return result.value;
         },
-        /** The page as it looks now, as PNG bytes. */
-        async screenshot() {
-          const { data } = await send('Page.captureScreenshot', { format: 'png' }, sessionId);
+        /**
+         * The page as it looks now, as PNG bytes. `fast` trades file size for encoding time, for
+         * frames that only pass through on their way to the video encoder.
+         */
+        async screenshot({ fast = false } = {}) {
+          const { data } = await send('Page.captureScreenshot', { format: 'png', optimizeForSpeed: fast }, sessionId);
           return Buffer.from(data, 'base64');
         },
         async close() {

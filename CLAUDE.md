@@ -20,6 +20,9 @@ npm run store-assets              # re-render store/assets/ images (needs Chrome
 npm run store-assets -- marquee   # just one, by shot name
 npm run store-video               # re-render store/assets/promo-video.mp4 (not committed; ffmpeg or macOS)
 npm run store-video -- 8 12       # just those seconds of it, while working on a scene
+npm run store-video -- --audio-only   # just the soundtrack, to store/assets/promo-soundtrack.wav
+npm run store-video -- --script       # the narration as one take's text, for ElevenLabs
+npm run store-video -- --import take.mp3 --audio-only   # cut that take into the narration's lines
 npm run icons                     # public/icons/ + store/assets/icon-128.png
 ```
 
@@ -116,8 +119,14 @@ re-runs. Legacy steps don't get a 401, so `runner.ts` treats "Failed to fetch" i
   `PLAN` and `WEIGHTS`. The README's poster is that page again, asked for one frame with a play badge over it
   (`?poster=`, taken by `store-assets` as the `poster` shot). What all of them draw lives in
   `store/src/parts.ts` and `parts.css`; `scripts/stage.mjs` builds, serves and photographs them in headless
-  Chrome. The video is encoded by `ffmpeg` if it is on `PATH`, else by `scripts/encode-mp4.swift`
-  (macOS); the MP4 is gitignored, because the store's video field takes a YouTube link.
+  Chrome. The video is 4K at 60 fps (the stage at `deviceScaleFactor` 2), each frame piped as it is taken to
+  `ffmpeg` if it is on `PATH`, else to `scripts/encode-mp4.swift` (macOS); the popup's own CSS animations are
+  put on the film's clock, or they would flicker. The soundtrack is scored from the same timeline
+  (`window.video.soundtrack`: the parts, `NARRATION`, `SOUNDS`) by `scripts/soundtrack.mjs`, which synthesizes the
+  music and effects itself; the voice is ElevenLabs (`scripts/narration.mjs`): one take of the script
+  (`--script`) cut into lines by `--import <take>`, or line by line with `ELEVENLABS_API_KEY` from `.env`, and
+  cached in `.cache/narration/`. Retime a scene and the narration moves with it; a line that no longer fits stops
+  the render before the first frame. The MP4 is gitignored, because the store's video field takes a YouTube link.
 - **The mark** is a folder with a download arrow, drawn in Maccabi Online's own illustration register:
   a navy (`#083f92`) outline of even weight with round joins, and a pale-pink (`#f1c1cd`) echo of that
   outline offset up and left, so it reads as slightly off-register print. The folder is filled white so

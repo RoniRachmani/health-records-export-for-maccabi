@@ -18,12 +18,12 @@ to your computer as one ZIP file: every PDF the site offers, plus the site's own
 
 <p align="center">
   <a href="https://youtu.be/bMO8CJFN0ig">
-    <img src="store/assets/video-poster.png" alt="Watch an export, start to finish: a 46-second video" width="720">
+    <img src="store/assets/video-poster.png" alt="Watch an export, start to finish: a 49-second video" width="720">
   </a>
 </p>
 
 <p align="center">
-  ▶︎ <a href="https://youtu.be/bMO8CJFN0ig">Watch an export, start to finish</a> · 46 seconds, no sound
+  ▶︎ <a href="https://youtu.be/bMO8CJFN0ig">Watch an export, start to finish</a> · 49 seconds, narrated
 </p>
 
 - **Thorough.** Test results, visit summaries, prescriptions and purchases, referrals, vaccinations, letters, doctor
@@ -330,10 +330,19 @@ dashboard.
 
 The video is drawn frame by frame in the same headless browser (`store/src/video.ts`), so nothing depends on the
 speed of the machine rendering it: the export it plays is the real popup, driven through a whole run by states
-built from the real plan and its weights. It is encoded with `ffmpeg` when that is on `PATH`, and otherwise, on
-macOS, with `scripts/encode-mp4.swift`, compiled on the spot. Give two times in seconds to render one part of it
-while working on it, e.g. `npm run store-video -- 8 12`. The MP4 is not committed — the store's video field takes
-a YouTube link, so upload it there and paste the link on the dashboard. The poster above it is one frame of the same
+built from the real plan and its weights. It comes out in 4K at 60 fps — the 1920×1080 stage drawn at twice its
+size — and each frame is piped straight into the encoder: `ffmpeg` when that is on `PATH`, and otherwise, on
+macOS, `scripts/encode-mp4.swift`, compiled on the spot. A full render takes about 20 minutes; give two times in
+seconds to render one part of it while working on it, e.g. `npm run store-video -- 8 12`.
+
+Its soundtrack is scored from the same timeline by `scripts/soundtrack.mjs`: music and effects synthesized there,
+from oscillators and noise, and narration spoken by ElevenLabs (`scripts/narration.mjs`). The voice comes from one
+take of the whole script, made in ElevenLabs with the text `--script` prints and brought in with
+`--import <take>`, which cuts it into lines at the pauses; or, with `ELEVENLABS_API_KEY` in the environment or a
+gitignored `.env`, line by line over the API. Spoken lines are cached in `.cache/narration/`, so only a changed
+line costs anything. `--audio-only` writes the soundtrack alone, to listen to; `--no-narration` leaves the voice
+out, and `--silent` the sound. The MP4 is not committed — the store's video
+field takes a YouTube link, so upload it there and paste the link on the dashboard. The poster above it is one frame of the same
 film, drawn by the same page: `npm run store-assets -- poster`.
 
 ### Ground rules
