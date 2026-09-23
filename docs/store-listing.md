@@ -94,10 +94,10 @@ placeholder page, never a real account. The text around the popup comes from `SH
 ### Promo video
 
 The store's video field takes a **YouTube link**, not a file. The one to paste is
-**https://youtu.be/bMO8CJFN0ig** — "Export your Maccabi Online medical records to one ZIP — Chrome extension",
-on the [Hey Roni](https://www.youtube.com/@Hey-Roni-Dev) channel. `npm run store-video` renders the video to
-`store/assets/promo-video.mp4` (3840×2160, 60 fps, 49 seconds, with narration); a re-render replaces that video on YouTube, so
-the link on the dashboard stays the one above.
+**https://youtu.be/bMO8CJFN0ig**, on the [Hey Roni](https://www.youtube.com/@Hey-Roni-Dev) channel, with the title
+and description [below](#on-youtube). `npm run store-video` renders the video to `store/assets/promo-video.mp4`
+(3840×2160, 60 fps, 49 seconds, with narration); a re-render replaces that video on YouTube, so the link on the
+dashboard stays the one above.
 
 It is not committed — it is rebuilt from `store/src/video.ts`, which draws it a frame at a time in headless
 Chrome. Like the screenshots, it shows the real popup fed made-up states (`store/src/mock-chrome.ts`), driven
@@ -119,16 +119,67 @@ with a play badge over it, drawn by `npm run store-assets -- poster`. Re-render 
 The soundtrack is made the same way, from the same timeline (`scripts/soundtrack.mjs`). The music and effects are
 synthesized by that script, from oscillators and noise, so no music licence is involved. The narration is
 `NARRATION` in `store/src/video.ts`, spoken by ElevenLabs in "Vino – Warm Leadership Narrator", a Voice Library
-voice, which needs ElevenLabs' Creator plan or above to speak again. To re-record it, make one take of the text `npm run store-video -- --script` prints (ElevenLabs' web app,
-or its connector for Claude; model `eleven_multilingual_v2`), then `npm run store-video -- --import <take.mp3>`:
-the take is cut into lines at the second's pause the script leaves between them. With `ELEVENLABS_API_KEY` in
+voice, which needs ElevenLabs' Creator plan or above to speak again. To re-record it, make one take of the text
+`npm run store-video -- --script` prints (ElevenLabs' web app, or its connector for Claude; model
+`eleven_multilingual_v2`), then `npm run store-video -- --import <take.mp3>`: the take is cut into lines at the
+second's pause the script leaves between them. With `ELEVENLABS_API_KEY` in
 `.env` the lines are asked for one by one instead. Either way they are cached in `.cache/narration/`. The render
 stops before the first frame if a line would run into the next one. ElevenLabs' free plan is for non-commercial
 use only and asks to be credited; a paid plan is what allows commercial use of what it speaks.
 
-On YouTube: upload it as **Unlisted** or Public (the store cannot show a private video), give it the extension's
-name, and turn off ads and end screens so nothing is suggested over the last frame. Say in the description that
-the narration is an AI voice.
+#### On YouTube
+
+Upload it as **Unlisted** or Public (the store cannot show a private video), and turn off ads and end screens so
+nothing is suggested over the last frame.
+
+**Title:**
+
+```
+Export your Maccabi Online medical records to one ZIP – free Chrome extension
+```
+
+**Description** (plain text; the chapter times are the film's parts, `runFrom`, `saved` and `privacy` in `T` in
+`store/src/video.ts`, so retiming the film means changing them here and on YouTube; YouTube shows chapters only
+when each is at least 10 seconds long. The lists repeat the store description's, so change them together):
+
+```
+Save a copy of your Maccabi Online medical records on your computer, as one ZIP file: every PDF the site offers, plus the site's own data as JSON. Free and open source.
+
+▶ Install from the Chrome Web Store: https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp
+
+0:00 Years of records, one ZIP
+0:12 The export, start to finish (sped up)
+0:23 What's in the ZIP
+0:37 Private by design
+
+WHAT IT SAVES
+• Test results, lab histories and result PDFs
+• Visit summaries from the last 12 months
+• Prescriptions, pharmacy purchases and the purchase report
+• Referrals, approvals and information pages
+• Vaccinations and the vaccination booklet
+• Letters, messages with your doctor, and documents you uploaded
+• Your full medical file, freshly ordered to cover your whole history
+
+HOW IT WORKS
+1. Log in to Maccabi Online as usual.
+2. Click the extension's icon and press Start export.
+3. Keep the tab open. After 5 to 20 minutes, the ZIP is in your Downloads folder.
+
+Each export orders a fresh copy of your full medical file, so Maccabi will text you about the order. That is the only change the extension makes to your account.
+
+PRIVATE BY DESIGN
+• Connects only to online.maccabi4u.co.il. No servers, analytics or tracking.
+• Uses the session you're already logged in with. It never sees your password.
+• Open source, and what ships isn't minified: https://github.com/RoniRachmani/health-records-export-for-maccabi
+• Privacy policy: https://github.com/RoniRachmani/health-records-export-for-maccabi/blob/main/docs/privacy.md
+
+תוסף לא רשמי לכרום ששומר במחשב שלכם עותק של הרשומות הרפואיות ממכבי אונליין – בדיקות, ביקורים, מרשמים, מכתבים והתיק הרפואי המלא – בקובץ ZIP אחד. ממשק התוסף באנגלית.
+
+The narration is an AI voice (ElevenLabs). The music and sound effects were synthesized for this video. The records shown are made up.
+
+Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare Services.
+```
 
 ### Additional fields
 
