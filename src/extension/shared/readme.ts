@@ -34,9 +34,9 @@ const FOLDERS: Folder[] = [
     name: 'test-results',
     summary: 'lab, imaging, cardiology and external results',
     detail: `\`list.json\` is \`tests[]\`, each with a \`type\`: \`lab_result\`, \`imaging_result\` (a
-radiologist's report), \`imaging_study\` (the images — never exported, no file),
-\`cardiology_result\`, \`external_test_result\`. A lab test keeps its values in
-\`details/\` (\`results[]\` → groups → \`group_values[]\`, see *Lab values*) and has no PDF; **every
+radiologist's report), \`imaging_study\` (the images — never exported; details, no PDF),
+\`cardiology_result\`, \`external_test_result\`. A lab test keeps its values in \`details/\`
+(\`results[]\`, one per group, each with \`group_values[]\`; see *Lab values*) and has no PDF; **every
 other type has \`results\` empty** and its finding only in the PDF in \`files/\`.
 \`history/<test_id>_<name>.json\` is one measurement over time and reaches years further back than
 \`details/\`; \`latest-lab-results.json\` is the latest of each.`,
@@ -46,14 +46,14 @@ other type has \`results\` empty** and its finding only in the PDF in \`files/\`
     summary: 'the last 12 months of visits, with their summary PDFs',
     detail: `\`details/\` holds the doctor's own words (\`visit_recommendations\`, \`online_requests\`)
 and what the visit produced (\`referrals[]\`, \`drugs[]\`, \`approvals\`, \`tutorials\`).
-**\`diagnosis[]\` may hold only nulls** — the diagnosis is then in the PDF and the medical file only.
+**\`diagnosis[]\` may hold only null fields** — the diagnosis is then in the PDF and the medical file only.
 A visit with no summary is \`status\` 204 with \`data\` null; \`has_summery_file\` (sic) says which.`,
   },
   {
     name: 'medications-and-prescriptions',
     summary: 'prescriptions, the full purchase history, a 2-year purchase report',
-    detail: `\`list.json\` lists recent prescriptions only, one PDF each.
-\`purchased-history.html\` is every purchase, as the site's own Hebrew table, encoded
+    detail: `\`list.json\` lists recent prescriptions only, one PDF each. \`is_active\` can stay true
+after \`to_date\` has passed. \`purchased-history.html\` is every purchase, as the site's own Hebrew table, encoded
 **windows-1255**, with no JSON equivalent; \`purchased-report.json\` and its PDF cover 2 years.`,
   },
   {
@@ -76,8 +76,8 @@ Approvals have no id, so their file names carry a hash of the record's fields.`,
   {
     name: 'vaccinations',
     summary: 'vaccinations by vaccine, flu eligibility, the vaccination booklet PDF',
-    detail: `\`list.json\` is one entry per vaccine, \`details/<vaccine_group_code>_<name>.json\` one
-per dose. Older doses may be missing here and appear only in the medical file or the uploads.`,
+    detail: `\`list.json\` is one entry per vaccine, and \`details/<vaccine_group_code>_<name>.json\` lists
+its doses. Older doses may be missing here and appear only in the medical file or the uploads.`,
   },
   {
     name: 'letters',
@@ -118,7 +118,7 @@ extension said why in its popup. Without it, this export reaches back only as fa
   }
   return `\`${file}\`, beside this file, is Maccabi's own printout of the member's record
 as of ${file.slice(0, 10)}: personal details, known problems (diagnoses, with the date each began),
-sensitivities and lifestyle, then every visit back to the earliest — reason, findings, diagnosis,
+sensitivities and lifestyle, then visits back to the earliest on record — reason, findings, diagnosis,
 medications, referrals, vaccinations — then copies of the documents filed in the record. **Start
 there**: it reaches far further back than the JSON, which holds a few years. Maccabi's own heading
 still calls it partial (חלקי), and if the fresh order this run makes failed, this is an older
@@ -159,7 +159,19 @@ before them. It says where to start, what the export lacks and which values misl
 - **Leave the export as it is.** Write what you make — notes, tables, summaries — into a new folder
   of your own, such as \`notes/\`; never edit, rename or delete the export's files.
 - **Keep the member's name, ID number and contact details out of anything that leaves this
-  folder** — web searches, other tools, messages — unless the member asks for it.
+  folder** — web searches, other services, messages — unless the member asks for it.
+- **If a record suggests something needs a doctor soon, say so plainly** and point to it. Explain
+  the records; don't diagnose, and don't advise changing a treatment.
+
+Where to look: for a health history, the medical file; for a measurement over time,
+\`test-results/history/\`, and the latest of each in \`latest-lab-results.json\`; for what changed
+since the last visit, whatever is dated after the newest file in \`visit-summaries/\` — results,
+prescriptions, referrals, letters; for an appointment, the medical file's known problems, the latest
+results, recent \`visit-summaries/\` and open \`referrals/\`; for allergies, \`allergies-sensitivity/\`
+and the medical file's sensitivities; for preventive care due, age and sex in
+\`profile/member.json\`, \`vaccinations/\` and the screenings in \`test-results/\`. What the member
+actually bought is in \`purchased-history.html\`, not the prescriptions; neither shows what they take
+now, so ask.
 
 ## Start with the full medical file
 
@@ -180,13 +192,11 @@ site returns, which is less than Maccabi holds, which is less than the member's 
   the medical file, the member's own uploads.
 - Sections the site had nothing for. A folder exists only when the site returned something, so a
   missing folder means "nothing was returned", not "this was not checked".${absent}
-  A failed request does not stop an export; failures are listed in the extension's popup, not here.
 
 ## What is in this export
 
-Each folder holds the site's list in \`list.json\`, one JSON file per item in \`details/\`, and
-documents in \`files/\`; a record's JSON and its PDF share a file name. The files carry their own
-field names, so only what would be read wrongly is spelled out here.
+A folder holds the site's list in \`list.json\`, one JSON file per item in \`details/\` where the site
+has one, and documents in \`files/\`; a record's JSON and its PDF share a file name.
 
 ${folders}
 
@@ -196,15 +206,17 @@ Every value in \`group_values[]\`, \`current_result\`, \`other_results[]\` and
 \`latest-lab-results.json\` has the same fields: \`test_id\` and \`test_desc\` (the measurement),
 \`result\`, \`units\`, the reference range \`min_lim\`–\`max_lim\` (all numbers) and \`lab_date\`.
 
-- **\`min_lim\` and \`max_lim\` both 0 means no range was given**, not a range of 0 to 0. Then
-  \`numeric_percentage\` — where \`result\` sits in the range, 0 at \`min_lim\` and 100 at \`max_lim\` —
-  is 0 and means nothing.
+- **\`min_lim\` and \`max_lim\` both 0 means no range was given**, not a range of 0 to 0, and
+  \`numeric_percentage\` (where \`result\` sits in the range) is then 0 and means nothing.
 - **A \`result\` of 0 is often not a measurement.** When the answer is text, \`result\` is 0 and the
   text is in \`message\` (\`NEGATIVE\`) or, when \`is_messages\` is \`"2"\`, only in \`message_list\`
   (\`Undetectable\`, or a note that the test was not done). Read both before trusting a 0.
 - \`message_list\` is one note split into display lines (a reference range, a method change, an
   interpretation); join them. Its Hebrew is sometimes in visual order, numbers and punctuation at the
   wrong end: \`.60 ערך רצוי מעל\` reads "a value above 60 is desirable".
+- **Ranges and units change over time**: within one \`history/\` file, \`min_lim\`–\`max_lim\` and
+  \`units\` can differ by date, and older \`units\` may be blank. Judge each result against its own
+  range; don't trend across a change of units.
 - Two measurements can share a name and differ only by a symbol — \`Eosinophils #\` is a count,
   \`Eosinophils %\` a share. \`history/\` file names drop the symbol; \`test_desc\` and \`units\` keep it.
 - **The same values appear up to three times:** in \`details/\` by test, in \`history/\` by measurement,
@@ -219,9 +231,10 @@ Every value in \`group_values[]\`, \`current_result\`, \`other_results[]\` and
   (insurance dates), \`DD-MM-YYYY\` (\`purchased-history.html\`).
 - **Some dates are placeholders:** \`0001-01-01T00:00:00\` means never set, \`1900-01-01T00:00:00\` in
   a validity range means there is none. The one real \`1900-01-01\` is the medical file's
-  \`from_date\` in \`letters/list.json\`: it means the file covers everything.
-- Field names are English and keep the site's misspellings (\`has_summery_file\`,
-  \`scpecializations\`, \`orginal_package_count\`) — search for them as spelled. Values are mostly
+  \`from_date\` in \`letters/list.json\`: it means the file was asked for from the start, not that it
+  is complete.
+- Field names are English and keep the site's misspellings (\`has_summery_file\`) — search for
+  them as spelled. Values are mostly
   Hebrew, often padded with spaces; \`""\`, \`"0"\` and \`null\` usually mean none. Codes (status,
   type, insurance, speciality) are Maccabi's own and documented nowhere: trust the description beside them.
 - Match people by id, never by name: names run either way round and titles are spelled several ways
@@ -246,31 +259,25 @@ Every value in \`group_values[]\`, \`current_result\`, \`other_results[]\` and
 
 ## How files are shaped
 
-Every JSON file is one response from the site, kept as it was sent, wrapped in where it came from:
+Every JSON file is one response from the site, kept as it was sent, wrapped as
+\`{endpoint, fetched_at, status, data}\`. \`{mid}\` stands for the member id, never written into
+\`endpoint\`. \`status\` is 200, or 204 when the site had nothing — \`data\` is then null. \`omitted\`
+names what was left out of \`data\` (a report's PDF, kept in \`files/\` instead of as base64). A
+details file repeats the list fields it was fetched with, so it stands on its own.
 
-    { "endpoint": "GET MainAppAPI/v1/members/0/{mid}", "fetched_at": "2026-09-17T08:12:03.512Z",
-      "status": 200, "data": { "...": "the response, unchanged" } }
-
-\`{mid}\` stands for the member id, never written into \`endpoint\`. \`status\` is 200, or 204 when the
-site had nothing — \`data\` is then null. \`omitted\` names what was left out of \`data\` (a report's
-PDF, kept in \`files/\` instead of as base64). A details file repeats the list fields it was fetched
-with, so it stands on its own.
-
-File names are \`<date>_<id>_<title>.<ext>\`, so a record's JSON and its document share a name
-(\`details/2026-02-01_41234567-imaging-result.json\`, and the same name \`.pdf\` in \`files/\`).
-\`<date>\` is the record's own date or \`undated\`; \`<id>\` is the site's id, or a hash where the site
-gives none, plus \`-1\`, \`-2\` when a record has several documents; \`<title>\` is a display string,
-Hebrew kept and punctuation turned into \`-\`, left out when there is none. \`_\` appears nowhere else,
-and \`test-results/history/\` and \`vaccinations/details/\` name files by what they hold, with no date.
-Names are UTF-8: macOS's \`unzip\` garbles the Hebrew in them, \`ditto -x -k\` does not.
+File names are \`<date>_<id>_<title>.<ext>\`. \`<date>\` is the record's own date or \`undated\`;
+\`<id>\` is the site's id (with the test type, in \`test-results/\`), or a hash where the site gives
+none, plus \`-1\`, \`-2\` when a record has several documents; \`<title>\` is a display string,
+Hebrew kept and punctuation turned into \`-\`, left out when there is none. \`_\` appears nowhere
+else, and \`test-results/history/\` and \`vaccinations/details/\` name files by what they hold, with no date.
 
 ## Before sharing this export
 
 The member's national ID number runs through the data — \`id_number\`, \`member_id\`, \`user_id\`,
 \`recipient_id\`, inside \`doc_id\`, \`virtual_key\` and \`name_document\` — and is printed on nearly
 every page of the medical file and on most PDFs. File names never carry it. \`profile/member.json\`
-also holds the address, phone numbers and email. This ZIP is not encrypted, and it is health
-information: anyone who can open it can read it, including any service it is uploaded to.
+also holds the address, phone numbers and email. The ZIP is not encrypted: anyone, or any service,
+given it can read it.
 `;
 }
 

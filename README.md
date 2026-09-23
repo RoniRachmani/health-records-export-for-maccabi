@@ -185,14 +185,18 @@ in `files/` instead — those say so in their own `omitted` field.
 
 ### Hand it to an AI assistant
 
-The export is made to be worked on with an AI assistant. Unzip it and open the folder in Claude Cowork, Claude Code,
+The export is made to be worked on with an AI assistant. Assistants that connect to medical records reach U.S.
+providers, not Maccabi, so this export is how your records get to one. Unzip it and open the folder in Claude Cowork, Claude Code,
 ChatGPT Work or Codex: `README.md` is the assistant's saved instructions, and the records are its project files.
 Claude Code reads `CLAUDE.md` and Codex reads `AGENTS.md` on their own, and both lead to `README.md`; elsewhere, add
 `README.md` as the project's instructions, or ask the assistant to read it first.
 
 The instructions ask the assistant to start from your full medical file, to say which file (and which page of a PDF)
 each fact comes from and give it a date, to write its own notes into a new folder rather than change the export, and
-to keep your name, ID number and contact details out of web searches and other tools unless you ask.
+to keep your name, ID number and contact details out of web searches and other tools unless you ask. They have it
+say plainly when a record suggests something needs a doctor soon, and explain rather than diagnose, and they say
+where to look for the common questions: a lab value's trend, the latest results, what changed since your last
+visit, what to raise at an appointment, your allergies.
 
 > [!WARNING]
 > The extension sends your records nowhere, but an AI service you open them in can read them. Check what that

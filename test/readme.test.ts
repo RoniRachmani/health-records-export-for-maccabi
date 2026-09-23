@@ -9,10 +9,25 @@ describe('exportReadme', () => {
   it('tells an assistant how to work with the records before it describes them', () => {
     const md = exportReadme('2026-09-18', PRESENT, FILE);
     expect(md).toContain('this file is your instructions and the records are your project files');
-    for (const rule of ['Say where each fact comes from', 'Leave the export as it is.', 'out of anything that leaves this']) {
+    for (const rule of ['Say where each fact comes from', 'Leave the export as it is.', 'out of anything that leaves this', 'needs a doctor soon']) {
       expect(md).toContain(rule);
     }
     expect(md.indexOf('How to work with these records')).toBeLessThan(md.indexOf('Start with the full medical file'));
+  });
+
+  it('says where to look for the questions people ask most', () => {
+    const md = exportReadme('2026-09-18', PRESENT, FILE).replace(/\s+/g, ' ');
+    for (const pointer of [
+      'for a health history, the medical file',
+      'for a measurement over time, `test-results/history/`',
+      'for what changed since the last visit, whatever is dated after the newest file in `visit-summaries/`',
+      'for an appointment, the medical file',
+      "for allergies, `allergies-sensitivity/` and the medical file's sensitivities",
+      'for preventive care due, age and sex in `profile/member.json`, `vaccinations/`',
+      'open `referrals/`',
+    ]) {
+      expect(md).toContain(pointer);
+    }
   });
 
   it('describes only the folders this export has', () => {
