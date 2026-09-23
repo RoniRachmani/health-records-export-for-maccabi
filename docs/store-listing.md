@@ -54,6 +54,9 @@ Each export orders a fresh copy of your full medical file. It covers your whole 
 WHAT YOU GET
 The ZIP has one folder for each part of the site. Every record is saved as the site's own data (JSON), exactly as the site sent it. If a record has a PDF, the PDF has the same name: the record's date, ID and title. The full medical file is at the top level of the ZIP, and it's the best place to start. A README in the ZIP explains what each folder holds and what the export leaves out.
 
+MADE TO HAND TO AN AI ASSISTANT
+Unzip the ZIP and open the folder in Claude Cowork, Claude Code, ChatGPT Work or Codex. The README becomes the assistant's saved instructions, and the records become its project files. The README tells the assistant to start with the full medical file, not to mistake something missing from the export for something that never happened, to say which file each fact comes from, and to read correctly the values that mislead. Claude Code and Codex find the README without being told to. The extension itself sends your records nowhere, but whichever AI service you give them to can read them.
+
 Not included: imaging studies (DICOM), which the site only opens in its own viewer, and visits older than 12 months, which the site doesn't show. The purchase report PDF covers the last 2 years, though the purchase history itself covers everything. If an item fails to download, the export carries on, and the popup lists the failed items when the export finishes.
 
 PRIVATE BY DESIGN

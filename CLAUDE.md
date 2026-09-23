@@ -99,6 +99,12 @@ re-runs. Legacy steps don't get a 401, so `runner.ts` treats "Failed to fetch" i
 - **Offscreen document** (`extension/offscreen/`) does the two things a service worker cannot: `DOMParser`
   for the two legacy HTML responses, and a `blob:` URL for the finished ZIP. Talk to it only through
   `offscreenClient.ts`.
+- **The export's `README.md`** (`shared/readme.ts`) is written for an AI assistant: the ZIP is made to be
+  opened in Claude Cowork, Claude Code, ChatGPT Work or Codex, with the README as the assistant's saved
+  instructions and the records as its project files. It opens with how to work with the records, then is
+  their data dictionary, and it is kept short because it shares the assistant's context with them.
+  `INSTRUCTION_POINTERS` writes a `CLAUDE.md` (which imports it) and an `AGENTS.md` (which points to it) beside
+  it, because those tools load those names and never a README.
 - **Staging** (`shared/staging.ts`) is IndexedDB; it holds collected files until the ZIP downloads, then
   is cleared. The session token lives only in `chrome.storage.session` (memory).
 - **Popup**: `popup/model.ts` is pure, unit-tested view logic; `popup.ts` is DOM only. Put anything with a

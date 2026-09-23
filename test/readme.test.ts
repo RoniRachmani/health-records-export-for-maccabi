@@ -1,10 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { exportReadme } from '../src/extension/shared/readme';
+import { exportReadme, INSTRUCTION_POINTERS } from '../src/extension/shared/readme';
 
 const PRESENT = { profile: 4, 'test-results': 6, letters: 2 };
 const FILE = '2026-09-18_medical-file.pdf';
 
 describe('exportReadme', () => {
+  // An assistant is handed the export with this file as its saved instructions.
+  it('tells an assistant how to work with the records before it describes them', () => {
+    const md = exportReadme('2026-09-18', PRESENT, FILE);
+    expect(md).toContain('this file is your instructions and the records are your project files');
+    for (const rule of ['Say where each fact comes from', 'Leave the export as it is.', 'out of anything that leaves this']) {
+      expect(md).toContain(rule);
+    }
+    expect(md.indexOf('How to work with these records')).toBeLessThan(md.indexOf('Start with the full medical file'));
+  });
+
   it('describes only the folders this export has', () => {
     const md = exportReadme('2026-09-18', PRESENT, FILE);
     expect(md).toContain('**`test-results/`** · 6 files');
@@ -68,5 +78,12 @@ describe('exportReadme', () => {
   // It shares an AI reader's context with the records themselves, so its length is part of its job.
   it('stays short enough to read beside the records', () => {
     expect(exportReadme('2026-09-18', PRESENT, FILE).length).toBeLessThan(14000);
+  });
+});
+
+describe('INSTRUCTION_POINTERS', () => {
+  it('has Claude Code import the README and Codex read it', () => {
+    expect(INSTRUCTION_POINTERS['CLAUDE.md']).toMatch(/^@README\.md$/m);
+    expect(INSTRUCTION_POINTERS['AGENTS.md']).toContain('Read README.md');
   });
 });

@@ -12,7 +12,7 @@ import {
 import {
   clearProblemsOfStep, clearStaging, listMeta, listProblems, putTextDirect, setCurrentStep, stagedTotals, stagingSink,
 } from '../shared/staging';
-import { exportReadme } from '../shared/readme';
+import { exportReadme, INSTRUCTION_POINTERS } from '../shared/readme';
 import { callOffscreen, closeOffscreen, offscreenHtml } from './offscreenClient';
 import { capturingTransport, rawDumpOn } from './rawDump';
 import { currentSession, DEFAULT_ROUTES, isVisible, keepSessionAlive, navigate, routedTransport, snapshot, type Routes } from './tab';
@@ -380,7 +380,10 @@ async function runPlanStep(step: PlanStep): Promise<void> {
 }
 
 // ---- finishing ---------------------------------------------------------
-/** The export's own data dictionary, at the root of the ZIP. Counts describe what this run got. */
+/**
+ * The export's own data dictionary and an assistant's instructions, at the root of the ZIP, with the
+ * files that point Claude Code and Codex at it. Counts describe what this run got.
+ */
 async function writeReadme(root: string): Promise<void> {
   const files: Record<string, number> = {};
   let medicalFile: string | null = null;
@@ -391,6 +394,7 @@ async function writeReadme(root: string): Promise<void> {
     else if (m.rel.endsWith('_medical-file.pdf') && (!medicalFile || m.rel > medicalFile)) medicalFile = m.rel;
   }
   await putTextDirect('README.md', exportReadme(root.replace(/^maccabi-export-/, ''), files, medicalFile));
+  for (const [name, text] of Object.entries(INSTRUCTION_POINTERS)) await putTextDirect(name, text);
 }
 
 async function saveZip(): Promise<void> {

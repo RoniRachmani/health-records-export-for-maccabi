@@ -33,6 +33,9 @@ to your computer as one ZIP file: every PDF the site offers, plus the site's own
   password.
 - **Raw.** One JSON file per record, exactly as the site sent it, named so you can read it: `<date>_<id>_<title>`,
   with a `README.md` in the ZIP explaining the lot.
+- **Ready for your AI assistant.** Open the folder in Claude Cowork, Claude Code, ChatGPT Work or Codex, and the
+  ZIP's `README.md` becomes the assistant's instructions for your records. See
+  [Hand it to an AI assistant](#hand-it-to-an-ai-assistant).
 - **Resumable.** If your session ends partway through, log in again and press **Resume**. Files collected so far
   are kept.
 
@@ -128,7 +131,8 @@ One folder, `maccabi-export-YYYY-MM-DD/`:
 | `uploads/` | Documents you uploaded and their files |
 | `allergies-sensitivity/`, `appointments/` (future only), `requests-approvals/` | Only when the site has something in them |
 | `<date>_medical-file.pdf` | Your full medical file, freshly ordered: one document covering your whole history, and the place to start |
-| `README.md` | The export's own data dictionary: what each folder holds, how a record is shaped, which fields carry no meaning, and what the export does **not** contain |
+| `README.md` | Instructions for an AI assistant, and the export's own data dictionary: what each folder holds, how a record is shaped, which fields carry no meaning, and what the export does **not** contain |
+| `CLAUDE.md`, `AGENTS.md` | Point Claude Code and Codex at `README.md`, so they take it as their instructions without being told to |
 
 Every section keeps its list in `list.json`, one JSON file per record in `details/`, and documents in `files/`.
 
@@ -147,8 +151,9 @@ out when a record has none.
 > bundled `unzip` command is Info-ZIP 6.00, which predates that flag and garbles them — use `ditto -x -k <zip> <dir>`
 > there instead.
 
-`README.md` is written for whoever reads the export next, an AI assistant included. It points at your full medical
-file PDF as the one document to start from, then says what the export doesn't contain — no DICOM images, no visit
+`README.md` is written for whoever reads the export next, most often an AI assistant (see
+[Hand it to an AI assistant](#hand-it-to-an-ai-assistant)). It opens with how to work with the records, then points
+at your full medical file PDF as the one document to start from, then says what the export doesn't contain — no DICOM images, no visit
 data over 12 months — so a reader doesn't take an omission for an absence in your history. It then goes folder by
 folder, and through the values that mislead: a lab `result` of 0 that is really a text answer, placeholder dates,
 and fields that change on every request. It shares a reader's context with the records themselves, so it is kept
@@ -177,6 +182,21 @@ in `files/` instead — those say so in their own `omitted` field.
 - **Imaging studies (DICOM).** The site only opens them in its viewer. Export them by hand from there.
 - **Visits older than 12 months.** The site doesn't show them.
 - **Older purchase reports.** The purchase report PDF covers the last 2 years. The purchase history covers everything.
+
+### Hand it to an AI assistant
+
+The export is made to be worked on with an AI assistant. Unzip it and open the folder in Claude Cowork, Claude Code,
+ChatGPT Work or Codex: `README.md` is the assistant's saved instructions, and the records are its project files.
+Claude Code reads `CLAUDE.md` and Codex reads `AGENTS.md` on their own, and both lead to `README.md`; elsewhere, add
+`README.md` as the project's instructions, or ask the assistant to read it first.
+
+The instructions ask the assistant to start from your full medical file, to say which file (and which page of a PDF)
+each fact comes from and give it a date, to write its own notes into a new folder rather than change the export, and
+to keep your name, ID number and contact details out of web searches and other tools unless you ask.
+
+> [!WARNING]
+> The extension sends your records nowhere, but an AI service you open them in can read them. Check what that
+> service keeps, and for how long, before you give it your health information.
 
 ## Privacy and safety
 

@@ -1,13 +1,14 @@
-/* The README.md written at the root of the ZIP. It is the export's data dictionary, aimed at
-   whoever -- or whatever -- reads the export next: where to start, what the export does not
-   contain, how it is laid out, and the fields that do not mean what they appear to mean. It is
-   written from real exports; every claim about a field was checked against one.
+/* The README.md written at the root of the ZIP. The export is made to be handed to an AI assistant
+   -- Claude Cowork, Claude Code, ChatGPT Work, Codex -- and this file is that assistant's saved
+   instructions, the records its project files. So it opens with how to work with them, then is the
+   export's data dictionary: where to start, what the export does not contain, how it is laid out,
+   and the fields that do not mean what they appear to mean. It is written from real exports; every
+   claim about a field was checked against one.
 
-   It is read with the export, most often by an AI assistant whose context it shares with the
-   records themselves, so it is kept short on purpose. It says only what a reader cannot get by
-   opening a file -- the layout, the gaps, the traps, the join keys -- and leaves the field names to
-   the JSON, which carries them already. Before adding a line, ask whether a record would be read
-   wrongly without it; if not, leave it out. */
+   It shares the assistant's context with the records themselves, so it is kept short on purpose.
+   It says only what a reader cannot get by opening a file -- the layout, the gaps, the traps, the
+   join keys -- and leaves the field names to the JSON, which carries them already. Before adding a
+   line, ask whether a record would be read wrongly without it; if not, leave it out. */
 
 interface Folder {
   name: string;
@@ -146,8 +147,19 @@ export function exportReadme(exportedOn: string, present: Record<string, number>
   return `# Maccabi health records export
 
 Exported ${exportedOn} from online.maccabi4u.co.il with the Health Records Export for Maccabi
-browser extension; everything here belongs to one member. This is the export's data dictionary —
-where to start, what is missing, what misleads. Read it before the records.
+browser extension; everything here belongs to one member. If you are an AI assistant working with
+these records, this file is your instructions and the records are your project files: read it
+before them. It says where to start, what the export lacks and which values mislead.
+
+## How to work with these records
+
+- **Say where each fact comes from** — the file's path, and the page of a PDF — so the member can
+  check it. Give each finding its date: a record describes the day it was made, and a diagnosis or
+  a medication in an old one may no longer hold.
+- **Leave the export as it is.** Write what you make — notes, tables, summaries — into a new folder
+  of your own, such as \`notes/\`; never edit, rename or delete the export's files.
+- **Keep the member's name, ID number and contact details out of anything that leaves this
+  folder** — web searches, other tools, messages — unless the member asks for it.
 
 ## Start with the full medical file
 
@@ -261,3 +273,19 @@ also holds the address, phone numbers and email. This ZIP is not encrypted, and 
 information: anyone who can open it can read it, including any service it is uploaded to.
 `;
 }
+
+/**
+ * Files written beside README.md so that coding assistants take it as their instructions without
+ * being told to: each loads a file of its own name from the folder it is opened in, and none loads a
+ * README. Claude Code's CLAUDE.md imports it with `@`; Codex's AGENTS.md has no imports, so it says
+ * where to look.
+ */
+export const INSTRUCTION_POINTERS: Record<string, string> = {
+  'CLAUDE.md': `This folder's instructions are in README.md, beside this file:
+
+@README.md
+`,
+  'AGENTS.md': `Read README.md, beside this file, before anything else, and follow it: it is this folder's
+instructions — where to start, what the export lacks and which values mislead.
+`,
+};
