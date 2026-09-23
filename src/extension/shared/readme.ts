@@ -103,7 +103,7 @@ There is no \`list.json\`: the site's list is a web page, not data.`,
   },
   {
     name: 'hospital-stays',
-    summary: 'hospital visits: date, kind of visit, hospital and department, and discharge letters',
+    summary: 'hospital visits: date, kind of visit, hospital and department, with any discharge letters',
     detail: `\`TypeCommitment\` is the kind of visit (\`אשפוז\` is an admission). Use \`Date\`:
 \`DateHospitalization\` is day, month and year run together, not zero-padded. Maccabi Healthcare
 Services's own page shows only those four; \`DescriptionTreatment\` and \`DescriptionDistinction\` are
