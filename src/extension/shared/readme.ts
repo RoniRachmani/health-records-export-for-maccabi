@@ -161,7 +161,8 @@ before them. It says where to start, what the export lacks and which values misl
 - **Keep the member's name, ID number and contact details out of anything that leaves this
   folder** — web searches, other services, messages — unless the member asks for it.
 - **If a record suggests something needs a doctor soon, say so plainly** and point to it. Explain
-  the records; don't diagnose, and don't advise changing a treatment.
+  the records in plain language, not the clinical shorthand they are written in; don't diagnose,
+  and don't advise changing a treatment.
 
 Where to look: for a health history, the medical file; for a measurement over time,
 \`test-results/history/\`, and the latest of each in \`latest-lab-results.json\`; for what changed

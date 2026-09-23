@@ -194,7 +194,7 @@ Claude Code reads `CLAUDE.md` and Codex reads `AGENTS.md` on their own, and both
 The instructions ask the assistant to start from your full medical file, to say which file (and which page of a PDF)
 each fact comes from and give it a date, to write its own notes into a new folder rather than change the export, and
 to keep your name, ID number and contact details out of web searches and other tools unless you ask. They have it
-say plainly when a record suggests something needs a doctor soon, and explain rather than diagnose, and they say
+say plainly when a record suggests something needs a doctor soon, and explain in plain language rather than diagnose, and they say
 where to look for the common questions: a lab value's trend, the latest results, what changed since your last
 visit, what to raise at an appointment, your allergies.
 
