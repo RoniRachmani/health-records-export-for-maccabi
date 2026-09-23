@@ -1,6 +1,6 @@
 import { errMessage, isControl, PACE_MS, type Collector } from '../collector';
 import type { Ctx, Json } from '../types';
-import { iso, safe, stem, titleOf } from '../util';
+import { iso, safe, shortHash, stem, titleOf } from '../util';
 
 const INQUIRY_TITLE = ['subject', 'inquiry_subject', 'title', 'service_provider_name', 'practitioner_name', 'description'];
 // The PHR grid's DocumentSystemName is a storage name, not a title, so it is not a candidate.
@@ -77,6 +77,9 @@ function uploadName(info: Json, id: Json): string {
 }
 
 const HOSPITAL_URL = '/online/webapi/MailingsFromHospitals/GetMailingsFromHospitals/';
+// The page's Summary button (openPdf in app_js/components/MailingsFromHospital/BaseModule.js) opens
+// this with both values appended as they are, unencoded; they are sent here the same way.
+const HOSPITAL_LETTER_URL = '/online/Pages/Popups/MailingsFromHospitals/MailingsFromHospitals.aspx?path=';
 // DDMMYYYY, as the page's own date picker sends them. The page asks for its last YearsBack (3) years
 // only, but the service takes any range and returns older stays too (seen 2026-09-23: four from 2001,
 // none of them within three years), so it is asked for everything.
@@ -113,6 +116,19 @@ export async function hospitalStays(c: Collector, _ctx: Ctx): Promise<void> {
       status: r.status,
       data: { ReportHospitalizations: stays },
     });
+    // A stay with HasLink has a discharge letter: the one document here that says what happened.
+    const letters = stays.filter((s) => s.HasLink === true);
+    for (let i = 0; i < letters.length; i++) {
+      const s = letters[i];
+      c.progress(i, letters.length, 'hospital letters');
+      // A stay has no id of its own; these four fields are what the site lists it by.
+      const name = stem(iso(s.Date), await shortHash([s.Date, s.NameHospital, s.Department, s.TypeCommitmentEgenKey]), titleOf(s, ['NameHospital']));
+      if (!s.LinkPDF || !s.TypeCommitmentEgenKey) {
+        await c.problem('hospital-stays/files/' + name + '.pdf', 'HasLink is true but LinkPDF or TypeCommitmentEgenKey is empty');
+        continue;
+      }
+      await c.pdfIfMissing('hospital-stays/files/' + name + '.pdf', HOSPITAL_LETTER_URL + s.LinkPDF + '&typeCommitment=' + s.TypeCommitmentEgenKey, {});
+    }
   } catch (e) {
     if (isControl(e)) throw e;
     await c.problem(REL, errMessage(e));

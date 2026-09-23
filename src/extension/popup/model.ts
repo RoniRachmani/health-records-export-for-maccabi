@@ -115,7 +115,7 @@ export const DESCRIPTIONS: Record<PlanStep, Record<string, string>> = {
     'purchase report': 'Creating the 2-year purchase report PDF',
   },
   savedDocuments: { '': 'Reading the documents you uploaded', 'saved documents': 'Downloading the documents you uploaded' },
-  hospitalStays: { '': 'Reading your hospital stays', 'hospital stays': 'Reading your hospital stays' },
+  hospitalStays: { '': 'Reading your hospital stays', 'hospital stays': 'Reading your hospital stays', 'hospital letters': 'Downloading hospital discharge letters' },
   orderMedicalFile: { '': 'Ordering a fresh copy (you’ll get an SMS)' },
   returnToSonline: { '': 'Keeps your session alive during the wait' },
   waitMedicalFile: {

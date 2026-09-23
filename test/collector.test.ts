@@ -92,6 +92,7 @@ describe('full run against the fake site', () => {
       'communication-with-doctor/list.json',
       'my-doctor/assigned-practitioners.json',
       'my-doctor/eligibilities.json',
+      'hospital-stays/files/2025-05-10_<hash8>_מרכז-רפואי-לדוגמה.pdf',
       'hospital-stays/list.json',
       'info-pages/list.json',
       'letters/files/2026-04-01_L1_מכתב-שיחרור.pdf',
@@ -159,13 +160,15 @@ describe('full run against the fake site', () => {
     expect(site.calls).toContain('POST /online/webapi/MailingsFromHospitals/GetMailingsFromHospitals/');
     const stays = mem.json('hospital-stays/list.json');
     expect(stays.request_body).toEqual({ isDateSelected: true, fromDate: '01011900', toDate: '31122099' });
-    expect(stays.data.ReportHospitalizations).toHaveLength(1);
+    expect(stays.data.ReportHospitalizations).toHaveLength(2);
     expect(stays.data.ReportHospitalizations[0]).toMatchObject({
       NameHospital: 'בית חולים לדוגמה',
       DescriptionTreatment: [{ Description: 'HOSPITALIZATION - PER DAY' }],
       DescriptionDistinction: [],
     });
-    expect(s.results).toEqual({ written: 40 });
+    // The discharge letter is asked for as the page's Summary button opens it.
+    expect(site.calls).toContain('GET /online/Pages/Popups/MailingsFromHospitals/MailingsFromHospitals.aspx?path=reports/L9.pdf&typeCommitment=2');
+    expect(s.results).toEqual({ written: 41 });
   });
 
   it('a second run into the same files changes nothing and skips unchanged work', async () => {
@@ -191,6 +194,16 @@ describe('full run against the fake site', () => {
     const s = await runAll(c, newCtx(), ['hospitalStays']);
     expect(s.problems).toEqual([expect.stringMatching(/^hospital-stays\/list\.json PROBLEM: HTTP 200 text\/html.*logged out\?/)]);
     expect([...(sink as MemorySink).files.keys()]).toEqual([]);
+  });
+
+  it('reports a discharge letter that is not a PDF, and keeps the stays', async () => {
+    const site = fakeMaccabi();
+    const page: HttpResponse = { status: 200, redirected: false, contentType: 'text/html; charset=utf-8', bytes: new TextEncoder().encode('<html>error</html>') };
+    const t = fakeTransport([(_req, url) => (url.pathname.endsWith('MailingsFromHospitals.aspx') ? page : undefined), ...site.routes]);
+    const { c, sink } = makeCollector(t);
+    const s = await runAll(c, newCtx(), ['hospitalStays']);
+    expect(s.problems).toEqual([expect.stringMatching(/^hospital-stays\/files\/2025-05-10_[0-9a-f]{8}_מרכז-רפואי-לדוגמה\.pdf PROBLEM: PDF download: HTTP 200 text\/html/)]);
+    expect([...(sink as MemorySink).files.keys()]).toEqual(['hospital-stays/list.json']);
   });
 
   it('runs only the named steps and stops at SESSION ENDED', async () => {

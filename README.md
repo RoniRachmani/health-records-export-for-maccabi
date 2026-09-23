@@ -139,7 +139,7 @@ One folder, `maccabi-export-YYYY-MM-DD/`:
 | `letters/` | Letters and their PDFs |
 | `communication-with-doctor/` | Inquiries to doctors and attached forms |
 | `uploads/` | Documents you uploaded and their files |
-| `hospital-stays/` | Hospital visits: date, kind of visit, hospital and department. Only when the site lists any |
+| `hospital-stays/` | Hospital visits: date, kind of visit, hospital and department, and discharge letters when the site has them. Only when the site lists any |
 | `allergies-sensitivity/`, `appointments/` (future only), `requests-approvals/` | Only when the site has something in them |
 | `<date>_medical-file.pdf` | Your full medical file, freshly ordered: one document covering your whole history, and the place to start |
 | `README.md` | Instructions for an AI assistant, and the export's own data dictionary: what each folder holds, how a record is shaped, which fields carry no meaning, and what the export does **not** contain |

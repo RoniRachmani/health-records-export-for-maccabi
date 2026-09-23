@@ -103,12 +103,13 @@ There is no \`list.json\`: the site's list is a web page, not data.`,
   },
   {
     name: 'hospital-stays',
-    summary: 'hospital visits: date, kind of visit, hospital and department',
+    summary: 'hospital visits: date, kind of visit, hospital and department, and discharge letters',
     detail: `\`TypeCommitment\` is the kind of visit (\`אשפוז\` is an admission). Use \`Date\`:
 \`DateHospitalization\` is day, month and year run together, not zero-padded. Maccabi Healthcare
 Services's own page shows only those four; \`DescriptionTreatment\` and \`DescriptionDistinction\` are
 not shown there, and **can hold only billing lines** such as \`HOSPITALIZATION - PER DAY\`, not
-treatments or diagnoses. What happened in hospital is in the medical file, under the visit's dates.`,
+treatments or diagnoses. What happened in hospital is in the discharge letter in \`files/\` (the
+visits with \`HasLink\` true have one) or else in the medical file, under the visit's dates.`,
   },
   { name: 'allergies-sensitivity', summary: 'recorded sensitivities and intolerances (`intolerance[]`)', detail: '' },
   { name: 'appointments', summary: 'future appointments only — past ones are visits, in `visit-summaries/`', detail: '' },
@@ -179,7 +180,7 @@ since the last visit, whatever is dated after the newest file in \`visit-summari
 prescriptions, referrals, letters; for an appointment, the medical file's known problems, the latest
 results, recent \`visit-summaries/\` and open \`referrals/\`; for allergies, \`allergies-sensitivity/\`
 and the medical file's sensitivities; for hospital stays, \`hospital-stays/\` for when and where,
-the medical file for what happened; for preventive care due, age and sex in
+its discharge letters and the medical file for what happened; for preventive care due, age and sex in
 \`profile/member.json\`, \`vaccinations/\` and the screenings in \`test-results/\`. What the member
 actually bought is in \`purchased-history.html\`, not the prescriptions; neither shows what they take
 now, so ask.

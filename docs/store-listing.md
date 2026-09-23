@@ -70,7 +70,7 @@ Health Records Export for Maccabi collects the records that Maccabi Online shows
 • Letters
 • Messages with your doctor, and the forms attached to them
 • Documents you uploaded
-• Hospital stays: where and when
+• Hospital stays, with discharge letters when the site has them
 • Your member details, entitlements and assigned doctors
 • Your full medical file, freshly ordered to cover your whole history
 

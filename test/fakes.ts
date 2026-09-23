@@ -101,8 +101,11 @@ export function fakeMaccabi(letterState: LetterState = { medicalFile: null }): {
         DescriptionTreatment: [{ Description: 'HOSPITALIZATION - PER DAY      ' }, { Description: '      ' }],
         DescriptionDistinction: [{ Description: '      ' }],
       };
-      return jsonResp({ ReportHospitalizations: [stay, stay], ResultMessage: { Code: 0, Description: '' } });
+      // A second stay, with a discharge letter.
+      const letter = { ...stay, NameHospital: 'מרכז רפואי לדוגמה', Date: '2025-05-10T00:00:00', DateHospitalization: '10052025', HasLink: true, LinkPDF: 'reports/L9.pdf', TypeCommitmentEgenKey: '2' };
+      return jsonResp({ ReportHospitalizations: [stay, stay, letter], ResultMessage: { Code: 0, Description: '' } });
     }],
+    ['GET', '/online/Pages/Popups/MailingsFromHospitals/MailingsFromHospitals.aspx', () => bytesResp(PDF)],
   ];
   const route: Route = (req, url) => {
     calls.push(req.method + ' ' + url.pathname + url.search);
