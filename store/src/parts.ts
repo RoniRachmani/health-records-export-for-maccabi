@@ -1,5 +1,6 @@
 /* The pieces the store images (stage.ts) and the promo video (video.ts) both draw: the little
-   DOM helper, the icons, the fake browser window's insides, the ZIP's folder list and the mark.
+   DOM helper, the icons, the fake browser window's insides, the ZIP's folder list, the AI
+   assistant opened on the export, and the mark.
    Nothing here decides a layout — each page's own CSS places these. */
 
 export type Child = Node | string | null | undefined | false;
@@ -78,12 +79,49 @@ export function fileRow(icon: string, name: string, what: string, kinds: string)
   );
 }
 
-/** The ZIP's contents: the full medical file, which sorts ahead of the folders, and then FOLDERS. */
-export function fileRows(): HTMLElement[] {
-  return [
-    fileRow(DOC, '2026-09-17_medical-file.pdf', 'Your full medical file', 'PDF'),
-    ...FOLDERS.map(([name, what, kinds]) => fileRow(FOLDER, name, what, kinds)),
+/** A generic assistant's mark: a four-point spark, in the extension's blue. */
+const SPARK = '<svg viewBox="0 0 20 20" width="18" height="18"><path d="M10 1.5c.6 4.4 4.1 7.9 8.5 8.5-4.4.6-7.9 4.1-8.5 8.5-.6-4.4-4.1-7.9-8.5-8.5 4.4-.6 7.9-4.1 8.5-8.5z" fill="#296bed"/></svg>';
+
+/** More questions a member might ask of the export, offered under the answer. */
+export const QUESTIONS = [
+  'Explain my latest blood test in plain English',
+  'What should I raise at my next appointment?',
+  'Summarize my medical file',
+  'Which vaccinations might I be due for?',
+];
+
+export interface Chat {
+  el: HTMLElement;
+  question: HTMLElement;
+  /** The answer's paragraphs, then the file it names as its source. */
+  answer: HTMLElement[];
+  chips: HTMLElement[];
+  input: HTMLElement;
+}
+
+/**
+ * An AI assistant with the export's folder open, drawn plain so that it is no real product: the
+ * export's README taken as its instructions, a question, an answer in English from a record whose name is Hebrew, the file it came from, and
+ * more questions to ask. The records are made up, as everywhere else in these images.
+ */
+export function chatWindow(): Chat {
+  const question = h('div', 'msg ask', 'How has my HbA1c changed since 2019?');
+  const answer = [
+    h('p', '', 'It rose from 5.4% in March 2019 to 5.9% in August 2026. Each result was inside the lab’s range of 4 to 6 at the time, but it has gone up at every test since 2022.'),
+    h('p', '', h('strong', '', 'That steady rise is worth raising with your family doctor'), ' at your next visit.'),
+    h('p', 'source', svg(DOC, 'source-icon'),
+      h('span', 'dir', 'test-results/history/'), h('span', 'stem', '1486_המוגלובין-מסוכרר'), h('span', 'dir', '.json')),
   ];
+  const chips = QUESTIONS.map((q) => h('span', 'ask-chip', q));
+  const input = h('div', 'chat-input', 'Ask about your records…');
+  const el = h('div', 'window chat',
+    h('div', 'toolbar', dots(), h('div', 'chat-title', svg(FOLDER, 'folder'), h('span', '', 'maccabi-export-2026-09-17'))),
+    h('div', 'chat-body',
+      h('p', 'chat-note', svg(DOC, 'source-icon'), 'Read README.md, the instructions for working with these records'),
+      question, h('div', 'msg reply', svg(SPARK, 'avatar'), h('div', 'reply-body', ...answer))),
+    h('div', 'chat-foot', h('div', 'ask-chips', ...chips), input),
+  );
+  return { el, question, answer, chips, input };
 }
 
 // The two tilted documents and the icon's own artwork (scripts/make-icons.mjs, on its 24-unit

@@ -287,6 +287,9 @@ function runView(run: RunState, st: StateReply): Child[] {
 
 const ZIP_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M11 6h1M12 8.5h1M11 11h1M12 13.5h1"/><rect x="10.5" y="16" width="3" height="3" rx=".8"/></svg>';
 
+/** The README's section on opening the export in an AI assistant. */
+const AI_HELP = 'https://github.com/RoniRachmani/health-records-export-for-maccabi#hand-it-to-an-ai-assistant';
+
 function doneView(run: RunState): Child[] {
   const shown = run.problems || [];
   const count = Math.max(run.problemCount ?? 0, shown.length);
@@ -311,6 +314,8 @@ function doneView(run: RunState): Child[] {
           h('ul', {}, ...g.items.map((p) => h('li', {}, p.what, p.where.includes('/') && h('span', { class: 'path' }, p.where))))))),
       count > shown.length && h('p', { class: 'small' }, 'Showing the first ' + shown.length + '.')),
     actions(actionButton('Show in folder', { type: 'showFile' }, 'primary grow'), actionButton('Done', { type: 'dismiss' }, 'grow')),
+    note('', h('strong', {}, 'Next: '), 'unzip it and open the folder in your AI assistant, then ask about your records. ',
+      h('a', { href: AI_HELP, target: '_blank' }, 'See how')),
     note('', 'The ZIP contains sensitive health information. Store and share it with care.'),
   ];
 }

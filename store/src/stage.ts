@@ -2,13 +2,13 @@
    which runs in an iframe with a made-up state (mock-chrome.ts). The page sets
    <html data-ready="1"> when it has finished rendering, for scripts/store-assets.mjs. */
 import '@fontsource-variable/heebo';
-import { CHECK, LOCK, MARK, dots, fileRows, h, img, pageSkeleton, paper, svg } from './parts';
+import { CHECK, LOCK, MARK, chatWindow, dots, h, img, pageSkeleton, paper, svg } from './parts';
 
 interface Shot {
   title: string;
   text: string;
   points: string[];
-  /** Popup state shown in the browser window; without one, the export's folders are shown. */
+  /** Popup state shown in the browser window; without one, an AI assistant opened on the export is shown. */
   popup?: string;
   /** A <details> in the popup to show open. */
   open?: string;
@@ -18,8 +18,8 @@ interface Shot {
 
 const SHOTS: Record<string, Shot> = {
   start: {
-    title: 'Your Maccabi records in one ZIP',
-    text: 'Log in to Maccabi Online as usual, click the extension icon and press Start export.',
+    title: 'Your Maccabi records, ready for your AI assistant',
+    text: 'Log in to Maccabi Online as usual, click the extension icon and press Start export. You get one ZIP on your computer.',
     points: [
       'Test results, visits, prescriptions, referrals, vaccinations and letters',
       'Every PDF the site offers, plus the site’s own data as JSON',
@@ -42,21 +42,25 @@ const SHOTS: Record<string, Shot> = {
     title: 'One file in your Downloads folder',
     text: 'Everything collected, in one dated ZIP file. The popup lists anything that could not be exported.',
     points: [
-      'A README explains what every folder holds',
+      'Its README tells your AI assistant how to read your records',
       'Keep it for your records or share it with a doctor',
       'The extension then deletes its own copy',
     ],
     popup: 'done',
     badge: { text: '✓', color: '#1a7a48' },
   },
-  contents: {
-    title: 'Every record, every PDF',
-    text: 'One folder per part of Maccabi Online. JSON files are the site’s own responses, exactly as sent.',
-    points: ['Open formats: JSON and PDF', 'Opens offline, without any account', 'Same layout every time, easy to compare'],
+  ask: {
+    title: 'Ask about your records',
+    text: 'Unzip it, open the folder in your AI assistant, and ask in plain language.',
+    points: [
+      'See your whole history, and how each result has changed',
+      'Records in Hebrew, answers in your language',
+      'The README asks it to name the file behind each fact, so you can check',
+    ],
   },
   privacy: {
     title: 'Private by design',
-    text: 'Your records go from Maccabi Online straight to a file on your computer.',
+    text: 'Your records stop at your computer. You choose which AI assistant, if any, reads them.',
     points: [
       'No servers, analytics or tracking',
       'Talks only to online.maccabi4u.co.il and never sees your password',
@@ -113,13 +117,6 @@ async function browserWindow(shot: Shot): Promise<HTMLElement> {
   return win;
 }
 
-function filesWindow(): HTMLElement {
-  return h('div', 'window files',
-    h('div', 'toolbar', dots(), h('div', 'files-title', 'maccabi-export-2026-09-17')),
-    h('div', 'files-list', ...fileRows()),
-  );
-}
-
 function promo(): HTMLElement {
   // The icon's folder, over two documents; no text, as the store asks.
   return svg(`<svg viewBox="0 0 440 280" width="440" height="280">
@@ -141,8 +138,8 @@ function marquee(): HTMLElement {
   return h('div', 'mq',
     h('section', 'mq-copy',
       h('div', 'eyebrow', img('/icons/icon-128.png'), 'Health Records Export for Maccabi'),
-      h('h1', '', 'Your Maccabi records in one ZIP'),
-      h('p', 'lead', 'Tests, visits, prescriptions, referrals, vaccinations, letters and your full medical file — every PDF, saved straight to your computer.'),
+      h('h1', '', 'Your Maccabi records, ready for your AI assistant'),
+      h('p', 'lead', 'Tests, visits, prescriptions, letters and your full medical file, as one ZIP on your computer. Open it in the assistant you choose, and ask.'),
       h('p', 'disclaimer', 'Unofficial. Not affiliated with Maccabi Healthcare Services.'),
     ),
     svg(`<svg viewBox="0 0 540 440" width="540" height="440">
@@ -166,7 +163,7 @@ async function main(): Promise<void> {
     document.body.className = 'shot';
     document.body.append(copy(shot));
     if (shot.popup) await browserWindow(shot);
-    else document.body.append(filesWindow());
+    else document.body.append(chatWindow().el);
   }
   await document.fonts.ready;
   await Promise.all(Array.from(document.images).map((img) => img.decode().catch(() => undefined)));

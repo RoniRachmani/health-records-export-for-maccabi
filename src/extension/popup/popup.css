@@ -112,12 +112,14 @@ footer nav {
   margin-left: auto;
 }
 footer a,
-.consent a {
+.consent a,
+.note a {
   color: var(--accent);
   text-underline-offset: 2px;
 }
 footer a:hover,
-.consent a:hover {
+.consent a:hover,
+.note a:hover {
   color: var(--accent-hover);
 }
 .version {

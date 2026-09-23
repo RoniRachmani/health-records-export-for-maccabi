@@ -18,7 +18,7 @@ import {
   between, clamp01, fade, inCubic, inOut, kinetic, lerp, linear, out, outBack, outQuint, place, pulse, ramp, rise, showing,
   type Point,
 } from './motion';
-import { CHECK, DOC, FOLDER, FOLDERS, LOCK, MARK, dots, fileRow, h, img, pageSkeleton, paper, svg } from './parts';
+import { CHECK, DOC, FOLDER, FOLDERS, LOCK, MARK, chatWindow, dots, fileRow, h, img, pageSkeleton, paper, svg } from './parts';
 
 const FPS = 60;
 
@@ -27,31 +27,33 @@ const T = {
   // 1 · Years of records, pulled into one folder.
   cards: 0.15,
   hookLine: 0.4,
-  swallow: 2.55,
+  swallow: 3.65,
   // 2 · The name and the promise.
-  title: 3.55,
+  title: 4.65,
   // 3 · The clicks, on a placeholder page. The camera then closes in on the popup.
-  browser: 7.6,
-  clickIcon: 9.5,
-  popupIn: 9.6,
-  zoom: 10.0,
-  clickStart: 12.4,
+  browser: 8.7,
+  clickIcon: 10.6,
+  popupIn: 10.7,
+  zoom: 11.1,
+  clickStart: 13.5,
   // 4 · The export, sped up.
-  runFrom: 12.7,
-  runTo: 23.3,
-  saved: 23.7,
+  runFrom: 13.8,
+  runTo: 24.4,
+  saved: 24.8,
   // 5 · The ZIP, opened. Its two parts are as long as their narration needs.
-  open: 27.2,
-  drill: 32.7,
+  open: 28.3,
+  drill: 33.8,
   // 6 · Private by design.
-  privacy: 37.4,
-  // 7 · Where to get it.
-  close: 42.6,
-  end: 48.6,
+  privacy: 38.5,
+  // 7 · Then, asked of the assistant the member chooses: two of the music's bars.
+  ask: 43.7,
+  // 8 · Where to get it.
+  close: 49.0,
+  end: 55.4,
 };
 
 /** The second the README's poster is taken from: the export running, which is what the film is about. */
-const POSTER_AT = 18.6;
+const POSTER_AT = 19.7;
 
 // What a long-standing member's export comes to, the same numbers the store images show.
 const FILES = 486;
@@ -365,6 +367,10 @@ const CAPTIONS: Caption[] = [
     from: T.drill, to: T.privacy - 0.1, top: 360, title: 'Named by date, id and title',
     text: 'A record’s data, exactly as the site sent it, sits beside its PDF under the same name.',
   },
+  {
+    from: T.ask + 0.15, to: T.close, top: 330, title: 'Then ask your AI assistant', accent: [3, 4],
+    text: 'Open the folder in the assistant you choose. The README in the ZIP tells it how to read your records.',
+  },
 ];
 
 /** The two steps shown over the browser before the camera moves in. */
@@ -388,6 +394,7 @@ const NARRATION: { at: number; text: string }[] = [
   { at: T.open + 0.7, text: 'Inside: every record, every PDF, and your full medical file.' },
   { at: T.drill + 0.4, text: 'Each record’s data sits right beside its PDF, under the same name.' },
   { at: T.privacy + 0.4, text: 'It’s private by design: nothing between Maccabi and your computer.' },
+  { at: T.ask + 0.4, text: 'Then open it in the AI assistant you choose, and ask in plain language.' },
   { at: T.close + 0.4, text: 'Health Records Export for Maccabi. Free, on the Chrome Web Store.' },
 ];
 
@@ -407,6 +414,9 @@ const SOUNDS: { at: number; kind: string; dur?: number }[] = [
   { at: T.drill + 0.35, kind: 'pop' },
   { at: T.privacy - 0.3, kind: 'whoosh', dur: 0.9 },
   ...[0, 1, 2, 3, 4].map((i) => ({ at: T.privacy + 2.2 + i * 0.2, kind: 'pop' })),
+  { at: T.ask - 0.3, kind: 'whoosh', dur: 0.9 },
+  { at: T.ask + 1.5, kind: 'pop' },
+  { at: T.ask + 3.0, kind: 'pop' },
   { at: T.close + 0.1, kind: 'shimmer' },
   // A tick for each file that lands in the list, once the list is there to see it land.
   ...FEED.filter((f) => f.at >= T.runFrom + 0.5 && f.at < T.saved).map((f) => ({ at: f.at, kind: 'tick' })),
@@ -514,7 +524,11 @@ async function main(): Promise<void> {
     h('div', 'pills', ...pills.slice(0, 3)), h('div', 'pills second', ...pills.slice(3)),
   );
 
-  // 7 · where to get it
+  // 7 · the assistant, asked: the store's screenshot of it, played out
+  const chat = chatWindow();
+  const chatNote = chat.el.querySelector('.chat-note') as HTMLElement;
+
+  // 8 · where to get it
   const endArt = artwork();
   const endName = kinetic('h1', 'end-title', 'Health Records Export for Maccabi');
   const endSub = h('p', 'end-sub', 'Free on the Chrome Web Store  ·  Open source');
@@ -523,7 +537,7 @@ async function main(): Promise<void> {
   const ending = h('div', 'layer', endName.el, endSub, endLink, endNote);
 
   const scrim = h('div', 'scrim');
-  document.body.append(hook, art.el, lockup, world, ...steps, ...captions.map((c) => c.el), feed, files, privacy, endArt.el, ending, scrim);
+  document.body.append(hook, art.el, lockup, world, ...steps, ...captions.map((c) => c.el), feed, files, privacy, chat.el, endArt.el, ending, scrim);
 
   // ---- the real popup, in the browser window ----
   const frame = await popupFrame(browser);
@@ -597,6 +611,9 @@ async function main(): Promise<void> {
     // The popup's cards are rounded at 20px (--r-card), which the popup's scale and the camera's enlarge.
     return { x: a.x, y: a.y, w: cardInWorld.width * cam.s, h: cardInWorld.height * cam.s, r: 20 * POPUP * cam.s };
   })();
+
+  /** Where the assistant's window sits in part 7, and its scale: the store's screenshot, enlarged. */
+  const CHAT = { x: 910, y: 137, s: 1.3 };
 
   /** The line the records travel along in part 6; the two ends sit under video.css's .site and .home. */
   const WIRE = { from: 700, to: 1220, y: 540 };
@@ -833,8 +850,8 @@ async function main(): Promise<void> {
     drill.style.setProperty('--pair', ramp(t, T.drill + 1.6, 0.5).toFixed(3));
 
     // ---- 6 · private by design ----
-    const privOut = ramp(t, T.close - 0.45, 0.45, inOut);
-    fade(privacy, t >= T.privacy && t < T.close ? 1 - privOut : 0);
+    const privOut = ramp(t, T.ask - 0.45, 0.45, inOut);
+    fade(privacy, t >= T.privacy && t < T.ask ? 1 - privOut : 0);
     place(privacy, 0, -40 * privOut);
     rise(privacyTitle.words, t, T.privacy + 0.25, 0.08);
     fade(privacySub, ramp(t, T.privacy + 0.7, 0.5));
@@ -860,7 +877,28 @@ async function main(): Promise<void> {
       p.style.transform = 'scale(' + lerp(0.6, 1, u).toFixed(4) + ')';
     });
 
-    // ---- 7 · where to get it ----
+    // ---- 7 · the assistant, asked ----
+    const chatIn = ramp(t, T.ask + 0.5, 0.9, outQuint);
+    const chatOut = ramp(t, T.close - 0.45, 0.45, inOut);
+    fade(chat.el, t >= T.ask && t < T.close ? Math.min(ramp(t, T.ask + 0.5, 0.4), 1 - chatOut) : 0);
+    place(chat.el, CHAT.x, CHAT.y + 60 * (1 - chatIn) - 40 * chatOut, CHAT.s);
+    const lift = (el: HTMLElement, from: number, dy = 14): void => {
+      const u = ramp(t, from, 0.55, outQuint);
+      el.style.opacity = u.toFixed(3);
+      el.style.transform = 'translate(0,' + ((1 - u) * dy).toFixed(1) + 'px)';
+    };
+    lift(chatNote, T.ask + 1.0);
+    // The question pops in from its corner, as a sent message does; the answer follows, a line at a time.
+    const asked = ramp(t, T.ask + 1.5, 0.5, outBack);
+    chat.question.style.opacity = clamp01(asked * 2).toFixed(3);
+    chat.question.style.transformOrigin = 'bottom right';
+    chat.question.style.transform = 'scale(' + lerp(0.7, 1, asked).toFixed(4) + ')';
+    const avatar = chat.el.querySelector('.avatar') as HTMLElement;
+    lift(avatar, T.ask + 2.0, 0);
+    chat.answer.forEach((el, i) => lift(el, T.ask + 2.1 + i * 0.45));
+    chat.chips.forEach((el, i) => lift(el, T.ask + 3.4 + i * 0.1, 10));
+
+    // ---- 8 · where to get it ----
     fade(ending, t >= T.close ? 1 : 0);
     const endPop = ramp(t, T.close + 0.1, 0.7, outBack);
     placeArt(endArt, 960, 356, 0.56 * endPop);

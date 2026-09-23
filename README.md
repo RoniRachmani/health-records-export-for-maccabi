@@ -1,7 +1,8 @@
 # Health Records Export for Maccabi
 
 A Chrome extension that saves a copy of your [Maccabi Online](https://online.maccabi4u.co.il) medical records
-to your computer as one ZIP file: every PDF the site offers, plus the site's own data as JSON.
+to your computer as one ZIP file, ready to open with an AI assistant and ask about in plain language: every PDF the
+site offers, plus the site's own data as JSON.
 
 > [!NOTE]
 > Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare Services.
@@ -18,24 +19,25 @@ to your computer as one ZIP file: every PDF the site offers, plus the site's own
 
 <p align="center">
   <a href="https://youtu.be/IyP4kBFQHJQ">
-    <img src="store/assets/video-poster.png" alt="Watch an export, start to finish: a 48-second video" width="720">
+    <img src="store/assets/video-poster.png" alt="Watch an export, start to finish: a 55-second video" width="720">
   </a>
 </p>
 
 <p align="center">
-  ▶︎ <a href="https://youtu.be/IyP4kBFQHJQ">Watch an export, start to finish</a> · 48 seconds, narrated
+  ▶︎ <a href="https://youtu.be/IyP4kBFQHJQ">Watch an export, start to finish</a> · 55 seconds, narrated
 </p>
 
+- **Ready for your AI assistant.** Open the folder in Claude Cowork, Claude Code, ChatGPT Work or Codex, and the
+  ZIP's `README.md` becomes the assistant's instructions for your records. Assistants that connect to medical records
+  reach U.S. providers, not Maccabi; this is how yours get to one. See
+  [Hand it to an AI assistant](#hand-it-to-an-ai-assistant).
 - **Thorough.** Test results, visit summaries, prescriptions and purchases, referrals, vaccinations, letters, doctor
   inquiries and saved documents, plus a freshly ordered copy of your full medical file. Some things
   [aren't included](#not-included).
-- **Private.** Talks only to `online.maccabi4u.co.il`. No servers, no analytics, no remote code. Never sees your
-  password.
+- **Private.** Your records stop at your computer, and you choose which assistant, if any, reads them. Talks only to
+  `online.maccabi4u.co.il`. No servers, no analytics, no remote code. Never sees your password.
 - **Raw.** One JSON file per record, exactly as the site sent it, named so you can read it: `<date>_<id>_<title>`,
   with a `README.md` in the ZIP explaining the lot.
-- **Ready for your AI assistant.** Open the folder in Claude Cowork, Claude Code, ChatGPT Work or Codex, and the
-  ZIP's `README.md` becomes the assistant's instructions for your records. See
-  [Hand it to an AI assistant](#hand-it-to-an-ai-assistant).
 - **Resumable.** If your session ends partway through, log in again and press **Resume**. Files collected so far
   are kept.
 
@@ -82,6 +84,8 @@ Then load the `dist/` folder the same way.
 3. Leave the tab open and in front. It starts on the old site's medical-file page, to order your file and collect the
    parts that live there, then returns to the new site for the rest. The toolbar badge shows progress.
 4. After 5 to 20 minutes, `maccabi-export-YYYY-MM-DD.zip` is in your Downloads folder and Chrome notifies you.
+5. Unzip it, open the folder in your AI assistant and ask about your records. See
+   [Hand it to an AI assistant](#hand-it-to-an-ai-assistant).
 
 ### Before you start
 
@@ -190,6 +194,24 @@ providers, not Maccabi, so this export is how your records get to one. Unzip it 
 ChatGPT Work or Codex: `README.md` is the assistant's saved instructions, and the records are its project files.
 Claude Code reads `CLAUDE.md` and Codex reads `AGENTS.md` on their own, and both lead to `README.md`; elsewhere, add
 `README.md` as the project's instructions, or ask the assistant to read it first.
+
+What it helps you do:
+
+- **See your whole history.** The full medical file reaches back to the earliest visit on record, far beyond the
+  few years the site's data covers.
+- **Track changes over time.** Each lab measurement has its own history, often years long.
+- **Prepare for your next visit.** Known problems, the latest results, recent visits and open referrals, in one place.
+- **Check every answer.** The assistant is asked to name the file, and the page of a PDF, behind each fact.
+- **Ask in your own language.** The records are mostly in Hebrew; ask, and get answers, in English or whatever you
+  speak.
+
+Questions to start with:
+
+- *Help me understand my latest blood test.*
+- *How has my HbA1c changed over the years?*
+- *What should I raise at my next appointment?*
+- *Summarize my medical history.*
+- *Which vaccinations or screenings might I be due for?*
 
 The instructions ask the assistant to start from your full medical file, to say which file (and which page of a PDF)
 each fact comes from and give it a date, to write its own notes into a new folder rather than change the export, and

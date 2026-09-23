@@ -19,14 +19,23 @@ the extension changes, update this file along with it (see [Keeping it true](#ke
 
 **Title** comes from the manifest's `name`: Health Records Export for Maccabi
 
-**Summary** comes from the manifest's `description` in `manifest.config.ts`. It has 119 characters, and the limit is 132:
+**Summary** comes from the manifest's `description` in `manifest.config.ts`. It has 115 characters, and the limit is 132:
 
-> Save your Maccabi Online medical records (tests, visits, prescriptions, letters) and their PDFs as one ZIP. Unofficial.
+> Save your Maccabi Online medical records and their PDFs as one ZIP, ready to open with an AI assistant. Unofficial.
 
 **Description** (plain text. The store shows line breaks but doesn't render Markdown):
 
 ```
-Save a copy of your Maccabi Online medical records on your computer, as one ZIP file: every PDF the site offers, plus the site's own data as JSON. Free and open source, with no servers of its own.
+Get your Maccabi Online medical records ready for an AI assistant. Save them to your computer as one ZIP file, open the folder in the assistant you choose, and ask about them in plain language. Every PDF the site offers, plus the site's own data as JSON. Free and open source, with no servers of its own.
+
+AI assistants that connect to medical records reach U.S. providers, not Maccabi. This export is how your Maccabi records get to one.
+
+WHAT IT HELPS YOU DO
+• See your whole history: each export orders a fresh copy of your full medical file, which reaches back to the earliest visit on record.
+• Track changes over time: each lab measurement has its own history, often years long.
+• Prepare for your next visit: known problems, the latest results, recent visits and open referrals, in one place.
+• Check every answer: the assistant is asked to name the file, and the page of a PDF, behind each fact.
+• Ask in your own language: the records are mostly in Hebrew, and you can ask, and get answers, in English or whatever you speak.
 
 Health Records Export for Maccabi collects the records that Maccabi Online shows you and saves them to your Downloads folder:
 
@@ -45,6 +54,8 @@ HOW IT WORKS
 1. Log in to Maccabi Online as usual.
 2. On that tab, click the extension's icon and press Start export.
 3. Keep the tab open and in front. After 5 to 20 minutes, the ZIP is in your Downloads folder and Chrome lets you know.
+4. Unzip it and open the folder in Claude Cowork, Claude Code, ChatGPT Work or Codex.
+5. Ask about your records: "Help me understand my latest blood test", "How has my HbA1c changed over the years?", "What should I raise at my next appointment?"
 
 While the export runs, the tab moves to the site's medical-file page and back. The extension keeps your Maccabi session from timing out until the export finishes. If the session ends anyway, the export pauses. Log in again and press Resume. Files collected so far are kept.
 
@@ -54,19 +65,27 @@ Each export orders a fresh copy of your full medical file. It covers your whole 
 WHAT YOU GET
 The ZIP has one folder for each part of the site. Every record is saved as the site's own data (JSON), exactly as the site sent it. If a record has a PDF, the PDF has the same name: the record's date, ID and title. The full medical file is at the top level of the ZIP, and it's the best place to start. A README in the ZIP explains what each folder holds and what the export leaves out.
 
-MADE TO HAND TO AN AI ASSISTANT
-AI assistants that connect to medical records reach U.S. providers, not Maccabi. This export is how your records get to one. Unzip the ZIP and open the folder in Claude Cowork, Claude Code, ChatGPT Work or Codex. The README becomes the assistant's saved instructions, and the records become its project files. The README tells the assistant to start with the full medical file, not to mistake something missing from the export for something that never happened, to say which file each fact comes from, to say plainly when something needs a doctor soon, and to read correctly the values that mislead. Claude Code and Codex find the README without being told to. The extension itself sends your records nowhere, but whichever AI service you give them to can read them.
+INSTRUCTIONS WRITTEN FOR THE ASSISTANT
+The ZIP's README is written for the assistant that reads your records: it becomes the assistant's saved instructions, and the records become its project files. Claude Code and Codex find it without being told to; elsewhere, add it as the project's instructions. It asks the assistant to:
+• start with the full medical file, which reaches furthest back
+• name the file, and the page of a PDF, behind each fact, and give each its date
+• say plainly when a record suggests something needs a doctor soon
+• explain in plain language, without diagnosing or advising a change of treatment
+• not mistake something missing from the export for something that never happened
+• read correctly the lab values that mislead: missing ranges, results given as text, units that change over time
+• keep your name, ID number and contact details out of web searches and other tools
 
 Not included: imaging studies (DICOM), which the site only opens in its own viewer, and visits older than 12 months, which the site doesn't show. The purchase report PDF covers the last 2 years, though the purchase history itself covers everything. If an item fails to download, the export carries on, and the popup lists the failed items when the export finishes.
 
 PRIVATE BY DESIGN
+Your records stop at your computer. You choose which AI assistant, if any, reads them.
 • Connects only to online.maccabi4u.co.il. No servers, analytics, tracking or remote code.
 • Reads nothing from the tab until you've read the notice and agreed.
 • Uses the session you're already logged in with. It never sees your password or one-time codes.
 • Deletes its own copy of your files as soon as the ZIP is saved.
 • Open source, and what ships isn't minified, so you can read exactly what runs: https://github.com/RoniRachmani/health-records-export-for-maccabi
 
-The ZIP isn't encrypted, and it contains your health information. Keep it somewhere safe.
+The ZIP isn't encrypted, and it contains your health information. Keep it somewhere safe. The extension sends your records nowhere, but an AI service you open them in can read them: check what it keeps, and for how long, before you give it your health information.
 
 Use the extension only with your own account, or with an account whose records you're legally entitled to access. It copies what Maccabi Online provides. It isn't medical advice, and the export isn't an official copy of your records.
 
@@ -82,24 +101,26 @@ Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare 
 | Field | File | Shows |
 |---|---|---|
 | Store icon (128×128) | `store/assets/icon-128.png` | The toolbar icon: 96×96 artwork with 16 px of transparent padding |
-| Screenshot 1 | `store/assets/screenshot-1-start.png` | The popup, ready to start: "Your Maccabi records in one ZIP" |
+| Screenshot 1 | `store/assets/screenshot-1-start.png` | The popup, ready to start: "Your Maccabi records, ready for your AI assistant" |
 | Screenshot 2 | `store/assets/screenshot-2-progress.png` | An export in progress, with the badge on the toolbar icon |
-| Screenshot 3 | `store/assets/screenshot-3-done.png` | The finished export: "One file in your Downloads folder" |
-| Screenshot 4 | `store/assets/screenshot-4-contents.png` | The folders inside the ZIP |
-| Screenshot 5 | `store/assets/screenshot-5-privacy.png` | "Private by design", with the popup's list of what's included |
+| Screenshot 3 | `store/assets/screenshot-3-done.png` | The finished export: "One file in your Downloads folder", with the popup's next step, opening it in an AI assistant |
+| Screenshot 4 | `store/assets/screenshot-4-ask.png` | "Ask about your records": a generic AI assistant opened on the export, answering from a made-up lab history and naming the file |
+| Screenshot 5 | `store/assets/screenshot-5-privacy.png` | "Private by design": your records stop at your computer, with the popup's list of what's included |
 | Small promo tile (440×280) | `store/assets/promo-small-440x280.png` | The icon's artwork on a blue background, with no text |
-| Marquee promo tile (1400×560) | `store/assets/promo-marquee-1400x560.png` | The same artwork beside the name and one line of text. Optional: the store uses it only when it features the extension |
+| Marquee promo tile (1400×560) | `store/assets/promo-marquee-1400x560.png` | The same artwork beside the name and "Your Maccabi records, ready for your AI assistant". Optional: the store uses it only when it features the extension |
 | Global promo video | https://youtu.be/IyP4kBFQHJQ | Optional. See [Promo video](#promo-video) below |
 
 The screenshots are 1280×800 PNG files with no transparency. They show the real popup in made-up states over a
-placeholder page, never a real account. The text around the popup comes from `SHOTS` in `store/src/stage.ts`.
+placeholder page, never a real account. Screenshot 4 draws an AI assistant instead, plain enough to be no real
+product (`chatWindow` in `store/src/parts.ts`), with a made-up question, answer and record. The text around the popup
+comes from `SHOTS` in `store/src/stage.ts`.
 
 ### Promo video
 
 The store's video field takes a **YouTube link**, not a file. The one to paste is
 **https://youtu.be/IyP4kBFQHJQ**, on the [Hey Roni](https://www.youtube.com/@Hey-Roni-Dev) channel, with the title
 and description [below](#on-youtube). `npm run store-video` renders the video to `store/assets/promo-video.mp4`
-(3840×2160, 60 fps, 48 seconds, with narration). YouTube can't swap the file under a link, so a re-render is a
+(3840×2160, 60 fps, 55 seconds, with narration). YouTube can't swap the file under a link, so a re-render is a
 new upload with a new link: paste it on the dashboard and put it in the README, in place of the one above.
 
 It is not committed — it is rebuilt from `store/src/video.ts`, which draws it a frame at a time in headless
@@ -112,15 +133,19 @@ What it shows, in order: record cards from all over the site pulled into the ext
 what the extension does · the clicks that start an export, on a placeholder page, then the camera closing in on the
 popup · the export running, sped up, beside the files it writes and the progress badge on the toolbar icon · the
 finished ZIP, which opens into its folders, and `test-results/` opened to show a record's JSON and PDF sharing a
-name · "Private by design", with records travelling from the site to a computer and nothing in between · the
-closing card with the repository's address. The disclaimer is on the title and closing cards, and the popup's own
-"Unofficial · Not affiliated with Maccabi" is on screen whenever the popup is.
+name · "Private by design", with records travelling from the site to a computer and nothing in between · "Then ask
+your AI assistant": a generic assistant, opened on the export, answering a made-up question from a made-up lab history
+and naming the file (the same `chatWindow` as screenshot 4) · the closing card with the repository's address. The
+disclaimer is on the title and closing cards, and the popup's own "Unofficial · Not affiliated with Maccabi" is on
+screen whenever the popup is.
 
 The README shows the video as a poster that links to it: `store/assets/video-poster.png`, one frame of the same film
 with a play badge over it, drawn by `npm run store-assets -- poster`. Re-render it whenever the video changes.
 
 The soundtrack is made the same way, from the same timeline (`scripts/soundtrack.mjs`). The music and effects are
-synthesized by that script, from oscillators and noise, so no music licence is involved. The narration is
+synthesized by that script, from oscillators and noise, so no music licence is involved. The music is eighteen bars
+from the first card to the closing card (`BARS`), so the assistant's part is two bars long: lengthen or shorten a
+part and the tempo follows, unless the bar count changes with it. The narration is
 `NARRATION` in `store/src/video.ts`, spoken by ElevenLabs in "Vino – Warm Leadership Narrator", a Voice Library
 voice, which needs ElevenLabs' Creator plan or above to speak again. To re-record it, make one take of the text
 `npm run store-video -- --script` prints (ElevenLabs' web app, or its connector for Claude; model
@@ -138,7 +163,7 @@ nothing is suggested over the last frame.
 **Title:**
 
 ```
-Export your Maccabi Online medical records to one ZIP – free Chrome extension
+Your Maccabi Online medical records, ready for your AI assistant – free Chrome extension
 ```
 
 **Description** (plain text; the chapter times are the film's parts, `runFrom`, `saved` and `privacy` in `T` in
@@ -146,14 +171,16 @@ Export your Maccabi Online medical records to one ZIP – free Chrome extension
 when each is at least 10 seconds long. The lists repeat the store description's, so change them together):
 
 ```
-Save a copy of your Maccabi Online medical records on your computer, as one ZIP file: every PDF the site offers, plus the site's own data as JSON. Free and open source.
+Save a copy of your Maccabi Online medical records on your computer, as one ZIP file, then open it in the AI assistant you choose and ask about them in plain language. Every PDF the site offers, plus the site's own data as JSON. Free and open source.
+
+AI assistants that connect to medical records reach U.S. providers, not Maccabi. This export is how your Maccabi records get to one.
 
 ▶ Install from the Chrome Web Store: https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp
 
 0:00 Years of records, one ZIP
-0:12 The export, start to finish (sped up)
-0:23 What's in the ZIP
-0:37 Private by design
+0:13 The export, start to finish (sped up)
+0:24 What's in the ZIP
+0:38 Private by design, then ask your AI assistant
 
 WHAT IT SAVES
 • Test results, lab histories and result PDFs
@@ -168,10 +195,12 @@ HOW IT WORKS
 1. Log in to Maccabi Online as usual.
 2. Click the extension's icon and press Start export.
 3. Keep the tab open. After 5 to 20 minutes, the ZIP is in your Downloads folder.
+4. Unzip it, open the folder in your AI assistant, and ask about your records.
 
 Each export orders a fresh copy of your full medical file, so Maccabi will text you about the order. That is the only change the extension makes to your account.
 
 PRIVATE BY DESIGN
+Your records stop at your computer. You choose which AI assistant, if any, reads them.
 • Connects only to online.maccabi4u.co.il. No servers, analytics or tracking.
 • Uses the session you're already logged in with. It never sees your password.
 • Open source, and what ships isn't minified: https://github.com/RoniRachmani/health-records-export-for-maccabi
@@ -321,7 +350,8 @@ of this page:
 | Change | Also update |
 |---|---|
 | Popup layout or wording | Run `npm run store-assets` and `npm run store-video`. Check the description and the test instructions. |
-| A section is added, renamed or dropped | Description list, `FOLDERS` in `store/src/stage.ts`, README |
+| A section is added, renamed or dropped | Description list, `FOLDERS` in `store/src/parts.ts`, README |
 | A permission is added or removed | Permission justifications here, the manifest, `docs/privacy.md`, `public/privacy.html`, README |
 | A new kind of data or request | Data usage here, the privacy policy, `docs/endpoints.json` |
 | The manifest's `description` | Summary here (132 characters at most) |
+| What the export's README asks of the assistant (`shared/readme.ts`) | The description's "Instructions written for the assistant" and "What it helps you do", the README's *Hand it to an AI assistant*, and the answer in `chatWindow` (`store/src/parts.ts`), which screenshot 4 and the video draw |
