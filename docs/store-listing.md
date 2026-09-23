@@ -1,6 +1,6 @@
 # Chrome Web Store listing
 
-What to enter on the Chrome Web Store developer dashboard for each tab. The text below matches version 0.3.0. When
+What to enter on the Chrome Web Store developer dashboard for each tab. The text below matches version 0.4.0. When
 the extension changes, update this file along with it (see [Keeping it true](#keeping-it-true)).
 
 ## Before each upload

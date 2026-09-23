@@ -30,7 +30,7 @@ body:
     attributes:
       label: Extension version
       description: The version in the popup's footer, next to Privacy and Terms.
-      placeholder: v0.3.0
+      placeholder: v0.4.0
     validations:
       required: true
   - type: input
