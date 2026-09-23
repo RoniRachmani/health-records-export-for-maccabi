@@ -11,6 +11,8 @@
 //   --silent        no soundtrack at all
 //   --script        print the narration as one take's text, to paste into ElevenLabs, and stop
 //   --import <file> cut such a take into its lines for the narration (see narration.mjs), then go on
+//   --remux         keep the picture of the last render and give it this soundtrack: seconds, not a
+//                   render, for trying a sound
 //
 // The stage is laid out at 1920x1080 and drawn at twice that, so the film is 4K: text, the popup and
 // every line drawing are rendered at 3840x2160 rather than scaled up to it, and YouTube gives a 4K
@@ -44,9 +46,19 @@ const importAt = args.indexOf('--import');
 const take = importAt < 0 ? null : args.splice(importAt, 2)[1];
 if (take === undefined || take?.startsWith('--')) throw new Error('--import needs the take: --import <file>');
 const flags = new Set(args.filter((a) => a.startsWith('--')));
-for (const f of flags) if (!['--audio-only', '--no-narration', '--silent', '--script'].includes(f)) throw new Error('Unknown option ' + f);
+const OPTIONS = ['--audio-only', '--no-narration', '--silent', '--script', '--remux'];
+for (const f of flags) if (!OPTIONS.includes(f)) throw new Error('Unknown option ' + f);
 const [from, to] = args.filter((a) => !a.startsWith('--')).map(Number);
+if (flags.has('--remux') && (Number.isFinite(from) || Number.isFinite(to))) throw new Error('--remux takes the whole film; leave out the times');
 if (existsSync(join(root, '.env'))) process.loadEnvFile(join(root, '.env'));
+
+/** The soundtrack as AAC in an .m4a, by the encoder macOS ships: 320 kbit/s, its best quality. */
+function toAac(wav, work) {
+  const m4a = join(work, 'soundtrack.m4a');
+  const aac = spawnSync('afconvert', ['-f', 'm4af', '-d', 'aac', '-b', '320000', '-q', '127', wav, m4a], { stdio: 'inherit' });
+  if (aac.error || aac.status !== 0) throw aac.error || new Error('afconvert failed (' + aac.status + ')');
+  return m4a;
+}
 
 function onPath(name) {
   return (process.env.PATH || '').split(delimiter).map((dir) => join(dir, name)).find(isFile);
@@ -85,13 +97,7 @@ function startEncoder(fps, work, wav) {
     const built = spawnSync(swiftc, ['-O', '-suppress-warnings', '-o', exe, join(root, 'scripts', 'encode-mp4.swift')], { stdio: 'inherit' });
     if (built.error || built.status !== 0) throw built.error || new Error('swiftc failed (' + built.status + ')');
     args = [PARTIAL, String(fps)];
-    if (wav) {
-      // AAC for the MP4, by the encoder macOS ships: 320 kbit/s, its best quality.
-      const m4a = join(work, 'soundtrack.m4a');
-      const aac = spawnSync('afconvert', ['-f', 'm4af', '-d', 'aac', '-b', '320000', '-q', '127', wav, m4a], { stdio: 'inherit' });
-      if (aac.error || aac.status !== 0) throw aac.error || new Error('afconvert failed (' + aac.status + ')');
-      args.push(m4a);
-    }
+    if (wav) args.push(toAac(wav, work));
   }
   const proc = spawn(exe, args, { stdio: ['pipe', 'inherit', 'inherit'] });
   const exited = new Promise((resolve, reject) => {
@@ -106,6 +112,30 @@ function startEncoder(fps, work, wav) {
 const work = mkdtempSync(join(tmpdir(), 'hrem-video-'));
 const stage = await openStage();
 let encoder;
+
+/**
+ * Gives the picture of the last full render a new soundtrack: the picture is copied, the sound
+ * encoded, and nothing is drawn again.
+ */
+function remux(wav, seconds) {
+  const picture = OUT;
+  if (!existsSync(picture)) throw new Error('--remux needs a render to take the picture from: store/assets/promo-video.mp4');
+  if (!wav) throw new Error('--remux is for a new soundtrack; there is none with --silent');
+  const ffmpeg = process.env.FFMPEG_PATH || onPath('ffmpeg');
+  const res = ffmpeg
+    ? spawnSync(ffmpeg, ['-y', '-loglevel', 'error', '-i', picture, '-i', wav, '-map', '0:v', '-map', '1:a', '-c:v', 'copy',
+      '-c:a', 'aac', '-b:a', '320k', '-shortest', '-movflags', '+faststart', PARTIAL], { stdio: 'inherit' })
+    : (() => {
+      const exe = join(work, 'encode-mp4');
+      const swiftc = onPath('swiftc') || '/usr/bin/swiftc';
+      const built = spawnSync(swiftc, ['-O', '-suppress-warnings', '-o', exe, join(root, 'scripts', 'encode-mp4.swift')], { stdio: 'inherit' });
+      if (built.error || built.status !== 0) throw built.error || new Error('swiftc failed (' + built.status + ')');
+      return spawnSync(exe, ['--mux', picture, toAac(wav, work), PARTIAL], { stdio: 'inherit' });
+    })();
+  if (res.error || res.status !== 0) throw res.error || new Error('could not put the picture and the sound together');
+  renameSync(PARTIAL, OUT);
+  console.log('wrote ' + OUT.slice(root.length) + ' (' + seconds + 's, the last render\'s picture with this soundtrack)');
+}
 
 /** Scores the film, then draws it frame by frame into the encoder. */
 async function render() {
@@ -137,6 +167,12 @@ async function render() {
     }
     wav = join(work, 'soundtrack.wav');
     writeWav(wav, track, first / fps, last / fps);
+  }
+
+  if (flags.has('--remux')) {
+    await page.close();
+    remux(wav, seconds);
+    return;
   }
   console.log('rendering ' + (last - first) + ' frames (' + seconds + 's) at ' + WIDTH * SCALE + 'x' + HEIGHT * SCALE + ', ' + fps + ' fps');
 
@@ -188,7 +224,7 @@ async function render() {
   await encoder.exited;
   renameSync(PARTIAL, OUT);
   const mb = (statSync(OUT).size / 1e6).toFixed(1);
-  console.log('wrote store/assets/promo-video.mp4 (' + seconds + 's, ' + mb + ' MB, ' + encoder.name + (wav ? ', with sound' : ', silent') + ')');
+  console.log('wrote ' + OUT.slice(root.length) + ' (' + seconds + 's, ' + mb + ' MB, ' + encoder.name + (wav ? ', with sound' : ', silent') + ')');
 }
 
 try {

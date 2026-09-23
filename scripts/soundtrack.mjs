@@ -439,6 +439,22 @@ const EFFECTS = {
       bus.add(i0 + j, v * 0.2, 0);
     }
   },
+  /**
+   * A file landing in the list: a small, soft blip on a note of the key, from the left, where the
+   * list is. Dozens come in a row, so each takes a different note and weight.
+   */
+  tick(bus, at, _dur, rand) {
+    const notes = [86, 88, 90, 93, 95];
+    const f = hz(notes[Math.floor(((rand() + 1) / 2) * notes.length)]);
+    const vel = 0.18 * (0.75 + 0.25 * ((rand() + 1) / 2));
+    const i0 = Math.round(at * RATE);
+    const [gl, gr] = panned(-0.35);
+    for (let j = 0; j < 0.12 * RATE; j++) {
+      const t = j / RATE;
+      const v = Math.sin(TAU * f * t) + 0.3 * Math.sin(TAU * 2 * f * t) * Math.exp(-t / 0.01);
+      bus.put(i0 + j, v * Math.min(1, t / 0.001) * Math.exp(-t / 0.022) * vel, gl, gr);
+    }
+  },
   /** Saved: three bell notes, up the tonic chord. */
   chime(bus, at) {
     [81, 86, 90].forEach((n, i) => mallet(bus, at + i * 0.09, n, 0.22, -0.3 + i * 0.3, 0.9));
@@ -641,17 +657,9 @@ function duckGain(voice, depth) {
   return gain;
 }
 
-/**
- * The whole soundtrack, for `spec` (window.video.soundtrack) and the spoken narration (or null to
- * leave the voice out). Returns the stereo track at RATE, a line of levels for the log, and the
- * three stems as they went into the mix, for looking at one on its own.
- */
-export function buildSoundtrack(spec, clips) {
-  const { scenes, sounds, duration } = spec;
-  const length = Math.round(duration * RATE);
+/** The music written for the film: a pad, mallets and their echo, bass and drums, in one room. */
+function score(length, scenes) {
   const g = grid(scenes);
-
-  // The music: each part levelled, then together to -25 LUFS.
   const music = new Stereo(length);
   const padBus = pad(length, g, scenes);
   const pluckBus = plucks(length, g, scenes);
@@ -671,14 +679,27 @@ export function buildSoundtrack(spec, clips) {
     music.l[i] = airL.run(music.l[i]);
     music.r[i] = airR.run(music.r[i]);
   }
+  return music;
+}
+
+/**
+ * The whole soundtrack, for `spec` (window.video.soundtrack) and the spoken narration (or null to
+ * leave the voice out). Returns the stereo track at RATE, a line of levels for the log, and the
+ * three stems as they went into the mix, for looking at one on its own.
+ */
+export function buildSoundtrack(spec, clips) {
+  const { scenes, sounds, duration } = spec;
+  const length = Math.round(duration * RATE);
+
+  // The music, to -25 LUFS.
+  const music = score(length, scenes);
   level(music, -25);
 
-  // The effects, at their seconds, with some of the same room.
+  // The effects, at their seconds, in a room of their own.
   const fx = new Stereo(length);
   const rand = noise(47);
   for (const s of sounds) EFFECTS[s.kind](fx, s.at, s.dur, rand);
-  const fxRoom = reverb(fx, 0.8, 0.35);
-  fx.mix(fxRoom, 0.35);
+  fx.mix(reverb(fx, 0.8, 0.35), 0.35);
   fx.scale(dB(-4));
 
   // The voice, and the music stepping back for it.

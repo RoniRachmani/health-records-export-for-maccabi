@@ -21,6 +21,7 @@ npm run store-assets -- marquee   # just one, by shot name
 npm run store-video               # re-render store/assets/promo-video.mp4 (not committed; ffmpeg or macOS)
 npm run store-video -- 8 12       # just those seconds of it, while working on a scene
 npm run store-video -- --audio-only   # just the soundtrack, to store/assets/promo-soundtrack.wav
+npm run store-video -- --remux        # a changed soundtrack on the last render's picture, in seconds
 npm run store-video -- --script       # the narration as one take's text, for ElevenLabs
 npm run store-video -- --import take.mp3 --audio-only   # cut that take into the narration's lines
 npm run icons                     # public/icons/ + store/assets/icon-128.png

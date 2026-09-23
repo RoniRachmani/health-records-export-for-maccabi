@@ -340,8 +340,9 @@ from oscillators and noise, and narration spoken by ElevenLabs (`scripts/narrati
 take of the whole script, made in ElevenLabs with the text `--script` prints and brought in with
 `--import <take>`, which cuts it into lines at the pauses; or, with `ELEVENLABS_API_KEY` in the environment or a
 gitignored `.env`, line by line over the API. Spoken lines are cached in `.cache/narration/`, so only a changed
-line costs anything. `--audio-only` writes the soundtrack alone, to listen to; `--no-narration` leaves the voice
-out, and `--silent` the sound. The MP4 is not committed — the store's video
+line costs anything. `--audio-only` writes the soundtrack alone, to listen to; `--remux` puts a changed soundtrack
+on the last render's picture in seconds, without drawing it again; `--no-narration` leaves the voice out, and
+`--silent` the sound. The MP4 is not committed — the store's video
 field takes a YouTube link, so upload it there and paste the link on the dashboard. The poster above it is one frame of the same
 film, drawn by the same page: `npm run store-assets -- poster`.
 

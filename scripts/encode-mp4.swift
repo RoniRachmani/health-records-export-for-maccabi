@@ -2,9 +2,11 @@
 // AVFoundation — so rendering the promo video needs nothing installed beyond Chrome and the macOS
 // command line tools. scripts/store-video.mjs pipes each frame in as soon as it has photographed
 // it, so nothing is kept on disk; it compiles and runs this only when ffmpeg isn't on PATH. With a
-// soundtrack (AAC, in an .m4a), the two are put in one MP4 at the end, neither re-encoded.
+// soundtrack (AAC, in an .m4a), the two are put in one MP4 at the end, neither re-encoded; --mux does
+// only that, for a new soundtrack on a picture already encoded.
 //
 //   swiftc -O -o encode-mp4 encode-mp4.swift && <PNG stream> | ./encode-mp4 <out.mp4> <fps> [sound.m4a]
+//   ./encode-mp4 --mux <picture.mp4> <sound.m4a> <out.mp4>
 
 import AVFoundation
 import CoreGraphics
@@ -16,7 +18,39 @@ func fail(_ message: String) -> Never {
     exit(1)
 }
 
+/// Puts a picture (an MP4) and a soundtrack (AAC, in an .m4a) into one MP4: passthrough, so both
+/// tracks are copied as they are.
+func mux(picture pictureURL: URL, sound: URL, into out: URL) {
+    let picture = AVURLAsset(url: pictureURL)
+    let audio = AVURLAsset(url: sound)
+    guard let pictureTrack = picture.tracks(withMediaType: .video).first,
+          let audioTrack = audio.tracks(withMediaType: .audio).first else { fail("nothing to put together") }
+    let both = AVMutableComposition()
+    let length = picture.duration
+    do {
+        try both.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)?
+            .insertTimeRange(CMTimeRange(start: .zero, duration: length), of: pictureTrack, at: .zero)
+        try both.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)?
+            .insertTimeRange(CMTimeRange(start: .zero, duration: CMTimeMinimum(length, audio.duration)), of: audioTrack, at: .zero)
+    } catch {
+        fail("could not put the picture and the sound together: " + String(describing: error))
+    }
+    try? FileManager.default.removeItem(at: out)
+    guard let export = AVAssetExportSession(asset: both, presetName: AVAssetExportPresetPassthrough) else { fail("no exporter") }
+    export.outputURL = out
+    export.outputFileType = .mp4
+    export.shouldOptimizeForNetworkUse = true
+    let exported = DispatchSemaphore(value: 0)
+    export.exportAsynchronously { exported.signal() }
+    exported.wait()
+    if export.status != .completed { fail("could not write " + out.path + ": " + String(describing: export.error)) }
+}
+
 let args = CommandLine.arguments
+if args.count == 5 && args[1] == "--mux" {
+    mux(picture: URL(fileURLWithPath: args[2]), sound: URL(fileURLWithPath: args[3]), into: URL(fileURLWithPath: args[4]))
+    exit(0)
+}
 guard args.count == 3 || args.count == 4, let fps = Int32(args[2]), fps > 0 else {
     fail("usage: encode-mp4 <out.mp4> <fps> [sound.m4a] < frames.png")
 }
@@ -139,29 +173,6 @@ if writer.status != .completed { fail("encoding failed: " + String(describing: w
 
 // ---- the soundtrack, alongside ----
 if let sound {
-    let picture = AVURLAsset(url: pictureOut)
-    let audio = AVURLAsset(url: sound)
-    guard let pictureTrack = picture.tracks(withMediaType: .video).first,
-          let audioTrack = audio.tracks(withMediaType: .audio).first else { fail("nothing to put together") }
-    let both = AVMutableComposition()
-    let length = picture.duration
-    do {
-        try both.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)?
-            .insertTimeRange(CMTimeRange(start: .zero, duration: length), of: pictureTrack, at: .zero)
-        try both.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)?
-            .insertTimeRange(CMTimeRange(start: .zero, duration: CMTimeMinimum(length, audio.duration)), of: audioTrack, at: .zero)
-    } catch {
-        fail("could not put the picture and the sound together: " + String(describing: error))
-    }
-    try? FileManager.default.removeItem(at: out)
-    // Passthrough: both tracks are copied as they are, the picture above and the AAC from afconvert.
-    guard let export = AVAssetExportSession(asset: both, presetName: AVAssetExportPresetPassthrough) else { fail("no exporter") }
-    export.outputURL = out
-    export.outputFileType = .mp4
-    export.shouldOptimizeForNetworkUse = true
-    let exported = DispatchSemaphore(value: 0)
-    export.exportAsynchronously { exported.signal() }
-    exported.wait()
+    mux(picture: pictureOut, sound: sound, into: out)
     try? FileManager.default.removeItem(at: pictureOut)
-    if export.status != .completed { fail("could not write " + out.path + ": " + String(describing: export.error)) }
 }

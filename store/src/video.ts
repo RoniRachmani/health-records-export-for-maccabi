@@ -408,7 +408,9 @@ const SOUNDS: { at: number; kind: string; dur?: number }[] = [
   { at: T.privacy - 0.3, kind: 'whoosh', dur: 0.9 },
   ...[0, 1, 2, 3, 4].map((i) => ({ at: T.privacy + 2.2 + i * 0.2, kind: 'pop' })),
   { at: T.close + 0.1, kind: 'shimmer' },
-];
+  // A tick for each file that lands in the list, once the list is there to see it land.
+  ...FEED.filter((f) => f.at >= T.runFrom + 0.5 && f.at < T.saved).map((f) => ({ at: f.at, kind: 'tick' })),
+].sort((a, b) => a.at - b.at);
 
 const PRIVACY_PILLS: { no: boolean; text: string }[] = [
   { no: true, text: 'No servers' },
@@ -573,13 +575,15 @@ async function main(): Promise<void> {
   const browserRect = browser.getBoundingClientRect();
   const offStage: Point = { x: browserRect.right + 260, y: browserRect.bottom + 220 };
 
-  /** The camera: which world point is at the middle of the frame, and how close it is. */
+  /**
+   * The camera: which world point is at the middle of the frame, and how close it is. It holds
+   * still on either side of its one move: text under a camera that keeps creeping is redrawn at a
+   * slightly different size every frame, and reads as shivering rather than as a move.
+   */
   const camAt = (t: number): { x: number; y: number; s: number } => {
-    const wide = { s: 1 + 0.015 * ramp(t, T.browser, T.zoom - T.browser, linear), x: 960, y: 540 };
-    // Closed in, the popup's top right corner stays at the same point of the frame while the
-    // camera keeps easing closer, so the popup grows down and to the left.
-    const s = CLOSE * (1 + 0.025 * ramp(t, T.zoom + 1.3, T.open - T.zoom - 1.3, linear));
-    const close = { s, x: anchor.x - (1800 - 960) / s, y: anchor.y + (540 - 104) / s };
+    const wide = { s: 1, x: 960, y: 540 };
+    // Closed in, the popup's top right corner sits at the same point of the frame throughout.
+    const close = { s: CLOSE, x: anchor.x - (1800 - 960) / CLOSE, y: anchor.y + (540 - 104) / CLOSE };
     const z = ramp(t, T.zoom, 1.3, inOut);
     return { s: lerp(wide.s, close.s, z), x: lerp(wide.x, close.x, z), y: lerp(wide.y, close.y, z) };
   };
@@ -625,12 +629,13 @@ async function main(): Promise<void> {
       const el = cards[i];
       const len = Math.hypot(c.x - 960, c.y - 540) || 1;
       const dir = { x: (c.x - 960) / len, y: (c.y - 540) / len };
+      // In, and then still until the folder takes it: a card left drifting, growing or tilting by
+      // fractions of a pixel reads as its text shivering, not as life.
       const inU = ramp(t, T.cards + c.arrives * 0.09, 1.0, outQuint);
-      const bob = Math.sin(t * 1.2 + i * 1.7) * 6;
       let x = c.x + dir.x * 820 * (1 - inU);
-      let y = c.y + dir.y * 820 * (1 - inU) + bob;
-      let turn = c.turn + dir.x * 26 * (1 - inU) + Math.sin(t * 0.8 + i) * 0.8;
-      let s = c.scale * (1 + 0.04 * t / T.swallow);
+      let y = c.y + dir.y * 820 * (1 - inU);
+      let turn = c.turn + dir.x * 26 * (1 - inU);
+      let s = c.scale;
       // Into the folder: faster and faster, curling a little as they go.
       const leave = T.swallow + c.leaves * 0.05;
       const u = ramp(t, leave, 0.55, inCubic);

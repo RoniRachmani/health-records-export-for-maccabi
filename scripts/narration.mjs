@@ -11,12 +11,11 @@
 //     line; the script puts a second's pause between lines, which is where it is cut.
 //
 // ELEVENLABS_VOICE (a voice id) and ELEVENLABS_MODEL override the voice and the model below.
-import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readAudio } from './audio-file.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const CACHE = join(root, '.cache', 'narration');
@@ -116,39 +115,17 @@ export function script(lines) {
   return lines.map((l) => l.text).join(' <break time="' + PAUSE.toFixed(1) + 's" /> ');
 }
 
-/** Any audio file as 16-bit mono PCM at its own rate, by ffmpeg or, on macOS, afconvert. */
-function decode(file) {
-  const work = mkdtempSync(join(tmpdir(), 'hrem-take-'));
-  try {
-    const wav = join(work, 'take.wav');
-    const ffmpeg = process.env.FFMPEG_PATH || 'ffmpeg';
-    let res = spawnSync(ffmpeg, ['-y', '-loglevel', 'error', '-i', file, '-ac', '1', '-c:a', 'pcm_s16le', wav]);
-    if (res.error || res.status !== 0) res = spawnSync('afconvert', ['-f', 'WAVE', '-d', 'LEI16', '-c', '1', file, wav]);
-    if (res.error || res.status !== 0) throw new Error('Could not read ' + file + ': it needs ffmpeg, or afconvert on macOS.');
-    const buf = readFileSync(wav);
-    // Walk the RIFF chunks for the format and the samples.
-    let rate = 0;
-    for (let at = 12; at + 8 <= buf.length;) {
-      const id = buf.toString('ascii', at, at + 4);
-      const size = buf.readUInt32LE(at + 4);
-      if (id === 'fmt ') rate = buf.readUInt32LE(at + 12);
-      if (id === 'data') return { rate, pcm: buf.subarray(at + 8, at + 8 + size) };
-      at += 8 + size + (size % 2);
-    }
-    throw new Error(file + ' decoded to no samples');
-  } finally {
-    rmSync(work, { recursive: true, force: true });
-  }
-}
-
 /**
  * Cuts one take of the script into its lines, at the pauses between them, and keeps each as the
  * clip for its line. The cuts go in the longest silences; a take whose silences don't separate
  * into one per gap — a line read twice, a pause left out — is refused rather than guessed at.
  */
 export function importTake(file, lines) {
-  const { rate, pcm } = decode(file);
-  const n = pcm.length >> 1;
+  const { rate, l, r } = readAudio(file);
+  const n = l.length;
+  // Kept as 16-bit mono, as the API sends it.
+  const pcm = Buffer.alloc(n * 2);
+  for (let i = 0; i < n; i++) pcm.writeInt16LE(Math.max(-32768, Math.min(32767, Math.round(((l[i] + r[i]) / 2) * 32767))), i * 2);
   const at = (i) => pcm.readInt16LE(i * 2) / 32768;
   const frame = Math.round(rate / 100);
   const level = [];
