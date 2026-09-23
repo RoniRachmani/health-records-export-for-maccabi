@@ -16,15 +16,15 @@ export interface PageSnapshot {
 async function inTab<A extends unknown[], R>(tabId: number, func: (...args: A) => R | Promise<R>, args: A, timeoutMs = SCRIPT_TIMEOUT_MS): Promise<R> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new SessionEndedError('the Maccabi tab did not respond for ' + timeoutMs / 1000 + ' s')), timeoutMs);
+    timer = setTimeout(() => reject(new SessionEndedError('the Maccabi Healthcare Services tab did not respond for ' + timeoutMs / 1000 + ' s')), timeoutMs);
   });
   try {
     const run = chrome.scripting.executeScript({ target: { tabId }, world: 'MAIN', func, args }).then((res) => {
-      if (!res || !res.length) throw new SessionEndedError('could not run in the Maccabi tab');
+      if (!res || !res.length) throw new SessionEndedError('could not run in the Maccabi Healthcare Services tab');
       return res[0].result as R;
     }, (e: unknown) => {
       // No tab, a tab on another site, or an error page.
-      throw new SessionEndedError('the Maccabi tab is not available (' + (e instanceof Error ? e.message : String(e)) + ')');
+      throw new SessionEndedError('the Maccabi Healthcare Services tab is not available (' + (e instanceof Error ? e.message : String(e)) + ')');
     });
     return await Promise.race([run, timeout]);
   } finally {
@@ -205,7 +205,7 @@ export async function isVisible(tabId: number): Promise<boolean> {
   try {
     tab = await chrome.tabs.get(tabId);
   } catch {
-    throw new SessionEndedError('the Maccabi tab was closed');
+    throw new SessionEndedError('the Maccabi Healthcare Services tab was closed');
   }
   if (!tab.active) return false;
   const win = await chrome.windows.get(tab.windowId);
@@ -233,7 +233,7 @@ export async function navigate(tabId: number, url: string, expectPath: RegExp): 
     chrome.tabs.update(tabId, { url }).catch((e) => {
       clearTimeout(timer);
       chrome.tabs.onUpdated.removeListener(listener);
-      reject(new SessionEndedError('the Maccabi tab was closed (' + e.message + ')'));
+      reject(new SessionEndedError('the Maccabi Healthcare Services tab was closed (' + e.message + ')'));
     });
   });
   const s = await snapshot(tabId);

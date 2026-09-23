@@ -25,7 +25,7 @@ export class CancelledError extends Error {
 export class RateLimitedError extends Error {
   readonly rateLimited = true;
   constructor(waitS: number) {
-    super('RATE LIMITED: Maccabi asked for a pause of ' + waitS + ' s -- the export stops here; finished files are kept');
+    super('RATE LIMITED: Maccabi Healthcare Services asked for a pause of ' + waitS + ' s -- the export stops here; finished files are kept');
   }
 }
 

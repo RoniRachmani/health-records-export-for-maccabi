@@ -84,11 +84,43 @@ const SPARK = '<svg viewBox="0 0 20 20" width="18" height="18"><path d="M10 1.5c
 
 /** More questions a member might ask of the export, offered under the answer. */
 export const QUESTIONS = [
-  'Explain my latest blood test in plain English',
-  'What should I raise at my next appointment?',
   'Summarize my medical file',
-  'Which vaccinations might I be due for?',
+  'Explain my latest blood test in plain English',
+  'Which referrals are still open?',
+  'What should I raise at my next appointment?',
 ];
+
+/** A question put to the assistant, and its answer: paragraphs, then the file it names as its source. */
+export interface Exchange {
+  question: string;
+  answer: () => HTMLElement[];
+}
+
+/** A source pill: the folder quiet, the record's name bright, and the page when it is a PDF's. */
+function source(dir: string, stem: string, ext: string, page?: string): HTMLElement {
+  return h('p', 'source', svg(DOC, 'source-icon'),
+    h('span', 'dir', dir), h('span', 'stem', stem), h('span', 'dir', ext + (page ? ' · ' + page : '')));
+}
+
+/** A lab value's trend, and when to take it to the doctor: store screenshot 1 and the film's end. */
+export const TREND: Exchange = {
+  question: 'How has my HbA1c changed since 2019?',
+  answer: () => [
+    h('p', '', 'It rose from 5.4% in March 2019 to 5.9% in August 2026. Each result was inside the lab’s range of 4 to 6 at the time, but it has gone up at every test since 2022.'),
+    h('p', '', h('strong', '', 'That steady rise is worth raising with your family doctor'), ' at your next visit.'),
+    source('test-results/history/', '1486_המוגלובין-מסוכרר', '.json'),
+  ],
+};
+
+/** A letter in Hebrew, explained in English: the film's opening. */
+export const LETTER: Exchange = {
+  question: 'What does my latest letter from the clinic say?',
+  answer: () => [
+    h('p', '', 'It’s from your family doctor, dated 9 March 2026, and written in Hebrew. In English: your blood test results are in, and the doctor asks you to book a visit within a month to go over them.'),
+    h('p', '', h('strong', '', 'Nothing in it is marked urgent,'), ' but it does ask for that visit.'),
+    source('letters/files/', '2026-03-09_L20931_תוצאות-בדיקה', '.pdf', 'page 1'),
+  ],
+};
 
 export interface Chat {
   el: HTMLElement;
@@ -104,14 +136,9 @@ export interface Chat {
  * export's README taken as its instructions, a question, an answer in English from a record whose name is Hebrew, the file it came from, and
  * more questions to ask. The records are made up, as everywhere else in these images.
  */
-export function chatWindow(): Chat {
-  const question = h('div', 'msg ask', 'How has my HbA1c changed since 2019?');
-  const answer = [
-    h('p', '', 'It rose from 5.4% in March 2019 to 5.9% in August 2026. Each result was inside the lab’s range of 4 to 6 at the time, but it has gone up at every test since 2022.'),
-    h('p', '', h('strong', '', 'That steady rise is worth raising with your family doctor'), ' at your next visit.'),
-    h('p', 'source', svg(DOC, 'source-icon'),
-      h('span', 'dir', 'test-results/history/'), h('span', 'stem', '1486_המוגלובין-מסוכרר'), h('span', 'dir', '.json')),
-  ];
+export function chatWindow(exchange: Exchange = TREND): Chat {
+  const question = h('div', 'msg ask', exchange.question);
+  const answer = exchange.answer();
   const chips = QUESTIONS.map((q) => h('span', 'ask-chip', q));
   const input = h('div', 'chat-input', 'Ask about your records…');
   const el = h('div', 'window chat',

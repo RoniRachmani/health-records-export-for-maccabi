@@ -15,7 +15,7 @@ async function ensure(): Promise<void> {
       .createDocument({
         url: PATH,
         reasons: [chrome.offscreen.Reason.DOM_PARSER, chrome.offscreen.Reason.BLOBS],
-        justification: 'Parse two HTML tables from the Maccabi site and build the export ZIP as a downloadable blob.',
+        justification: 'Parse two HTML tables from the Maccabi Healthcare Services site and build the export ZIP as a downloadable blob.',
       })
       .finally(() => {
         creating = null;

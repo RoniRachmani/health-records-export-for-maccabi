@@ -3,9 +3,10 @@
    photographs it. Nothing animates by itself — every position is a function of time (motion.ts) —
    so the render is the same on every machine, however long a frame takes to capture.
 
-   The film, in seven parts: years of records pulled into one folder · the name and the promise ·
-   the clicks that start an export, on a placeholder page · the export running, with the files it
-   writes · the ZIP opened, and one folder in it · private by design · where to get it.
+   The film, in nine parts: what it is for, first — an assistant answering from the export · years of
+   records pulled into one folder · the name and the promise · the clicks that start an export, on a
+   placeholder page · the export running, with the files it writes · the ZIP opened, and one folder in
+   it · private by design · the assistant again · where to get it.
 
    The export it shows is the real popup (mock-chrome.ts gives it a made-up state, never real data)
    driven through a whole run: the states pushed into it are built from the real PLAN and WEIGHTS,
@@ -18,42 +19,50 @@ import {
   between, clamp01, fade, inCubic, inOut, kinetic, lerp, linear, out, outBack, outQuint, place, pulse, ramp, rise, showing,
   type Point,
 } from './motion';
-import { CHECK, DOC, FOLDER, FOLDERS, LOCK, MARK, chatWindow, dots, fileRow, h, img, pageSkeleton, paper, svg } from './parts';
+import { CHECK, DOC, FOLDER, FOLDERS, LETTER, LOCK, MARK, chatWindow, dots, fileRow, h, img, pageSkeleton, paper, svg, type Chat } from './parts';
 
 const FPS = 60;
 
+/**
+ * How long the opening answer runs before the first card: two of the music's bars, which the rest of
+ * the film is timed from, so that the bar lines still fall on its cuts (scripts/soundtrack.mjs).
+ */
+const OPEN = 5.43;
+
 /** When each part of the film starts, in seconds. The last one is the end. */
 const T = {
+  // 0 · What it is for: the assistant, answering from the export.
+  answer: 0,
   // 1 · Years of records, pulled into one folder.
-  cards: 0.15,
-  hookLine: 0.4,
-  swallow: 3.65,
+  cards: OPEN + 0.15,
+  hookLine: OPEN + 0.4,
+  swallow: OPEN + 3.65,
   // 2 · The name and the promise.
-  title: 4.65,
+  title: OPEN + 4.65,
   // 3 · The clicks, on a placeholder page. The camera then closes in on the popup.
-  browser: 8.7,
-  clickIcon: 10.6,
-  popupIn: 10.7,
-  zoom: 11.1,
-  clickStart: 13.5,
+  browser: OPEN + 8.7,
+  clickIcon: OPEN + 10.6,
+  popupIn: OPEN + 10.7,
+  zoom: OPEN + 11.1,
+  clickStart: OPEN + 13.5,
   // 4 · The export, sped up.
-  runFrom: 13.8,
-  runTo: 24.4,
-  saved: 24.8,
+  runFrom: OPEN + 13.8,
+  runTo: OPEN + 24.4,
+  saved: OPEN + 24.8,
   // 5 · The ZIP, opened. Its two parts are as long as their narration needs.
-  open: 28.3,
-  drill: 33.8,
+  open: OPEN + 28.3,
+  drill: OPEN + 33.8,
   // 6 · Private by design.
-  privacy: 38.5,
+  privacy: OPEN + 38.5,
   // 7 · Then, asked of the assistant the member chooses: two of the music's bars.
-  ask: 43.7,
+  ask: OPEN + 43.7,
   // 8 · Where to get it.
-  close: 49.0,
-  end: 55.4,
+  close: OPEN + 49.0,
+  end: OPEN + 55.4,
 };
 
 /** The second the README's poster is taken from: the export running, which is what the film is about. */
-const POSTER_AT = 19.7;
+const POSTER_AT = OPEN + 19.7;
 
 // What a long-standing member's export comes to, the same numbers the store images show.
 const FILES = 486;
@@ -353,6 +362,10 @@ interface Caption {
 }
 
 const CAPTIONS: Caption[] = [
+  {
+    from: T.answer + 0.3, to: T.cards - 0.1, top: 330, title: 'Ask about your Maccabi health records', accent: [3, 4, 5],
+    text: 'In plain language, in the language you speak, with the file behind each answer.',
+  },
   { from: T.zoom + 0.9, to: T.runFrom + 0.25, top: 400, step: '3', title: 'Press Start export' },
   { from: T.runFrom + 0.25, to: T.saved + 0.25, top: 118, title: 'It works through your records on its own', chip: 'Sped up · a real export takes 5 to 20 minutes' },
   {
@@ -385,21 +398,24 @@ const STEPS: { from: number; to: number; step: string; text: string }[] = [
  * that grows has to be cut or given room here. Numbers are spelled out, as they are to be said.
  */
 const NARRATION: { at: number; text: string }[] = [
+  { at: T.answer + 0.6, text: 'Ask about your Maccabi health records, in the language you speak.' },
   { at: T.hookLine, text: 'Years of test results, visits, prescriptions and letters.' },
   { at: T.title + 0.5, text: 'All in one ZIP, saved to your own computer.' },
   { at: T.browser + 0.7, text: 'Log in as usual, click the icon, and press Start export.' },
   { at: T.runFrom + 0.5, text: 'It works through every section on its own, saving every PDF, and the data behind it.' },
   { at: T.runFrom + 6.9, text: 'A real export takes five to twenty minutes.' },
   { at: T.saved + 0.3, text: 'When it’s done, one dated ZIP lands in your Downloads folder.' },
-  { at: T.open + 0.7, text: 'Inside: every record, every PDF, and your full medical file.' },
-  { at: T.drill + 0.4, text: 'Each record’s data sits right beside its PDF, under the same name.' },
-  { at: T.privacy + 0.4, text: 'It’s private by design: nothing between Maccabi and your computer.' },
+  { at: T.open + 0.85, text: 'Inside: every record, every PDF, and your full medical file.' },
+  { at: T.drill + 0.3, text: 'Each record’s data sits right beside its PDF, under the same name.' },
+  { at: T.privacy + 0.4, text: 'It’s private by design: nothing between Maccabi Healthcare Services and your computer.' },
   { at: T.ask + 0.4, text: 'Then open it in the AI assistant you choose, and ask in plain language.' },
   { at: T.close + 0.4, text: 'Health Records Export for Maccabi. Free, on the Chrome Web Store.' },
 ];
 
 /** The sound effects, by kind (scripts/soundtrack.mjs draws each one) and second. */
 const SOUNDS: { at: number; kind: string; dur?: number }[] = [
+  { at: T.answer + 1.5, kind: 'pop' },
+  { at: T.answer + 3.0, kind: 'pop' },
   { at: T.cards, kind: 'whoosh', dur: 1.3 },
   { at: T.swallow - 1.0, kind: 'riser', dur: 1.0 },
   { at: T.swallow, kind: 'impact' },
@@ -439,7 +455,10 @@ async function main(): Promise<void> {
   const glows = [0, 1, 2].map(() => h('div', 'glow'));
   document.body.append(grid, ...glows);
 
-  // 1 · the opening
+  // 0 · what it is for: the assistant, answering from the export
+  const openChat = chatWindow(LETTER);
+
+  // 1 · years of records
   const cards = CARDS.map(recordCard);
   const hookLine = kinetic('h1', 'hook-line', 'Years of medical records.');
   const hook = h('div', 'layer', ...cards, hookLine.el);
@@ -447,7 +466,7 @@ async function main(): Promise<void> {
   // 2 · the name and the promise
   const art = artwork();
   const lockName = h('p', 'lock-name', 'Health Records Export for Maccabi');
-  const promise = kinetic('h1', 'lock-title', 'Your Maccabi records, in one ZIP', [3, 4, 5]);
+  const promise = kinetic('h1', 'lock-title', 'Your Maccabi health records, in one ZIP', [4, 5, 6]);
   const lockSub = h('p', 'lock-sub', 'A free Chrome extension that saves every record and PDF to your own computer.');
   const lockNote = h('p', 'disclaimer', DISCLAIMER);
   const lockup = h('div', 'layer', lockName, promise.el, lockSub, lockNote);
@@ -526,7 +545,6 @@ async function main(): Promise<void> {
 
   // 7 · the assistant, asked: the store's screenshot of it, played out
   const chat = chatWindow();
-  const chatNote = chat.el.querySelector('.chat-note') as HTMLElement;
 
   // 8 · where to get it
   const endArt = artwork();
@@ -537,7 +555,7 @@ async function main(): Promise<void> {
   const ending = h('div', 'layer', endName.el, endSub, endLink, endNote);
 
   const scrim = h('div', 'scrim');
-  document.body.append(hook, art.el, lockup, world, ...steps, ...captions.map((c) => c.el), feed, files, privacy, chat.el, endArt.el, ending, scrim);
+  document.body.append(openChat.el, hook, art.el, lockup, world, ...steps, ...captions.map((c) => c.el), feed, files, privacy, chat.el, endArt.el, ending, scrim);
 
   // ---- the real popup, in the browser window ----
   const frame = await popupFrame(browser);
@@ -612,7 +630,7 @@ async function main(): Promise<void> {
     return { x: a.x, y: a.y, w: cardInWorld.width * cam.s, h: cardInWorld.height * cam.s, r: 20 * POPUP * cam.s };
   })();
 
-  /** Where the assistant's window sits in part 7, and its scale: the store's screenshot, enlarged. */
+  /** Where the assistant's window sits in parts 0 and 7, and its scale: the store's screenshot, enlarged. */
   const CHAT = { x: 910, y: 137, s: 1.3 };
 
   /** The line the records travel along in part 6; the two ends sit under video.css's .site and .home. */
@@ -629,6 +647,28 @@ async function main(): Promise<void> {
     { x: 1400, y: 980, r: 860, ax: 80, ay: 30, f: 0.17 },
     { x: 240, y: 260, r: 560, ax: 50, ay: 60, f: 0.13 },
   ];
+
+  /** The assistant's window between `from` and `to`: in, the question sent, the answer a line at a time, out. */
+  function playChat(c: Chat, t: number, from: number, to: number): void {
+    const chatIn = ramp(t, from + 0.5, 0.9, outQuint);
+    const chatOut = ramp(t, to - 0.45, 0.45, inOut);
+    fade(c.el, t >= from && t < to ? Math.min(ramp(t, from + 0.5, 0.4), 1 - chatOut) : 0);
+    place(c.el, CHAT.x, CHAT.y + 60 * (1 - chatIn) - 40 * chatOut, CHAT.s);
+    const lift = (el: HTMLElement, at: number, dy = 14): void => {
+      const u = ramp(t, at, 0.55, outQuint);
+      el.style.opacity = u.toFixed(3);
+      el.style.transform = 'translate(0,' + ((1 - u) * dy).toFixed(1) + 'px)';
+    };
+    lift(c.el.querySelector('.chat-note') as HTMLElement, from + 1.0);
+    // The question pops in from its corner, as a sent message does; the answer follows, a line at a time.
+    const asked = ramp(t, from + 1.5, 0.5, outBack);
+    c.question.style.opacity = clamp01(asked * 2).toFixed(3);
+    c.question.style.transformOrigin = 'bottom right';
+    c.question.style.transform = 'scale(' + lerp(0.7, 1, asked).toFixed(4) + ')';
+    lift(c.el.querySelector('.avatar') as HTMLElement, from + 2.0, 0);
+    c.answer.forEach((el, i) => lift(el, from + 2.1 + i * 0.45));
+    c.chips.forEach((el, i) => lift(el, from + 3.4 + i * 0.1, 10));
+  }
 
   function applyAt(t: number): void {
     // The ground drifts the whole way through.
@@ -877,26 +917,9 @@ async function main(): Promise<void> {
       p.style.transform = 'scale(' + lerp(0.6, 1, u).toFixed(4) + ')';
     });
 
-    // ---- 7 · the assistant, asked ----
-    const chatIn = ramp(t, T.ask + 0.5, 0.9, outQuint);
-    const chatOut = ramp(t, T.close - 0.45, 0.45, inOut);
-    fade(chat.el, t >= T.ask && t < T.close ? Math.min(ramp(t, T.ask + 0.5, 0.4), 1 - chatOut) : 0);
-    place(chat.el, CHAT.x, CHAT.y + 60 * (1 - chatIn) - 40 * chatOut, CHAT.s);
-    const lift = (el: HTMLElement, from: number, dy = 14): void => {
-      const u = ramp(t, from, 0.55, outQuint);
-      el.style.opacity = u.toFixed(3);
-      el.style.transform = 'translate(0,' + ((1 - u) * dy).toFixed(1) + 'px)';
-    };
-    lift(chatNote, T.ask + 1.0);
-    // The question pops in from its corner, as a sent message does; the answer follows, a line at a time.
-    const asked = ramp(t, T.ask + 1.5, 0.5, outBack);
-    chat.question.style.opacity = clamp01(asked * 2).toFixed(3);
-    chat.question.style.transformOrigin = 'bottom right';
-    chat.question.style.transform = 'scale(' + lerp(0.7, 1, asked).toFixed(4) + ')';
-    const avatar = chat.el.querySelector('.avatar') as HTMLElement;
-    lift(avatar, T.ask + 2.0, 0);
-    chat.answer.forEach((el, i) => lift(el, T.ask + 2.1 + i * 0.45));
-    chat.chips.forEach((el, i) => lift(el, T.ask + 3.4 + i * 0.1, 10));
+    // ---- 0 and 7 · the assistant, asked ----
+    playChat(openChat, t, T.answer, T.cards);
+    playChat(chat, t, T.ask, T.close);
 
     // ---- 8 · where to get it ----
     fade(ending, t >= T.close ? 1 : 0);

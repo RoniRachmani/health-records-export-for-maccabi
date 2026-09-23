@@ -17,8 +17,17 @@ interface Shot {
 }
 
 const SHOTS: Record<string, Shot> = {
+  ask: {
+    title: 'Ask an AI assistant about your Maccabi health records',
+    text: 'Save them as one ZIP, open it in the assistant you choose, and ask in plain language.',
+    points: [
+      'Records in Hebrew, answers in your language',
+      'See your whole history, and how each result has changed',
+      'It’s asked to name the file behind each answer, so you can check',
+    ],
+  },
   start: {
-    title: 'Your Maccabi records, ready for your AI assistant',
+    title: 'Start it on Maccabi Online',
     text: 'Log in to Maccabi Online as usual, click the extension icon and press Start export. You get one ZIP on your computer.',
     points: [
       'Test results, visits, prescriptions, referrals, vaccinations and letters',
@@ -29,7 +38,7 @@ const SHOTS: Record<string, Shot> = {
   },
   progress: {
     title: 'It works through your records on its own',
-    text: 'Progress shows on the toolbar icon. You can close the popup; keep the Maccabi tab open and in front.',
+    text: 'Progress shows on the toolbar icon. You can close the popup; keep the Maccabi Healthcare Services tab open and in front.',
     points: [
       'Usually done in 5 to 20 minutes',
       'Read-only, except for ordering your medical file',
@@ -48,15 +57,6 @@ const SHOTS: Record<string, Shot> = {
     ],
     popup: 'done',
     badge: { text: '✓', color: '#1a7a48' },
-  },
-  ask: {
-    title: 'Ask about your records',
-    text: 'Unzip it, open the folder in your AI assistant, and ask in plain language.',
-    points: [
-      'See your whole history, and how each result has changed',
-      'Records in Hebrew, answers in your language',
-      'The README asks it to name the file behind each fact, so you can check',
-    ],
   },
   privacy: {
     title: 'Private by design',
@@ -138,8 +138,8 @@ function marquee(): HTMLElement {
   return h('div', 'mq',
     h('section', 'mq-copy',
       h('div', 'eyebrow', img('/icons/icon-128.png'), 'Health Records Export for Maccabi'),
-      h('h1', '', 'Your Maccabi records, ready for your AI assistant'),
-      h('p', 'lead', 'Tests, visits, prescriptions, letters and your full medical file, as one ZIP on your computer. Open it in the assistant you choose, and ask.'),
+      h('h1', '', 'Ask an AI assistant about your Maccabi health records'),
+      h('p', 'lead', 'Save your tests, visits, prescriptions, letters and full medical file as one ZIP on your computer. Open it in the assistant you choose, and ask in your own language.'),
       h('p', 'disclaimer', 'Unofficial. Not affiliated with Maccabi Healthcare Services.'),
     ),
     svg(`<svg viewBox="0 0 540 440" width="540" height="440">

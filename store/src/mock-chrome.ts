@@ -51,7 +51,7 @@ const STATES: Record<string, Omit<StateReply, 'noticeAccepted'> & { noticeAccept
       percent: 55,
       fileCount: 355,
       byteCount: 24_100_000,
-      message: 'Your Maccabi session ended (HTTP 401). Log in to Maccabi Online again, then click this extension\'s icon on that tab and press Resume. Files collected so far are kept.',
+      message: 'Your Maccabi Healthcare Services session ended (HTTP 401). Log in to Maccabi Online again, then click this extension\'s icon on that tab and press Resume. Files collected so far are kept.',
     }),
     tab,
   },

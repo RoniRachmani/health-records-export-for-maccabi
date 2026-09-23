@@ -2,13 +2,13 @@
 
 Health Records Export for Maccabi
 
-Effective 17 September 2026
+Effective 23 September 2026
 
 <!-- Keep in sync with public/privacy.html, which ships in the extension at chrome-extension://<id>/privacy.html. -->
 
 This policy explains how Health Records Export for Maccabi ("the extension") handles your information. The
 extension is developed by Roni Rachmani ("the developer"). It is unofficial and is not affiliated with, endorsed
-by or sponsored by Maccabi Healthcare Services ("Maccabi").
+by or sponsored by Maccabi Healthcare Services.
 
 See also the [Terms of Use](terms.md).
 
@@ -60,7 +60,7 @@ Removing the extension from Chrome deletes everything it stores. It does not del
 ## What is sent, and to whom
 
 - The extension communicates only with `online.maccabi4u.co.il`, the site you log in to, and only to read
-  your name and records and order your medical file. The requests carry your login session, so Maccabi links them to
+  your name and records and order your medical file. The requests carry your login session, so Maccabi Healthcare Services links them to
   your account, and handles them under its own privacy policy.
 - Nothing is sent to the developer. The developer runs no server that could receive it.
 - Your information is not sold, not shared with third parties, and not used for advertising, analytics,
@@ -71,20 +71,20 @@ The use of information received from Maccabi Online adheres to the
 [Chrome Web Store User Data Policy](https://developer.chrome.com/docs/webstore/program-policies/user-data-faq),
 including the Limited Use requirements.
 
-## Actions on your Maccabi account
+## Actions on your Maccabi Healthcare Services account
 
 Apart from reading, the extension takes one action: each export orders a fresh copy of your full medical file. It sends
 the same request the site's own order button sends, but asks for your whole history, which is a wider date range than
-the site's form offers. Maccabi sends you an SMS about it, and the new file replaces the previous one in the site's
+the site's form offers. Maccabi Healthcare Services sends you an SMS about it, and the new file replaces the previous one in the site's
 list. When a copy ordered earlier the same day over the same range is already waiting, no new order is placed. The
 extension does not change or delete anything else, mark items as read, or access payment details.
 
 ## Permissions
 
 - Access to `online.maccabi4u.co.il`: to read your records from the site you are logged in to.
-- `scripting`: to read the login session from the Maccabi tab (and clear the old token there so the site issues a
+- `scripting`: to read the login session from the Maccabi Healthcare Services tab (and clear the old token there so the site issues a
   fresh one), send the requests the site accepts only from its own pages, and, while an export is running, signal
-  activity in that tab every few minutes so Maccabi's six-minute idle logout does not end the export partway.
+  activity in that tab every few minutes so Maccabi Healthcare Services's six-minute idle logout does not end the export partway.
 - `downloads`: to save the ZIP file.
 - `storage` and `unlimitedStorage`: to keep export progress and collected files until the ZIP is saved (PDF files can be large).
 - `offscreen`: to build the ZIP file, and read two HTML tables from the site.

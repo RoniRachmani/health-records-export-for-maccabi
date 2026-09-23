@@ -116,9 +116,9 @@ describe('popup', () => {
   });
 
   it('offers to switch tabs when a paused export is opened elsewhere', async () => {
-    const paused = running({ status: 'paused_session', message: 'Your Maccabi session ended.' });
+    const paused = running({ status: 'paused_session', message: 'Your Maccabi Healthcare Services session ended.' });
     await openPopup({ run: paused, tab: { onMaccabi: false, loggedIn: false } });
-    buttonNamed('Go to the Maccabi tab').click();
+    buttonNamed('Go to the Maccabi Healthcare Services tab').click();
     await flush();
     expect(sent.map((m) => m.type)).toContain('focusTab');
   });
@@ -135,7 +135,7 @@ describe('popup', () => {
   it('offers Start export straight away, with the SMS warning beside it', async () => {
     await openPopup({ run: null, tab });
     expect(buttonNamed('Start export')).toBeTruthy();
-    expect(document.querySelector('.note')?.textContent).toContain('Maccabi will text you.');
+    expect(document.querySelector('.note')?.textContent).toContain('Maccabi Healthcare Services will text you.');
     expect(document.querySelector('details.more')?.hasAttribute('open')).toBe(false);
 
     buttonNamed('Start export').click();

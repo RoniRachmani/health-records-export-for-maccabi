@@ -26,7 +26,7 @@ The things worth reporting, roughly in order:
 - Collected files surviving after a ZIP is saved or an export is stopped.
 - A member id written into a file path or a stored `endpoint` string.
 
-Out of scope: Maccabi Online's own security (report that to Maccabi), the ZIP being unencrypted (it's by design and
+Out of scope: Maccabi Online's own security (report that to Maccabi Healthcare Services), the ZIP being unencrypted (it's by design and
 documented), and anything that needs an attacker who is already on your machine or in your Chrome profile.
 
 ## Supported versions

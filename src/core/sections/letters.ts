@@ -38,7 +38,7 @@ async function medicalFilePdf(c: Collector, x: Json, replace: boolean): Promise<
     b = await c.fetchBin(url);
   }
   if (b.status === 200 && isPdf(b.bytes)) return c.saveBin(rel, b.bytes, replace);
-  await c.problem(MEDICAL_FILE, b.status === 202 ? 'still being prepared by Maccabi (202); export again later' : 'HTTP ' + b.status + ' ' + b.type);
+  await c.problem(MEDICAL_FILE, b.status === 202 ? 'still being prepared by Maccabi Healthcare Services (202); export again later' : 'HTTP ' + b.status + ' ' + b.type);
   return null;
 }
 

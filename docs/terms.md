@@ -2,7 +2,7 @@
 
 Health Records Export for Maccabi
 
-Effective 17 September 2026
+Effective 23 September 2026
 
 <!-- Keep in sync with public/terms.html, which ships in the extension at chrome-extension://<id>/terms.html. -->
 
@@ -15,8 +15,8 @@ See also the [Privacy Policy](privacy.md).
 ## 1. What the extension is
 
 A free, open-source tool that saves a copy of your Maccabi Online records to your computer. It is unofficial: it is
-not made, reviewed, endorsed or sponsored by Maccabi Healthcare Services, and Maccabi does not support it. "Maccabi"
-and "Maccabi Online" belong to their owner and are used only to describe what the extension works with.
+not made, reviewed, endorsed or sponsored by Maccabi Healthcare Services, and Maccabi Healthcare Services does not support it.
+"Maccabi" and "Maccabi Online" belong to their owner and are used only to describe what the extension works with.
 
 ## 2. Using the extension
 
@@ -29,7 +29,7 @@ and "Maccabi Online" belong to their owner and are used only to describe what th
 
 Each export orders a fresh copy of your full medical file through Maccabi Online. The extension sends the same request
 the site's own order button sends, but asks for your whole history, which is a wider date range than the site's form
-offers. By starting an export, you ask the extension to place that order for you. Maccabi sends you an SMS about it,
+offers. By starting an export, you ask the extension to place that order for you. Maccabi Healthcare Services sends you an SMS about it,
 and the new file replaces the previous one on the site. When a copy ordered earlier the same day over the same range
 is already waiting, the extension uses that one and orders nothing.
 
@@ -48,7 +48,7 @@ shared after it is saved.
 
 ## 6. Availability
 
-Maccabi can change its website, or limit how it can be accessed, at any time, which may stop the extension from
+Maccabi Healthcare Services can change its website, or limit how it can be accessed, at any time, which may stop the extension from
 working, fully or in part. The developer has no obligation to update, fix or support the extension, and may change or discontinue it at any time.
 
 ## 7. Open-source license

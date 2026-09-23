@@ -81,7 +81,7 @@ its doses. Older doses may be missing here and appear only in the medical file o
   },
   {
     name: 'letters',
-    summary: 'letters Maccabi sent the member; also lists the full medical file',
+    summary: 'letters Maccabi Healthcare Services sent the member; also lists the full medical file',
     detail: `\`letter_type\` 1 is a letter, its PDF in \`files/\`; \`letter_type\` 2 is the full medical
 file — \`from_date\`–\`to_date\` is the range it covers, \`status\` 1 means ready, and its PDF is the
 one beside this README. Use \`original_item_date\`: \`item_date\` is a display string (\`היום\`, "today").`,
@@ -103,7 +103,7 @@ There is no \`list.json\`: the site's list is a web page, not data.`,
   },
   { name: 'allergies-sensitivity', summary: 'recorded sensitivities and intolerances (`intolerance[]`)', detail: '' },
   { name: 'appointments', summary: 'future appointments only — past ones are visits, in `visit-summaries/`', detail: '' },
-  { name: 'requests-approvals', summary: 'requests and cases the member has open with Maccabi', detail: '' },
+  { name: 'requests-approvals', summary: 'requests and cases the member has open with Maccabi Healthcare Services', detail: '' },
 ];
 
 /** "a", "a and b", "a, b and c". */
@@ -116,11 +116,11 @@ function medicalFileSection(file: string | null): string {
     return `**This export has no full medical file.** Ordering or downloading it failed, and the
 extension said why in its popup. Without it, this export reaches back only as far as the data below.`;
   }
-  return `\`${file}\`, beside this file, is Maccabi's own printout of the member's record
+  return `\`${file}\`, beside this file, is Maccabi Healthcare Services's own printout of the member's record
 as of ${file.slice(0, 10)}: personal details, known problems (diagnoses, with the date each began),
 sensitivities and lifestyle, then visits back to the earliest on record — reason, findings, diagnosis,
 medications, referrals, vaccinations — then copies of the documents filed in the record. **Start
-there**: it reaches far further back than the JSON, which holds a few years. Maccabi's own heading
+there**: it reaches far further back than the JSON, which holds a few years. Maccabi Healthcare Services's own heading
 still calls it partial (חלקי), and if the fresh order this run makes failed, this is an older
 file covering less. Its range is the \`from_date\`–\`to_date\` of the \`letter_type\` 2 entry in
 \`letters/list.json\`. It runs to hundreds of pages, and extractors often get its Hebrew out
@@ -181,7 +181,7 @@ ${medicalFileSection(medicalFile)}
 ## What this export does not contain
 
 **Something missing here is not evidence that it never happened.** The export holds what the member
-site returns, which is less than Maccabi holds, which is less than the member's medical history.
+site returns, which is less than Maccabi Healthcare Services holds, which is less than the member's medical history.
 
 - Visits over 12 months old, and tests older than the site's list — as data. \`history/\` goes
   further back, but only for measurements taken in at least one listed test.
@@ -189,7 +189,7 @@ site returns, which is less than Maccabi holds, which is less than the member's 
   \`purchased-report.pdf\`. \`purchased-history.html\` still covers every purchase.
 - Images: no DICOM, ever — the site opens studies only in its own viewer.
 - Values for anything but lab tests: imaging, cardiology and external findings are only in a PDF.
-- Care outside Maccabi, except what was filed with Maccabi: external results, documents copied into
+- Care outside Maccabi Healthcare Services, except what was filed with Maccabi Healthcare Services: external results, documents copied into
   the medical file, the member's own uploads.
 - Sections the site had nothing for. A folder exists only when the site returned something, so a
   missing folder means "nothing was returned", not "this was not checked".${absent}
@@ -237,7 +237,7 @@ Every value in \`group_values[]\`, \`current_result\`, \`other_results[]\` and
 - Field names are English and keep the site's misspellings (\`has_summery_file\`) — search for
   them as spelled. Values are mostly
   Hebrew, often padded with spaces; \`""\`, \`"0"\` and \`null\` usually mean none. Codes (status,
-  type, insurance, speciality) are Maccabi's own and documented nowhere: trust the description beside them.
+  type, insurance, speciality) are Maccabi Healthcare Services's own and documented nowhere: trust the description beside them.
 - Match people by id, never by name: names run either way round and titles are spelled several ways
   (\`ד"ר\`, \`דר'\`, \`ד'ר\`). An id can be a number in one file and a zero-padded string in another
   (\`12345678\`, \`"012345678"\`) — compare ids as numbers.

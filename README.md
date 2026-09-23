@@ -1,8 +1,12 @@
 # Health Records Export for Maccabi
 
-A Chrome extension that saves a copy of your [Maccabi Online](https://online.maccabi4u.co.il) medical records
-to your computer as one ZIP file, ready to open with an AI assistant and ask about in plain language: every PDF the
-site offers, plus the site's own data as JSON.
+Ask an AI assistant about your [Maccabi Online](https://online.maccabi4u.co.il) medical records, in plain language
+and in the language you speak. This Chrome extension saves them to your computer as one ZIP file, every PDF the site
+offers plus the site's own data as JSON, and you open the folder in the assistant you choose.
+
+Maccabi Online shows your records one section and one PDF at a time, and its medical-file form covers less than your
+whole history. The export gathers everything in one go, with a freshly ordered medical file that reaches back to your
+earliest visit. It helps you understand your records and prepare for your doctor. It doesn't replace your doctor.
 
 > [!NOTE]
 > Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare Services.
@@ -19,18 +23,20 @@ site offers, plus the site's own data as JSON.
 
 <p align="center">
   <a href="https://youtu.be/IyP4kBFQHJQ">
-    <img src="store/assets/video-poster.png" alt="Watch an export, start to finish: a 55-second video" width="720">
+    <img src="store/assets/video-poster.png" alt="Watch an export, start to finish: a one-minute video" width="720">
   </a>
 </p>
 
 <p align="center">
-  ▶︎ <a href="https://youtu.be/IyP4kBFQHJQ">Watch an export, start to finish</a> · 55 seconds, narrated
+  ▶︎ <a href="https://youtu.be/IyP4kBFQHJQ">Watch an export, start to finish</a> · 1 minute, narrated
 </p>
 
 - **Ready for your AI assistant.** Open the folder in Claude Cowork, Claude Code, ChatGPT Work or Codex, and the
   ZIP's `README.md` becomes the assistant's instructions for your records. Assistants that connect to medical records
-  reach U.S. providers, not Maccabi; this is how yours get to one. See
+  reach U.S. providers, not Maccabi Healthcare Services; this is how yours get to one. See
   [Hand it to an AI assistant](#hand-it-to-an-ai-assistant).
+- **In your language.** The records are mostly in Hebrew. Ask about them, and get answers, in English or whatever you
+  speak.
 - **Thorough.** Test results, visit summaries, prescriptions and purchases, referrals, vaccinations, letters, doctor
   inquiries and saved documents, plus a freshly ordered copy of your full medical file. Some things
   [aren't included](#not-included).
@@ -89,14 +95,14 @@ Then load the `dist/` folder the same way.
 
 ### Before you start
 
-- **Maccabi will text you, right at the start.** Each export orders a fresh copy of your full medical file, first
-  thing, so Maccabi can build it while everything else is collected. It sends the site's own order request, but asks
-  for your whole history, which is wider than the range the site's form offers. Maccabi sends an SMS, and the new file
+- **Maccabi Healthcare Services will text you, right at the start.** Each export orders a fresh copy of your full medical file, first
+  thing, so Maccabi Healthcare Services can build it while everything else is collected. It sends the site's own order request, but asks
+  for your whole history, which is wider than the range the site's form offers. Maccabi Healthcare Services sends an SMS, and the new file
   replaces the previous one on the site. A copy ordered earlier the same day over the same range is used as it is.
   This is the only change the extension makes to your account, and it happens even if the export later fails.
-- **Keep the Maccabi tab in front.** Chrome pauses hidden tabs, which can end your session. If you switch away, the
+- **Keep the Maccabi Healthcare Services tab in front.** Chrome pauses hidden tabs, which can end your session. If you switch away, the
   export waits until you come back.
-- **Your session is kept awake.** Maccabi logs you out after six minutes without a click or a keypress on the page, and
+- **Your session is kept awake.** Maccabi Healthcare Services logs you out after six minutes without a click or a keypress on the page, and
   an export asks nothing of you for far longer than that, so while it runs the extension signals activity in that tab
   every few minutes. It stops as soon as the export does.
 
@@ -105,8 +111,8 @@ Then load the `dist/` folder the same way.
 | The popup says | What to do |
 |---|---|
 | **Export paused** | Your session ended. Log in to Maccabi Online again, click the icon on that tab and press **Resume**. (The extension first tries to reconnect by itself.) Also shown after Chrome restarts mid-export. |
-| **Waiting for the Maccabi tab** | Bring the tab back to the front. The export continues on its own. |
-| **Export stopped** | Press **Try again** on the Maccabi tab. It continues from the step that failed. |
+| **Waiting for the Maccabi Healthcare Services tab** | Bring the tab back to the front. The export continues on its own. |
+| **Export stopped** | Press **Try again** on the Maccabi Healthcare Services tab. It continues from the step that failed. |
 | **The ZIP was not saved** | Press **Save again**. |
 
 Resume refuses to continue if a different member is logged in. **Stop** ends the export and deletes the files collected
@@ -190,7 +196,7 @@ in `files/` instead — those say so in their own `omitted` field.
 ### Hand it to an AI assistant
 
 The export is made to be worked on with an AI assistant. Assistants that connect to medical records reach U.S.
-providers, not Maccabi, so this export is how your records get to one. Unzip it and open the folder in Claude Cowork, Claude Code,
+providers, not Maccabi Healthcare Services, so this export is how your records get to one. Unzip it and open the folder in Claude Cowork, Claude Code,
 ChatGPT Work or Codex: `README.md` is the assistant's saved instructions, and the records are its project files.
 Claude Code reads `CLAUDE.md` and Codex reads `AGENTS.md` on their own, and both lead to `README.md`; elsewhere, add
 `README.md` as the project's instructions, or ask the assistant to read it first.
@@ -199,30 +205,44 @@ What it helps you do:
 
 - **See your whole history.** The full medical file reaches back to the earliest visit on record, far beyond the
   few years the site's data covers.
+- **Ask in your own language.** The records are mostly in Hebrew; ask, and get answers, in English or whatever you
+  speak.
 - **Track changes over time.** Each lab measurement has its own history, often years long.
 - **Prepare for your next visit.** Known problems, the latest results, recent visits and open referrals, in one place.
 - **Check every answer.** The assistant is asked to name the file, and the page of a PDF, behind each fact.
-- **Ask in your own language.** The records are mostly in Hebrew; ask, and get answers, in English or whatever you
-  speak.
 
-Questions to start with:
+It supports your doctor and doesn't replace them. For urgent symptoms, call a doctor or emergency services, not an
+assistant.
 
+Things to ask (the first is a good place to start):
+
+- *Summarize my health history from my full medical file.*
 - *Help me understand my latest blood test.*
 - *How has my HbA1c changed over the years?*
 - *What should I raise at my next appointment?*
-- *Summarize my medical history.*
-- *Which vaccinations or screenings might I be due for?*
+- *Translate my latest letter from the clinic into English.*
+- *Which referrals and approvals are still open?*
+- *What did the cardiologist write at my last visit?*
+- *When was my last tetanus shot?*
+- *Which medications have I bought this year, and how often?*
+- *Make a one-page summary to bring to a new doctor.*
 
-The instructions ask the assistant to start from your full medical file, to say which file (and which page of a PDF)
-each fact comes from and give it a date, to write its own notes into a new folder rather than change the export, and
-to keep your name, ID number and contact details out of web searches and other tools unless you ask. They have it
-say plainly when a record suggests something needs a doctor soon, and explain in plain language rather than diagnose, and they say
-where to look for the common questions: a lab value's trend, the latest results, what changed since your last
-visit, what to raise at an appointment, your allergies.
+The instructions are the assistant's guardrails. They ask it to start from your full medical file, to say which file
+(and which page of a PDF) each fact comes from and give it a date, to write its own notes into a new folder rather than
+change the export, and to keep your name, ID number and contact details out of web searches and other tools unless you
+ask. They have it say plainly when a record suggests something needs a doctor soon, and explain in plain language
+rather than diagnose, and they say where to look for the common questions: a lab value's trend, the latest results,
+what changed since your last visit, what to raise at an appointment, your allergies.
 
 > [!WARNING]
-> The extension sends your records nowhere, but an AI service you open them in can read them. Check what that
-> service keeps, and for how long, before you give it your health information.
+> The extension sends your records nowhere, but an AI service you open them in can read them. Before you give it your
+> health information, check what it keeps and for how long. Where the service lets you, turn off training on your
+> chats, keep each person's records in a project of their own with memory kept to that project, and delete the
+> project when you're done with it.
+
+**What about ChatGPT Health?** As of September 2026, OpenAI offers Health in ChatGPT to users in the U.S., and it
+connects medical records from U.S. providers only, so it can't reach Maccabi Healthcare Services. Open the export in ChatGPT Work, or in
+any of the assistants above, instead.
 
 ## Privacy and safety
 
@@ -236,7 +256,7 @@ visit, what to raise at an appointment, your allergies.
   export, more for a long history — and all of them are listed in [docs/endpoints.json](docs/endpoints.json). It never
   calls anything that changes or deletes data, marks items as read, returns session credentials, or touches payment
   details.
-- If Maccabi answers 429, the extension waits exactly as long as the response asks and tries once more. If Maccabi
+- If Maccabi Healthcare Services answers 429, the extension waits exactly as long as the response asks and tries once more. If Maccabi Healthcare Services
   asks again, or asks for a wait longer than two minutes, the export stops rather than keep knocking. Files collected
   so far are kept, so you can try again later.
 
@@ -251,7 +271,7 @@ Read the full [Privacy Policy](docs/privacy.md) and [Terms of Use](docs/terms.md
 | Permission | Used to |
 |---|---|
 | `online.maccabi4u.co.il` | Read your records from the site you're logged in to. No other sites. |
-| `scripting` | Read the login session from the Maccabi tab, and send the requests the site accepts only from its own pages |
+| `scripting` | Read the login session from the Maccabi Healthcare Services tab, and send the requests the site accepts only from its own pages |
 | `downloads` | Save the ZIP |
 | `storage`, `unlimitedStorage` | Keep export progress, and collected files until the ZIP is saved (PDFs can be large) |
 | `offscreen` | Build the ZIP, and parse two HTML tables the site returns |
@@ -281,7 +301,7 @@ Load `dist-dev/` at `chrome://extensions` the same way as `dist/`. It shows up a
 flowchart LR
   popup[Popup] -- messages --> sw[Service worker]
   sw -- "/sonline/ REST API and PDFs" --> site[(Maccabi Online)]
-  sw -- chrome.scripting --> tab[Maccabi tab]
+  sw -- chrome.scripting --> tab[Maccabi Healthcare Services tab]
   tab -- "/online/ legacy pages, medical file order" --> site
   sw -- staged files --> idb[(IndexedDB)]
   sw -- "parse HTML, build ZIP" --> off[Offscreen document]
@@ -291,7 +311,7 @@ flowchart LR
 
 The service worker walks a fixed plan (`PLAN` in `src/extension/shared/state.ts`): one crossing to the old site to
 order the medical file and collect purchases and uploads, back to `/sonline/` for the REST API sections, and the
-medical file collected last, by which time Maccabi has had the whole run to build it. Each finished step is
+medical file collected last, by which time Maccabi Healthcare Services has had the whole run to build it. Each finished step is
 checkpointed in `chrome.storage.local`, so a paused run, or a restarted service worker, continues from there.
 
 The tab visits a single legacy page, `/online/medicalfile/summary/`. The legacy services answer only after some
@@ -300,12 +320,12 @@ steps that need the old site share it. The run returns to `/sonline/` before wai
 renews the session token only there, and the wait is the longest part of the run.
 
 REST API requests (`/sonline/`) go from the service worker, with the session token read from the tab. Legacy requests
-(`/online/`) and the medical file order go from inside the Maccabi tab, where the site requires them to originate.
+(`/online/`) and the medical file order go from inside the Maccabi Healthcare Services tab, where the site requires them to originate.
 
 | Path | Contents |
 |---|---|
 | `src/core/` | The collection logic, one file per part of the site in `sections/`. Uses no extension APIs: it reaches the site through a `Transport`, writes through a `Sink` and parses HTML through an `HtmlParser` (see `types.ts`). |
-| `src/extension/background/` | The service worker: the run loop with pause and resume (`runner.ts`), the Maccabi tab (`tab.ts`), badge and notifications (`ui.ts`) |
+| `src/extension/background/` | The service worker: the run loop with pause and resume (`runner.ts`), the Maccabi Healthcare Services tab (`tab.ts`), badge and notifications (`ui.ts`) |
 | `src/extension/offscreen/` | HTML parsing and ZIP building, which the service worker can't do |
 | `src/extension/shared/` | Run state and plan, IndexedDB staging |
 | `src/extension/popup/` | The popup |
@@ -322,8 +342,8 @@ REST API requests (`/sonline/`) go from the service worker, with the session tok
 The popup and the two pages that ship with it share one design system: navy headings over white, one bright blue
 for actions and progress, magenta for links, pale-blue cards at a 20px radius, pill buttons, and a soft
 navy-tinted shadow. The register is meant to feel at home next to Maccabi Online rather than foreign to it, while
-staying plainly the extension's own — there is no Maccabi logo or wordmark anywhere, and the header says
-"Unofficial · Not affiliated with Maccabi" on every screen.
+staying plainly the extension's own — there is no Maccabi Healthcare Services logo or wordmark anywhere, and the header says
+"Unofficial · Not affiliated with Maccabi Healthcare Services" on every screen.
 
 The stylesheets ask for Roboto first and fall back to the system face. That is a local lookup only: the extension
 ships no fonts and downloads none.
@@ -336,7 +356,7 @@ tall, so keep the states that are not disclosures under it; `npm run store-asset
 
 ### Driving a run from the console
 
-The development build adds a bridge content script, so you can run and inspect an export from the Maccabi page's
+The development build adds a bridge content script, so you can run and inspect an export from the Maccabi Healthcare Services page's
 DevTools console:
 
 ```js

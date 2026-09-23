@@ -109,9 +109,10 @@ function blep(t, dt) {
 }
 
 // ---- the music ---------------------------------------------------------------
-// D major, I–vi–IV–V with added tones, voiced close so the pad moves by step. Eighteen bars from the
-// first card to the closing card, so the bar lines fall on the film's own cuts: the loop four times,
-// then IV–V under the assistant, resolving on the closing card.
+// D major, I–vi–IV–V with added tones, voiced close so the pad moves by step. Twenty bars from the
+// start to the closing card, so the bar lines fall on the film's own cuts: two bars of IV–V under the
+// opening answer, resolving as the first card lands, then the loop four times, then IV–V under the
+// assistant again, resolving on the closing card.
 const CHORDS = {
   D: { pad: [57, 61, 64, 66], root: 50, bass: 38 },
   Bm: { pad: [57, 61, 62, 66], root: 47, bass: 35 },
@@ -119,7 +120,9 @@ const CHORDS = {
   A: { pad: [57, 59, 62, 64], root: 45, bass: 33 },
 };
 const LOOP = ['D', 'Bm', 'G', 'A'];
-const BARS = 18;
+const BARS = 20;
+/** The bars before the first card, under the opening answer (OPEN in store/src/video.ts). */
+const INTRO = 2;
 const ARP = [0, 2, 3, 4, 2, 3, 1, 3];
 
 function grid(scenes) {
@@ -129,12 +132,13 @@ function grid(scenes) {
     bar,
     beat: bar / 4,
     at: (b, beat = 0) => start + b * bar + beat * (bar / 4),
-    chord: (b) => CHORDS[b >= BARS ? 'D' : b >= 16 ? LOOP[b - 14] : LOOP[b % 4]],
+    chord: (b) => CHORDS[b >= BARS ? 'D' : b < INTRO ? LOOP[b + 2] : b >= INTRO + 16 ? LOOP[b - INTRO - 14] : LOOP[(b - INTRO) % 4]],
   };
 }
 
 /** Which part of the film a second falls in, for the arrangement. */
 function partAt(t, s) {
+  if (t < s.cards) return 'answer';
   if (t < s.title) return 'hook';
   if (t < s.browser) return 'title';
   if (t < s.runFrom) return 'start';
@@ -177,10 +181,10 @@ function pad(length, g, s) {
     }
   }
   // Soft in the opening, opening up while the export runs, closing again for the quiet parts.
-  const cutoff = { hook: 1300, title: 1900, start: 2300, run: 3400, zip: 2700, privacy: 1700, ask: 2000, end: 2300 };
+  const cutoff = { answer: 1200, hook: 1300, title: 1900, start: 2300, run: 3400, zip: 2700, privacy: 1700, ask: 2000, end: 2300 };
   const fl = new Biquad('lowpass', 1300, 0.65);
   const fr = new Biquad('lowpass', 1300, 0.65);
-  let f = cutoff.hook;
+  let f = cutoff.answer;
   for (let i = 0; i < length; i++) {
     if (i % 128 === 0) {
       const target = cutoff[partAt(i / RATE, s)];
@@ -216,7 +220,7 @@ function mallet(bus, at, midi, vel, pan, tau = 0.5) {
 function plucks(length, g, s) {
   const bus = new Stereo(length);
   // Per part: how many notes a bar (4 = quarters, 8 = eighths) and how hard.
-  const feel = { hook: [4, 0.5], title: [8, 0.55], start: [8, 0.6], run: [8, 0.72], zip: [8, 0.6], privacy: [4, 0.5], ask: [8, 0.55] };
+  const feel = { answer: [4, 0.45], hook: [4, 0.5], title: [8, 0.55], start: [8, 0.6], run: [8, 0.72], zip: [8, 0.6], privacy: [4, 0.5], ask: [8, 0.55] };
   for (let b = 0; b < BARS; b++) {
     const chord = g.chord(b);
     const tones = [...chord.pad.map((n) => n + 12), chord.bass + 36].sort((x, y) => x - y);
@@ -236,7 +240,7 @@ function plucks(length, g, s) {
 
 function bass(length, g, s) {
   const bus = new Stereo(length);
-  for (let b = 3; b <= BARS; b++) {
+  for (let b = INTRO + 3; b <= BARS; b++) {
     const f = hz(g.chord(b).bass);
     const part = partAt(g.at(b) + 0.01, s);
     const vel = part === 'privacy' || part === 'ask' || b === BARS ? 0.13 : 0.19;
@@ -288,7 +292,7 @@ function drums(length, g, s) {
     }
   };
   // In while the export runs, lighter over the ZIP, out for the privacy part and the close.
-  for (let b = 5; b < 14; b++) {
+  for (let b = INTRO + 5; b < INTRO + 14; b++) {
     const light = partAt(g.at(b) + 0.01, s) === 'zip';
     kick(g.at(b, 0), light ? 0.3 : 0.42);
     kick(g.at(b, 2), light ? 0.22 : 0.36);
