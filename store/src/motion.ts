@@ -40,9 +40,15 @@ export const between = (a: Point, b: Point, u: number): Point => ({ x: lerp(a.x,
 
 const n2 = (v: number): string => v.toFixed(2);
 
-/** Moves an element (placed at left 0, top 0) to x, y, scaled and turned about its own centre. */
+/**
+ * Moves an element (placed at left 0, top 0) to x, y, scaled and turned about its own centre. A 2D
+ * transform, never translate3d: that gives the element a layer of its own, whose text Chrome draws
+ * once and then slides around, so where it lands depends on where it was when it was drawn — and
+ * the render draws the film in a fresh browser every few seconds, which then disagrees with the
+ * last. Drawn in place, every frame depends on its second alone.
+ */
 export function place(el: HTMLElement | SVGElement, x: number, y: number, scale = 1, turn = 0): void {
-  el.style.transform = 'translate3d(' + n2(x) + 'px,' + n2(y) + 'px,0) scale(' + scale.toFixed(4) + ') rotate(' + n2(turn) + 'deg)';
+  el.style.transform = 'translate(' + n2(x) + 'px,' + n2(y) + 'px) scale(' + scale.toFixed(4) + ') rotate(' + n2(turn) + 'deg)';
 }
 
 export function fade(el: HTMLElement | SVGElement, o: number): void {
@@ -77,6 +83,6 @@ export function kinetic(tag: string, cls: string, text: string, accent: number[]
 export function rise(words: HTMLElement[], t: number, from: number, stagger = 0.065, dur = 0.7): void {
   words.forEach((w, i) => {
     const u = ramp(t, from + i * stagger, dur, outQuint);
-    w.style.transform = 'translate3d(0,' + ((1 - u) * 110).toFixed(1) + '%,0)';
+    w.style.transform = 'translate(0,' + ((1 - u) * 110).toFixed(1) + '%)';
   });
 }

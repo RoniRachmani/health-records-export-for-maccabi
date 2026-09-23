@@ -86,7 +86,7 @@ Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare 
 | Screenshot 5 | `store/assets/screenshot-5-privacy.png` | "Private by design", with the popup's list of what's included |
 | Small promo tile (440×280) | `store/assets/promo-small-440x280.png` | The icon's artwork on a blue background, with no text |
 | Marquee promo tile (1400×560) | `store/assets/promo-marquee-1400x560.png` | The same artwork beside the name and one line of text. Optional: the store uses it only when it features the extension |
-| Global promo video | https://youtu.be/bMO8CJFN0ig | Optional. See [Promo video](#promo-video) below |
+| Global promo video | https://youtu.be/IyP4kBFQHJQ | Optional. See [Promo video](#promo-video) below |
 
 The screenshots are 1280×800 PNG files with no transparency. They show the real popup in made-up states over a
 placeholder page, never a real account. The text around the popup comes from `SHOTS` in `store/src/stage.ts`.
@@ -94,10 +94,10 @@ placeholder page, never a real account. The text around the popup comes from `SH
 ### Promo video
 
 The store's video field takes a **YouTube link**, not a file. The one to paste is
-**https://youtu.be/bMO8CJFN0ig**, on the [Hey Roni](https://www.youtube.com/@Hey-Roni-Dev) channel, with the title
+**https://youtu.be/IyP4kBFQHJQ**, on the [Hey Roni](https://www.youtube.com/@Hey-Roni-Dev) channel, with the title
 and description [below](#on-youtube). `npm run store-video` renders the video to `store/assets/promo-video.mp4`
-(3840×2160, 60 fps, 49 seconds, with narration); a re-render replaces that video on YouTube, so the link on the
-dashboard stays the one above.
+(3840×2160, 60 fps, 48 seconds, with narration). YouTube can't swap the file under a link, so a re-render is a
+new upload with a new link: paste it on the dashboard and put it in the README, in place of the one above.
 
 It is not committed — it is rebuilt from `store/src/video.ts`, which draws it a frame at a time in headless
 Chrome. Like the screenshots, it shows the real popup fed made-up states (`store/src/mock-chrome.ts`), driven

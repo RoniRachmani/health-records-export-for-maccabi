@@ -122,7 +122,10 @@ re-runs. Legacy steps don't get a 401, so `runner.ts` treats "Failed to fetch" i
   `store/src/parts.ts` and `parts.css`; `scripts/stage.mjs` builds, serves and photographs them in headless
   Chrome. The video is 4K at 60 fps (the stage at `deviceScaleFactor` 2), each frame piped as it is taken to
   `ffmpeg` if it is on `PATH`, else to `scripts/encode-mp4.swift` (macOS); the popup's own CSS animations are
-  put on the film's clock, or they would flicker. The soundtrack is scored from the same timeline
+  put on the film's clock, or they would flicker. A frame must look the same in a browser that has just
+  started as in one that drew the frames before it (the render restarts it every 150 frames): no
+  `translate3d`, whose layers keep text where it was first drawn, and no camera or element creeping by
+  fractions of a pixel, which reads as text shivering. The soundtrack is scored from the same timeline
   (`window.video.soundtrack`: the parts, `NARRATION`, `SOUNDS`) by `scripts/soundtrack.mjs`, which synthesizes the
   music and effects itself; the voice is ElevenLabs (`scripts/narration.mjs`): one take of the script
   (`--script`) cut into lines by `--import <take>`, or line by line with `ELEVENLABS_API_KEY` from `.env`, and

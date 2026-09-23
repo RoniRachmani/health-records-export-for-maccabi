@@ -705,18 +705,6 @@ async function main(): Promise<void> {
       shownHeight = tall;
       frame.style.height = tall + 'px';
     }
-    // The popup's own animations (the sheen on the bar, the pulse on the current step) run on the
-    // wall clock, which has nothing to do with the film's: each frame would catch them at a random
-    // point, and the bar would flicker. They run on the film's clock instead, and its transitions
-    // land at once, since the states pushed in already move a frame at a time.
-    for (const a of doc.getAnimations()) {
-      if ('transitionProperty' in a) {
-        a.finish();
-      } else {
-        a.pause();
-        a.currentTime = t * 1000;
-      }
-    }
     const opened = ramp(t, T.popupIn, 0.3, out);
     fade(frame, opened * (1 - ramp(t, T.open, 0.25)));
     frame.style.transform = 'scale(' + (POPUP * lerp(0.94, 1, opened)).toFixed(4) + ')';
@@ -739,7 +727,7 @@ async function main(): Promise<void> {
     fade(cursor, Math.min(ramp(t, T.browser + 1.0, 0.3), 1 - ramp(t, T.clickStart + 0.35, 0.35)));
     const ring = Math.max(pulse(t, T.clickIcon), pulse(t, T.clickStart));
     fade(ripple, ring * 0.6);
-    ripple.style.transform = 'translate3d(' + path.x.toFixed(1) + 'px,' + path.y.toFixed(1) + 'px,0) scale(' + (0.4 + 0.9 * (1 - ring)).toFixed(3) + ')';
+    ripple.style.transform = 'translate(' + path.x.toFixed(1) + 'px,' + path.y.toFixed(1) + 'px) scale(' + (0.4 + 0.9 * (1 - ring)).toFixed(3) + ')';
 
     // Start export under the pointer: hovered, then pressed.
     const startButton = doc.querySelector<HTMLElement>('#view button.primary');
@@ -749,6 +737,20 @@ async function main(): Promise<void> {
       startButton.style.background = hovered ? '#1f5bd6' : '';
       startButton.style.borderColor = hovered ? '#1f5bd6' : '';
       startButton.style.transform = pressed ? 'scale(0.975)' : '';
+    }
+
+    // The popup's own animations (the sheen on the bar, the pulse on the current step) run on the
+    // wall clock, which has nothing to do with the film's: each frame would catch them at a random
+    // point, and the bar would flicker. They run on the film's clock instead, and its transitions
+    // land at once, since the states pushed in already move a frame at a time. Last, after every
+    // change made to the popup this frame, so none is caught halfway.
+    for (const a of doc.getAnimations()) {
+      if ('transitionProperty' in a) {
+        a.finish();
+      } else {
+        a.pause();
+        a.currentTime = t * 1000;
+      }
     }
 
     // ---- the words beside the window ----
@@ -762,7 +764,7 @@ async function main(): Promise<void> {
       cap.rest.forEach((el, j) => {
         const u = ramp(t, c.from + 0.45 + j * 0.15, 0.7, outQuint);
         el.style.opacity = u.toFixed(3);
-        el.style.transform = 'translate3d(0,' + ((1 - u) * 16).toFixed(1) + 'px,0)';
+        el.style.transform = 'translate(0,' + ((1 - u) * 16).toFixed(1) + 'px)';
       });
     });
 
@@ -817,7 +819,7 @@ async function main(): Promise<void> {
     fileRowsAll.forEach((row, i) => {
       const u = ramp(t, T.open + 0.35 + i * 0.04, 0.5, outQuint);
       row.style.opacity = u.toFixed(3);
-      row.style.transform = 'translate3d(0,' + ((1 - u) * 14).toFixed(1) + 'px,0)';
+      row.style.transform = 'translate(0,' + ((1 - u) * 14).toFixed(1) + 'px)';
     });
     // test-results/, opened.
     const opening = ramp(t, T.drill + 0.35, 0.6, inOut);
@@ -826,7 +828,7 @@ async function main(): Promise<void> {
     drillRows.forEach((row, i) => {
       const u = ramp(t, T.drill + 0.55 + i * 0.09, 0.5, outQuint);
       row.style.opacity = u.toFixed(3);
-      row.style.transform = 'translate3d(' + ((1 - u) * -16).toFixed(1) + 'px,0,0)';
+      row.style.transform = 'translate(' + ((1 - u) * -16).toFixed(1) + 'px,0)';
     });
     drill.style.setProperty('--pair', ramp(t, T.drill + 1.6, 0.5).toFixed(3));
 
@@ -840,7 +842,7 @@ async function main(): Promise<void> {
     const nodeIn = (el: HTMLElement, from: number, dx: number): void => {
       const u = ramp(t, from, 0.8, outQuint);
       fade(el, ramp(t, from, 0.35));
-      el.style.transform = 'translate3d(' + ((1 - u) * dx).toFixed(1) + 'px,0,0) scale(' + lerp(0.92, 1, u).toFixed(4) + ')';
+      el.style.transform = 'translate(' + ((1 - u) * dx).toFixed(1) + 'px,0) scale(' + lerp(0.92, 1, u).toFixed(4) + ')';
     };
     nodeIn(site, T.privacy + 0.9, -60);
     nodeIn(home, T.privacy + 1.1, 60);
