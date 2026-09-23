@@ -103,11 +103,12 @@ There is no \`list.json\`: the site's list is a web page, not data.`,
   },
   {
     name: 'hospital-stays',
-    summary: 'hospital admissions: hospital, department, date and length of stay',
-    detail: `Use \`Date\`: \`DateHospitalization\` is day, month and year run together, not zero-padded.
-\`DescriptionTreatment\` and \`DescriptionDistinction\` **can hold only billing lines** such as
-\`HOSPITALIZATION - PER DAY\` — not treatments or diagnoses. What happened in hospital is in the
-medical file, under the stay's dates.`,
+    summary: 'hospital visits: date, kind of visit, hospital and department',
+    detail: `\`TypeCommitment\` is the kind of visit (\`אשפוז\` is an admission). Use \`Date\`:
+\`DateHospitalization\` is day, month and year run together, not zero-padded. Maccabi Healthcare
+Services's own page shows only those four; \`DescriptionTreatment\` and \`DescriptionDistinction\` are
+not shown there, and **can hold only billing lines** such as \`HOSPITALIZATION - PER DAY\`, not
+treatments or diagnoses. What happened in hospital is in the medical file, under the visit's dates.`,
   },
   { name: 'allergies-sensitivity', summary: 'recorded sensitivities and intolerances (`intolerance[]`)', detail: '' },
   { name: 'appointments', summary: 'future appointments only — past ones are visits, in `visit-summaries/`', detail: '' },
