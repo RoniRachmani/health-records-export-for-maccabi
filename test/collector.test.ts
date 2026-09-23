@@ -92,6 +92,7 @@ describe('full run against the fake site', () => {
       'communication-with-doctor/list.json',
       'my-doctor/assigned-practitioners.json',
       'my-doctor/eligibilities.json',
+      'hospital-stays/list.json',
       'info-pages/list.json',
       'letters/files/2026-04-01_L1_מכתב-שיחרור.pdf',
       'letters/list.json',
@@ -153,7 +154,18 @@ describe('full run against the fake site', () => {
     expect(mem.json('medications-and-prescriptions/purchased-report.json').omitted).toEqual(['data.base64']);
     expect(new TextDecoder().decode(mem.files.get('medications-and-prescriptions/files/purchased-report.pdf'))).toBe('%PDF-1.4 report');
     expect(mem.files.get('uploads/files/2026-05-01_F1_סיכום-אשפוז.pdf')).toEqual(PDF);
-    expect(s.results).toEqual({ written: 39 });
+    // Hospital stays: every year asked for, not the page's three; padding, blank entries and the
+    // repeated stay gone.
+    expect(site.calls).toContain('POST /online/webapi/MailingsFromHospitals/GetMailingsFromHospitals/');
+    const stays = mem.json('hospital-stays/list.json');
+    expect(stays.request_body).toEqual({ isDateSelected: true, fromDate: '01011900', toDate: '31122099' });
+    expect(stays.data.ReportHospitalizations).toHaveLength(1);
+    expect(stays.data.ReportHospitalizations[0]).toMatchObject({
+      NameHospital: 'בית חולים לדוגמה',
+      DescriptionTreatment: [{ Description: 'HOSPITALIZATION - PER DAY' }],
+      DescriptionDistinction: [],
+    });
+    expect(s.results).toEqual({ written: 40 });
   });
 
   it('a second run into the same files changes nothing and skips unchanged work', async () => {
@@ -171,6 +183,16 @@ describe('full run against the fake site', () => {
     expect(site2.calls.filter((u) => /pdf|compare\?|report/.test(u))).toEqual([]);
   });
 
+  it('reports hospital stays answered with a web page as a problem, and writes nothing', async () => {
+    const site = fakeMaccabi();
+    const logout: HttpResponse = { status: 200, redirected: false, contentType: 'text/html; charset=utf-8', bytes: new TextEncoder().encode('<html>logged out</html>') };
+    const t = fakeTransport([(_req, url) => (url.pathname.includes('MailingsFromHospitals') ? logout : undefined), ...site.routes]);
+    const { c, sink } = makeCollector(t);
+    const s = await runAll(c, newCtx(), ['hospitalStays']);
+    expect(s.problems).toEqual([expect.stringMatching(/^hospital-stays\/list\.json PROBLEM: HTTP 200 text\/html.*logged out\?/)]);
+    expect([...(sink as MemorySink).files.keys()]).toEqual([]);
+  });
+
   it('runs only the named steps and stops at SESSION ENDED', async () => {
     const site = fakeMaccabi();
     let n = 0;
@@ -181,6 +203,6 @@ describe('full run against the fake site', () => {
     expect(s.stoppedAt).toBe('visits');
     expect(s.problems[0]).toMatch(/^visits PROBLEM: SESSION ENDED/);
     expect([...(sink as MemorySink).files.keys()]).toEqual([]);
-    expect(STEP_ORDER).toHaveLength(13);
+    expect(STEP_ORDER).toHaveLength(14);
   });
 });

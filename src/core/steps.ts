@@ -1,5 +1,5 @@
 import { errMessage, isControl, type Collector } from './collector';
-import { doctorCommunications, emptySections, savedDocuments } from './sections/other';
+import { doctorCommunications, emptySections, hospitalStays, savedDocuments } from './sections/other';
 import { letters } from './sections/letters';
 import { medications, purchases } from './sections/medications';
 import { profileAndDoctors } from './sections/profile';
@@ -25,6 +25,7 @@ export const STEPS = {
   letters,
   doctorCommunications,
   savedDocuments,
+  hospitalStays,
   emptySections,
 } satisfies Record<string, Step>;
 
@@ -32,7 +33,7 @@ export type StepName = keyof typeof STEPS;
 export const STEP_ORDER = Object.keys(STEPS) as StepName[];
 
 /** Steps that use the legacy /online/ services (need a legacy page opened in the session). */
-export const LEGACY_STEPS: StepName[] = ['purchases', 'savedDocuments'];
+export const LEGACY_STEPS: StepName[] = ['purchases', 'savedDocuments', 'hospitalStays'];
 
 /**
  * Runs one step. A failure inside it is recorded as a problem under the step's

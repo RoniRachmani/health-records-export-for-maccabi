@@ -5,6 +5,7 @@ describe('resumeIndex', () => {
   it('opens the legacy page again before its steps', () => {
     expect(PLAN[resumeIndex(PLAN.indexOf('purchases'))]).toBe('openLegacyPage');
     expect(PLAN[resumeIndex(PLAN.indexOf('savedDocuments'))]).toBe('openLegacyPage');
+    expect(PLAN[resumeIndex(PLAN.indexOf('hospitalStays'))]).toBe('openLegacyPage');
   });
 
   it('continues other steps where they stopped', () => {
@@ -17,7 +18,7 @@ describe('resumeIndex', () => {
 
   it('crosses to the old site once, at the start, and comes back for the rest', () => {
     const order = (s: (typeof PLAN)[number]) => PLAN.indexOf(s);
-    for (const legacy of ['orderMedicalFile', 'purchases', 'savedDocuments'] as const) {
+    for (const legacy of ['orderMedicalFile', 'purchases', 'savedDocuments', 'hospitalStays'] as const) {
       expect(order('openLegacyPage')).toBeLessThan(order(legacy));
       expect(order(legacy)).toBeLessThan(order('returnToSonline'));
     }

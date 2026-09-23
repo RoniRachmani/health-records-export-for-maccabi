@@ -373,7 +373,7 @@ async function runPlanStep(step: PlanStep): Promise<void> {
       await runStep(c, run.ctx, step as StepName);
       // Legacy services don't report an ended session; a failed request is the sign of one.
       if (LEGACY_STEPS.includes(step as StepName) && c.log.some((x) => /PROBLEM: .*Failed to fetch/.test(x[1]))) {
-        throw new SessionEndedError('the old medications and documents pages stopped answering');
+        throw new SessionEndedError("the old site's pages stopped answering");
       }
     }
   }

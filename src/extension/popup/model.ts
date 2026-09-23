@@ -23,7 +23,9 @@ export const STAGES: Stage[] = [
   // the legacy purchase history and its report, which fail in quite different ways.
   { label: 'Prescriptions', steps: ['medications'] },
   { label: 'Medication purchases', steps: ['purchases'] },
-  { label: 'Your uploads', steps: ['savedDocuments'] },
+  // The uploads and the hospital stays both come from the old site; the stays are one request, too
+  // small for a line of their own.
+  { label: 'Your uploads and hospital stays', steps: ['savedDocuments', 'hospitalStays'] },
   { label: 'Your details and doctor', steps: ['returnToSonline', 'profileAndDoctors'] },
   { label: 'Test results', steps: ['testResults'] },
   { label: 'Visit summaries', steps: ['visits'] },
@@ -106,13 +108,14 @@ export const DESCRIPTIONS: Record<PlanStep, Record<string, string>> = {
   letters: { '': 'Reading your letters', letters: 'Downloading your letters as PDFs' },
   doctorCommunications: { '': 'Reading your messages to your doctor', 'doctor inquiries': 'Downloading messages and attached forms' },
   emptySections: { '': 'Checking sections that are often empty', 'other sections': 'Checking allergies, appointments and requests' },
-  openLegacyPage: { '': 'Needed for purchases, uploads and the order' },
+  openLegacyPage: { '': 'Needed for the old site’s records and the order' },
   purchases: {
     '': 'Reading every medication purchase',
     'purchase history': 'Reading every medication purchase',
     'purchase report': 'Creating the 2-year purchase report PDF',
   },
   savedDocuments: { '': 'Reading the documents you uploaded', 'saved documents': 'Downloading the documents you uploaded' },
+  hospitalStays: { '': 'Reading your hospital stays', 'hospital stays': 'Reading your hospital stays' },
   orderMedicalFile: { '': 'Ordering a fresh copy (you’ll get an SMS)' },
   returnToSonline: { '': 'Keeps your session alive during the wait' },
   waitMedicalFile: {

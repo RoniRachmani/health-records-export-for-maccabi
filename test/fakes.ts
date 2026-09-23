@@ -93,6 +93,16 @@ export function fakeMaccabi(letterState: LetterState = { medicalFile: null }): {
     ['POST', '/online/Ajax/PHR/WsPHRManager.asmx/SearchByDate', () => jsonResp({ d: '<div fileid="F1"><a onclick="PHR.OpenFile(\'SYS1.pdf\')">x</a></div>' })],
     ['POST', '/online/Ajax/PHR/WsPHRManager.asmx/GetFileDetails', () => jsonResp({ d: [{ DocumentSystemName: 'SYS1', DocumentName: 'סיכום אשפוז', DocumentDate: '2026-05-01T00:00:00' }] })],
     ['GET', '/online/Pages/Popups/PHR/PHRDownloadDocument.aspx', () => bytesResp(PDF)],
+    // Padded strings, blank Description entries and one stay listed twice, as the service sends them.
+    ['POST', '/online/webapi/MailingsFromHospitals/GetMailingsFromHospitals/', () => {
+      const stay = {
+        NameHospital: 'בית חולים לדוגמה   ', Department: 'פנימית א', DateHospitalization: '3032024', Date: '2024-03-03T00:00:00',
+        DurationHospitalization: '2', QuantityTreatments: '2', TypeCommitment: 'אשפוז', TypeCommitmentEgenKey: '1', LinkPDF: '', HasLink: false,
+        DescriptionTreatment: [{ Description: 'HOSPITALIZATION - PER DAY      ' }, { Description: '      ' }],
+        DescriptionDistinction: [{ Description: '      ' }],
+      };
+      return jsonResp({ ReportHospitalizations: [stay, stay], ResultMessage: { Code: 0, Description: '' } });
+    }],
   ];
   const route: Route = (req, url) => {
     calls.push(req.method + ' ' + url.pathname + url.search);

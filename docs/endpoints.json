@@ -9,10 +9,11 @@
     "legacy": "Session cookies only. Returns empty results until an /online/ page has been opened in the session. Any legacy page registers it, and the page the request is sent from does not have to be the one the service belongs to: verified 2026-09-18 from a session that had loaded only /sonline/, where ajax.ashx returned 488 B, GetAllPurchasedPrescription 706 B and PHR SearchByDate 8 B ({\"d\":\"\"}); after loading /online/medicalfile/summary/ and nothing else, the same three returned 91,465 B, 111,793 B and 13,761 B, and the purchase table parsed to 7 columns / 51 rows. The extension therefore opens only the summary page, which the medical-file order needs anyway.",
     "idle_logout": "The site logs the tab out 6 min after the last keydown or mousedown in the page, showing a warning dialog (IdleTimeOutPopup) with about 25 s to answer; ignoring it ends the session. Measured 2026-09-18 on /sonline/ by hooking window.setTimeout: a dispatched keydown or mousedown re-arms a 360000 ms timer, and firing that timer's callback raises the dialog. mousemove, click, keyup, scroll, wheel and touchstart do not re-arm it, nor does any request -- from the page or from the extension -- so an export is invisible to it and a run longer than 6 hands-off minutes would be cut off. The listener does not check isTrusted, so the extension dispatches a synthetic mousedown in the tab every 4 min while a run is in progress (keepSessionAlive). Being visible is not activity either, so this is separate from Chrome freezing hidden tabs.",
     "signed_links": "PDF links carry per-session timestamp/hash from the same list response, or are minted by a UI click (see click_only).",
-    "extension": "Checked 2026-09-17 from the extension's service worker (host permission, credentials: include): REST GET and POST with Authorization: Bearer <sessionStorage.token> return the same results as the page (without the token: 401), and signed PDF links download without the Bearer header. Legacy /online/ services also answer after a legacy page was opened in the session (SearchByDate before that: empty {d}), but ajax.ashx returned a different, much shorter response to the extension than to the page, so the extension sends /online/ requests (and the medical-file order XHR) from the page and /sonline/ requests itself."
+    "extension": "Checked 2026-09-17 from the extension's service worker (host permission, credentials: include): REST GET and POST with Authorization: Bearer <sessionStorage.token> return the same results as the page (without the token: 401), and signed PDF links download without the Bearer header. Legacy /online/ services also answer after a legacy page was opened in the session (SearchByDate before that: empty {d}), but ajax.ashx returned a different, much shorter response to the extension than to the page, so the extension sends /online/ requests (and the medical-file order XHR) from the page and /sonline/ requests itself.",
+    "session_cap": "Besides the 6-minute idle logout, the site's F5 BIG-IP gateway ends every session a fixed 3600 s after that gateway session began, whatever the activity. The F5_ST cookie is readable from page JavaScript and holds the deadline as 1z1z1z<start epoch>z<seconds>, the last field 3600 (seen 2026-09-23). The start is when the gateway session began, not the SMS login: signing in inside an already open gateway session kept its F5_ST and so its deadline. When it passed, requests redirected to /my.logout.php3 (a plain redirect, no 401) and F5_ST was deleted; signing in again then started a new hour. REST requests (redirect: manual) see the redirect and stop as SESSION ENDED; legacy requests from the tab follow it and get the logout page, which a step reports as a response that is not data."
   },
   "conventions": {
-    "record_wrapper": "{endpoint: '<METHOD> <path with {mid}, no query>', [request_body], [extra ids], [omitted: fields left out of data, e.g. a report's base64], fetched_at, status, data: <raw response>}",
+    "record_wrapper": "{endpoint: '<METHOD> <path with {mid}, no query>', [request_body], [extra ids], [omitted: fields left out of data, e.g. a report's base64], [cleaned: what was normalised in data, hospital-stays only], fetched_at, status, data: <raw response>}",
     "unchanged_detection": "A JSON file is rewritten only if its content changed, ignoring list order and the fields fetched_at, hash, timestamp, time_stamp, t, corona_hash, corona_t, url, searchQueryId, token, file_name_title and any key ending in 'link'. A few more fields changed between runs minutes apart with nothing else changed (2026-09-17), but the same key names are real data elsewhere, so they are not ignored: my-doctor/eligibilities.json data.next_possible_assign_date, profile/member.json data.last_visit, profile/providers.json provider[].provider_id and provider[].order_visit_details.doc_id, visit-summaries/list.json results[].provider_id, and letters/list.json from_date of the letter_type 2 entry (the ordered range's start, not a time -- see the order entry; it changes when a new order uses a different range, which is what was seen on 2026-09-17, not on every run).",
     "pacing": "300 ms between requests; 500/503 and requests without a response retried up to 3 times after 2.5 s.",
     "binary_files": "Existing PDFs/images are kept; regenerated reports (purchase report, vaccination booklet) are replaced only when their source data changed.",
@@ -326,6 +327,19 @@
         "output": "uploads/files/<DocumentDate>_<FileId>_<title>.<ext>",
         "notes": "Without the extension the server returns an empty ASP.NET page (200, text/html)."
       }
+    ],
+    "hospital-stays": [
+      {
+        "method": "POST",
+        "url": "/online/webapi/MailingsFromHospitals/GetMailingsFromHospitals/",
+        "output": "hospital-stays/list.json (only if non-empty)",
+        "request_body": {
+          "isDateSelected": true,
+          "fromDate": "01011900",
+          "toDate": "31122099"
+        },
+        "notes": "Legacy, UTF-8 JSON {ReportHospitalizations[], ResultMessage{Code}}; Code 0 is success. Answers from any legacy page, including /online/medicalfile/summary/ (checked 2026-09-23). Dates are DDMMYYYY strings. The site's page (/online/medicalfile/mailingsfromhospitals/) asks only for the last pageSettings.YearsBack (\"3\") years, with isDateSelected false and numeric dates; with the explicit full range the service returned four 2001 stays that the page's default returns none of. A row: NameHospital, Department, Date (ISO) and DateHospitalization (DMYYYY, not zero-padded), DurationHospitalization (days), QuantityTreatments, TypeCommitment, DescriptionTreatment[] and DescriptionDistinction[] (always four {Description} entries, padded; in the one account seen, only the billing line 'HOSPITALIZATION - PER DAY' and blanks, no diagnoses), HasLink and LinkPDF. Every string is padded to a fixed width and one stay was listed twice; the saved file trims strings, drops blank Description entries and exact repeats (recorded in its cleaned field) and leaves out ResultMessage. A discharge letter, when HasLink is true, would come from GET /online/Pages/Popups/MailingsFromHospitals/MailingsFromHospitals.aspx?path=<LinkPDF>&typeCommitment=<TypeCommitmentEgenKey> (per the maccabi-health project); no row with a link has been seen, so it is not fetched."
+      }
     ]
   },
   "checked_not_saved_when_empty": [
@@ -364,6 +378,45 @@
   ],
   "manual_not_fetched": {
     "test-results/images/*.zip": "DICOM studies. Viewer handoff GET TestResultsAPI/pdf/members/0/{mid}/meddream/token/<StudyInstanceUID>?checksum= works only as a top-level navigation; export by hand in MedDream (Format DICOM, Media ZIP)."
+  },
+  "read_not_collected": {
+    "_note": "Read-only requests checked live on 2026-09-23 against one account and left out because the export already has their content, or has it in a form an assistant reads better. Listed so they are not added later as if missing. Request paths are relative to /sonline/<Service>/webapi/mac/ unless they start with /.",
+    "english_medical_summary": {
+      "request": "GET DirectorshipAPI/v1/members/0/{mid}/timestampAndHash, then GET DirectorshipAPI/v1/members/0/{mid}/report/english/?timestamp&hash (hash URL-decoded first; no Bearer)",
+      "reason": "2-page text PDF: COVID vaccinations (already in vaccinations/), a COVID recovery certificate, and 14 recent lab values (already in test-results/). Prints the passport and ID numbers. A document for a person abroad, not data."
+    },
+    "lab_report_pdfs": {
+      "request": "GET TestResultsAPI/v1/members/0/{mid}/getresultsbyid/report?request_id&t&hash&irregular_only=false&is_attachment=false&is_partial&date",
+      "reason": "A printable report per lab_result (which otherwise has no PDF). Image-only: no text layer, 70 KB to 950 KB each, and every value is already in test-results/details/ as JSON. 404 with an empty body for 4 of 14 results (2021-2022), with nothing in list or detail that predicts which."
+    },
+    "latest_lab_results_pdf": {
+      "request": "GET TestResultsAPI/v1/members/0/{mid}/getlatestlabresults/report?t=<time_stamp>&hash=<hash, URL-decoded>&irregular_only=false&is_attachment=false",
+      "reason": "Image-only, 8 pages, 1.6 MB; the same data as test-results/latest-lab-results.json. 400 if hash is not URL-decoded first."
+    },
+    "lab_comparison_pdf": {
+      "request": "GET TestResultsAPI/v1/compare/0/{mid}/compare/report?test_id&t&hash&date_of_result&is_attachment=false&is_graph&test_des&lab_date",
+      "reason": "A print of one test-results/history/ file."
+    },
+    "followed_lab_results": {
+      "request": "GET TestResultsAPI/v1/members/0/{mid}/followed, and followed/report?t&hash&is_attachment=false",
+      "reason": "Tests the member chose to follow in the site's UI; none in the account checked, and the report is a print of those."
+    },
+    "sensitivity_pdf": {
+      "request": "GET MedicalFileAPI/v1/members/0/{mid}/sensitivity/pdf",
+      "reason": "{type, base64} PDF of the same list as allergies-sensitivity/list.json."
+    },
+    "visit_documents": {
+      "request": "GET AppointmentOrderAPI/v1/members/0/{mid}/pdf?path=<referral_pdf_link | prescription_pdf_link | approval_pdf_link>&timestamp&hash, from a visit's details",
+      "reason": "The referrals, prescriptions and approvals a visit produced; all 9 referrals seen were already in referrals/ by referral_id."
+    },
+    "letters_for_member_all": {
+      "request": "POST DirectorshipAPI/v1/members/0/{mid}/all/letters_for_member {from_date, to_date, members}",
+      "reason": "Returned the same letters as the GET the collector uses."
+    },
+    "personal_recommendations": {
+      "request": "GET /online/medicalfile/personalrecommendations/",
+      "reason": "Server-rendered page, no data behind it; held no recommendations in the account checked."
+    }
   },
   "not_called_by_design": "Only the requests listed in sections are made. Nothing that creates, changes or deletes data (apart from the medical-file order), marks items as read or viewed, returns session credentials, or touches payment or bank details."
 }

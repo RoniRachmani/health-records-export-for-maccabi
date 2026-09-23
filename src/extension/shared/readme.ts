@@ -101,6 +101,14 @@ document once.`,
     detail: `\`files/\` holds each document in the format it was uploaded in, often a photo or a scan.
 There is no \`list.json\`: the site's list is a web page, not data.`,
   },
+  {
+    name: 'hospital-stays',
+    summary: 'hospital admissions: hospital, department, date and length of stay',
+    detail: `Use \`Date\`: \`DateHospitalization\` is day, month and year run together, not zero-padded.
+\`DescriptionTreatment\` and \`DescriptionDistinction\` **can hold only billing lines** such as
+\`HOSPITALIZATION - PER DAY\` — not treatments or diagnoses. What happened in hospital is in the
+medical file, under the stay's dates.`,
+  },
   { name: 'allergies-sensitivity', summary: 'recorded sensitivities and intolerances (`intolerance[]`)', detail: '' },
   { name: 'appointments', summary: 'future appointments only — past ones are visits, in `visit-summaries/`', detail: '' },
   { name: 'requests-approvals', summary: 'requests and cases the member has open with Maccabi Healthcare Services', detail: '' },
@@ -169,7 +177,8 @@ Where to look: for a health history, the medical file; for a measurement over ti
 since the last visit, whatever is dated after the newest file in \`visit-summaries/\` — results,
 prescriptions, referrals, letters; for an appointment, the medical file's known problems, the latest
 results, recent \`visit-summaries/\` and open \`referrals/\`; for allergies, \`allergies-sensitivity/\`
-and the medical file's sensitivities; for preventive care due, age and sex in
+and the medical file's sensitivities; for hospital stays, \`hospital-stays/\` for when and where,
+the medical file for what happened; for preventive care due, age and sex in
 \`profile/member.json\`, \`vaccinations/\` and the screenings in \`test-results/\`. What the member
 actually bought is in \`purchased-history.html\`, not the prescriptions; neither shows what they take
 now, so ask.

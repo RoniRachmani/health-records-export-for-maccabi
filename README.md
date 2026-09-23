@@ -38,7 +38,7 @@ earliest visit. It helps you understand your records and prepare for your doctor
 - **In your language.** The records are mostly in Hebrew. Ask about them, and get answers, in English or whatever you
   speak.
 - **Thorough.** Test results, visit summaries, prescriptions and purchases, referrals, vaccinations, letters, doctor
-  inquiries and saved documents, plus a freshly ordered copy of your full medical file. Some things
+  inquiries, saved documents and hospital stays, plus a freshly ordered copy of your full medical file. Some things
   [aren't included](#not-included).
 - **Private.** Your records stop at your computer, and you choose which assistant, if any, reads them. Talks only to
   `online.maccabi4u.co.il`. No servers, no analytics, no remote code. Never sees your password.
@@ -139,6 +139,7 @@ One folder, `maccabi-export-YYYY-MM-DD/`:
 | `letters/` | Letters and their PDFs |
 | `communication-with-doctor/` | Inquiries to doctors and attached forms |
 | `uploads/` | Documents you uploaded and their files |
+| `hospital-stays/` | Hospital admissions: hospital, department, date and length of stay. Only when the site lists any |
 | `allergies-sensitivity/`, `appointments/` (future only), `requests-approvals/` | Only when the site has something in them |
 | `<date>_medical-file.pdf` | Your full medical file, freshly ordered: one document covering your whole history, and the place to start |
 | `README.md` | Instructions for an AI assistant, and the export's own data dictionary: what each folder holds, how a record is shaped, which fields carry no meaning, and what the export does **not** contain |
@@ -310,12 +311,12 @@ flowchart LR
 ```
 
 The service worker walks a fixed plan (`PLAN` in `src/extension/shared/state.ts`): one crossing to the old site to
-order the medical file and collect purchases and uploads, back to `/sonline/` for the REST API sections, and the
+order the medical file and collect purchases, uploads and hospital stays, back to `/sonline/` for the REST API sections, and the
 medical file collected last, by which time Maccabi Healthcare Services has had the whole run to build it. Each finished step is
 checkpointed in `chrome.storage.local`, so a paused run, or a restarted service worker, continues from there.
 
 The tab visits a single legacy page, `/online/medicalfile/summary/`. The legacy services answer only after some
-`/online/` page has been loaded in the session, and the medical file order has to be sent from that one, so the three
+`/online/` page has been loaded in the session, and the medical file order has to be sent from that one, so the four
 steps that need the old site share it. The run returns to `/sonline/` before waiting for the medical file: the site
 renews the session token only there, and the wait is the longest part of the run.
 

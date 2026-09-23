@@ -76,6 +76,75 @@ function uploadName(info: Json, id: Json): string {
   return stem(iso(info.DocumentDate), safe(id), titleOf(info, UPLOAD_TITLE));
 }
 
+const HOSPITAL_URL = '/online/webapi/MailingsFromHospitals/GetMailingsFromHospitals/';
+// DDMMYYYY, as the page's own date picker sends them. The page asks for its last YearsBack (3) years
+// only, but the service takes any range and returns older stays too (seen 2026-09-23: four from 2001,
+// none of them within three years), so it is asked for everything.
+const HOSPITAL_BODY = { isDateSelected: true, fromDate: '01011900', toDate: '31122099' };
+
+// Hospital stays exist only on the legacy site, as a JSON service behind its hospital-reports page;
+// any legacy page opened in the session is enough for it to answer.
+export async function hospitalStays(c: Collector, _ctx: Ctx): Promise<void> {
+  const REL = 'hospital-stays/list.json';
+  try {
+    c.progress(0, 1, 'hospital stays');
+    const r = await c.legacy(HOSPITAL_URL, 'POST', { 'Content-Type': 'application/json; charset=utf-8' }, JSON.stringify(HOSPITAL_BODY));
+    await c.sleep(PACE_MS);
+    // Requests from the tab follow redirects, so a logged-out session answers with a web page.
+    if (!/json/.test(r.contentType)) {
+      await c.problem(REL, 'HTTP ' + r.status + ' ' + (r.contentType || 'no content type') + ', not data -- was the session logged out?');
+      return;
+    }
+    const data = JSON.parse(c.legacyText(r));
+    const code = data && data.ResultMessage && data.ResultMessage.Code;
+    if (r.status !== 200 || code !== 0) {
+      await c.problem(REL, 'HTTP ' + r.status + ', result code ' + code);
+      return;
+    }
+    const stays = cleanStays(data.ReportHospitalizations || []);
+    // Most members have none; like the sections in emptySections, the folder appears only with data.
+    if (!stays.length) return;
+    await c.save(REL, {
+      endpoint: 'POST ' + HOSPITAL_URL,
+      request_body: HOSPITAL_BODY,
+      omitted: ['data.ResultMessage'],
+      cleaned: 'padding trimmed from every string; blank Description entries and exactly repeated stays dropped',
+      fetched_at: new Date(c.now()).toISOString(),
+      status: r.status,
+      data: { ReportHospitalizations: stays },
+    });
+  } catch (e) {
+    if (isControl(e)) throw e;
+    await c.problem(REL, errMessage(e));
+  }
+}
+
+/**
+ * The service pads every string to a fixed width, fills DescriptionTreatment and
+ * DescriptionDistinction to four entries with blank ones, and can list one stay twice. None of
+ * that is data, and all of it costs an assistant reading time.
+ */
+function cleanStays(rows: Json[]): Json[] {
+  const seen = new Set<string>();
+  const out: Json[] = [];
+  for (const row of rows) {
+    const stay: Json = {};
+    for (const [k, v] of Object.entries(row as Record<string, Json>)) {
+      if (typeof v === 'string') stay[k] = v.trim();
+      else if (Array.isArray(v)) {
+        stay[k] = v
+          .map((e: Json) => (e && typeof e.Description === 'string' ? { ...e, Description: e.Description.trim() } : e))
+          .filter((e: Json) => !(e && e.Description === ''));
+      } else stay[k] = v;
+    }
+    const key = JSON.stringify(stay);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(stay);
+  }
+  return out;
+}
+
 export async function emptySections(c: Collector, _ctx: Ctx): Promise<void> {
   const member = [{ member_id_code: '0', member_id: c.session.mid }];
   const checks: [string, string, string, Json, (d: Json) => unknown][] = [

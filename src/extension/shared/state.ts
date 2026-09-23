@@ -12,7 +12,7 @@ export const SONLINE_PAGE = MACCABI_ORIGIN + '/sonline/';
 /**
  * The one legacy page a run opens. Legacy services answer only once some /online/ page has been
  * loaded in the session, and the medical-file order has to be sent from this one, so it serves the
- * purchases, uploads and order steps together and the run crosses to the old site once.
+ * purchases, uploads, hospital stays and order steps together and the run crosses to the old site once.
  */
 export const SUMMARY_PAGE = MACCABI_ORIGIN + '/online/medicalfile/summary/';
 
@@ -32,7 +32,8 @@ export type RunStatus =
 export const PLAN = [
   // The medical file is ordered first so Maccabi builds it while the rest is collected: by the time
   // waitMedicalFile runs, it is normally ready and there is nothing left to wait for. The legacy
-  // page it is ordered from serves the purchases and uploads too, so the run still crosses once.
+  // page it is ordered from serves the purchases, uploads and hospital stays too, so the run still
+  // crosses once.
   'openLegacyPage',
   'orderMedicalFile',
   // Prescriptions sit next to the purchases they belong with: both write to
@@ -41,6 +42,7 @@ export const PLAN = [
   'medications',
   'purchases',
   'savedDocuments',
+  'hospitalStays',
   'returnToSonline',
   'profileAndDoctors',
   'testResults',
@@ -81,6 +83,7 @@ export const WEIGHTS: Record<PlanStep, number> = {
   openLegacyPage: 1,
   purchases: 3,
   savedDocuments: 3,
+  hospitalStays: 1,
   orderMedicalFile: 1,
   returnToSonline: 1,
   // Small now that it runs last: the file has had the whole collection to be built, so this is
@@ -104,6 +107,7 @@ export const LABELS: Record<PlanStep, string> = {
   openLegacyPage: 'Opening the medical file page',
   purchases: 'Medication purchases',
   savedDocuments: 'Your uploads',
+  hospitalStays: 'Hospital stays',
   orderMedicalFile: 'Ordering your medical file',
   returnToSonline: 'Back to the new site',
   waitMedicalFile: 'Waiting for your medical file',
@@ -177,12 +181,13 @@ export interface StateReply {
 
 /**
  * Steps that run on the page an earlier step opened. orderMedicalFile is not here: it reopens the
- * page itself when it has to, so resuming at the order does not repeat the purchases and uploads
- * that share that page.
+ * page itself when it has to, so resuming at the order does not repeat the purchases, uploads
+ * and hospital stays that share that page.
  */
 const OPENED_BY: Partial<Record<PlanStep, PlanStep>> = {
   purchases: 'openLegacyPage',
   savedDocuments: 'openLegacyPage',
+  hospitalStays: 'openLegacyPage',
 };
 
 /**

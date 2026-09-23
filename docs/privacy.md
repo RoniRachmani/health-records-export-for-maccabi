@@ -20,7 +20,7 @@ checks that tab's login session and reads your first name. It reads the rest whe
 
 - Your medical records as Maccabi Online shows them: test results, visit summaries, prescriptions and
   purchases, referrals and approvals, vaccinations, letters, your full medical file, inquiries to doctors, documents
-  you saved, and the PDF files attached to them.
+  you saved, hospital stays, and the PDF files attached to them.
 - Your first name, which the popup shows so you can check which member is logged in.
 - Your personal details as they appear in your Maccabi Online profile, and the doctors assigned to you.
 - Your Maccabi Online session token, member ID number and the gender recorded in your login session, which let the
