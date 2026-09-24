@@ -18,8 +18,6 @@ let announced: string | null = null;
 /** Nodes that progress updates write to in place. */
 let live: {
   status?: HTMLElement;
-  title?: HTMLElement;
-  detail?: HTMLElement;
   bar?: HTMLElement;
   fill?: HTMLElement;
   stats?: HTMLElement;
@@ -150,10 +148,10 @@ function progressBar(percent: number, active: boolean): { bar: HTMLElement; fill
 }
 
 function hintFor(run: RunState): string {
-  if (run.status === 'saving') return 'Building the ZIP. It will be in your Downloads folder in a moment.';
-  // Two lines at most, in any font: the running view has no room to spare under Chrome's 600px cap.
-  if (PLAN[run.next] === 'waitMedicalFile') return 'The file is usually ready within minutes, 15 at most. You can close this popup.';
-  return 'Keep the Maccabi Online tab open and in front. You can close this popup.';
+  // One line, in any font: the running view has no room to spare under Chrome's 600px cap.
+  if (run.status === 'saving') return 'It will be in your Downloads folder in a moment.';
+  if (PLAN[run.next] === 'waitMedicalFile') return 'Usually ready within minutes, 15 at most.';
+  return 'Keep the Maccabi Online tab open and in front.';
 }
 
 // ---- views -------------------------------------------------------------
@@ -232,24 +230,21 @@ function idleView(st: StateReply): Child[] {
 
 function progressView(run: RunState): Child[] {
   const pill = status('');
-  const title = h('h2', { class: 'step-title' });
-  const detail = h('p', { class: 'detail' });
   const { bar, fill } = progressBar(run.percent, true);
-  const stats = h('span', { class: 'stats' });
-  const hint = note('');
-  const stages = STAGES.map((s) => h('li', {}, s.label));
+  const stats = h('p', { class: 'stats' });
+  const hint = h('p', { class: 'hint' });
+  // The list is the view of the run: the current line carries what it is doing, in its .detail.
+  const stages = STAGES.map((s) => h('li', {}, h('span', {}, s.label, h('span', { class: 'detail' }))));
   const stagesDone = h('span');
-  live = { status: pill, title, detail, bar, fill, stats, stages, stagesDone, hint };
+  live = { status: pill, bar, fill, stats, stages, stagesDone, hint };
   return [
-    pill,
-    title,
-    detail,
+    h('h2', { class: 'visually-hidden' }, 'Export in progress'),
+    h('div', { class: 'status-row' }, pill, run.status === 'running' && ui.confirm !== 'cancel' && cancelButton('small')),
     bar,
-    ui.confirm === 'cancel'
-      ? cancelConfirm()
-      : h('div', { class: 'stats-row' }, stats, run.status === 'running' && cancelButton('small')),
+    stats,
+    // The list is hidden while Stop is being confirmed, so the question fits without scrolling.
+    ui.confirm === 'cancel' && cancelConfirm(),
     hint,
-    // Hidden while Stop is being confirmed, so the question fits without scrolling.
     ui.confirm !== 'cancel' && h('div', { class: 'sections' },
       h('p', { class: 'sections-label' }, h('span', {}, 'Sections'), stagesDone),
       h('ol', { class: 'stages', 'aria-label': 'Export steps' }, ...stages)),
@@ -258,7 +253,7 @@ function progressView(run: RunState): Child[] {
 
 function pausedView(run: RunState, st: StateReply): Child[] {
   const hidden = run.status === 'paused_hidden';
-  const stage = STAGES[stageStates(run.next).indexOf('current')]?.label;
+  const stage = STAGES[stageStates(run).indexOf('current')]?.label;
   let primary: HTMLElement;
   if (!hidden && st.tab.onMaccabi) primary = actionButton('Resume', { type: 'resume' }, 'primary', 'Reconnecting…');
   else primary = actionButton('Go to the Maccabi Online tab', { type: 'focusTab' }, 'primary');
@@ -364,22 +359,20 @@ function updateStats(): void {
 function updateLive(run: RunState): void {
   const { title, detail } = stepText(run);
   if (live.status) live.status.textContent = run.status === 'saving' ? 'Saving' : 'Exporting · ' + run.percent + '%';
-  if (live.title) {
-    live.title.textContent = title;
-    live.title.title = title;
-  }
-  if (live.detail) {
-    live.detail.textContent = detail;
-    live.detail.title = detail;
-  }
   if (live.fill) live.fill.style.width = run.percent + '%';
   if (live.bar) {
     live.bar.setAttribute('aria-valuenow', String(run.percent));
     live.bar.setAttribute('aria-valuetext', run.percent + '%' + (title ? ', ' + title : '') + (detail ? ': ' + detail : ''));
   }
   if (live.stages) {
-    const states = stageStates(run.next);
+    const states = stageStates(run);
     live.stages.forEach((li, i) => {
+      const text = states[i] === 'current' ? detail : '';
+      const d = li.querySelector('.detail') as HTMLElement;
+      if (d.textContent !== text) {
+        d.textContent = text;
+        d.title = text;
+      }
       if (li.className === states[i]) return;
       li.className = states[i];
       if (states[i] === 'current') li.setAttribute('aria-current', 'step');

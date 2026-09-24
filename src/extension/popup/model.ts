@@ -5,30 +5,39 @@ import { LABELS, PLAN, type PlanStep, type RunState, type StateReply } from '../
 export interface Stage {
   label: string;
   steps: PlanStep[];
+  /**
+   * Only these parts of a single step, as its progress detail names them ('' is the step before its first report),
+   * for a step long enough to deserve more than one line.
+   */
+  parts?: string[];
 }
 
 /**
- * The run plan as the user sees it: one line per part of the export, named for what it collects, with page changes
- * and bookkeeping steps folded into the line they serve. Every step's heading (LABELS) appears in its line, so the
- * highlighted line and the heading above it never disagree. Room is the constraint: Chrome caps the popup at 600px,
- * which leaves about 13 lines here, so parts that share a folder or take one request share a line. Each stage's steps
- * must be consecutive in PLAN, or stageStates would mark a stage current again after a later one is done.
+ * The run plan as the user sees it, and the popup's main view of the run: one line per part of the export,
+ * named for what it collects, so the list reads as an inventory of the member's records and ticks along at a
+ * steady pace. Page changes and bookkeeping steps are folded into the line they serve. The current line says what
+ * it is doing under its name (DESCRIPTIONS). Stages are in PLAN order, a step's stages consecutive, and the first
+ * stage holding a step is labelled with its LABELS entry, so errors and problems name it the same way.
+ *
+ * Room is the constraint: Chrome caps the popup at 600px, which leaves 18 lines here (16px each, plus the current
+ * line's description). A step that is a line of its own takes one; merge before adding a nineteenth.
  */
 export const STAGES: Stage[] = [
   // Ordering comes first so Maccabi can build the file while everything else is collected; collecting it is the
   // last stage before the ZIP.
   { label: 'Ordering your medical file', steps: ['openLegacyPage', 'orderMedicalFile'] },
-  // One folder, medications-and-prescriptions/: the REST API's prescriptions, then the legacy purchase history and
-  // its report. The heading names which one is running.
-  { label: 'Prescriptions and medication purchases', steps: ['medications', 'purchases'] },
-  // The uploads and the hospital stays both come from the old site; the stays are one request, too
-  // small for a line of their own.
-  { label: 'Your uploads and hospital stays', steps: ['savedDocuments', 'hospitalStays'] },
+  { label: 'Prescriptions', steps: ['medications'] },
+  { label: 'Medication purchases', steps: ['purchases'] },
+  { label: 'Your uploads', steps: ['savedDocuments'] },
+  { label: 'Hospital stays', steps: ['hospitalStays'] },
   { label: 'Your details and doctor', steps: ['returnToSonline', 'profileAndDoctors'] },
-  { label: 'Test results', steps: ['testResults'] },
+  // The longest step by far: its two halves are two lines, or the list would sit on one for a third of the run.
+  { label: 'Test results', steps: ['testResults'], parts: ['', 'test results'] },
+  { label: 'Lab histories', steps: ['testResults'], parts: ['lab histories'] },
   { label: 'Visit summaries', steps: ['visits'] },
-  // Three steps and three folders under one line: the step title names each as it runs.
-  { label: 'Referrals, approvals and information pages', steps: ['referrals', 'approvals', 'infoPages'] },
+  { label: 'Referrals', steps: ['referrals'] },
+  { label: 'Approvals', steps: ['approvals'] },
+  { label: 'Information pages', steps: ['infoPages'] },
   { label: 'Vaccinations', steps: ['vaccinations'] },
   { label: 'Letters', steps: ['letters'] },
   { label: 'Messages with your doctor', steps: ['doctorCommunications'] },
@@ -40,14 +49,29 @@ export const STAGES: Stage[] = [
 
 export type StageState = 'done' | 'current' | 'pending';
 
-/** next is the index into PLAN of the step to run next (PLAN.length once finished). */
-export function stageStates(next: number): StageState[] {
-  return STAGES.map((stage) => {
-    const idx = stage.steps.map((s) => PLAN.indexOf(s));
-    if (idx.every((i) => i < next)) return 'done';
-    if (idx.some((i) => i <= next)) return 'current';
-    return 'pending';
-  });
+type Position = Pick<RunState, 'next' | 'detail'>;
+
+/** The part of the current step the collector last reported ('' before its first report). */
+export function partOf(run: Position): string {
+  if (run.next >= PLAN.length) return '';
+  const title = LABELS[PLAN[run.next]];
+  const part = run.detail?.startsWith(title + ': ') ? run.detail.slice(title.length + 2) : '';
+  return part.replace(/^medical file status .*/, 'medical file status');
+}
+
+/** The index in STAGES of the line the run is on; STAGES.length once it has finished. */
+export function currentStage(run: Position): number {
+  if (run.next >= PLAN.length) return STAGES.length;
+  const step = PLAN[run.next];
+  const part = partOf(run);
+  const own = STAGES.findIndex((s) => s.steps.includes(step) && s.parts?.includes(part));
+  // A part no stage names (or a step with one line) stays on the step's first line.
+  return own >= 0 ? own : STAGES.findIndex((s) => s.steps.includes(step));
+}
+
+export function stageStates(run: Position): StageState[] {
+  const at = currentStage(run);
+  return STAGES.map((_, i) => (i < at ? 'done' : i === at ? 'current' : 'pending'));
 }
 
 export function formatDuration(ms: number): string {
@@ -125,13 +149,13 @@ export const DESCRIPTIONS: Record<PlanStep, Record<string, string>> = {
   save: { '': 'Packing all files into one ZIP' },
 };
 
-/** The current step's name, and a plain description of what it is collecting right now. */
+/** The current line's name, and a plain description of what it is collecting right now. */
 export function stepText(run: RunState): { title: string; detail: string } {
   if (run.next >= PLAN.length) return { title: '', detail: '' };
   const step = PLAN[run.next];
-  const title = LABELS[step];
-  const part = run.detail?.startsWith(title + ': ') ? run.detail.slice(title.length + 2) : '';
-  const described = DESCRIPTIONS[step][part.replace(/^medical file status .*/, 'medical file status')];
+  const title = STAGES[currentStage(run)].label;
+  const part = partOf(run);
+  const described = DESCRIPTIONS[step][part];
   if (described) return { title, detail: described };
   // A part added to the collector without a description here: show it as the collector names it.
   const raw = part.toLowerCase() === title.toLowerCase() ? '' : part;

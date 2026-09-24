@@ -533,13 +533,7 @@ details.more summary:hover {
 }
 
 /* ---- progress ---- */
-/* The running view's heading keeps to one line, like the detail under it: a second line would take
-   the view past Chrome's 600px cap. */
-.step-title {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+/* The paused view's line under its heading. */
 .detail {
   min-height: 1.5em;
   margin: 0 0 11px;
@@ -548,6 +542,20 @@ details.more summary:hover {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+/* The running view: status and Stop on one row, then the bar, the counters and the list, which is the
+   view of the run. Every line here is kept to one line: a second would take the view past Chrome's 600px
+   cap. */
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  margin: 0 0 8px;
+}
+.status-row .status {
+  margin: 0;
 }
 .bar {
   height: 8px;
@@ -577,22 +585,23 @@ details.more summary:hover {
     background-position: calc(100% + 120px) 0;
   }
 }
-.stats-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  min-height: 28px;
-  margin: 9px 0 0;
-}
 .stats {
+  margin: 7px 0 0;
   color: var(--muted);
   font-size: 12.5px;
   font-variant-numeric: tabular-nums;
 }
+.hint {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .sections {
-  margin: 12px 0 0;
-  padding-top: 9px;
+  margin: 10px 0 0;
+  padding-top: 8px;
   border-top: 1px solid var(--line);
 }
 .sections-label {
@@ -611,13 +620,27 @@ details.more summary:hover {
 }
 .stages li {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 9px;
   color: var(--muted);
-  /* 17px a line: thirteen sections, the tallest the run has, keep the popup under Chrome's 600px
-     cap without crowding the 15px marks. */
+  /* 16px a line: eighteen sections and the current one's description keep the popup under Chrome's
+     600px cap without crowding the 15px marks. */
   font-size: 12.5px;
-  line-height: 1.35;
+  line-height: 16px;
+}
+.stages li > span {
+  min-width: 0;
+}
+.stages .detail {
+  display: block;
+  min-height: 0;
+  margin: 0 0 2px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+.stages .detail:empty {
+  display: none;
 }
 .stages li::before {
   content: '';

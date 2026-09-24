@@ -67,10 +67,11 @@ worker or a Chrome restart continues from there. When you touch `PLAN`:
 
 - add the collection function to `STEPS` in `src/core/steps.ts` first (its key is the plan step name);
 - update `WEIGHTS` and `LABELS` in `state.ts` (both are `Record<PlanStep, …>`, so TS catches omissions);
-- update `STAGES` in `src/extension/popup/model.ts` — each stage's steps **must be consecutive in
-  `PLAN`**, or `stageStates` marks a finished stage current again, and a stage's label must contain each
-  of its steps' `LABELS` (the popup's heading), so the heading and the highlighted line agree; a step that
-  only serves another (a page change, a wait) takes that one's label and says what it does in `DESCRIPTIONS`;
+- update `STAGES` in `src/extension/popup/model.ts`, the popup's list of sections, which is its view of the
+  run: stages are **in `PLAN` order**, one line per thing the member gets (a long step may take a line per part,
+  with `parts`), and the first stage holding a step is labelled with its `LABELS` entry. A step that only
+  serves another (a page change, a wait) shares that one's line and label and says what it does in
+  `DESCRIPTIONS`, which the current line shows under its name. 18 lines is what fits under the 600px cap;
 - add an entry to `OPENED_BY` if the step only works on a page an earlier step opened (`resumeIndex`
   rewinds a resume to that opener);
 - a stored run carries `nextStep` by name beside the index, so `alignToPlan` survives reordering across

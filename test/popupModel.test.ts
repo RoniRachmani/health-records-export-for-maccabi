@@ -3,37 +3,53 @@ import { DESCRIPTIONS, formatBytes, formatDuration, groupProblems, STAGES, stage
 import { LABELS, PLAN, type RunState, type StateReply } from '../src/extension/shared/state';
 
 describe('STAGES', () => {
-  it('covers every plan step once, in plan order', () => {
-    expect(STAGES.flatMap((s) => s.steps)).toEqual([...PLAN]);
+  it('covers every plan step, in plan order, each step’s lines together', () => {
+    const steps = STAGES.flatMap((s) => s.steps).filter((step, i, all) => step !== all[i - 1]);
+    expect(steps).toEqual([...PLAN]);
   });
 
-  it('names every step’s heading in its own line, so the two never disagree', () => {
-    for (const stage of STAGES) {
-      for (const step of stage.steps) expect(stage.label.toLowerCase()).toContain(LABELS[step].toLowerCase());
-    }
+  it('labels the first line of each step with its LABELS entry, so errors and problems name it the same way', () => {
+    for (const step of PLAN) expect(STAGES.find((s) => s.steps.includes(step))?.label).toBe(LABELS[step]);
+  });
+
+  it('splits a step only into single-step lines that name its parts', () => {
+    for (const stage of STAGES.filter((s) => s.parts)) expect(stage.steps).toHaveLength(1);
   });
 });
 
 describe('stageStates', () => {
+  const at = (step: (typeof PLAN)[number], part?: string) =>
+    ({ next: PLAN.indexOf(step), detail: part === undefined ? undefined : LABELS[step] + ': ' + part });
+
   it('starts with the first stage current', () => {
-    const s = stageStates(0);
+    const s = stageStates({ next: 0 });
     expect(s[0]).toBe('current');
     expect(s.slice(1).every((x) => x === 'pending')).toBe(true);
   });
 
   it('keeps a grouped stage current through all its steps', () => {
-    const profile = STAGES.findIndex((s) => s.steps.includes('referrals'));
-    for (const step of ['referrals', 'approvals', 'infoPages'] as const) {
-      const s = stageStates(PLAN.indexOf(step));
-      expect(s[profile]).toBe('current');
-      expect(s.slice(0, profile).every((x) => x === 'done')).toBe(true);
-      expect(s.slice(profile + 1).every((x) => x === 'pending')).toBe(true);
+    const order = STAGES.findIndex((s) => s.label === 'Ordering your medical file');
+    for (const step of ['openLegacyPage', 'orderMedicalFile'] as const) {
+      const s = stageStates(at(step));
+      expect(s[order]).toBe('current');
+      expect(s.slice(order + 1).every((x) => x === 'pending')).toBe(true);
     }
   });
 
+  it('moves along a split step’s lines as its parts run', () => {
+    const tests = STAGES.findIndex((s) => s.label === 'Test results');
+    const histories = STAGES.findIndex((s) => s.label === 'Lab histories');
+    expect(stageStates(at('testResults'))[tests]).toBe('current');
+    expect(stageStates(at('testResults', 'test results'))[tests]).toBe('current');
+    const later = stageStates(at('testResults', 'lab histories'));
+    expect([later[tests], later[histories]]).toEqual(['done', 'current']);
+    // A part no line names stays on the step's first line.
+    expect(stageStates(at('testResults', 'imaging reports'))[tests]).toBe('current');
+  });
+
   it('marks everything but saving done at the save step, and everything done after it', () => {
-    expect(stageStates(PLAN.indexOf('save'))).toEqual([...Array(STAGES.length - 1).fill('done'), 'current']);
-    expect(stageStates(PLAN.length).every((x) => x === 'done')).toBe(true);
+    expect(stageStates(at('save'))).toEqual([...Array(STAGES.length - 1).fill('done'), 'current']);
+    expect(stageStates({ next: PLAN.length }).every((x) => x === 'done')).toBe(true);
   });
 });
 
@@ -78,7 +94,7 @@ describe('statsText and stepText', () => {
   it('describes what the current part of the step collects', () => {
     expect(stepText({ ...base, detail: 'Test results' })).toEqual({ title: 'Test results', detail: 'Reading your list of tests' });
     expect(stepText({ ...base, detail: 'Test results: test results' })).toEqual({ title: 'Test results', detail: 'Downloading each test result and its PDF' });
-    expect(stepText({ ...base, detail: 'Test results: lab histories' })).toEqual({ title: 'Test results', detail: 'Saving how each lab value changed over time' });
+    expect(stepText({ ...base, detail: 'Test results: lab histories' })).toEqual({ title: 'Lab histories', detail: 'Saving how each lab value changed over time' });
     expect(stepText({ ...base, next: PLAN.indexOf('referrals'), detail: 'Referrals: referrals' }))
       .toEqual({ title: 'Referrals', detail: 'Downloading each referral as a PDF' });
     expect(stepText({ ...base, next: PLAN.indexOf('approvals'), detail: 'Approvals: approvals' }).detail).toBe('Downloading each approval as a PDF');
