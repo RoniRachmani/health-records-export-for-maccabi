@@ -8,21 +8,19 @@ export interface Stage {
 }
 
 /**
- * The run plan as the user sees it: page changes and bookkeeping steps belong to the section they
- * serve, and a stage per collection step wherever there is room for one. Room is the constraint:
- * Chrome caps the popup at 600px, which leaves about 13 lines here, so steps that take little time
- * and write little (the often-empty sections, the three referral resources) share a stage with the
- * one beside them. Each stage's steps must be consecutive in PLAN, or stageStates would mark a
- * stage current again after a later one is done.
+ * The run plan as the user sees it: one line per part of the export, named for what it collects, with page changes
+ * and bookkeeping steps folded into the line they serve. Every step's heading (LABELS) appears in its line, so the
+ * highlighted line and the heading above it never disagree. Room is the constraint: Chrome caps the popup at 600px,
+ * which leaves about 13 lines here, so parts that share a folder or take one request share a line. Each stage's steps
+ * must be consecutive in PLAN, or stageStates would mark a stage current again after a later one is done.
  */
 export const STAGES: Stage[] = [
-  // Ordering comes first so Maccabi can build the file while everything else is collected; the
-  // download of it is the last stage before the ZIP.
+  // Ordering comes first so Maccabi can build the file while everything else is collected; collecting it is the
+  // last stage before the ZIP.
   { label: 'Ordering your medical file', steps: ['openLegacyPage', 'orderMedicalFile'] },
-  // One folder, medications-and-prescriptions/, but two stages: the REST API's prescriptions, then
-  // the legacy purchase history and its report, which fail in quite different ways.
-  { label: 'Prescriptions', steps: ['medications'] },
-  { label: 'Medication purchases', steps: ['purchases'] },
+  // One folder, medications-and-prescriptions/: the REST API's prescriptions, then the legacy purchase history and
+  // its report. The heading names which one is running.
+  { label: 'Prescriptions and medication purchases', steps: ['medications', 'purchases'] },
   // The uploads and the hospital stays both come from the old site; the stays are one request, too
   // small for a line of their own.
   { label: 'Your uploads and hospital stays', steps: ['savedDocuments', 'hospitalStays'] },
@@ -33,10 +31,10 @@ export const STAGES: Stage[] = [
   { label: 'Referrals, approvals and information pages', steps: ['referrals', 'approvals', 'infoPages'] },
   { label: 'Vaccinations', steps: ['vaccinations'] },
   { label: 'Letters', steps: ['letters'] },
-  // emptySections is three requests for sections that are usually empty; it rides along here
-  // rather than taking a line of its own.
-  { label: 'Messages with your doctor', steps: ['doctorCommunications', 'emptySections'] },
-  { label: 'Full medical file', steps: ['waitMedicalFile'] },
+  { label: 'Messages with your doctor', steps: ['doctorCommunications'] },
+  // Three requests for sections that are usually empty, but they are sections of the export like any other.
+  { label: 'Allergies and appointments', steps: ['emptySections'] },
+  { label: 'Collecting your medical file', steps: ['waitMedicalFile'] },
   { label: 'Saving the ZIP', steps: ['save'] },
 ];
 
@@ -108,7 +106,7 @@ export const DESCRIPTIONS: Record<PlanStep, Record<string, string>> = {
   letters: { '': 'Reading your letters', letters: 'Downloading your letters as PDFs' },
   doctorCommunications: { '': 'Reading your messages to your doctor', 'doctor inquiries': 'Downloading messages and attached forms' },
   emptySections: { '': 'Checking sections that are often empty', 'other sections': 'Checking allergies, appointments and requests' },
-  openLegacyPage: { '': 'Needed for the old site’s records and the order' },
+  openLegacyPage: { '': 'Opening the medical file page in your tab' },
   purchases: {
     '': 'Reading every medication purchase',
     'purchase history': 'Reading every medication purchase',
@@ -117,9 +115,9 @@ export const DESCRIPTIONS: Record<PlanStep, Record<string, string>> = {
   savedDocuments: { '': 'Reading the documents you uploaded', 'saved documents': 'Downloading the documents you uploaded' },
   hospitalStays: { '': 'Reading your hospital stays', 'hospital stays': 'Reading your hospital stays', 'hospital letters': 'Downloading hospital discharge letters' },
   orderMedicalFile: { '': 'Ordering a fresh copy (you’ll get an SMS)' },
-  returnToSonline: { '': 'Keeps your session alive during the wait' },
+  returnToSonline: { '': 'Taking your tab back to the main site' },
   waitMedicalFile: {
-    '': 'Collecting your newly prepared medical file',
+    '': 'Checking whether your file is ready',
     'waiting for the medical file to appear': 'Waiting for the new file to be listed',
     'medical file status': 'Your medical file is being prepared',
     letters: 'Downloading your medical file',
@@ -155,6 +153,7 @@ const FOLDER_LABELS: Record<string, string> = {
   'medical-file': 'Full medical file',
   'communication-with-doctor': 'Messages with your doctor',
   uploads: 'Your uploads',
+  'hospital-stays': 'Hospital stays',
   'allergies-sensitivity': 'Allergies',
   appointments: 'Appointments',
   'requests-approvals': 'Requests and approvals',

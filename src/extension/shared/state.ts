@@ -92,6 +92,12 @@ export const WEIGHTS: Record<PlanStep, number> = {
   save: 5,
 };
 
+/**
+ * The popup's heading while a step runs, and the name a problem or an error gives it. Each is the name of what the
+ * step collects, and appears in its stage's line in STAGES (popup/model.ts), so the heading and the highlighted line
+ * always say the same thing. A step that only serves another (a page change, the wait) takes that one's name: what
+ * it is doing is the line under the heading, in DESCRIPTIONS.
+ */
 export const LABELS: Record<PlanStep, string> = {
   profileAndDoctors: 'Your details and doctor',
   testResults: 'Test results',
@@ -104,13 +110,13 @@ export const LABELS: Record<PlanStep, string> = {
   letters: 'Letters',
   doctorCommunications: 'Messages with your doctor',
   emptySections: 'Allergies and appointments',
-  openLegacyPage: 'Opening the medical file page',
+  openLegacyPage: 'Ordering your medical file',
   purchases: 'Medication purchases',
   savedDocuments: 'Your uploads',
   hospitalStays: 'Hospital stays',
   orderMedicalFile: 'Ordering your medical file',
-  returnToSonline: 'Back to the new site',
-  waitMedicalFile: 'Waiting for your medical file',
+  returnToSonline: 'Your details and doctor',
+  waitMedicalFile: 'Collecting your medical file',
   save: 'Saving the ZIP',
 };
 

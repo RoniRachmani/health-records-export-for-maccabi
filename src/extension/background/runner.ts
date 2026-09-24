@@ -208,7 +208,7 @@ function loop(): Promise<void> {
         state.percent = percentOf(state.next, 0, 0);
         await save();
         if (__DEV_BRIDGE__ && (await chrome.storage.local.get('devStopBefore')).devStopBefore === step) {
-          await pause('paused_session', 'Stopped before "' + LABELS[step] + '" (dev:stopBefore).');
+          await pause('paused_session', 'Stopped before ' + step + ' (dev:stopBefore).');
           return;
         }
         setCurrentStep(step);

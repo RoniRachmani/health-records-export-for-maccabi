@@ -91,8 +91,8 @@ describe('popup', () => {
     expect(document.querySelector('.stats')?.textContent).toBe('212 files · 15 MB · 6 min elapsed');
     expect(document.querySelector('[role=progressbar]')?.getAttribute('aria-valuenow')).toBe('48');
     expect(document.querySelector('.stages [aria-current=step]')?.textContent).toBe('Referrals, approvals and information pages');
-    expect(document.querySelectorAll('.stages li.done')).toHaveLength(7);
-    expect(document.querySelector('.sections-label')?.textContent).toBe('Sections7 of 13 done');
+    expect(document.querySelectorAll('.stages li.done')).toHaveLength(6);
+    expect(document.querySelector('.sections-label')?.textContent).toBe('Sections6 of 13 done');
   });
 
   it('confirms Stop inline, then shows Stopping until the run is gone', async () => {

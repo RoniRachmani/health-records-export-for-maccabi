@@ -1,10 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { DESCRIPTIONS, formatBytes, formatDuration, groupProblems, STAGES, stageStates, statsText, stepText, viewKey, type UiFlags } from '../src/extension/popup/model';
-import { PLAN, type RunState, type StateReply } from '../src/extension/shared/state';
+import { LABELS, PLAN, type RunState, type StateReply } from '../src/extension/shared/state';
 
 describe('STAGES', () => {
   it('covers every plan step once, in plan order', () => {
     expect(STAGES.flatMap((s) => s.steps)).toEqual([...PLAN]);
+  });
+
+  it('names every step’s heading in its own line, so the two never disagree', () => {
+    for (const stage of STAGES) {
+      for (const step of stage.steps) expect(stage.label.toLowerCase()).toContain(LABELS[step].toLowerCase());
+    }
   });
 });
 
@@ -78,7 +84,7 @@ describe('statsText and stepText', () => {
     expect(stepText({ ...base, next: PLAN.indexOf('approvals'), detail: 'Approvals: approvals' }).detail).toBe('Downloading each approval as a PDF');
     expect(stepText({ ...base, next: PLAN.indexOf('infoPages'), detail: 'Information pages: information pages' }).detail).toBe('Downloading each page as a PDF');
     const waiting = { ...base, next: PLAN.indexOf('waitMedicalFile') };
-    expect(stepText({ ...waiting, detail: 'Waiting for your medical file: medical file status 2' }).detail).toBe('Your medical file is being prepared');
+    expect(stepText({ ...waiting, detail: 'Collecting your medical file: medical file status 2' }).detail).toBe('Your medical file is being prepared');
     expect(stepText({ ...base, next: PLAN.length })).toEqual({ title: '', detail: '' });
   });
 
