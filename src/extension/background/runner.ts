@@ -288,7 +288,7 @@ async function reconnect(): Promise<boolean> {
 
 async function waitVisible(): Promise<void> {
   if (!state || (await isVisible(state.tabId))) return;
-  await pause('paused_hidden', 'Bring the Maccabi Healthcare Services tab back to the front to continue. Chrome pauses hidden tabs, which can end your session.');
+  await pause('paused_hidden', 'Bring the Maccabi Online tab back to the front to continue. Chrome pauses hidden tabs, which can end your session.');
   while (state && !(await isVisible(state.tabId))) {
     if (cancelRequested) throw new CancelledError();
     await new Promise((r) => setTimeout(r, 1000));

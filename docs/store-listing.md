@@ -268,7 +268,7 @@ Reads the signed-in member's records and their PDFs from Maccabi Online, using t
 **scripting:**
 
 ```
-Runs short functions in the Maccabi Healthcare Services tab the member is logged in on, and only there. The functions do three things:
+Runs short functions in the Maccabi Online tab the member is logged in on, and only there. The functions do three things:
 1. Read the site's session token so the extension can make requests as the logged-in member. When the token is stale, they clear it so that the site issues a new one.
 2. Send the few requests that the site accepts only from its own pages: the legacy medical-file services and the medical file order.
 3. While an export runs, dispatch a mousedown event on the page every 4 minutes. Maccabi Healthcare Services logs members out after 6 minutes without a click or keypress, and an export runs for 5 to 20 minutes without user input. The member is told about this before the first export, and it stops as soon as the export ends.
@@ -307,7 +307,7 @@ Sets a 30-second heartbeat while an export runs, so that the export continues if
 **notifications:**
 
 ```
-Tells the member when the export is ready, or when it needs them to log in again, bring the Maccabi Healthcare Services tab back to the front or try again.
+Tells the member when the export is ready, or when it needs them to log in again, bring the Maccabi Online tab back to the front or try again.
 ```
 
 ### Remote code
@@ -324,7 +324,7 @@ device. Check these five:
 |---|---|
 | Personally identifiable information | Name, ID number, birth date and the other member details in the profile, which the export saves. The popup also shows the member's first name. |
 | Health information | The medical records themselves |
-| Authentication information | The site's session token and the member ID. The popup reads them from the Maccabi Healthcare Services tab when it opens, and they're kept in `chrome.storage.session` while an export runs. |
+| Authentication information | The site's session token and the member ID. The popup reads them from the Maccabi Online tab when it opens, and they're kept in `chrome.storage.session` while an export runs. |
 | Personal communications | The member's inquiries to doctors, from the Communication with doctor section |
 | Website content | The pages and files the extension reads from Maccabi Online |
 

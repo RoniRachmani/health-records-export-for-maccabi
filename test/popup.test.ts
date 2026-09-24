@@ -118,7 +118,7 @@ describe('popup', () => {
   it('offers to switch tabs when a paused export is opened elsewhere', async () => {
     const paused = running({ status: 'paused_session', message: 'Your Maccabi Healthcare Services session ended.' });
     await openPopup({ run: paused, tab: { onMaccabi: false, loggedIn: false } });
-    buttonNamed('Go to the Maccabi Healthcare Services tab').click();
+    buttonNamed('Go to the Maccabi Online tab').click();
     await flush();
     expect(sent.map((m) => m.type)).toContain('focusTab');
   });
