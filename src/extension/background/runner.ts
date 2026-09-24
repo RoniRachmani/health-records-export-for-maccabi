@@ -168,7 +168,7 @@ export async function recover(reason: 'startup' | 'heartbeat'): Promise<void> {
   if (!run || active) return;
   if (run.status === 'running' || run.status === 'paused_hidden') {
     if (reason === 'startup' || !(await getSession())) {
-      await pause('paused_session', 'Chrome was restarted during the export. Log in to Maccabi Online, then click this extension\'s icon on that tab and press Resume. Files collected so far are kept.');
+      await pause('paused_session', 'Chrome was restarted during the export. Log in to Maccabi Online, then click this extension’s icon on that tab and press Resume. Files collected so far are kept.');
       return;
     }
     run.status = 'running';
@@ -230,13 +230,13 @@ function loop(): Promise<void> {
               }
             }
             if (cancelRequested) break;
-            await pause('paused_session', 'Your Maccabi Healthcare Services session ended (' + stripSessionPrefix(errMessage(e)) + '). Log in to Maccabi Online again, then click this extension\'s icon on that tab and press Resume. Files collected so far are kept.');
+            await pause('paused_session', 'Your Maccabi Healthcare Services session ended (' + stripSessionPrefix(errMessage(e)) + '). Log in to Maccabi Online again, then click this extension’s icon on that tab and press Resume. Files collected so far are kept.');
             return;
           }
           if ((e as RateLimitedError).rateLimited) {
             if (state) {
               state.status = 'error';
-              state.message = 'Maccabi Online asked the extension to slow down, so the export stopped. Files collected so far are kept: wait a few minutes, then press "Try again".';
+              state.message = 'Maccabi Online asked the extension to slow down, so the export stopped. Files collected so far are kept: wait a few minutes, then press “Try again”.';
               await save();
               await notify('attention', 'Export stopped', state.message);
             }
@@ -244,7 +244,7 @@ function loop(): Promise<void> {
           }
           if (state) {
             state.status = 'error';
-            state.message = 'Unexpected error in "' + LABELS[step] + '": ' + errMessage(e);
+            state.message = 'Unexpected error in “' + LABELS[step] + '”: ' + errMessage(e);
             await save();
             await notify('attention', 'Export failed', state.message);
           }
@@ -373,7 +373,7 @@ async function runPlanStep(step: PlanStep): Promise<void> {
       await runStep(c, run.ctx, step as StepName);
       // Legacy services don't report an ended session; a failed request is the sign of one.
       if (LEGACY_STEPS.includes(step as StepName) && c.log.some((x) => /PROBLEM: .*Failed to fetch/.test(x[1]))) {
-        throw new SessionEndedError("the old site's pages stopped answering");
+        throw new SessionEndedError('the old site’s pages stopped answering');
       }
     }
   }
@@ -437,7 +437,7 @@ export async function onDownloadChanged(delta: chrome.downloads.DownloadDelta): 
     await notify('ready', 'Export ready', run.zipName + ': ' + run.fileCount + ' files' + (p ? ', ' + p + ' problem' + (p === 1 ? '' : 's') : '') + '.');
   } else if (delta.state?.current === 'interrupted') {
     run.status = 'error';
-    run.message = 'The ZIP could not be saved (' + (delta.error?.current || 'interrupted') + '). Your files are still collected: press "Save again".';
+    run.message = 'The ZIP could not be saved (' + (delta.error?.current || 'interrupted') + '). Your files are still collected: press “Save again”.';
     await save();
     await notify('attention', 'Export not saved', run.message);
   }

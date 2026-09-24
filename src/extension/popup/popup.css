@@ -159,6 +159,14 @@ h3 {
 p {
   margin: 0;
 }
+/* No paragraph or list item ends on one word by itself. */
+p,
+li {
+  text-wrap: pretty;
+}
+h2 {
+  text-wrap: balance;
+}
 .muted {
   color: var(--muted);
 }
@@ -184,6 +192,16 @@ p {
   gap: 8px;
   color: var(--muted);
   margin: 6px 0 0;
+}
+h2.working {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+h2.working .spinner {
+  width: 17px;
+  height: 17px;
+  color: var(--primary);
 }
 a:focus-visible,
 button:focus-visible,
@@ -226,12 +244,15 @@ summary:focus-visible {
   color: var(--fg);
   font-size: 13px;
 }
+/* The halo is drawn outside the dot, so the margin keeps it within the text column's left edge. */
 .dot {
   flex: none;
   width: 8px;
   height: 8px;
+  margin: 0 1px 0 3px;
   border-radius: 50%;
   background: var(--faint);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--faint) 20%, transparent);
 }
 .account.on .dot {
   background: var(--ok-dot);
@@ -291,7 +312,10 @@ button {
   color: var(--heading);
   white-space: nowrap;
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+button:not([aria-disabled='true']):active {
+  transform: scale(0.975);
 }
 button:not([aria-disabled='true']):hover {
   background: var(--surface-hover);
@@ -319,9 +343,6 @@ button.block {
   width: 100%;
   min-height: 46px;
   font-size: 15px;
-}
-button.grow {
-  flex: 1;
 }
 button.small {
   min-height: 30px;
@@ -355,6 +376,10 @@ button[aria-disabled='true']:not(.busy) {
   align-items: center;
   gap: 8px;
   margin: 14px 0 0;
+}
+/* A row's buttons share it evenly, as one pair; a pair too wide for a line stacks, each at full width. */
+.actions > button {
+  flex: 1;
 }
 /* The first-use notice is longer than the 600px Chrome gives a popup, and its text is the
    thing being agreed to. Rather than cut it, its action stays pinned within reach, and the
@@ -426,6 +451,9 @@ details[open] > summary::before {
 }
 details.more summary {
   font-size: 13.5px;
+}
+details.more summary:hover {
+  color: var(--primary-hover);
 }
 .more-body {
   margin: 10px 0 0;
@@ -658,6 +686,18 @@ details.more summary {
 .file-card .small {
   margin-top: 1px;
 }
+.caution {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 12px 2px 0;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.caution svg {
+  flex: none;
+  margin-top: 2px;
+}
 details.problems {
   margin: 12px 0 0;
   padding: 11px 14px;
@@ -675,9 +715,20 @@ details.problems[open] summary {
 details.problems p {
   margin: 0 0 4px;
 }
+/* Shadows mark an edge with more beyond it: the two covers scroll with the list and hide them at
+   its ends (the classic background-attachment: local technique), so a list cut off mid-item reads
+   as one to scroll. */
 .problem-list {
   max-height: 120px;
   overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--warn-rule) 50%, transparent) transparent;
+  background:
+    linear-gradient(var(--warn-bg) 30%, transparent) top / 100% 24px no-repeat local,
+    linear-gradient(transparent, var(--warn-bg) 70%) bottom / 100% 24px no-repeat local,
+    linear-gradient(color-mix(in srgb, var(--warn) 14%, transparent), transparent) top / 100% 7px no-repeat,
+    linear-gradient(transparent, color-mix(in srgb, var(--warn) 14%, transparent)) bottom / 100% 7px no-repeat;
 }
 .problem-list ul {
   margin: 0 0 4px;
@@ -686,6 +737,9 @@ details.problems p {
 }
 .problem-list li {
   margin-bottom: 3px;
+}
+.problem-list li::marker {
+  color: var(--warn-rule);
 }
 .problem-list .path {
   display: block;

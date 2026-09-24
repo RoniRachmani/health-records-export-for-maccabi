@@ -214,7 +214,7 @@ function idleView(st: StateReply): Child[] {
       h('h2', {}, 'Log in to Maccabi Online'),
       h('ol', { class: 'numbered' },
         h('li', {}, st.tab.onMaccabi ? 'Log in to Maccabi Online in this tab.' : 'Open Maccabi Online and log in (or finish logging in).'),
-        h('li', {}, 'On that tab, click this extension\'s icon again.')),
+        h('li', {}, 'On that tab, click this extension’s icon again.')),
       !st.tab.onMaccabi && actions(actionButton('Open Maccabi Online', { type: 'openMaccabi' }, 'primary block')),
     ];
   }
@@ -286,6 +286,8 @@ function runView(run: RunState, st: StateReply): Child[] {
   }
 }
 
+const LOCK_ICON = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+
 const ZIP_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M11 6h1M12 8.5h1M11 11h1M12 13.5h1"/><rect x="10.5" y="16" width="3" height="3" rx=".8"/></svg>';
 
 /** The shipped page on opening the export in an AI assistant (the README's section of the same name). */
@@ -297,6 +299,8 @@ function doneView(run: RunState): Child[] {
   const took = run.finishedAt ? 'took ' + formatDuration(Date.parse(run.finishedAt) - Date.parse(run.startedAt)) : '';
   const icon = h('span', { class: 'file-icon', 'aria-hidden': 'true' });
   icon.innerHTML = ZIP_ICON;
+  const caution = h('p', { class: 'caution' }, h('span', {}, 'The ZIP contains sensitive health information. Store and share it with care.'));
+  caution.insertAdjacentHTML('afterbegin', LOCK_ICON);
   return [
     status('Saved', 'ok'),
     h('h2', {}, 'Your export is ready'),
@@ -314,10 +318,10 @@ function doneView(run: RunState): Child[] {
           h('h3', {}, g.label),
           h('ul', {}, ...g.items.map((p) => h('li', {}, p.what, p.where.includes('/') && h('span', { class: 'path' }, p.where))))))),
       count > shown.length && h('p', { class: 'small' }, 'Showing the first ' + shown.length + '.')),
-    actions(actionButton('Show in folder', { type: 'showFile' }, 'primary grow'), actionButton('Done', { type: 'dismiss' }, 'grow')),
+    actions(actionButton('Show in folder', { type: 'showFile' }, 'primary'), actionButton('Done', { type: 'dismiss' })),
     note('', h('strong', {}, 'Next: '), 'unzip it and open the folder in your AI assistant, then ask about your records. ',
       h('a', { href: AI_HELP, target: '_blank' }, 'See how')),
-    note('', 'The ZIP contains sensitive health information. Store and share it with care.'),
+    caution,
   ];
 }
 
@@ -344,7 +348,7 @@ function errorView(run: RunState, st: StateReply): Child[] {
 function stoppingView(): Child[] {
   return [
     status('Stopping'),
-    h('p', { class: 'loading' }, h('span', { class: 'spinner', 'aria-hidden': 'true' }), 'Stopping the export…'),
+    h('h2', { class: 'working' }, h('span', { class: 'spinner', 'aria-hidden': 'true' }), 'Stopping the export…'),
     note('', 'The files collected so far are deleted once the current request finishes. This can take a few seconds.'),
   ];
 }
