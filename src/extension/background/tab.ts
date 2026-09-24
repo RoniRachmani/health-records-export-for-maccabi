@@ -304,21 +304,65 @@ export function tabTransport(tabId: number, waitVisible: () => Promise<void>): T
   };
 }
 
+/**
+ * How long a request from the extension may go without receiving anything, before its headers or
+ * between parts of its body, before it is given up on as a network error (which the collector
+ * retries). Counted from the last bytes rather than from the start, so a large PDF on a slow line
+ * is not cut off while it is still arriving.
+ */
+export const STALL_MS = 60_000;
+
 /** Requests sent by the extension itself, with the site's cookies (host permission). */
-export function extensionFetch(req: HttpRequest): Promise<HttpResponse> {
-  return fetch(new URL(req.url, MACCABI_ORIGIN).toString(), {
-    method: req.method,
-    headers: req.headers,
-    body: req.body,
-    credentials: 'include',
-    redirect: req.redirect || 'follow',
-  }).then(async (r) => ({
-    status: r.status,
-    redirected: r.type === 'opaqueredirect',
-    contentType: r.headers.get('content-type') || '',
-    retryAfter: r.headers.get('retry-after') || undefined,
-    bytes: new Uint8Array(await r.arrayBuffer()),
-  }));
+export async function extensionFetch(req: HttpRequest): Promise<HttpResponse> {
+  const abort = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const alive = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => abort.abort(new Error('Maccabi Healthcare Services sent nothing for ' + STALL_MS / 1000 + ' s')), STALL_MS);
+  };
+  alive();
+  try {
+    const r = await fetch(new URL(req.url, MACCABI_ORIGIN).toString(), {
+      method: req.method,
+      headers: req.headers,
+      body: req.body,
+      credentials: 'include',
+      redirect: req.redirect || 'follow',
+      signal: abort.signal,
+    });
+    alive();
+    return {
+      status: r.status,
+      redirected: r.type === 'opaqueredirect',
+      contentType: r.headers.get('content-type') || '',
+      retryAfter: r.headers.get('retry-after') || undefined,
+      bytes: await readBody(r, alive),
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** The whole body, calling alive() as each part arrives. */
+async function readBody(r: Response, alive: () => void): Promise<Uint8Array> {
+  if (!r.body) return new Uint8Array(await r.arrayBuffer());
+  const reader = r.body.getReader();
+  const parts: Uint8Array[] = [];
+  let length = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    alive();
+    parts.push(value);
+    length += value.length;
+  }
+  const bytes = new Uint8Array(length);
+  let at = 0;
+  for (const p of parts) {
+    bytes.set(p, at);
+    at += p.length;
+  }
+  return bytes;
 }
 
 export type Route = 'extension' | 'tab';

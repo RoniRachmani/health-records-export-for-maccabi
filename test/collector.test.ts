@@ -76,6 +76,68 @@ describe('api()', () => {
   });
 });
 
+describe('fetchBin()', () => {
+  const pdf = (): HttpResponse => ({ status: 200, redirected: false, contentType: 'application/pdf', bytes: PDF });
+
+  it('retries a download that failed in passing, and ends the session if it keeps failing', async () => {
+    const t = fakeTransport([() => pdf()]);
+    const send = t.fetch;
+    let n = 0;
+    t.fetch = async (req) => { if (++n === 1) throw new Error('Failed to fetch'); return send(req); };
+    const { c, clock } = makeCollector(t);
+    expect(await c.fetchBin('/sonline/x.pdf')).toMatchObject({ status: 200, bytes: PDF });
+    expect(clock.sleeps).toEqual([2500, 300]);
+
+    let m = 0;
+    t.fetch = async () => { m++; throw new Error('Failed to fetch'); };
+    await expect(c.fetchBin('/sonline/x.pdf')).rejects.toMatchObject({ sessionEnded: true, message: /request failed \(Failed to fetch\)/ });
+    expect(m).toBe(4);
+  });
+
+  it('retries 500/503, and gives back what is left', async () => {
+    let n = 0;
+    const { c, clock } = makeCollector(fakeTransport([() => (++n < 3 ? jsonResp({}, 500) : pdf())]));
+    expect((await c.fetchBin('/sonline/x.pdf')).status).toBe(200);
+    expect(clock.sleeps).toEqual([2500, 2500, 300]);
+    n = -10;
+    expect((await c.fetchBin('/sonline/x.pdf')).status).toBe(500);
+  });
+
+  it('ends the session on a 401 to the token, not to a link signed on its own', async () => {
+    const { c } = makeCollector(fakeTransport([() => jsonResp({}, 401)]));
+    await expect(c.fetchBin('/sonline/x.pdf')).rejects.toMatchObject({ sessionEnded: true, message: /HTTP 401/ });
+    expect((await c.fetchBin('/sonline/x.pdf', {})).status).toBe(401);
+  });
+
+  it('waits out one 429, and stops the run if it is asked again', async () => {
+    const tooMany: HttpResponse = { status: 429, redirected: false, contentType: 'text/plain', bytes: new Uint8Array(), retryAfter: '5' };
+    let n = 0;
+    const { c, clock } = makeCollector(fakeTransport([() => (++n === 1 ? tooMany : pdf())]));
+    expect((await c.fetchBin('/sonline/x.pdf')).status).toBe(200);
+    expect(clock.sleeps[0]).toBe(5000);
+    const { c: c2 } = makeCollector(fakeTransport([() => tooMany]));
+    await expect(c2.fetchBin('/sonline/x.pdf')).rejects.toMatchObject({ rateLimited: true });
+  });
+
+  it('keeps going through a step after one PDF download drops', async () => {
+    const site = fakeMaccabi();
+    const t = fakeTransport(site.routes);
+    const send = t.fetch;
+    let dropped = false;
+    t.fetch = async (req) => {
+      if (!dropped && req.url.includes('getprescriptionpdf')) {
+        dropped = true;
+        throw new Error('Failed to fetch');
+      }
+      return send(req);
+    };
+    const { c, sink } = makeCollector(t);
+    const s = await runAll(c, newCtx(), ['medications']);
+    expect(s.problems).toEqual([]);
+    expect([...(sink as MemorySink).files.keys()].filter((k) => k.endsWith('.pdf'))).toHaveLength(2);
+  });
+});
+
 describe('full run against the fake site', () => {
   it('writes today\'s layout with the right URL encodings', async () => {
     const site = fakeMaccabi();

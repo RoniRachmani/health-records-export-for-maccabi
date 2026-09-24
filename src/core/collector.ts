@@ -185,19 +185,40 @@ export class Collector {
     await this.sleep(waitMs);
   }
 
-  async fetchBin(url: string, headers?: Record<string, string>, tries = 2): Promise<BinResult> {
-    this.checkStop();
-    const r = await this.deps.transport.fetch({
-      url,
-      method: 'GET',
-      headers: headers || { Authorization: 'Bearer ' + this.session.jwt },
-    });
-    if (r.status === 429) {
-      await this.rateLimitPause(r, tries);
-      return this.fetchBin(url, headers, tries - 1);
+  /**
+   * A file download. Retried like api() when no response comes or the server answers 500/503, so one
+   * dropped PDF does not end the step it is in; a 429 is waited out once. A 401 ends the session only
+   * when the request carried the token: links signed with their own hash are sent without one.
+   */
+  async fetchBin(url: string, headers?: Record<string, string>): Promise<BinResult> {
+    const req = { url, method: 'GET', headers: headers || { Authorization: 'Bearer ' + this.session.jwt } };
+    let waited = false;
+    for (let tries = 4; ; tries--) {
+      this.checkStop();
+      let r: HttpResponse;
+      try {
+        r = await this.deps.transport.fetch(req);
+      } catch (e) {
+        if (isControl(e)) throw e;
+        if (tries > 1) {
+          await this.sleep(2500);
+          continue;
+        }
+        throw new SessionEndedError('request failed (' + errMessage(e) + ')');
+      }
+      if (r.status === 401 && !headers) throw new SessionEndedError('HTTP 401');
+      if (r.status === 429) {
+        await this.rateLimitPause(r, waited ? 1 : 2);
+        waited = true;
+        continue;
+      }
+      if ((r.status === 500 || r.status === 503) && tries > 1) {
+        await this.sleep(2500);
+        continue;
+      }
+      await this.sleep(PACE_MS);
+      return { status: r.status, type: mimeType(r.contentType), bytes: r.bytes };
     }
-    await this.sleep(PACE_MS);
-    return { status: r.status, type: mimeType(r.contentType), bytes: r.bytes };
   }
 
   async pdfIfMissing(rel: string, url: string, headers?: Record<string, string>): Promise<SaveResult | null | undefined> {
