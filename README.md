@@ -100,7 +100,7 @@ Then load the `dist/` folder the same way.
   for your whole history, which is wider than the range the site's form offers. Maccabi Healthcare Services sends an SMS, and the new file
   replaces the previous one on the site. A copy ordered earlier the same day over the same range is used as it is.
   This is the only change the extension makes to your account, and it happens even if the export later fails.
-- **Keep the Maccabi Healthcare Services tab in front.** Chrome pauses hidden tabs, which can end your session. If you switch away, the
+- **Keep the Maccabi Online tab in front.** Chrome pauses hidden tabs, which can end your session. If you switch away, the
   export waits until you come back.
 - **Your session is kept awake.** Maccabi Healthcare Services logs you out after six minutes without a click or a keypress on the page, and
   an export asks nothing of you for far longer than that, so while it runs the extension signals activity in that tab
@@ -111,8 +111,8 @@ Then load the `dist/` folder the same way.
 | The popup says | What to do |
 |---|---|
 | **Export paused** | Your session ended. Log in to Maccabi Online again, click the icon on that tab and press **Resume**. (The extension first tries to reconnect by itself.) Also shown after Chrome restarts mid-export. |
-| **Waiting for the Maccabi Healthcare Services tab** | Bring the tab back to the front. The export continues on its own. |
-| **Export stopped** | Press **Try again** on the Maccabi Healthcare Services tab. It continues from the step that failed. |
+| **Waiting for the Maccabi Online tab** | Bring the tab back to the front. The export continues on its own. |
+| **Export stopped** | Press **Try again** on the Maccabi Online tab. It continues from the step that failed. |
 | **The ZIP was not saved** | Press **Save again**. |
 
 Resume refuses to continue if a different member is logged in. **Stop** ends the export and deletes the files collected
@@ -272,7 +272,7 @@ Read the full [Privacy Policy](docs/privacy.md) and [Terms of Use](docs/terms.md
 | Permission | Used to |
 |---|---|
 | `online.maccabi4u.co.il` | Read your records from the site you're logged in to. No other sites. |
-| `scripting` | Read the login session from the Maccabi Healthcare Services tab, and send the requests the site accepts only from its own pages |
+| `scripting` | Read the login session from the Maccabi Online tab, and send the requests the site accepts only from its own pages |
 | `downloads` | Save the ZIP |
 | `storage`, `unlimitedStorage` | Keep export progress, and collected files until the ZIP is saved (PDFs can be large) |
 | `offscreen` | Build the ZIP, and parse two HTML tables the site returns |
@@ -302,7 +302,7 @@ Load `dist-dev/` at `chrome://extensions` the same way as `dist/`. It shows up a
 flowchart LR
   popup[Popup] -- messages --> sw[Service worker]
   sw -- "/sonline/ REST API and PDFs" --> site[(Maccabi Online)]
-  sw -- chrome.scripting --> tab[Maccabi Healthcare Services tab]
+  sw -- chrome.scripting --> tab[Maccabi Online tab]
   tab -- "/online/ legacy pages, medical file order" --> site
   sw -- staged files --> idb[(IndexedDB)]
   sw -- "parse HTML, build ZIP" --> off[Offscreen document]
@@ -321,12 +321,12 @@ steps that need the old site share it. The run returns to `/sonline/` before wai
 renews the session token only there, and the wait is the longest part of the run.
 
 REST API requests (`/sonline/`) go from the service worker, with the session token read from the tab. Legacy requests
-(`/online/`) and the medical file order go from inside the Maccabi Healthcare Services tab, where the site requires them to originate.
+(`/online/`) and the medical file order go from inside the Maccabi Online tab, where the site requires them to originate.
 
 | Path | Contents |
 |---|---|
 | `src/core/` | The collection logic, one file per part of the site in `sections/`. Uses no extension APIs: it reaches the site through a `Transport`, writes through a `Sink` and parses HTML through an `HtmlParser` (see `types.ts`). |
-| `src/extension/background/` | The service worker: the run loop with pause and resume (`runner.ts`), the Maccabi Healthcare Services tab (`tab.ts`), badge and notifications (`ui.ts`) |
+| `src/extension/background/` | The service worker: the run loop with pause and resume (`runner.ts`), the Maccabi Online tab (`tab.ts`), badge and notifications (`ui.ts`) |
 | `src/extension/offscreen/` | HTML parsing and ZIP building, which the service worker can't do |
 | `src/extension/shared/` | Run state and plan, IndexedDB staging |
 | `src/extension/popup/` | The popup |

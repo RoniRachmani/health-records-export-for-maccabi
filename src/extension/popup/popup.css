@@ -89,6 +89,8 @@ h1 {
   margin: 1px 0 0;
   color: var(--muted);
   font-size: 11.5px;
+  /* Two even lines rather than a lone "Services" on the second. */
+  text-wrap: balance;
 }
 main {
   padding: 3px 16px 14px;
