@@ -263,7 +263,7 @@ function pausedView(run: RunState, st: StateReply): Child[] {
   return [
     status('Paused · ' + run.percent + '%', 'warn'),
     h('h2', {}, hidden ? 'Waiting for the Maccabi Healthcare Services tab' : 'Export paused'),
-    stage && h('p', { class: 'detail' }, 'During ' + stage),
+    stage && h('p', { class: 'detail' }, 'Section: ' + stage),
     progressBar(run.percent, false).bar,
     note('warn', run.message || (hidden ? 'Bring the Maccabi Healthcare Services tab back to the front to continue.' : 'The export is paused.')),
     ui.confirm === 'cancel' ? cancelConfirm() : actions(primary, cancelButton()),
