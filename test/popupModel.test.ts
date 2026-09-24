@@ -49,7 +49,8 @@ describe('stageStates', () => {
     // A part no line names stays on the step's first line.
     expect(stageStates(at('testResults', 'imaging reports'))[tests]).toBe('current');
     const allergies = STAGES.findIndex((s) => s.label === 'Allergies');
-    for (const part of ['appointments', 'requests']) expect(stageStates(at('emptySections', part))[allergies + 1]).toBe('current');
+    expect(stageStates(at('emptySections', 'appointments'))[allergies + 1]).toBe('current');
+    expect(stageStates(at('emptySections', 'requests'))[allergies + 2]).toBe('current');
   });
 
   it('marks everything but saving done at the save step, and everything done after it', () => {

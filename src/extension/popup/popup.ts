@@ -180,7 +180,7 @@ function noticeView(): Child[] {
 const INCLUDED = [
   'Test results', 'Lab histories', 'Visit summaries', 'Prescriptions', 'Medication purchases', 'Referrals',
   'Approvals', 'Information pages', 'Vaccinations', 'Letters', 'Full medical file', 'Messages with your doctor', 'Your uploads',
-  'Hospital stays', 'Allergies', 'Upcoming appointments',
+  'Hospital stays', 'Allergies', 'Upcoming appointments', 'Open requests',
 ];
 
 function accountRow(st: StateReply): HTMLElement {

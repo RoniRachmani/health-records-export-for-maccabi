@@ -20,8 +20,8 @@ export interface Stage {
  * stage holding a step is labelled with its LABELS entry, so errors and problems name it the same way; a step split
  * into parts is named as a whole by LABELS instead.
  *
- * Room is the constraint: Chrome caps the popup at 600px, which leaves 19 lines here (16px each, plus the current
- * line's description). Merge before adding a twentieth.
+ * Room is the constraint: Chrome caps the popup at 600px, which leaves 20 lines here (16px each, plus the current
+ * line's description). Merge before adding a twenty-first.
  */
 export const STAGES: Stage[] = [
   // Ordering comes first so Maccabi can build the file while everything else is collected; collecting it is the
@@ -42,10 +42,10 @@ export const STAGES: Stage[] = [
   { label: 'Vaccinations', steps: ['vaccinations'] },
   { label: 'Letters', steps: ['letters'] },
   { label: 'Messages with your doctor', steps: ['doctorCommunications'] },
-  // Three requests for sections that are usually empty. Allergies are part of the medical record and get a line of
-  // their own; future appointments and open requests are the member's dealings with Maccabi, and share one.
+  // One step, three requests for sections that are usually empty: a line each.
   { label: 'Allergies', steps: ['emptySections'], parts: ['', 'allergies'] },
-  { label: 'Upcoming appointments and requests', steps: ['emptySections'], parts: ['appointments', 'requests'] },
+  { label: 'Upcoming appointments', steps: ['emptySections'], parts: ['appointments'] },
+  { label: 'Open requests', steps: ['emptySections'], parts: ['requests'] },
   { label: 'Collecting your medical file', steps: ['waitMedicalFile'] },
   { label: 'Saving the ZIP', steps: ['save'] },
 ];
@@ -188,7 +188,7 @@ const FOLDER_LABELS: Record<string, string> = {
   'hospital-stays': 'Hospital stays',
   'allergies-sensitivity': 'Allergies',
   appointments: 'Appointments',
-  'requests-approvals': 'Requests and approvals',
+  'requests-approvals': 'Open requests',
 };
 
 export interface ProblemGroup {
