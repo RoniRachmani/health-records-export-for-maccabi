@@ -505,6 +505,13 @@ details.more summary {
 }
 
 /* ---- progress ---- */
+/* The running view's heading keeps to one line, like the detail under it: a second line would take
+   the view past Chrome's 600px cap. */
+.step-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .detail {
   min-height: 1.5em;
   margin: 0 0 11px;

@@ -151,8 +151,9 @@ function progressBar(percent: number, active: boolean): { bar: HTMLElement; fill
 
 function hintFor(run: RunState): string {
   if (run.status === 'saving') return 'Building the ZIP. It will be in your Downloads folder in a moment.';
-  if (PLAN[run.next] === 'waitMedicalFile') return 'Maccabi Healthcare Services usually prepares the file within a few minutes (at most 15). You can close this popup.';
-  return 'Keep the Maccabi Online tab open and in front until the ZIP is saved. You can close this popup.';
+  // Two lines at most, in any font: the running view has no room to spare under Chrome's 600px cap.
+  if (PLAN[run.next] === 'waitMedicalFile') return 'The file is usually ready within minutes, 15 at most. You can close this popup.';
+  return 'Keep the Maccabi Online tab open and in front. You can close this popup.';
 }
 
 // ---- views -------------------------------------------------------------
@@ -230,7 +231,7 @@ function idleView(st: StateReply): Child[] {
 
 function progressView(run: RunState): Child[] {
   const pill = status('');
-  const title = h('h2');
+  const title = h('h2', { class: 'step-title' });
   const detail = h('p', { class: 'detail' });
   const { bar, fill } = progressBar(run.percent, true);
   const stats = h('span', { class: 'stats' });
@@ -358,7 +359,10 @@ function updateStats(): void {
 function updateLive(run: RunState): void {
   const { title, detail } = stepText(run);
   if (live.status) live.status.textContent = run.status === 'saving' ? 'Saving' : 'Exporting · ' + run.percent + '%';
-  if (live.title) live.title.textContent = title;
+  if (live.title) {
+    live.title.textContent = title;
+    live.title.title = title;
+  }
   if (live.detail) {
     live.detail.textContent = detail;
     live.detail.title = detail;
