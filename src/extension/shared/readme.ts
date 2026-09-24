@@ -109,7 +109,9 @@ There is no \`list.json\`: the site's list is a web page, not data.`,
 Services's own page shows only those four; \`DescriptionTreatment\` and \`DescriptionDistinction\` are
 not shown there, and **can hold only billing lines** such as \`HOSPITALIZATION - PER DAY\`, not
 treatments or diagnoses. What happened in hospital is in the discharge letter in \`files/\` (the
-visits with \`HasLink\` true have one) or else in the medical file, under the visit's dates.`,
+visits with \`HasLink\` true have one) or else in the medical file, under the visit's dates. The list
+is as the site sent it: strings padded with spaces, blank \`Description\` entries, and a visit can be
+listed twice (count it once).`,
   },
   { name: 'allergies-sensitivity', summary: 'recorded sensitivities and intolerances (`intolerance[]`)', detail: '' },
   { name: 'appointments', summary: 'future appointments only — past ones are visits, in `visit-summaries/`', detail: '' },

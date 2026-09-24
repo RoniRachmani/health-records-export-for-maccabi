@@ -104,25 +104,29 @@ export async function hospitalStays(c: Collector, _ctx: Ctx): Promise<void> {
       await c.problem(REL, 'HTTP ' + r.status + ', result code ' + code);
       return;
     }
-    const stays = cleanStays(data.ReportHospitalizations || []);
+    const stays: Json[] = data.ReportHospitalizations || [];
     // Most members have none; like the sections in emptySections, the folder appears only with data.
     if (!stays.length) return;
+    // Saved as the service sent it: padded strings, blank Description entries, repeats and all.
     await c.save(REL, {
       endpoint: 'POST ' + HOSPITAL_URL,
       request_body: HOSPITAL_BODY,
-      omitted: ['data.ResultMessage'],
-      cleaned: 'padding trimmed from every string; blank Description entries and exactly repeated stays dropped',
       fetched_at: new Date(c.now()).toISOString(),
       status: r.status,
-      data: { ReportHospitalizations: stays },
+      data,
     });
     // A stay with HasLink has a discharge letter: the one document here that says what happened.
+    // The service pads every string and can list a stay twice, so the letter's name and request use
+    // trimmed values, and a repeated stay's letter is asked for once.
     const letters = stays.filter((s) => s.HasLink === true);
+    const done = new Set<string>();
     for (let i = 0; i < letters.length; i++) {
-      const s = letters[i];
+      const s = trimmed(letters[i]);
       c.progress(i, letters.length, 'hospital letters');
       // A stay has no id of its own; these four fields are what the site lists it by.
       const name = stem(iso(s.Date), await shortHash([s.Date, s.NameHospital, s.Department, s.TypeCommitmentEgenKey]), titleOf(s, ['NameHospital']));
+      if (done.has(name)) continue;
+      done.add(name);
       if (!s.LinkPDF || !s.TypeCommitmentEgenKey) {
         await c.problem('hospital-stays/files/' + name + '.pdf', 'HasLink is true but LinkPDF or TypeCommitmentEgenKey is empty');
         continue;
@@ -135,29 +139,10 @@ export async function hospitalStays(c: Collector, _ctx: Ctx): Promise<void> {
   }
 }
 
-/**
- * The service pads every string to a fixed width, fills DescriptionTreatment and
- * DescriptionDistinction to four entries with blank ones, and can list one stay twice. None of
- * that is data, and all of it costs an assistant reading time.
- */
-function cleanStays(rows: Json[]): Json[] {
-  const seen = new Set<string>();
-  const out: Json[] = [];
-  for (const row of rows) {
-    const stay: Json = {};
-    for (const [k, v] of Object.entries(row as Record<string, Json>)) {
-      if (typeof v === 'string') stay[k] = v.trim();
-      else if (Array.isArray(v)) {
-        stay[k] = v
-          .map((e: Json) => (e && typeof e.Description === 'string' ? { ...e, Description: e.Description.trim() } : e))
-          .filter((e: Json) => !(e && e.Description === ''));
-      } else stay[k] = v;
-    }
-    const key = JSON.stringify(stay);
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(stay);
-  }
+/** A stay's string fields without the service's fixed-width padding. */
+function trimmed(row: Json): Json {
+  const out: Json = {};
+  for (const [k, v] of Object.entries(row as Record<string, Json>)) out[k] = typeof v === 'string' ? v.trim() : v;
   return out;
 }
 

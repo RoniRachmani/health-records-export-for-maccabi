@@ -217,17 +217,19 @@ describe('full run against the fake site', () => {
     expect(mem.json('medications-and-prescriptions/purchased-report.json').omitted).toEqual(['data.base64']);
     expect(new TextDecoder().decode(mem.files.get('medications-and-prescriptions/files/purchased-report.pdf'))).toBe('%PDF-1.4 report');
     expect(mem.files.get('uploads/files/2026-05-01_F1_סיכום-אשפוז.pdf')).toEqual(PDF);
-    // Hospital stays: every year asked for, not the page's three; padding, blank entries and the
-    // repeated stay gone.
+    // Hospital stays: every year asked for, not the page's three; saved exactly as sent, padding,
+    // blank entries, the repeated stay and ResultMessage included.
     expect(site.calls).toContain('POST /online/webapi/MailingsFromHospitals/GetMailingsFromHospitals/');
     const stays = mem.json('hospital-stays/list.json');
     expect(stays.request_body).toEqual({ isDateSelected: true, fromDate: '01011900', toDate: '31122099' });
-    expect(stays.data.ReportHospitalizations).toHaveLength(2);
+    expect(stays.data.ReportHospitalizations).toHaveLength(3);
     expect(stays.data.ReportHospitalizations[0]).toMatchObject({
-      NameHospital: 'בית חולים לדוגמה',
-      DescriptionTreatment: [{ Description: 'HOSPITALIZATION - PER DAY' }],
-      DescriptionDistinction: [],
+      NameHospital: 'בית חולים לדוגמה   ',
+      DescriptionTreatment: [{ Description: 'HOSPITALIZATION - PER DAY      ' }, { Description: '      ' }],
     });
+    expect(stays.data.ResultMessage).toEqual({ Code: 0, Description: '' });
+    expect(stays.cleaned).toBeUndefined();
+    expect(stays.omitted).toBeUndefined();
     // The discharge letter is asked for as the page's Summary button opens it.
     expect(site.calls).toContain('GET /online/Pages/Popups/MailingsFromHospitals/MailingsFromHospitals.aspx?path=reports/L9.pdf&typeCommitment=2');
     expect(s.results).toEqual({ written: 41 });
