@@ -2,7 +2,7 @@
 
 Health Records Export for Maccabi
 
-Effective 23 September 2026
+Effective 24 September 2026
 
 <!-- Keep in sync with public/privacy.html, which ships in the extension at chrome-extension://<id>/privacy.html. -->
 
@@ -82,7 +82,7 @@ extension does not change or delete anything else, mark items as read, or access
 ## Permissions
 
 - Access to `online.maccabi4u.co.il`: to read your records from the site you are logged in to.
-- `scripting`: to read the login session from the Maccabi Healthcare Services tab (and clear the old token there so the site issues a
+- `scripting`: to read the login session from the Maccabi Online tab (and clear the old token there so the site issues a
   fresh one), send the requests the site accepts only from its own pages, and, while an export is running, signal
   activity in that tab every few minutes so Maccabi Healthcare Services's six-minute idle logout does not end the export partway.
 - `downloads`: to save the ZIP file.

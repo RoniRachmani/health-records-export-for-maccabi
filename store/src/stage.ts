@@ -38,7 +38,7 @@ const SHOTS: Record<string, Shot> = {
   },
   progress: {
     title: 'It works through your records on its own',
-    text: 'Progress shows on the toolbar icon. You can close the popup; keep the Maccabi Healthcare Services tab open and in front.',
+    text: 'Progress shows on the toolbar icon. You can close the popup; keep the Maccabi Online tab open and in front.',
     points: [
       'Usually done in 5 to 20 minutes',
       'Read-only, except for ordering your medical file',

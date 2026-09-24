@@ -151,8 +151,9 @@ function progressBar(percent: number, active: boolean): { bar: HTMLElement; fill
 
 function hintFor(run: RunState): string {
   if (run.status === 'saving') return 'Building the ZIP. It will be in your Downloads folder in a moment.';
-  if (PLAN[run.next] === 'waitMedicalFile') return 'Maccabi Healthcare Services usually prepares the file within a few minutes (at most 15). You can close this popup.';
-  return 'Keep the Maccabi Healthcare Services tab open and in front until the ZIP is saved. You can close this popup.';
+  // Two lines at most, in any font: the running view has no room to spare under Chrome's 600px cap.
+  if (PLAN[run.next] === 'waitMedicalFile') return 'The file is usually ready within minutes, 15 at most. You can close this popup.';
+  return 'Keep the Maccabi Online tab open and in front. You can close this popup.';
 }
 
 // ---- views -------------------------------------------------------------
@@ -165,7 +166,7 @@ function noticeView(): Child[] {
     h('ul', { class: 'points' },
       h('li', {}, 'It reads your records from Maccabi Online while you are logged in, and saves them as one ZIP file on this computer. Nothing is sent anywhere else.'),
       h('li', {}, 'Use it only with your own account, or one whose records you are legally entitled to access.'),
-      h('li', {}, 'While it works, your Maccabi Healthcare Services tab moves to the medical-file page and back, and it keeps your session from timing out until the export finishes.'),
+      h('li', {}, 'While it works, your Maccabi Online tab moves to the medical-file page and back, and it keeps your session from timing out until the export finishes.'),
       h('li', {}, 'The ZIP contains sensitive health information. Store and share it with care.')),
     note('warn', h('strong', {}, 'Each export orders a fresh copy of your full medical file.'),
       ' It asks for your whole history, a wider range than the site’s own form offers. Maccabi Healthcare Services texts you about it, and the' +
@@ -202,7 +203,7 @@ function includedDetails(): HTMLElement {
         h('li', {}, 'Only the logged-in member’s records.'),
         h('li', {}, 'No imaging studies (DICOM).'),
         h('li', {}, 'Visits from the last 12 months, as on the site. The purchase report PDF covers 2 years; the purchase table, everything.'),
-        h('li', {}, 'While it works, your Maccabi Healthcare Services tab moves to the medical-file page and back.'))));
+        h('li', {}, 'While it works, your Maccabi Online tab moves to the medical-file page and back.'))));
 }
 
 function idleView(st: StateReply): Child[] {
@@ -230,7 +231,7 @@ function idleView(st: StateReply): Child[] {
 
 function progressView(run: RunState): Child[] {
   const pill = status('');
-  const title = h('h2');
+  const title = h('h2', { class: 'step-title' });
   const detail = h('p', { class: 'detail' });
   const { bar, fill } = progressBar(run.percent, true);
   const stats = h('span', { class: 'stats' });
@@ -259,13 +260,13 @@ function pausedView(run: RunState, st: StateReply): Child[] {
   const stage = STAGES[stageStates(run.next).indexOf('current')]?.label;
   let primary: HTMLElement;
   if (!hidden && st.tab.onMaccabi) primary = actionButton('Resume', { type: 'resume' }, 'primary', 'Reconnecting…');
-  else primary = actionButton('Go to the Maccabi Healthcare Services tab', { type: 'focusTab' }, 'primary');
+  else primary = actionButton('Go to the Maccabi Online tab', { type: 'focusTab' }, 'primary');
   return [
     status('Paused · ' + run.percent + '%', 'warn'),
-    h('h2', {}, hidden ? 'Waiting for the Maccabi Healthcare Services tab' : 'Export paused'),
+    h('h2', {}, hidden ? 'Waiting for the Maccabi Online tab' : 'Export paused'),
     stage && h('p', { class: 'detail' }, 'Section: ' + stage),
     progressBar(run.percent, false).bar,
-    note('warn', run.message || (hidden ? 'Bring the Maccabi Healthcare Services tab back to the front to continue.' : 'The export is paused.')),
+    note('warn', run.message || (hidden ? 'Bring the Maccabi Online tab back to the front to continue.' : 'The export is paused.')),
     ui.confirm === 'cancel' ? cancelConfirm() : actions(primary, cancelButton()),
   ];
 }
@@ -325,7 +326,7 @@ function errorView(run: RunState, st: StateReply): Child[] {
   let retry: HTMLElement;
   if (atSave) retry = actionButton('Save again', { type: 'retrySave' }, 'primary', 'Saving…');
   else if (st.tab.onMaccabi) retry = actionButton('Try again', { type: 'resume' }, 'primary', 'Reconnecting…');
-  else retry = actionButton('Go to the Maccabi Healthcare Services tab', { type: 'focusTab' }, 'primary');
+  else retry = actionButton('Go to the Maccabi Online tab', { type: 'focusTab' }, 'primary');
   return [
     status(atSave ? 'Not saved' : 'Stopped', 'err'),
     h('h2', {}, atSave ? 'The ZIP was not saved' : 'Export stopped'),
@@ -333,7 +334,7 @@ function errorView(run: RunState, st: StateReply): Child[] {
       h('div', {}, run.message || 'The export failed.'),
       !atSave && h('div', { class: 'small' }, st.tab.onMaccabi
         ? 'Files collected so far are kept. Try again continues from where it stopped.'
-        : 'Files collected so far are kept. To try again, open this popup on the logged-in Maccabi Healthcare Services tab.')),
+        : 'Files collected so far are kept. To try again, open this popup on the logged-in Maccabi Online tab.')),
     ui.confirm === 'discard'
       ? confirmPanel('Delete the files collected so far? You will need to start a new export.', 'Delete files', { type: 'dismiss' }, 'Deleting…', 'Keep them')
       : actions(retry, button('Discard collected files', () => askConfirm('discard'))),
@@ -358,7 +359,10 @@ function updateStats(): void {
 function updateLive(run: RunState): void {
   const { title, detail } = stepText(run);
   if (live.status) live.status.textContent = run.status === 'saving' ? 'Saving' : 'Exporting · ' + run.percent + '%';
-  if (live.title) live.title.textContent = title;
+  if (live.title) {
+    live.title.textContent = title;
+    live.title.title = title;
+  }
   if (live.detail) {
     live.detail.textContent = detail;
     live.detail.title = detail;
@@ -386,7 +390,7 @@ const ANNOUNCEMENTS: Record<string, string> = {
   running: 'Export running',
   saving: 'Saving the ZIP',
   paused_session: 'Export paused',
-  paused_hidden: 'Export waiting for the Maccabi Healthcare Services tab',
+  paused_hidden: 'Export waiting for the Maccabi Online tab',
   done: 'Export saved',
   error: 'Export failed',
   stopping: 'Stopping the export',
