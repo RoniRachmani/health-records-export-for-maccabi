@@ -148,14 +148,15 @@ function trimmed(row: Json): Json {
 
 export async function emptySections(c: Collector, _ctx: Ctx): Promise<void> {
   const member = [{ member_id_code: '0', member_id: c.session.mid }];
-  const checks: [string, string, string, Json, (d: Json) => unknown][] = [
-    ['allergies-sensitivity/list.json', 'GET', 'MedicalFileAPI/v1/members/0/{mid}/sensitivity', undefined, (d) => d && d.intolerance && d.intolerance.length],
-    ['appointments/list.json', 'POST', 'AppointmentOrderAPI/v2/members/0/{mid}/appointments/future', { members: member, is_with_ascribed_doctor: false }, (d) => Array.isArray(d) && d.length],
-    ['requests-approvals/list.json', 'POST', 'RequestsAndApprovalsAPI/v1/members/0/{mid}/requests_and_cases', { members: member }, (d) => (Array.isArray(d) ? d.length : d && Object.keys(d).length)],
+  // The first entry is the part's name in the progress detail: the popup gives allergies a line of their own.
+  const checks: [string, string, string, string, Json, (d: Json) => unknown][] = [
+    ['allergies', 'allergies-sensitivity/list.json', 'GET', 'MedicalFileAPI/v1/members/0/{mid}/sensitivity', undefined, (d) => d && d.intolerance && d.intolerance.length],
+    ['appointments', 'appointments/list.json', 'POST', 'AppointmentOrderAPI/v2/members/0/{mid}/appointments/future', { members: member, is_with_ascribed_doctor: false }, (d) => Array.isArray(d) && d.length],
+    ['requests', 'requests-approvals/list.json', 'POST', 'RequestsAndApprovalsAPI/v1/members/0/{mid}/requests_and_cases', { members: member }, (d) => (Array.isArray(d) ? d.length : d && Object.keys(d).length)],
   ];
   for (let i = 0; i < checks.length; i++) {
-    const [rel, method, path, body, hasData] = checks[i];
-    c.progress(i, checks.length, 'other sections');
+    const [part, rel, method, path, body, hasData] = checks[i];
+    c.progress(i, checks.length, part);
     const r = await c.api(method, path, body);
     if (r.status === 200 && hasData(r.data)) await c.save(rel, c.rec(method, path, r));
   }

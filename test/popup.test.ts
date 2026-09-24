@@ -82,18 +82,18 @@ describe('popup', () => {
     expect(document.querySelector('.status')?.textContent).toBe('Exporting · 12%');
     expect(document.querySelector('.stages [aria-current=step]')?.textContent).toBe('Lab historiesSaving how each lab value changed over time');
     expect([...document.querySelectorAll('.stages .detail')].filter((d) => d.textContent)).toHaveLength(1);
-    expect(document.querySelector('.stats')?.textContent).toBe('40 files · 2.3 MB · 6 min elapsed');
+    expect(document.querySelector('.stats > :first-child')?.textContent).toBe('40 files · 2.3 MB · 6 min elapsed');
 
     storageChange(running({ next: PLAN.indexOf('approvals'), percent: 48, detail: 'Approvals: approvals', fileCount: 212, byteCount: 14_800_000 }));
     expect(buttonNamed('Stop')).toBe(stop);
     expect(document.querySelector('.status')?.textContent).toBe('Exporting · 48%');
     expect(document.querySelector('.stages .current .detail')?.textContent).toBe('Downloading each approval as a PDF');
     expect([...document.querySelectorAll('.stages .detail')].filter((d) => d.textContent)).toHaveLength(1);
-    expect(document.querySelector('.stats')?.textContent).toBe('212 files · 15 MB · 6 min elapsed');
+    expect(document.querySelector('.stats > :first-child')?.textContent).toBe('212 files · 15 MB · 6 min elapsed');
     expect(document.querySelector('[role=progressbar]')?.getAttribute('aria-valuenow')).toBe('48');
     expect(document.querySelector('.stages [aria-current=step] > span')?.firstChild?.textContent).toBe('Approvals');
     expect(document.querySelectorAll('.stages li.done')).toHaveLength(10);
-    expect(document.querySelector('.sections-label')?.textContent).toBe('Sections10 of 18 done');
+    expect(document.querySelector('.stats > :last-child')?.textContent).toBe('10 of 19 sections');
   });
 
   it('confirms Stop inline, then shows Stopping until the run is gone', async () => {

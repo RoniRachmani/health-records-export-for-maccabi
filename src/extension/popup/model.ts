@@ -17,10 +17,11 @@ export interface Stage {
  * named for what it collects, so the list reads as an inventory of the member's records and ticks along at a
  * steady pace. Page changes and bookkeeping steps are folded into the line they serve. The current line says what
  * it is doing under its name (DESCRIPTIONS). Stages are in PLAN order, a step's stages consecutive, and the first
- * stage holding a step is labelled with its LABELS entry, so errors and problems name it the same way.
+ * stage holding a step is labelled with its LABELS entry, so errors and problems name it the same way; a step split
+ * into parts is named as a whole by LABELS instead.
  *
- * Room is the constraint: Chrome caps the popup at 600px, which leaves 18 lines here (16px each, plus the current
- * line's description). A step that is a line of its own takes one; merge before adding a nineteenth.
+ * Room is the constraint: Chrome caps the popup at 600px, which leaves 19 lines here (16px each, plus the current
+ * line's description). Merge before adding a twentieth.
  */
 export const STAGES: Stage[] = [
   // Ordering comes first so Maccabi can build the file while everything else is collected; collecting it is the
@@ -41,8 +42,10 @@ export const STAGES: Stage[] = [
   { label: 'Vaccinations', steps: ['vaccinations'] },
   { label: 'Letters', steps: ['letters'] },
   { label: 'Messages with your doctor', steps: ['doctorCommunications'] },
-  // Three requests for sections that are usually empty, but they are sections of the export like any other.
-  { label: 'Allergies and appointments', steps: ['emptySections'] },
+  // Three requests for sections that are usually empty. Allergies are part of the medical record and get a line of
+  // their own; future appointments and open requests are the member's dealings with Maccabi, and share one.
+  { label: 'Allergies', steps: ['emptySections'], parts: ['', 'allergies'] },
+  { label: 'Upcoming appointments and requests', steps: ['emptySections'], parts: ['appointments', 'requests'] },
   { label: 'Collecting your medical file', steps: ['waitMedicalFile'] },
   { label: 'Saving the ZIP', steps: ['save'] },
 ];
@@ -129,7 +132,12 @@ export const DESCRIPTIONS: Record<PlanStep, Record<string, string>> = {
   vaccinations: { '': 'Reading your vaccinations', vaccinations: 'Reading vaccines and the vaccination booklet' },
   letters: { '': 'Reading your letters', letters: 'Downloading your letters as PDFs' },
   doctorCommunications: { '': 'Reading your messages to your doctor', 'doctor inquiries': 'Downloading messages and attached forms' },
-  emptySections: { '': 'Checking sections that are often empty', 'other sections': 'Checking allergies, appointments and requests' },
+  emptySections: {
+    '': 'Checking for recorded allergies',
+    allergies: 'Checking for recorded allergies',
+    appointments: 'Checking for upcoming appointments',
+    requests: 'Checking your open requests with Maccabi',
+  },
   openLegacyPage: { '': 'Opening the medical file page in your tab' },
   purchases: {
     '': 'Reading every medication purchase',

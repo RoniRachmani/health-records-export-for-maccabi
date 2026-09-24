@@ -180,7 +180,7 @@ function noticeView(): Child[] {
 const INCLUDED = [
   'Test results', 'Lab histories', 'Visit summaries', 'Prescriptions', 'Medication purchases', 'Referrals',
   'Approvals', 'Information pages', 'Vaccinations', 'Letters', 'Full medical file', 'Messages with your doctor', 'Your uploads',
-  'Hospital stays', 'Allergies and appointments',
+  'Hospital stays', 'Allergies', 'Upcoming appointments',
 ];
 
 function accountRow(st: StateReply): HTMLElement {
@@ -231,7 +231,7 @@ function idleView(st: StateReply): Child[] {
 function progressView(run: RunState): Child[] {
   const pill = status('');
   const { bar, fill } = progressBar(run.percent, true);
-  const stats = h('p', { class: 'stats' });
+  const stats = h('span');
   const hint = h('p', { class: 'hint' });
   // The list is the view of the run: the current line carries what it is doing, in its .detail.
   const stages = STAGES.map((s) => h('li', {}, h('span', {}, s.label, h('span', { class: 'detail' }))));
@@ -241,13 +241,12 @@ function progressView(run: RunState): Child[] {
     h('h2', { class: 'visually-hidden' }, 'Export in progress'),
     h('div', { class: 'status-row' }, pill, run.status === 'running' && ui.confirm !== 'cancel' && cancelButton('small')),
     bar,
-    stats,
+    // The counters, and on the right how many sections are done: the list below needs every row it can get.
+    h('p', { class: 'stats' }, stats, stagesDone),
     // The list is hidden while Stop is being confirmed, so the question fits without scrolling.
     ui.confirm === 'cancel' && cancelConfirm(),
     hint,
-    ui.confirm !== 'cancel' && h('div', { class: 'sections' },
-      h('p', { class: 'sections-label' }, h('span', {}, 'Sections'), stagesDone),
-      h('ol', { class: 'stages', 'aria-label': 'Export steps' }, ...stages)),
+    ui.confirm !== 'cancel' && h('ol', { class: 'stages', 'aria-label': 'Sections' }, ...stages),
   ];
 }
 
@@ -378,7 +377,7 @@ function updateLive(run: RunState): void {
       if (states[i] === 'current') li.setAttribute('aria-current', 'step');
       else li.removeAttribute('aria-current');
     });
-    if (live.stagesDone) live.stagesDone.textContent = states.filter((s) => s === 'done').length + ' of ' + states.length + ' done';
+    if (live.stagesDone) live.stagesDone.textContent = states.filter((s) => s === 'done').length + ' of ' + states.length + ' sections';
   }
   if (live.hint) live.hint.textContent = hintFor(run);
   updateStats();

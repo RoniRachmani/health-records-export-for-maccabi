@@ -109,7 +109,7 @@ export const LABELS: Record<PlanStep, string> = {
   vaccinations: 'Vaccinations',
   letters: 'Letters',
   doctorCommunications: 'Messages with your doctor',
-  emptySections: 'Allergies and appointments',
+  emptySections: 'Allergies, appointments and requests',
   openLegacyPage: 'Ordering your medical file',
   purchases: 'Medication purchases',
   savedDocuments: 'Your uploads',

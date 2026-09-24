@@ -586,10 +586,23 @@ details.more summary:hover {
   }
 }
 .stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
   margin: 7px 0 0;
   color: var(--muted);
   font-size: 12.5px;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* A long run's counters give way to the section count, not the other way round. */
+.stats > :first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stats > :last-child {
+  flex: none;
 }
 .hint {
   margin: 4px 0 0;
@@ -599,31 +612,18 @@ details.more summary:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.sections {
-  margin: 10px 0 0;
-  padding-top: 8px;
-  border-top: 1px solid var(--line);
-}
-.sections-label {
-  display: flex;
-  justify-content: space-between;
-  margin: 0 0 5px;
-  color: var(--muted);
-  font-size: 11.5px;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-}
 .stages {
   list-style: none;
-  padding: 0;
-  margin: 0;
+  margin: 10px 0 0;
+  padding: 9px 0 0;
+  border-top: 1px solid var(--line);
 }
 .stages li {
   display: flex;
   align-items: flex-start;
   gap: 9px;
   color: var(--muted);
-  /* 16px a line: eighteen sections and the current one's description keep the popup under Chrome's
+  /* 16px a line: nineteen sections and the current one's description keep the popup under Chrome's
      600px cap without crowding the 15px marks. */
   font-size: 12.5px;
   line-height: 16px;

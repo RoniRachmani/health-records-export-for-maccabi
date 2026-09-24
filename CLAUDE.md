@@ -71,7 +71,7 @@ worker or a Chrome restart continues from there. When you touch `PLAN`:
   run: stages are **in `PLAN` order**, one line per thing the member gets (a long step may take a line per part,
   with `parts`), and the first stage holding a step is labelled with its `LABELS` entry. A step that only
   serves another (a page change, a wait) shares that one's line and label and says what it does in
-  `DESCRIPTIONS`, which the current line shows under its name. 18 lines is what fits under the 600px cap;
+  `DESCRIPTIONS`, which the current line shows under its name. 19 lines is what fits under the 600px cap;
 - add an entry to `OPENED_BY` if the step only works on a page an earlier step opened (`resumeIndex`
   rewinds a resume to that opener);
 - a stored run carries `nextStep` by name beside the index, so `alignToPlan` survives reordering across
