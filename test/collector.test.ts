@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canon, newCtx, STEP_ORDER, type HttpResponse } from '../src/core';
+import { canon, newCtx, type HttpResponse } from '../src/core';
 import { fakeMaccabi, fakeTransport, jsonResp, makeCollector, MemorySink, MID, PDF, PURCHASE_TABLE, runAll } from './fakes';
 
 describe('api()', () => {
@@ -280,6 +280,5 @@ describe('full run against the fake site', () => {
     expect(s.stoppedAt).toBe('visits');
     expect(s.problems[0]).toMatch(/^visits PROBLEM: SESSION ENDED/);
     expect([...(sink as MemorySink).files.keys()]).toEqual([]);
-    expect(STEP_ORDER).toHaveLength(14);
   });
 });

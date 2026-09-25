@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
+import { STEP_ORDER } from '../src/core';
 import { alignToPlan, PLAN, resumeIndex } from '../src/extension/shared/state';
+
+describe('PLAN', () => {
+  it('runs every collection step once, in the order core lists them', () => {
+    expect(PLAN.filter((s) => (STEP_ORDER as string[]).includes(s))).toEqual(STEP_ORDER);
+  });
+});
 
 describe('resumeIndex', () => {
   it('opens the legacy page again before its steps', () => {
@@ -40,9 +47,9 @@ describe('alignToPlan', () => {
   });
 
   it('follows the name when an update moved the step', () => {
-    // The real drift: the plan that ordered the medical file at index 13 now has returnToSonline
-    // there, so a run paused before the order would have skipped it and waited for a file nobody
-    // asked for.
+    // The real drift: a plan that ordered the medical file at index 13 was replaced by one with
+    // another step there, so a run paused before the order would have skipped it and waited for a
+    // file nobody asked for.
     const run = { next: 13, nextStep: 'orderMedicalFile' as const };
     expect(alignToPlan(run)).toBe(true);
     expect(PLAN[run.next]).toBe('orderMedicalFile');

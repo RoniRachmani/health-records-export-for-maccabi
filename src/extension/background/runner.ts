@@ -15,7 +15,7 @@ import {
 import { exportReadme, INSTRUCTION_POINTERS } from '../shared/readme';
 import { callOffscreen, closeOffscreen, offscreenHtml } from './offscreenClient';
 import { capturingTransport, rawDumpOn } from './rawDump';
-import { currentSession, DEFAULT_ROUTES, isVisible, keepSessionAlive, navigate, routedTransport, snapshot, type Routes } from './tab';
+import { currentRoutes, currentSession, isVisible, keepSessionAlive, navigate, routedTransport, snapshot } from './tab';
 import { updateBadge, notify } from './ui';
 
 const HEARTBEAT = 'hrem-heartbeat';
@@ -80,11 +80,6 @@ async function setSession(s: Session): Promise<void> {
 
 async function midHash(mid: string | null): Promise<string> {
   return sha256Hex(new TextEncoder().encode('hrem|' + (mid || '')));
-}
-
-async function routes(): Promise<Routes> {
-  const r = (await chrome.storage.local.get('routes')).routes as Routes | undefined;
-  return r ?? DEFAULT_ROUTES;
 }
 
 // ---- entry points (popup / dev bridge) ---------------------------------
@@ -304,7 +299,7 @@ async function collector(): Promise<Collector> {
   const run = state as RunState;
   const session = await getSession();
   if (!session) throw new SessionEndedError('no session token');
-  const transport = routedTransport(run.tabId, await routes(), waitVisible);
+  const transport = routedTransport(run.tabId, await currentRoutes(), waitVisible);
   return new Collector(
     {
       transport: __DEV_BRIDGE__ && (await rawDumpOn()) ? capturingTransport(transport, session.mid) : transport,

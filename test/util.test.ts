@@ -87,16 +87,16 @@ describe('sessionFrom', () => {
   const jwt = (claims: object) =>
     'h.' + btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(claims)))).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_') + '.s';
   it('prefers the member cookie', () => {
-    expect(sessionFrom('a=1; cookie_sessionId_0_777=x', jwt({ mem_id: 888, gender: 'M' }))).toEqual({ mid: '777', gender: 'M' });
+    expect(sessionFrom('777', jwt({ mem_id: 888, gender: 'M' }))).toEqual({ mid: '777', gender: 'M' });
   });
   it('falls back to mem_id in the token', () => {
-    expect(sessionFrom('a=1', jwt({ mem_id: 888, gender: 'F' }))).toEqual({ mid: '888', gender: 'F' });
+    expect(sessionFrom(null, jwt({ mem_id: 888, gender: 'F' }))).toEqual({ mid: '888', gender: 'F' });
   });
   it('decodes a Hebrew gender as UTF-8', () => {
-    expect(sessionFrom('', jwt({ mem_id: 888, gender: 'ז' }))).toEqual({ mid: '888', gender: 'ז' });
+    expect(sessionFrom(null, jwt({ mem_id: 888, gender: 'ז' }))).toEqual({ mid: '888', gender: 'ז' });
   });
   it('is empty when logged out', () => {
-    expect(sessionFrom('', null)).toEqual({ mid: null, gender: undefined });
+    expect(sessionFrom(null, null)).toEqual({ mid: null, gender: undefined });
   });
 });
 

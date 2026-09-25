@@ -1,9 +1,9 @@
 import { changed, type Collector } from '../collector';
 import type { Ctx, Json } from '../types';
 import { safe, stem, titleOf } from '../util';
+import { reportPdf } from './medications';
 
 const GROUP_TITLE = ['vaccine_group_name', 'vaccine_group_description', 'group_name', 'description', 'name'];
-import { reportPdf } from './medications';
 
 export async function vaccinations(c: Collector, ctx: Ctx): Promise<void> {
   let changedAny = false;

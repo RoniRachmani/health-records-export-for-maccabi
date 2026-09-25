@@ -11,22 +11,25 @@ import type { Ctx } from './types';
 
 export type Step = (c: Collector, ctx: Ctx) => Promise<unknown>;
 
-/** Every collection step, in run order. The extension's run plan uses these names. */
+/**
+ * Every collection step, in the order the extension's run plan (PLAN) takes them; the plan uses
+ * these names. The tests' fake run goes through them in this order, as an export does.
+ */
 export const STEPS = {
   profileAndDoctors,
-  testResults,
-  visits,
+  emptySections,
   medications,
   purchases,
+  hospitalStays,
+  savedDocuments,
+  testResults,
+  visits,
   referrals,
   approvals,
-  infoPages,
   vaccinations,
   letters,
   doctorCommunications,
-  savedDocuments,
-  hospitalStays,
-  emptySections,
+  infoPages,
 } satisfies Record<string, Step>;
 
 export type StepName = keyof typeof STEPS;
