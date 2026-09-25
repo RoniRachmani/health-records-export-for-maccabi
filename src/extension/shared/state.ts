@@ -32,30 +32,34 @@ export type RunStatus =
 export const PLAN = [
   // The medical file is ordered first so Maccabi builds it while the rest is collected: by the time
   // waitMedicalFile runs, it is normally ready and there is nothing left to wait for. The legacy
-  // page it is ordered from serves the purchases, uploads and hospital stays too, so the run still
+  // page it is ordered from serves the purchases, hospital stays and uploads too, so the run still
   // crosses once.
   'openLegacyPage',
   'orderMedicalFile',
-  // Prescriptions sit next to the purchases they belong with: both write to
-  // medications-and-prescriptions/. They come from the REST API, which does not care what page the
-  // tab is on, so they can be collected from the legacy page.
-  'medications',
-  'purchases',
-  'savedDocuments',
-  'hospitalStays',
-  'returnToSonline',
+  // The member's details, then their medications, come first in the popup's list, as the natural
+  // opening. Both are REST API steps, which do not care what page the tab is on, so they are
+  // collected from the legacy page, next to the purchases that belong with the prescriptions (both
+  // write to medications-and-prescriptions/). The token is good for hours; the site's 6-minute idle
+  // logout is kept off by keepSessionAlive, on whatever page the tab is on.
   'profileAndDoctors',
   // Allergies, upcoming appointments and requests: three short requests, shown in the popup as part
   // of "Your details and doctor", which needs them right after it.
   'emptySections',
+  'medications',
+  'purchases',
+  'hospitalStays',
+  'savedDocuments',
+  'returnToSonline',
   'testResults',
   'visits',
   'referrals',
   'approvals',
-  'infoPages',
   'vaccinations',
   'letters',
   'doctorCommunications',
+  // General health information a practitioner handed out, not about the member: the least of the
+  // sections, so the last before the medical file.
+  'infoPages',
   'waitMedicalFile',
   'save',
 ] as const;
@@ -117,7 +121,7 @@ export const LABELS: Record<PlanStep, string> = {
   savedDocuments: 'Your uploads',
   hospitalStays: 'Hospital stays',
   orderMedicalFile: 'Ordering your medical file',
-  returnToSonline: 'Your details and doctor',
+  returnToSonline: 'Test results',
   waitMedicalFile: 'Collecting your medical file',
   save: 'Saving the ZIP',
 };

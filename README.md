@@ -311,8 +311,8 @@ flowchart LR
 ```
 
 The service worker walks a fixed plan (`PLAN` in `src/extension/shared/state.ts`): one crossing to the old site to
-order the medical file and collect purchases, uploads and hospital stays, back to `/sonline/` for the REST API sections, and the
-medical file collected last, by which time Maccabi Healthcare Services has had the whole run to build it. Each finished step is
+order the medical file and collect purchases, hospital stays and uploads (with the member's details and prescriptions,
+which the REST API answers from any page), back to `/sonline/` for the other REST API sections, and the medical file collected last, by which time Maccabi Healthcare Services has had the whole run to build it. Each finished step is
 checkpointed in `chrome.storage.local`, so a paused run, or a restarted service worker, continues from there.
 
 The tab visits a single legacy page, `/online/medicalfile/summary/`. The legacy services answer only after some

@@ -12,9 +12,6 @@ describe('STAGES', () => {
     for (const stage of STAGES.filter((s) => !s.parts)) expect(stage.steps.map((step) => LABELS[step])).toContain(stage.label);
   });
 
-  it('splits a step only into single-step lines that name its parts', () => {
-    for (const stage of STAGES.filter((s) => s.parts)) expect(stage.steps).toHaveLength(1);
-  });
 });
 
 describe('stageStates', () => {
@@ -39,6 +36,7 @@ describe('stageStates', () => {
   it('moves along a split step’s lines as its parts run', () => {
     const tests = STAGES.findIndex((s) => s.label === 'Test results');
     const histories = STAGES.findIndex((s) => s.label === 'Lab histories');
+    expect(stageStates(at('returnToSonline'))[tests]).toBe('current');
     expect(stageStates(at('testResults'))[tests]).toBe('current');
     expect(stageStates(at('testResults', 'test results'))[tests]).toBe('current');
     const later = stageStates(at('testResults', 'lab histories'));

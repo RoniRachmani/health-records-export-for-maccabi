@@ -6,8 +6,8 @@ export interface Stage {
   label: string;
   steps: PlanStep[];
   /**
-   * Only these parts of a single step, as its progress detail names them ('' is the step before its first report),
-   * for a step long enough to deserve more than one line.
+   * Only these parts of the step being split, as its progress detail names them ('' is a step before its first
+   * report), for a step long enough to deserve more than one line.
    */
   parts?: string[];
 }
@@ -28,22 +28,23 @@ export const STAGES: Stage[] = [
   // Ordering comes first so Maccabi can build the file while everything else is collected; collecting it is the
   // last stage before the ZIP.
   { label: 'Ordering your medical file', steps: ['openLegacyPage', 'orderMedicalFile'] },
+  // Allergies, upcoming appointments and requests are three requests, usually empty: they ride along here.
+  { label: 'Your details and doctor', steps: ['profileAndDoctors', 'emptySections'] },
   { label: 'Prescriptions', steps: ['medications'] },
   { label: 'Medication purchases', steps: ['purchases'] },
-  { label: 'Your uploads', steps: ['savedDocuments'] },
   { label: 'Hospital stays', steps: ['hospitalStays'] },
-  // Allergies, upcoming appointments and requests are three requests, usually empty: they ride along here.
-  { label: 'Your details and doctor', steps: ['returnToSonline', 'profileAndDoctors', 'emptySections'] },
-  // The longest step by far: its two halves are two lines, or the list would sit on one for a third of the run.
-  { label: 'Test results', steps: ['testResults'], parts: ['', 'test results'] },
+  { label: 'Your uploads', steps: ['savedDocuments'] },
+  // The longest step by far: its two halves are two lines, or the list would sit on one for a third of the run. The
+  // tab's way back to the main site, just before it, is part of its first line.
+  { label: 'Test results', steps: ['returnToSonline', 'testResults'], parts: ['', 'test results'] },
   { label: 'Lab histories', steps: ['testResults'], parts: ['lab histories'] },
   { label: 'Visit summaries', steps: ['visits'] },
   { label: 'Referrals', steps: ['referrals'] },
   { label: 'Approvals', steps: ['approvals'] },
-  { label: 'Information pages', steps: ['infoPages'] },
   { label: 'Vaccinations', steps: ['vaccinations'] },
   { label: 'Letters', steps: ['letters'] },
   { label: 'Messages with your doctor', steps: ['doctorCommunications'] },
+  { label: 'Information pages', steps: ['infoPages'] },
   { label: 'Collecting your medical file', steps: ['waitMedicalFile'] },
   { label: 'Saving the ZIP', steps: ['save'] },
 ];
