@@ -8,11 +8,8 @@ describe('STAGES', () => {
     expect(steps).toEqual([...PLAN]);
   });
 
-  it('labels the line of each step with its LABELS entry, so errors and problems name it the same way', () => {
-    for (const step of PLAN) {
-      const stage = STAGES.find((s) => s.steps.includes(step));
-      if (!stage?.parts) expect(stage?.label).toBe(LABELS[step]);
-    }
+  it('labels each line with one of its steps’ LABELS entries, so errors and problems name it the same way', () => {
+    for (const stage of STAGES.filter((s) => !s.parts)) expect(stage.steps.map((step) => LABELS[step])).toContain(stage.label);
   });
 
   it('splits a step only into single-step lines that name its parts', () => {
@@ -48,9 +45,8 @@ describe('stageStates', () => {
     expect([later[tests], later[histories]]).toEqual(['done', 'current']);
     // A part no line names stays on the step's first line.
     expect(stageStates(at('testResults', 'imaging reports'))[tests]).toBe('current');
-    const allergies = STAGES.findIndex((s) => s.label === 'Allergies');
-    expect(stageStates(at('emptySections', 'appointments'))[allergies + 1]).toBe('current');
-    expect(stageStates(at('emptySections', 'requests'))[allergies + 2]).toBe('current');
+    const details = STAGES.findIndex((s) => s.label === 'Your details and doctor');
+    for (const part of [undefined, 'allergies', 'appointments', 'requests']) expect(stageStates(at('emptySections', part))[details]).toBe('current');
   });
 
   it('marks everything but saving done at the save step, and everything done after it', () => {

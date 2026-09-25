@@ -93,7 +93,7 @@ describe('popup', () => {
     expect(document.querySelector('[role=progressbar]')?.getAttribute('aria-valuenow')).toBe('48');
     expect(document.querySelector('.stages [aria-current=step] > span')?.firstChild?.textContent).toBe('Approvals');
     expect(document.querySelectorAll('.stages li.done')).toHaveLength(10);
-    expect(document.querySelector('.stats > :last-child')?.textContent).toBe('10 of 20 sections');
+    expect(document.querySelector('.stats > :last-child')?.textContent).toBe('10 of 17 sections');
   });
 
   it('confirms Stop inline, then shows Stopping until the run is gone', async () => {

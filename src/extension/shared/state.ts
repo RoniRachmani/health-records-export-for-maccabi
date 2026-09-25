@@ -37,14 +37,17 @@ export const PLAN = [
   'openLegacyPage',
   'orderMedicalFile',
   // Prescriptions sit next to the purchases they belong with: both write to
-  // medications-and-prescriptions/, and the popup shows them as one stage. They come from the REST
-  // API, which does not care what page the tab is on, so they can be collected from the legacy page.
+  // medications-and-prescriptions/. They come from the REST API, which does not care what page the
+  // tab is on, so they can be collected from the legacy page.
   'medications',
   'purchases',
   'savedDocuments',
   'hospitalStays',
   'returnToSonline',
   'profileAndDoctors',
+  // Allergies, upcoming appointments and requests: three short requests, shown in the popup as part
+  // of "Your details and doctor", which needs them right after it.
+  'emptySections',
   'testResults',
   'visits',
   'referrals',
@@ -53,7 +56,6 @@ export const PLAN = [
   'vaccinations',
   'letters',
   'doctorCommunications',
-  'emptySections',
   'waitMedicalFile',
   'save',
 ] as const;

@@ -17,8 +17,9 @@ export interface Stage {
  * named for what it collects, so the list reads as an inventory of the member's records and ticks along at a
  * steady pace. Page changes and bookkeeping steps are folded into the line they serve. The current line says what
  * it is doing under its name (DESCRIPTIONS). Stages are in PLAN order, a step's stages consecutive, and the first
- * stage holding a step is labelled with its LABELS entry, so errors and problems name it the same way; a step split
- * into parts is named as a whole by LABELS instead.
+ * stage is labelled with one of its steps' LABELS entries, so errors and problems name it the same way. A step that
+ * only serves another shares its label; a step that collects something of its own keeps its own name there, and a
+ * step split into parts is named as a whole.
  *
  * Room is the constraint: Chrome caps the popup at 600px, which leaves 20 lines here (16px each, plus the current
  * line's description). Merge before adding a twenty-first.
@@ -31,7 +32,8 @@ export const STAGES: Stage[] = [
   { label: 'Medication purchases', steps: ['purchases'] },
   { label: 'Your uploads', steps: ['savedDocuments'] },
   { label: 'Hospital stays', steps: ['hospitalStays'] },
-  { label: 'Your details and doctor', steps: ['returnToSonline', 'profileAndDoctors'] },
+  // Allergies, upcoming appointments and requests are three requests, usually empty: they ride along here.
+  { label: 'Your details and doctor', steps: ['returnToSonline', 'profileAndDoctors', 'emptySections'] },
   // The longest step by far: its two halves are two lines, or the list would sit on one for a third of the run.
   { label: 'Test results', steps: ['testResults'], parts: ['', 'test results'] },
   { label: 'Lab histories', steps: ['testResults'], parts: ['lab histories'] },
@@ -42,10 +44,6 @@ export const STAGES: Stage[] = [
   { label: 'Vaccinations', steps: ['vaccinations'] },
   { label: 'Letters', steps: ['letters'] },
   { label: 'Messages with your doctor', steps: ['doctorCommunications'] },
-  // One step, three requests for sections that are usually empty: a line each.
-  { label: 'Allergies', steps: ['emptySections'], parts: ['', 'allergies'] },
-  { label: 'Upcoming appointments', steps: ['emptySections'], parts: ['appointments'] },
-  { label: 'Open requests', steps: ['emptySections'], parts: ['requests'] },
   { label: 'Collecting your medical file', steps: ['waitMedicalFile'] },
   { label: 'Saving the ZIP', steps: ['save'] },
 ];
@@ -133,10 +131,10 @@ export const DESCRIPTIONS: Record<PlanStep, Record<string, string>> = {
   letters: { '': 'Reading your letters', letters: 'Downloading your letters as PDFs' },
   doctorCommunications: { '': 'Reading your messages to your doctor', 'doctor inquiries': 'Downloading messages and attached forms' },
   emptySections: {
-    '': 'Checking for recorded allergies',
-    allergies: 'Checking for recorded allergies',
+    '': 'Checking for allergies and sensitivities',
+    allergies: 'Checking for allergies and sensitivities',
     appointments: 'Checking for upcoming appointments',
-    requests: 'Checking your open requests with Maccabi',
+    requests: 'Checking your requests with Maccabi',
   },
   openLegacyPage: { '': 'Opening the medical file page in your tab' },
   purchases: {
@@ -188,7 +186,7 @@ const FOLDER_LABELS: Record<string, string> = {
   'hospital-stays': 'Hospital stays',
   'allergies-sensitivity': 'Allergies',
   appointments: 'Appointments',
-  'requests-approvals': 'Open requests',
+  'requests-approvals': 'Requests and approvals',
 };
 
 export interface ProblemGroup {
