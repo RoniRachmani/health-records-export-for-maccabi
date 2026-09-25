@@ -4,6 +4,7 @@
    Replies carry statuses, sizes and counts -- never record contents. */
 import { jwtClaims, type Json } from '../../core';
 import { getFile, listMeta, listProblems } from '../shared/staging';
+import { imagingProbe, type ProbeOptions } from './imagingProbe';
 import { cancel, dismiss, loadRun, resume, retrySave, start } from './runner';
 import { rawDumpOn, setRawDump } from './rawDump';
 import { currentRoutes, extensionFetch, sessionOf, snapshot, tabTransport } from './tab';
@@ -90,6 +91,9 @@ async function handleDevImpl(msg: DevMsg, sender: chrome.runtime.MessageSender):
       await chrome.storage.session.set({ session: { ...s, jwt: 'invalid.' + btoa('{}') + '.token' } });
       return { ok: true };
     }
+    case 'dev:imagingProbe':
+      // Experiment: can the extension reach the imaging viewer? See docs/imaging-experiment.md.
+      return imagingProbe(tabId, msg as unknown as ProbeOptions);
     case 'dev:reload':
       setTimeout(() => chrome.runtime.reload(), 100);
       return { ok: true };

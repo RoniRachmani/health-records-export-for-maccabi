@@ -22,8 +22,16 @@ export default defineManifest(({ mode }) => ({
     service_worker: 'src/extension/background/index.ts',
     type: 'module',
   },
-  permissions: ['storage', 'unlimitedStorage', 'scripting', 'downloads', 'offscreen', 'alarms', 'notifications'],
-  host_permissions: ['https://online.maccabi4u.co.il/*'],
+  permissions: [
+    'storage', 'unlimitedStorage', 'scripting', 'downloads', 'offscreen', 'alarms', 'notifications',
+    // dev:imagingProbe only (docs/imaging-experiment.md): which cookies the viewer handoff leaves.
+    ...(mode === 'development' ? ['cookies' as const] : []),
+  ],
+  host_permissions: [
+    'https://online.maccabi4u.co.il/*',
+    // dev:imagingProbe only: the handoff's login host and the imaging viewer. Not in the store build.
+    ...(mode === 'development' ? ['https://mac.maccabi4u.co.il/*', 'https://meddreamy.maccabi4u.co.il/*'] : []),
+  ],
   ...(mode === 'development'
     ? {
         content_scripts: [

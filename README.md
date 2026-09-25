@@ -378,6 +378,7 @@ await dev({ type: 'dev:stopBefore', step: 'orderMedicalFile' });   // test a ful
 | `dev:rawDump` `{on}` | Stage every response of the next run under `_raw/` in the ZIP, byte for byte, beside the export. Set it before `dev:start`. |
 | `dev:routes` `{routes}` | Choose whether `/sonline/` and `/online/` requests go from the extension or the tab |
 | `dev:spike` `{url, method, route, auth}` | Send one request and report its status and shape |
+| `dev:imagingProbe` `{mode, study, …}` | Experiment: walk the imaging viewer's handoff for one study and report each hop. See [docs/imaging-experiment.md](docs/imaging-experiment.md). |
 | `dev:reload` | Reload the extension |
 
 Replies carry statuses, sizes and counts, never record contents. None of this is in the store build.
