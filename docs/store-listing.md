@@ -122,7 +122,7 @@ Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare 
 | Screenshot 5 | `store/assets/screenshot-5-privacy.png` | "Private by design": your records stop at your computer, with the popup's list of what's included |
 | Small promo tile (440×280) | `store/assets/promo-small-440x280.png` | The icon's artwork on a blue background, with no text |
 | Marquee promo tile (1400×560) | `store/assets/promo-marquee-1400x560.png` | The same artwork beside the name and "Ask an AI assistant about your Maccabi health records". Optional: the store uses it only when it features the extension |
-| Global promo video | https://youtu.be/IyP4kBFQHJQ | Optional. See [Promo video](#promo-video) below |
+| Global promo video | https://youtu.be/tQkiFCoZLBg | Optional. See [Promo video](#promo-video) below |
 
 The screenshots are 1280×800 PNG files with no transparency. What the member gets comes first, and how they get
 there follows: upload them in this order. They show the real popup in made-up states over a placeholder page, never a
@@ -133,7 +133,7 @@ real account. Screenshot 1 draws an AI assistant instead, plain enough to be no 
 ### Promo video
 
 The store's video field takes a **YouTube link**, not a file. The one to paste is
-**https://youtu.be/IyP4kBFQHJQ**, on the [Hey Roni](https://www.youtube.com/@Hey-Roni-Dev) channel, with the title
+**https://youtu.be/tQkiFCoZLBg**, on the [Hey Roni](https://www.youtube.com/@Hey-Roni-Dev) channel, with the title
 and description [below](#on-youtube). `npm run store-video` renders the video to `store/assets/promo-video.mp4`
 (3840×2160, 60 fps, 61 seconds, with narration). YouTube can't swap the file under a link, so a re-render is a
 new upload with a new link: paste it on the dashboard and put it in the README, in place of the one above.
