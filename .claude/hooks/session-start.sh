@@ -16,4 +16,4 @@ if ! fc-list | grep -qi roboto; then
   fc-cache -f >/dev/null
 fi
 
-npm install --no-audit --no-fund
+npm install --no-audit --no-fund --no-save
