@@ -33,6 +33,11 @@ workflow file in the repo — it is configured in the repository's settings. Loa
 (or `dist/`) unpacked at `chrome://extensions` to run it; the dev build is named "… (dev)" and can be
 driven from the Maccabi page's console (see *Driving a run from the console* in the README).
 
+Before `store-assets` or `store-video`, install Roboto on the machine (`fonts-roboto` on Debian/Ubuntu,
+then `fc-cache -f`) and check `fc-list | grep -i roboto`: the renders photograph the popup, and without
+it they draw the fallback face. That is a font for the machine taking the pictures; the extension itself
+still never ships or fetches one.
+
 ## Git
 
 Work directly on `main`: commit and push to `main` (`git push origin main`), even when a session
