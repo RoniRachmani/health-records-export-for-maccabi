@@ -6,7 +6,7 @@ import { jwtClaims, type Json } from '../../core';
 import { getFile, listMeta, listProblems } from '../shared/staging';
 import { cancel, dismiss, loadRun, resume, retrySave, start } from './runner';
 import { rawDumpOn, setRawDump } from './rawDump';
-import { DEFAULT_ROUTES, extensionFetch, sessionOf, snapshot, tabTransport, type Routes } from './tab';
+import { currentRoutes, extensionFetch, sessionOf, snapshot, tabTransport } from './tab';
 
 type DevMsg = { type: string; [k: string]: Json };
 
@@ -30,7 +30,7 @@ async function handleDevImpl(msg: DevMsg, sender: chrome.runtime.MessageSender):
       const run = await loadRun();
       return {
         run: run && { ...run, problems: run.problems?.length },
-        routes: ((await chrome.storage.local.get('routes')).routes as Routes | undefined) ?? DEFAULT_ROUTES,
+        routes: await currentRoutes(),
         staged: { files: metas.length, bytes: metas.reduce((a, m) => a + m.size, 0), perFolder },
         problems: (await listProblems()).length,
         tab: { hasMid: !!s.mid, hasJwt: !!s.jwt, jwtExpiresInS: claims?.exp ? Math.round(claims.exp - Date.now() / 1000) : null },

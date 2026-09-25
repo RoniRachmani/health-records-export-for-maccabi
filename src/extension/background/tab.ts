@@ -46,7 +46,7 @@ export function snapshot(tabId: number): Promise<PageSnapshot> {
 }
 
 export function sessionOf(s: PageSnapshot): Session {
-  const { mid, gender } = sessionFrom(s.cookieMid ? 'cookie_sessionId_0_' + s.cookieMid + '=' : '', s.jwt);
+  const { mid, gender } = sessionFrom(s.cookieMid, s.jwt);
   return { mid, jwt: s.jwt, gender };
 }
 
@@ -83,6 +83,26 @@ export async function keepSessionAlive(tabId: number): Promise<void> {
 const REUSE_MIN_LIFE_S = 1800;
 const REUSE_CHECK_MS = 3000;
 
+/** The member record the export also reads, from the extension; rejects after timeoutMs. */
+async function fetchMember(s: Session, timeoutMs: number): Promise<HttpResponse> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      extensionFetch({
+        url: '/sonline/MainAppAPI/webapi/mac/v1/members/0/' + s.mid,
+        method: 'GET',
+        redirect: 'manual',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + s.jwt },
+      }),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error('timed out')), timeoutMs);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /**
  * The token already in the tab, when it can be taken as it is: it belongs to the member whose
  * cookie is in the same page, it is not about to expire, and the REST API still answers it. Then
@@ -98,25 +118,11 @@ async function reusableSession(tabId: number): Promise<Session | null> {
   if (!snap.cookieMid || !claims || String(claims.mem_id || '') !== snap.cookieMid) return null;
   if (typeof claims.exp !== 'number' || claims.exp - Date.now() / 1000 < REUSE_MIN_LIFE_S) return null;
   const s = sessionOf(snap);
-  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     // The claims say who the token is for; only the site says whether it still works.
-    const r = await Promise.race([
-      extensionFetch({
-        url: '/sonline/MainAppAPI/webapi/mac/v1/members/0/' + s.mid,
-        method: 'GET',
-        redirect: 'manual',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + s.jwt },
-      }),
-      new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new Error('timed out')), REUSE_CHECK_MS);
-      }),
-    ]);
-    return r.status === 200 ? s : null;
+    return (await fetchMember(s, REUSE_CHECK_MS)).status === 200 ? s : null;
   } catch {
     return null;
-  } finally {
-    clearTimeout(timer);
   }
 }
 
@@ -157,19 +163,8 @@ const NAME_TIMEOUT_MS = 3000;
 async function memberName(s: Session): Promise<string | undefined> {
   const cached = (await chrome.storage.session.get('member')).member as { mid: string; name: string } | undefined;
   if (cached && cached.mid === s.mid) return cached.name;
-  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    const r = await Promise.race([
-      extensionFetch({
-        url: '/sonline/MainAppAPI/webapi/mac/v1/members/0/' + s.mid,
-        method: 'GET',
-        redirect: 'manual',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + s.jwt },
-      }),
-      new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new Error('timed out')), NAME_TIMEOUT_MS);
-      }),
-    ]);
+    const r = await fetchMember(s, NAME_TIMEOUT_MS);
     if (r.status !== 200) return undefined;
     const name = memberFirstName(JSON.parse(new TextDecoder().decode(r.bytes)));
     if (!name) return undefined;
@@ -177,8 +172,6 @@ async function memberName(s: Session): Promise<string | undefined> {
     return name;
   } catch {
     return undefined; // the popup just leaves the name out
-  } finally {
-    clearTimeout(timer);
   }
 }
 
@@ -375,6 +368,12 @@ export interface Routes {
 
 /** Checked 2026-09-17 (docs/endpoints.json auth.extension): the REST API works from the extension; ajax.ashx answers the page differently. */
 export const DEFAULT_ROUTES: Routes = { sonline: 'extension', online: 'tab' };
+
+/** The routes a run takes: DEFAULT_ROUTES, unless the development build's dev:routes stored others. */
+export async function currentRoutes(): Promise<Routes> {
+  if (!__DEV_BRIDGE__) return DEFAULT_ROUTES;
+  return ((await chrome.storage.local.get('routes')).routes as Routes | undefined) ?? DEFAULT_ROUTES;
+}
 
 export function routedTransport(tabId: number, routes: Routes, waitVisible: () => Promise<void>): Transport {
   const tab = tabTransport(tabId, waitVisible);

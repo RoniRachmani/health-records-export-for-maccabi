@@ -6,11 +6,10 @@ import type { Json } from './types';
 // Values that are re-signed or re-stamped on every fetch. Keys, at any depth.
 const VOLATILE_KEYS = new Set([
   'fetched_at', 'hash', 'timestamp', 'time_stamp', 't', 'corona_hash', 'corona_t',
-  'link', 'pdf_link', 'file_link', 'visit_summary_pdf_link', 'url', 'searchQueryId',
-  'token', 'link_pdf', 'referral_pdf_link', 'file_name_title',
+  'url', 'searchQueryId', 'token', 'link_pdf', 'file_name_title',
 ]);
 
-// Every *_link field seen so far is a per-session signed path.
+// Every *link field seen so far (link, pdf_link, file_link, ...) is a per-session signed path.
 function isVolatile(key: string): boolean {
   return VOLATILE_KEYS.has(key) || key.endsWith('link');
 }

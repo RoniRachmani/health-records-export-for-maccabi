@@ -162,11 +162,11 @@ export function retryAfterMs(header: string | undefined, now: number, fallbackMs
 }
 
 /**
- * Member id and gender from what the page exposes. Since 2026-09-17 some logins
- * no longer set cookie_sessionId_0_<id>; the SPA token carries mem_id.
+ * Member id and gender from what the page exposes: the <id> of its cookie_sessionId_0_<id> cookie,
+ * and its SPA token. Since 2026-09-17 some logins no longer set that cookie; the token carries mem_id.
  */
-export function sessionFrom(cookie: string, jwt: string | null): { mid: string | null; gender: Json } {
-  let mid: string | null = (cookie.match(/cookie_sessionId_0_(\d+)/) || [])[1] || null;
+export function sessionFrom(cookieMid: string | null, jwt: string | null): { mid: string | null; gender: Json } {
+  let mid = cookieMid || null;
   const claims = jwtClaims(jwt);
   if (!mid && claims) mid = String(claims.mem_id || '') || null;
   return { mid, gender: claims ? claims.gender : undefined };

@@ -328,7 +328,7 @@ REST API requests (`/sonline/`) go from the service worker, with the session tok
 | `src/core/` | The collection logic, one file per part of the site in `sections/`. Uses no extension APIs: it reaches the site through a `Transport`, writes through a `Sink` and parses HTML through an `HtmlParser` (see `types.ts`). |
 | `src/extension/background/` | The service worker: the run loop with pause and resume (`runner.ts`), the Maccabi Online tab (`tab.ts`), badge and notifications (`ui.ts`) |
 | `src/extension/offscreen/` | HTML parsing and ZIP building, which the service worker can't do |
-| `src/extension/shared/` | Run state and plan, IndexedDB staging |
+| `src/extension/shared/` | Run state and plan, IndexedDB staging, the ZIP's layout and the `README.md` written into it |
 | `src/extension/popup/` | The popup |
 | `src/extension/dev/` | The bridge content script, injected by the development build only |
 | `test/` | Vitest tests against a fake Maccabi Online (`fakes.ts`) |
@@ -340,7 +340,7 @@ REST API requests (`/sonline/`) go from the service worker, with the session tok
 
 ### The look
 
-The popup and the two pages that ship with it share one design system: navy headings over white, one bright blue
+The popup and the pages that ship with it share one design system: navy headings over white, one bright blue
 for actions and progress, magenta for links, pale-blue cards at a 20px radius, pill buttons, and a soft
 navy-tinted shadow. The register is meant to feel at home next to Maccabi Online rather than foreign to it, while
 staying plainly the extension's own — there is no Maccabi Healthcare Services logo or wordmark anywhere, and the header says

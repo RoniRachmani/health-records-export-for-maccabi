@@ -64,8 +64,8 @@ const STATES: Record<string, Omit<StateReply, 'noticeAccepted'> & { noticeAccept
     run: {
       ...done,
       problems: [
-        { where: 'test-results/files/2025-03-02-cbc.pdf', what: 'HTTP 500', at: '' },
-        { where: 'visit-summaries/files/2026-01-11.pdf', what: 'HTTP 404', at: '' },
+        { where: 'test-results/files/2025-03-02_4417-lab-result_CBC.pdf', what: 'HTTP 500', at: '' },
+        { where: 'visit-summaries/files/2026-01-11_A7731_Cardiology.pdf', what: 'HTTP 404', at: '' },
         { where: 'vaccinations', what: 'the vaccination booklet was not available', at: '' },
       ],
       problemCount: 3,
