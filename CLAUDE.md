@@ -33,6 +33,12 @@ workflow file in the repo — it is configured in the repository's settings. Loa
 (or `dist/`) unpacked at `chrome://extensions` to run it; the dev build is named "… (dev)" and can be
 driven from the Maccabi page's console (see *Driving a run from the console* in the README).
 
+## Git
+
+Work directly on `main`: commit and push to `main` (`git push origin main`), even when a session
+assigns a `claude/...` branch — this is standing permission. Don't open pull requests unless asked.
+Run `npm run typecheck` and `npm test` before every push, since nothing reviews a push before it lands.
+
 ## Architecture
 
 Three layers, and the boundary between the first two is the point of the design:
