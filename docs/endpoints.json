@@ -283,7 +283,7 @@
         "method": "GET",
         "url": "MainAppAPI/v2/members/0/{mid}/pdf?file_path=<letter.link>&timestamp=<letter.timestamp>",
         "output": "<item_date>_medical-file.pdf",
-        "notes": "letter_type 2 (an ordered full medical file). Saved at the root of the export, not in letters/files/: it is the export's main document. The letters step skips it, since each run orders a new one; the waitMedicalFile step downloads the new one, replacing a same-day file, or, when nothing was ordered, the one already listed. Only one letter_type 2 entry exists at a time: a new order replaces the old entry within ~25 s. While the letter's status is 0 (~2.5 min) this returns 500. Once status is 1, fetch the file: read the letters list for the current link and timestamp, then GET this URL and read the whole response. It is available right away. On 2026-09-16, probe requests that were aborted after the headers kept getting 202. The collector polls up to 8 times, 5 s apart."
+        "notes": "letter_type 2 (an ordered full medical file). Saved at the root of the export, not in letters/files/: it is the export's main document. The letters step skips it, since each run orders a new one; the waitMedicalFile step downloads the new one, replacing a same-day file, or, when nothing was ordered, the one already listed. Only one letter_type 2 entry exists at a time: a new order replaces the old entry within ~25 s. While the letter's status is 0 (~2.5 min) this returns 500. Once status is 1, fetch the file: read the letters list for the current link and timestamp, then GET this URL and read the whole response. The first request for a link usually answers 202 with an empty body: measured 2026-09-26, it did so from a fresh Node session and from the page, and the same URL answered 200 with the PDF (7.9 MB) 5.2 s later. Maccabi's own reader waits 5 s on a 202 too. The collector polls up to 8 times, 5 s apart."
       }
     ],
     "communication-with-doctor": [
@@ -422,6 +422,10 @@
     "personal_recommendations": {
       "request": "GET /online/medicalfile/personalrecommendations/",
       "reason": "Server-rendered page, no data behind it; held no recommendations in the account checked."
+    },
+    "medical_file_v1_route": {
+      "request": "GET MainAppAPI/v1/members/0/{mid}/pdf?file_path=<letter.link>&timestamp=<letter.timestamp>&hash=<letter.hash>",
+      "reason": "The route the site uses for the medical file when its isOpenPdfByLinkHandlerV2 feature is off. Checked 2026-09-26: 200 on the first request, byte-identical (same size and SHA-256) to what the v2 route served after one 202. The v2 route is what the site uses today, and its 202 is already waited out."
     }
   },
   "not_called_by_design": "Only the requests listed in sections are made. Nothing that creates, changes or deletes data (apart from the medical-file order), marks items as read or viewed, returns session credentials, or touches payment or bank details."
