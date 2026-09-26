@@ -15,7 +15,7 @@ line to the run steps behind it, the parts of a step it stands for, and what tho
 | # | Line | Step | Parts | Writes |
 |---|---|---|---|---|
 | 1 | Ordering your medical file | `openLegacyPage`, `orderMedicalFile` | – | nothing: it places the order (and the SMS) |
-| 2 | Your details and doctor | `profileAndDoctors`, `emptySections` | – | `profile/member.json`, `entitlement.json`, `insurance-seniority.json`, `providers.json`; `my-doctor/assigned-practitioners.json`, `eligibilities.json`, `ascribed.json`; and, each only when not empty, `allergies-sensitivity/list.json`, `appointments/list.json`, `requests-approvals/list.json` |
+| 2 | Your details and doctor | `profileAndDoctors`, `emptySections` | – | `profile/member.json`, `entitlement.json`, `insurance-seniority.json`, `providers.json`; `my-doctor/assigned-practitioners.json`, `eligibilities.json`, `ascribed.json`; `allergies-sensitivity/list.json` whenever the site answers, even when empty; and, each only when not empty, `appointments/list.json`, `requests-approvals/list.json` |
 | 3 | Prescriptions | `medications` | `prescriptions` | `medications-and-prescriptions/list.json`, `files/<prescription>.pdf` |
 | 4 | Medication purchases | `purchases` | `purchase history`, `purchase report` | `medications-and-prescriptions/purchased-history.html`, `purchased-report.json`, `files/purchased-report.pdf` |
 | 5 | Hospital stays | `hospitalStays` | `hospital stays`, `hospital letters` | `hospital-stays/list.json`, `files/` (discharge letters) |

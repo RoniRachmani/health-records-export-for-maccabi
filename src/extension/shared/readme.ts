@@ -113,10 +113,18 @@ visits with \`HasLink\` true have one) or else in the medical file, under the vi
 is as the site sent it: strings padded with spaces, blank \`Description\` entries, and a visit can be
 listed twice (count it once).`,
   },
-  { name: 'allergies-sensitivity', summary: 'recorded sensitivities and intolerances (`intolerance[]`)', detail: '' },
+  {
+    name: 'allergies-sensitivity',
+    summary: 'recorded sensitivities and intolerances (`intolerance[]`)',
+    detail: `An empty \`intolerance\` means Maccabi Healthcare Services has no sensitivity on record, not that the
+member has none: check the medical file's sensitivities, and ask.`,
+  },
   { name: 'appointments', summary: 'future appointments only — past ones are visits, in `visit-summaries/`', detail: '' },
   { name: 'requests-approvals', summary: 'requests and cases the member has open with Maccabi Healthcare Services', detail: '' },
 ];
+
+/** Saved whenever the site answers, so its folder is missing only when the request failed. */
+const ALLERGIES = 'allergies-sensitivity';
 
 /** "a", "a and b", "a, b and c". */
 function inWords(items: string[]): string {
@@ -147,11 +155,15 @@ as images.`;
  */
 export function exportReadme(exportedOn: string, present: Record<string, number>, medicalFile: string | null): string {
   const here = FOLDERS.filter((f) => present[f.name]);
-  const missing = FOLDERS.filter((f) => !present[f.name]).map((f) => '`' + f.name + '/`');
-  const absent = missing.length
+  // "None on record" and "not checked" read very differently for allergies, so they get their own line.
+  const missing = FOLDERS.filter((f) => !present[f.name] && f.name !== ALLERGIES).map((f) => '`' + f.name + '/`');
+  const absent = (missing.length
     ? '\n  This export has no ' + inWords(missing) + ': the site returned nothing for ' +
       (missing.length > 1 ? 'them' : 'it') + ', or the request failed.'
-    : '';
+    : '') + (present[ALLERGIES]
+    ? ''
+    : '\n  This export has no `' + ALLERGIES + '/` because its request failed: it cannot say whether any\n' +
+      '  sensitivity is on record. Look in the medical file, and ask.');
   const folders = here
     .map((f) => '**`' + f.name + '/`** · ' + present[f.name] + ' files — ' + f.summary + '.' +
       (f.detail ? '\n' + f.detail : ''))

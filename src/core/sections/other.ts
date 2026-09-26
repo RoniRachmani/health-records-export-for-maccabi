@@ -149,8 +149,10 @@ function trimmed(row: Json): Json {
 export async function emptySections(c: Collector, _ctx: Ctx): Promise<void> {
   const member = [{ member_id_code: '0', member_id: c.session.mid }];
   // The first entry is the part's name in the progress detail: the popup gives allergies a line of their own.
+  // Allergies are kept even when the list is empty: "none on record" is itself an answer, and without the
+  // file the export's README could not tell it from a request that failed.
   const checks: [string, string, string, string, Json, (d: Json) => unknown][] = [
-    ['allergies', 'allergies-sensitivity/list.json', 'GET', 'MedicalFileAPI/v1/members/0/{mid}/sensitivity', undefined, (d) => d && d.intolerance && d.intolerance.length],
+    ['allergies', 'allergies-sensitivity/list.json', 'GET', 'MedicalFileAPI/v1/members/0/{mid}/sensitivity', undefined, (d) => d && Array.isArray(d.intolerance)],
     ['appointments', 'appointments/list.json', 'POST', 'AppointmentOrderAPI/v2/members/0/{mid}/appointments/future', { members: member, is_with_ascribed_doctor: false }, (d) => Array.isArray(d) && d.length],
     ['requests', 'requests-approvals/list.json', 'POST', 'RequestsAndApprovalsAPI/v1/members/0/{mid}/requests_and_cases', { members: member }, (d) => (Array.isArray(d) ? d.length : d && Object.keys(d).length)],
   ];

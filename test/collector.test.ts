@@ -147,6 +147,8 @@ describe('full run against the fake site', () => {
     expect(mem.problems).toEqual([]);
     // <section>/list.json, then details/ and files/ sharing one <date>_<id>_<title> stem.
     expect([...mem.files.keys()].map((k) => k.replace(/_[0-9a-f]{8}(?=[_.])/, '_<hash8>')).sort()).toEqual([
+      // Kept though the fake has no sensitivities: an empty list is the site saying none are on record.
+      'allergies-sensitivity/list.json',
       'approvals/files/2026-03-02_<hash8>_אישור-פיזותרפיה.pdf',
       'approvals/list.json',
       'communication-with-doctor/details/2026-04-02_Q1_ד-ר-ישראלי.json',
@@ -232,7 +234,7 @@ describe('full run against the fake site', () => {
     expect(stays.omitted).toBeUndefined();
     // The discharge letter is asked for as the page's Summary button opens it.
     expect(site.calls).toContain('GET /online/Pages/Popups/MailingsFromHospitals/MailingsFromHospitals.aspx?path=reports/L9.pdf&typeCommitment=2');
-    expect(s.results).toEqual({ written: 41 });
+    expect(s.results).toEqual({ written: 42 });
   });
 
   it('a second run into the same files changes nothing and skips unchanged work', async () => {

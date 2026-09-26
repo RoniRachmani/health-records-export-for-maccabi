@@ -352,7 +352,7 @@
     {
       "method": "GET",
       "url": "MedicalFileAPI/v1/members/0/{mid}/sensitivity",
-      "output": "allergies-sensitivity/list.json (only if intolerance is non-empty)"
+      "output": "allergies-sensitivity/list.json (whenever the site answers, even with intolerance empty)"
     },
     {
       "method": "POST",

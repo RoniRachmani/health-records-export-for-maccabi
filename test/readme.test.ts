@@ -44,6 +44,16 @@ describe('exportReadme', () => {
     expect(md).not.toMatch(/This export has no [^.]*`profile\/`/);
   });
 
+  // Allergies are saved whenever the site answers, so a missing folder means the request failed.
+  it('tells an empty allergy list from a failed request', () => {
+    const failed = exportReadme('2026-09-18', PRESENT, FILE).replace(/\s+/g, ' ');
+    expect(failed).toContain('This export has no `allergies-sensitivity/` because its request failed');
+    expect(failed).not.toMatch(/This export has no [^.]*`allergies-sensitivity\/`[^.]*: the site returned nothing/);
+    const empty = exportReadme('2026-09-18', { ...PRESENT, 'allergies-sensitivity': 1 }, FILE).replace(/\s+/g, ' ');
+    expect(empty).toContain('An empty `intolerance` means Maccabi Healthcare Services has no sensitivity on record');
+    expect(empty).not.toContain('`allergies-sensitivity/` because its request failed');
+  });
+
   it('starts from the full medical file, by its name', () => {
     const md = exportReadme('2026-09-18', PRESENT, FILE);
     expect(md).toContain('`2026-09-18_medical-file.pdf`, beside this file');
