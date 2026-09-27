@@ -202,7 +202,7 @@
       "method": "GET",
       "url": "/online/medicalfile/mailingsfromhospitals/?relative=-1&sr_id=<session>",
       "checked": "200 text/html",
-      "notes": "The page behind hospital-stays in endpoints.json. It holds one #mailingsFromHospitalsController and a script with var pageSettings = {..., \"YearsBack\": \"<1-99>\"} (7 in the account). That repo sends GetMailingsFromHospitals {isDateSelected: false, fromDate: <DDMMYYYY number> - YearsBack, toDate: <DDMMYYYY number>}, subtracting the years from the day digits exactly as the site's controller does; endpoints.json's body answers too. With no stay it returns {ReportHospitalizations: [], ResultMessage: {Code: 0}}."
+      "notes": "The page behind hospital-stays in endpoints.json. It holds one #mailingsFromHospitalsController and a script with var pageSettings = {..., \"YearsBack\": \"<1-99>\"} (7 in the account). That repo sends GetMailingsFromHospitals {isDateSelected: false, fromDate: <DDMMYYYY number> - YearsBack, toDate: <DDMMYYYY number>}, subtracting the years from the day digits exactly as the site's controller does. That is the site's default window, the last YearsBack years, and it misses older stays: on 2026-09-27 it returned {ReportHospitalizations: [], ResultMessage: {Code: 0}} for an account whose 4 stays are all from 2001, which endpoints.json's explicit {isDateSelected: true, fromDate: '01011900', toDate: '31122099'} returned the day before. Ask for the full range."
     }
   ],
 
