@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { canon, newCtx, type HttpResponse } from '../src/core';
-import { fakeMaccabi, fakeTransport, jsonResp, makeCollector, MemorySink, MID, PDF, PURCHASE_TABLE, runAll } from './fakes';
+import { bytesResp, fakeMaccabi, fakeTransport, jsonResp, makeCollector, MemorySink, MID, PDF, PURCHASE_TABLE, runAll, win1255, type Route } from './fakes';
 
 describe('api()', () => {
   it('stops with SESSION ENDED on a redirect or 401', async () => {
@@ -259,6 +259,38 @@ describe('full run against the fake site', () => {
     const { c, sink } = makeCollector(t);
     const s = await runAll(c, newCtx(), ['hospitalStays']);
     expect(s.problems).toEqual([expect.stringMatching(/^hospital-stays\/list\.json PROBLEM: HTTP 200 text\/html.*logged out\?/)]);
+    expect([...(sink as MemorySink).files.keys()]).toEqual([]);
+  });
+
+  it('decodes the saved-documents service as the windows-1255 it declares, and records that', async () => {
+    const { c, sink } = makeCollector(fakeTransport(fakeMaccabi().routes));
+    const s = await runAll(c, newCtx(), ['savedDocuments']);
+    expect(s.problems).toEqual([]);
+    const details = (sink as MemorySink).json('uploads/details/2026-05-01_F1_סיכום-אשפוז.json');
+    expect(details.decoded_from).toBe('windows-1255');
+    expect(details.data.d[0].DocumentName).toBe('סיכום אשפוז');
+  });
+
+  it('falls back to windows-1255 for the saved-documents service when the header names no charset', async () => {
+    const site = fakeMaccabi();
+    const bare: Route = (req, url) => {
+      if (!url.pathname.includes('WsPHRManager')) return undefined;
+      const r = site.routes.map((route) => route(req, url)).find(Boolean)!;
+      return { ...r, contentType: 'application/json' };
+    };
+    const { c, sink } = makeCollector(fakeTransport([bare, ...site.routes]));
+    const s = await runAll(c, newCtx(), ['savedDocuments']);
+    expect(s.problems).toEqual([]);
+    expect((sink as MemorySink).json('uploads/details/2026-05-01_F1_סיכום-אשפוז.json').data.d[0].DocumentName).toBe('סיכום אשפוז');
+  });
+
+  it('reports hospital stays in a charset other than the one declared, instead of saving replacement characters', async () => {
+    const site = fakeMaccabi();
+    const mislabelled = bytesResp(win1255(JSON.stringify({ ReportHospitalizations: [{ NameHospital: 'בית חולים' }], ResultMessage: { Code: 0 } })), 'application/json; charset=utf-8');
+    const t = fakeTransport([(_req, url) => (url.pathname.includes('GetMailingsFromHospitals') ? mislabelled : undefined), ...site.routes]);
+    const { c, sink } = makeCollector(t);
+    const s = await runAll(c, newCtx(), ['hospitalStays']);
+    expect(s.problems).toEqual([expect.stringMatching(/^hospital-stays\/list\.json PROBLEM: response is not valid utf-8 \(application\/json; charset=utf-8\)/)]);
     expect([...(sink as MemorySink).files.keys()]).toEqual([]);
   });
 

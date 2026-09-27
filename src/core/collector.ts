@@ -237,8 +237,17 @@ export class Collector {
     return this.deps.transport.fetch({ url, method, headers, body });
   }
 
-  legacyText(r: HttpResponse, fallback = 'utf-8'): string {
-    return new TextDecoder(charset(r.contentType, fallback)).decode(r.bytes);
+  /** A legacy body in the charset its Content-Type declares, else `fallback`: what that service is
+   *  known to send (the .asmx services windows-1255, the /online/webapi/ ones utf-8; measured
+   *  2026-09-27, every one declared it). Fatal, so a wrong charset is reported against the step
+   *  instead of being saved as U+FFFD. */
+  legacyText(r: HttpResponse, fallback: string): { text: string; charset: string } {
+    const cs = charset(r.contentType, fallback).toLowerCase();
+    try {
+      return { text: new TextDecoder(cs, { fatal: true }).decode(r.bytes), charset: cs };
+    } catch {
+      throw new Error('response is not valid ' + cs + ' (' + (r.contentType || 'no content type') + ')');
+    }
   }
 }
 

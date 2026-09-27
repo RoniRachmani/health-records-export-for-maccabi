@@ -29,11 +29,11 @@ export async function doctorCommunications(c: Collector, _ctx: Ctx): Promise<voi
 
 export async function savedDocuments(c: Collector, _ctx: Ctx): Promise<void> {
   const base = '/online/Ajax/PHR/WsPHRManager.asmx/';
-  async function post(method: string, body: string): Promise<{ status: number; data: Json }> {
+  async function post(method: string, body: string): Promise<{ status: number; charset: string; data: Json }> {
     const r = await c.legacy(base + method, 'POST', { 'Content-Type': 'application/json; charset=utf-8' }, body);
-    const text = c.legacyText(r);
     await c.sleep(PACE_MS);
-    return { status: r.status, data: JSON.parse(text) };
+    const { text, charset } = c.legacyText(r, 'windows-1255');
+    return { status: r.status, charset, data: JSON.parse(text) };
   }
   try {
     const s = await post('SearchByDate', "{'categoryId':'','dateFrom':'1/1/1900','dateTo':'1/1/2050'}");
@@ -62,7 +62,7 @@ export async function savedDocuments(c: Collector, _ctx: Ctx): Promise<void> {
         fetched_at: new Date(c.now()).toISOString(),
         status: d.status,
         content_type: 'application/json',
-        decoded_from: 'windows-1255',
+        decoded_from: d.charset,
         data: d.data,
       });
     }
@@ -98,7 +98,7 @@ export async function hospitalStays(c: Collector, _ctx: Ctx): Promise<void> {
       await c.problem(REL, 'HTTP ' + r.status + ' ' + (r.contentType || 'no content type') + ', not data -- was the session logged out?');
       return;
     }
-    const data = JSON.parse(c.legacyText(r));
+    const data = JSON.parse(c.legacyText(r, 'utf-8').text);
     const code = data && data.ResultMessage && data.ResultMessage.Code;
     if (r.status !== 200 || code !== 0) {
       await c.problem(REL, 'HTTP ' + r.status + ', result code ' + code);

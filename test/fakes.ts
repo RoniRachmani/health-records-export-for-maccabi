@@ -24,6 +24,21 @@ export function latin1(s: string): Uint8Array {
   return Uint8Array.from(s, (ch) => ch.charCodeAt(0));
 }
 
+/** A string as windows-1255 bytes: ASCII as is, the Hebrew letters א-ת as 0xE0-0xFA. */
+export function win1255(s: string): Uint8Array {
+  return Uint8Array.from(s, (ch) => {
+    const code = ch.charCodeAt(0);
+    if (code < 0x80) return code;
+    if (code >= 0x5d0 && code <= 0x5ea) return code - 0x5d0 + 0xe0;
+    throw new Error('not in the fake windows-1255 range: ' + ch);
+  });
+}
+
+/** JSON the way the legacy .asmx services send it: windows-1255 bytes, declared in the header. */
+export function win1255JsonResp(obj: Json): HttpResponse {
+  return bytesResp(win1255(JSON.stringify(obj)), 'application/json; charset=windows-1255');
+}
+
 // A purchase table as windows-1255 bytes: 0xF9 0xE5 0xED is "shalom" in Hebrew.
 export const PURCHASE_TABLE = latin1(
   '<table><tr><th>a</th><th>b</th><th>c</th><th>d</th><th>e</th><th>f</th><th>g</th></tr>' +
@@ -90,8 +105,9 @@ export function fakeMaccabi(letterState: LetterState = { medicalFile: null }): {
     ['POST', '/online/handlers/ajax.ashx', () => bytesResp(latin1('<table>page 1</table>'), 'text/html; charset=windows-1255')],
     ['POST', '/online/Ajax/DrugsManager/WsPurchasedDrugsManager.asmx/GetAllPurchasedPrescription', () =>
       bytesResp(latin1('{"d":' + JSON.stringify(Array.from(PURCHASE_TABLE, (b) => String.fromCharCode(b)).join('')) + '}'), 'application/json; charset=windows-1255')],
-    ['POST', '/online/Ajax/PHR/WsPHRManager.asmx/SearchByDate', () => jsonResp({ d: '<div fileid="F1"><a onclick="PHR.OpenFile(\'SYS1.pdf\')">x</a></div>' })],
-    ['POST', '/online/Ajax/PHR/WsPHRManager.asmx/GetFileDetails', () => jsonResp({ d: [{ DocumentSystemName: 'SYS1', DocumentName: 'סיכום אשפוז', DocumentDate: '2026-05-01T00:00:00' }] })],
+    // The .asmx services answer windows-1255 and say so; the /online/webapi/ one below answers utf-8.
+    ['POST', '/online/Ajax/PHR/WsPHRManager.asmx/SearchByDate', () => win1255JsonResp({ d: '<div fileid="F1"><a onclick="PHR.OpenFile(\'SYS1.pdf\')">x</a></div>' })],
+    ['POST', '/online/Ajax/PHR/WsPHRManager.asmx/GetFileDetails', () => win1255JsonResp({ d: [{ DocumentSystemName: 'SYS1', DocumentName: 'סיכום אשפוז', DocumentDate: '2026-05-01T00:00:00' }] })],
     ['GET', '/online/Pages/Popups/PHR/PHRDownloadDocument.aspx', () => bytesResp(PDF)],
     // Padded strings, blank Description entries and one stay listed twice, as the service sends them.
     ['POST', '/online/webapi/MailingsFromHospitals/GetMailingsFromHospitals/', () => {
