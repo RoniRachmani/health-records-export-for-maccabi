@@ -15,7 +15,7 @@ import {
 import { exportReadme, INSTRUCTION_POINTERS } from '../shared/readme';
 import { callOffscreen, closeOffscreen, offscreenHtml } from './offscreenClient';
 import { capturingTransport, rawDumpOn } from './rawDump';
-import { currentRoutes, currentSession, isVisible, keepSessionAlive, navigate, routedTransport, snapshot } from './tab';
+import { currentRoutes, currentSession, extensionFetch, isVisible, keepSessionAlive, navigate, routedTransport, snapshot } from './tab';
 import { updateBadge, notify } from './ui';
 
 const HEARTBEAT = 'hrem-heartbeat';
@@ -187,8 +187,11 @@ function loop(): Promise<void> {
     // Extension API calls keep the service worker alive between requests.
     const keepAlive = setInterval(() => void chrome.runtime.getPlatformInfo(), 20_000);
     // The same for the site's session, which watches the page for interaction rather than requests.
+    // While a hidden tab pauses the run, nothing else reaches the site, and its gateway ends a session
+    // after 6-8 min without a request: send the site's own keep-alive request as well.
     const poke = () => {
       if (state && state.status === 'running') void keepSessionAlive(state.tabId);
+      else if (state && state.status === 'paused_hidden') void keepSessionAlive(state.tabId).then(renewSession);
     };
     poke(); // Start was clicked in the popup, not the page: the site's idle timer may be minutes in already.
     const activity = setInterval(poke, ACTIVITY_MS);
@@ -292,6 +295,24 @@ async function waitVisible(): Promise<void> {
     state.status = 'running';
     state.message = undefined;
     await save();
+    // A frozen tab's idle timers fire as soon as it runs again.
+    await keepSessionAlive(state.tabId);
+  }
+}
+
+/** The portal's own keep-alive request (MainAppAPI .../alive), from the extension. Failures are ignored. */
+async function renewSession(): Promise<void> {
+  const s = await getSession();
+  if (!s) return;
+  try {
+    await extensionFetch({
+      url: '/sonline/MainAppAPI/webapi/mac/v1/members/0/' + s.mid + '/alive',
+      method: 'GET',
+      redirect: 'manual',
+      headers: { Authorization: 'Bearer ' + s.jwt },
+    });
+  } catch {
+    /* the run's next request reports an ended session */
   }
 }
 
