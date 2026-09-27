@@ -182,7 +182,7 @@
       "url": "/online/Ajax/DebitsAndCredits/WcDebitsAndCreditsManager.asmx/GetQuarterlyReport",
       "request_body": "{'value':'<period option value>'} (single-quoted, as the site's script sends it; Content-Type application/json; charset=utf-8)",
       "checked": "200 JSON {d: <HTML fragment>}",
-      "notes": "The reports issued for one period. Rows are .dataGrid > .quaterly_table > .maintable > ul.rowgroup > li; the third span's link has onclick QuarterlyReport.OpenReportPdf('<token>', '<reportType>'). 44 reports across the 16 periods: some periods have more than one."
+      "notes": "The reports issued for one period. Rows are .dataGrid > .quaterly_table > .maintable > ul.rowgroup > li; the third span's link has onclick QuarterlyReport.OpenReportPdf('<token>', '<reportType>'). Row cells: period (e.g. רבעון שני 2026), production date (DD/MM/YYYY), link. The 16 'periods' are overlapping filters, not periods: 3 (last 3 years), 0 (all periods) and one per year. Every report is one quarter; the account had 44, Q3 2015 to Q2 2026, each listed under its year and some under the first two filters too. Filter 0 is paged: input#GridNumOfResultsHidden said 44 but it returned the first 12, so read it year by year. A report's link is the same under every filter it appears in."
     },
     {
       "method": "POST",
