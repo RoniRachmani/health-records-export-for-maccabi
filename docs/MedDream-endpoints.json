@@ -1,0 +1,104 @@
+{
+  "_note": "The MedDream imaging viewer chain, as another Maccabi client, orenyomtov/maccabi-health (https://github.com/orenyomtov/maccabi-health, packages/core/src/readers/imaging-viewer.ts, read at commit 258e535 on 2026-09-27), follows it from Node. Nothing here is requested by this extension: endpoints.json lists the first hop under manual_not_fetched, and the member exports DICOM studies by hand. None of it was sent from here either; every hop after the first is on another origin, so it cannot be followed from a page. What the requests return comes from that repo's code and its docs/research/LIVE-VALIDATION.md (validated end to end against one live account on 2026-09-23, twice). No medical data: response shapes are field names and types, never values. {mid} = member id; the member id code is 0, as in endpoints.json.",
+  "origins": {
+    "portal": "https://online.maccabi4u.co.il",
+    "login": "https://mac.maccabi4u.co.il",
+    "viewer": "https://meddreamy.maccabi4u.co.il"
+  },
+  "conventions": {
+    "auth": "No Bearer token anywhere in the chain. Every hop rides cookies, kept per host: the portal's session cookies for hop 1, then the viewer host's own F5 APM session (hops 3-6) and its application cookie MEDDREAMSESSID (hops 7-8 and every read).",
+    "redirects": "Hops 1, 3, 5 and 6 are sent with redirect: manual, because at hops 1 and 6 the Location header holds the only copy of a value the next hop needs.",
+    "viewer_headers": "Every request to the viewer after hop 7 sends Referer: <the hop-6 Location URL> and X-CSRF-TOKEN: <x-csrf-token from hop 7>. Spring Security does not enforce the token on GET; that repo echoes it because the viewer's own page does.",
+    "per_study": "The chain is re-run for each study: the handoff is minted per click, and nothing shows that a viewer session may be reused for a study it was not handed. Viewer cookies left from an earlier run make the SAML leg answer differently and the token mint fail (every read after the first returned TOKEN_UNAVAILABLE, 2026-09-23), so that repo clears the viewer host's cookies before hop 1.",
+    "unsettled": "Only 8-bit single-frame images (1 and 3 samples per pixel) have been read; CT and MR are usually 16-bit and may be multi-frame. No error response from the viewer has ever been captured, so what its status codes mean is unknown. How long the handoff URL stays valid, and whether the viewer token is single-use, are unmeasured."
+  },
+
+  "handoff": [
+    {
+      "hop": 1,
+      "method": "GET",
+      "url": "https://online.maccabi4u.co.il/sonline/TestResultsAPI/webapi/mac/pdf/members/0/{mid}/meddream/token/<StudyInstanceUID>?checksum=<current_customer_info.checksum_id>",
+      "request_headers": "Referer: https://online.maccabi4u.co.il/sonline/testsResults/TestsResults/lobby/",
+      "returns": "302, Location https://mac.maccabi4u.co.il/imaging/login?<JWE>",
+      "notes": "The same request as endpoints.json manual_not_fetched. StudyInstanceUID comes from an imaging_study row of TestResultsAPI/v1/members/0/{mid}/tests; checksum_id from TokenServerAPI/v4/members/token/full (other-endpoints.json), which this extension must not call. The URL carries the member id and checksum, so it is a credential in itself. A redirect to the login host is also what an ended portal session looks like; that repo exempts this one destination (/imaging/login) from its logged-out check."
+    },
+    {
+      "hop": 2,
+      "method": "GET",
+      "url": "https://mac.maccabi4u.co.il/imaging/login?<JWE> (the hop-1 Location)",
+      "returns": "200 text/html: an auto-submitting form with hidden inputs SAMLResponse (a signed SAML assertion) and RelayState",
+      "notes": "Stateless: the JWE in the query is the whole credential. The inputs are read out of the markup; nothing on the page has to run."
+    },
+    {
+      "hop": 3,
+      "method": "POST",
+      "url": "https://meddreamy.maccabi4u.co.il/saml/sp/profile/post/acs",
+      "request_body": "application/x-www-form-urlencoded: SAMLResponse=<hop 2>&RelayState=<hop 2>",
+      "request_headers": "Origin and Referer: https://mac.maccabi4u.co.il",
+      "returns": "302, Location /my.policy",
+      "notes": "Opens the viewer host's own F5 session."
+    },
+    {
+      "hop": 4,
+      "method": "GET",
+      "url": "https://meddreamy.maccabi4u.co.il/my.policy (the hop-3 Location)",
+      "returns": "200 text/html, about 406 bytes: a form with one hidden input, dummy (an anti-replay nonce)"
+    },
+    {
+      "hop": 5,
+      "method": "POST",
+      "url": "https://meddreamy.maccabi4u.co.il/saml/sp/profile/post/acs",
+      "request_body": "application/x-www-form-urlencoded: dummy=<hop 4>",
+      "request_headers": "Origin: https://meddreamy.maccabi4u.co.il, Referer: the /my.policy URL",
+      "returns": "302, Location /"
+    },
+    {
+      "hop": 6,
+      "method": "GET",
+      "url": "https://meddreamy.maccabi4u.co.il/",
+      "returns": "302, Location /?token=<HIS token>",
+      "notes": "The APM appends the HIS token here; this Location is the only place to read it short of decoding the signed assertion."
+    },
+    {
+      "hop": 7,
+      "method": "GET",
+      "url": "https://meddreamy.maccabi4u.co.il/?token=<HIS token> (the hop-6 Location)",
+      "returns": "200 text/html (the viewer's single-page app), with response header x-csrf-token and an anonymous MEDDREAMSESSID cookie",
+      "notes": "Only the header and the cookie are used; the page is discarded."
+    },
+    {
+      "hop": 8,
+      "method": "GET",
+      "url": "https://meddreamy.maccabi4u.co.il/his?token=<HIS token>",
+      "returns": "200 JSON {studyIds: [{studyUid, storageId, modality}]}",
+      "notes": "The authentication event: it rotates MEDDREAMSESSID to an authenticated value, and every /studies read fails without it. The entry whose studyUid is the hop-1 StudyInstanceUID gives the storageId every read needs."
+    }
+  ],
+
+  "reads": [
+    {
+      "method": "GET",
+      "url": "https://meddreamy.maccabi4u.co.il/studies/<StudyInstanceUID>/structure?storageId=<storageId>",
+      "returns": "200 JSON {studyInstanceUID, studyDate, studyTime, mainModality, storageId, series: [{seriesInstanceUID, modality, instances: [{sopInstanceUID, sopClassUID, transferSyntaxUID, numberOfFrames}]}]}",
+      "notes": "The study, series and image tree; its UIDs are the path segments of the per-image reads. numberOfFrames is 0 here for every image (not populated) while metadata says 1; transferSyntaxUID here is the stored syntax."
+    },
+    {
+      "method": "GET",
+      "url": "https://meddreamy.maccabi4u.co.il/studies/<StudyInstanceUID>/series/<SeriesInstanceUID>/images/<SOPInstanceUID>/metadata?storageId=<storageId>",
+      "returns": "200 JSON: per-image DICOM fields, echoing studyInstanceUID, seriesInstanceUID and sopInstanceUID, with rows, columns, samplesPerPixel, bitsAllocated, bitsStored, pixelRepresentation, photometricInterpretation, numberOfFrames, windowCenter, windowWidth and transferSyntaxUID (the decoded syntax, which is what pixels serves)",
+      "notes": "The only source of the numbers the pixel buffer needs to be read."
+    },
+    {
+      "method": "GET",
+      "url": "https://meddreamy.maccabi4u.co.il/studies/<StudyInstanceUID>/series/<SeriesInstanceUID>/images/<SOPInstanceUID>/thumbnail?storageId=<storageId>",
+      "returns": "200 image/jpeg;charset=UTF-8: a baseline JPEG the server renders (starts ff d8 ff e0, ends ff d9)",
+      "notes": "Not DICOM. No size parameter has been seen."
+    },
+    {
+      "method": "GET",
+      "url": "https://meddreamy.maccabi4u.co.il/studies/<StudyInstanceUID>/series/<SeriesInstanceUID>/images/<SOPInstanceUID>/pixels?storageId=<storageId>",
+      "returns": "200 application/octet-stream: raw decoded pixels, with no header or trailer",
+      "notes": "Its length is exactly rows x columns x samplesPerPixel x (bitsAllocated / 8) x numberOfFrames from metadata, and that is the only integrity check available. content-length reports the compressed transfer size, not that length. About 1.5 MB for the one image measured."
+    }
+  ]
+}

@@ -129,7 +129,7 @@
       "method": "GET",
       "url": "TestResultsAPI/pdf/members/0/{mid}/meddream/token/<StudyInstanceUID>?checksum=<current_customer_info.checksum_id>",
       "checked": "302 (seen as an opaque redirect from fetch with redirect: 'manual')",
-      "notes": "Already in endpoints.json manual_not_fetched. That repo follows the whole chain from Node: this redirect to the login host, a SAML form posted to https://meddreamy.maccabi4u.co.il/saml/sp/profile/post/acs, /my.policy with a nonce, then the viewer's own study, image, thumbnail and pixel reads (readers/imaging-viewer.ts). From a page the chain cannot be followed, since every hop after this one is on another origin."
+      "notes": "Already in endpoints.json manual_not_fetched. That repo follows the whole chain from Node: this redirect to the login host, a SAML form posted to https://meddreamy.maccabi4u.co.il/saml/sp/profile/post/acs, /my.policy with a nonce, then the viewer's own study, image, thumbnail and pixel reads (readers/imaging-viewer.ts); each hop and read is in MedDream-endpoints.json. From a page the chain cannot be followed, since every hop after this one is on another origin."
     }
   ],
 
