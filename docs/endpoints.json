@@ -1,5 +1,5 @@
 {
-  "_note": "Endpoint map: every request the collector (src/core, built into the extension) makes, and the file each one produces. Verified live 2026-09-16. No medical data. {mid} = member id (cookie cookie_sessionId_0_<id>, or mem_id in the sessionStorage token when that cookie is absent, seen 2026-09-17); it never appears in export paths or stored endpoint strings.",
+  "_note": "Endpoint map: every request the collector (src/core, built into the extension) makes, and the file each one produces. Verified live 2026-09-27. No medical data. {mid} = member id (cookie cookie_sessionId_0_<id>, or mem_id in the sessionStorage token when that cookie is absent, seen 2026-09-17); it never appears in export paths or stored endpoint strings.",
   "bases": {
     "rest": "https://online.maccabi4u.co.il/sonline/<Service>/webapi/mac/<version>/...",
     "legacy": "https://online.maccabi4u.co.il/online/..."
