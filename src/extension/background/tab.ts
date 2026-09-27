@@ -244,6 +244,7 @@ interface PageResult {
   redirected?: boolean;
   contentType?: string;
   retryAfter?: string;
+  url?: string;
   b64?: string;
 }
 
@@ -253,7 +254,7 @@ async function fetchInPage(req: HttpRequest): Promise<PageResult> {
     const buf = new Uint8Array(await r.arrayBuffer());
     let bin = '';
     for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode.apply(null, Array.from(buf.subarray(i, i + 0x8000)));
-    return { ok: true, status: r.status, redirected: r.type === 'opaqueredirect', contentType: r.headers.get('content-type') || '', retryAfter: r.headers.get('retry-after') || undefined, b64: btoa(bin) };
+    return { ok: true, status: r.status, redirected: r.type === 'opaqueredirect', contentType: r.headers.get('content-type') || '', retryAfter: r.headers.get('retry-after') || undefined, url: r.url, b64: btoa(bin) };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
@@ -285,7 +286,7 @@ export function tabTransport(tabId: number, waitVisible: () => Promise<void>): T
       await waitVisible();
       const r = await inTab(tabId, fetchInPage, [req]);
       if (!r.ok) throw new Error(r.error);
-      return { status: r.status as number, redirected: !!r.redirected, contentType: r.contentType || '', retryAfter: r.retryAfter, bytes: b64bytes(r.b64 || '') };
+      return { status: r.status as number, redirected: !!r.redirected, contentType: r.contentType || '', retryAfter: r.retryAfter, url: r.url, bytes: b64bytes(r.b64 || '') };
     },
     async xhr(req) {
       await waitVisible();
@@ -329,6 +330,7 @@ export async function extensionFetch(req: HttpRequest): Promise<HttpResponse> {
       redirected: r.type === 'opaqueredirect',
       contentType: r.headers.get('content-type') || '',
       retryAfter: r.headers.get('retry-after') || undefined,
+      url: r.url,
       bytes: await readBody(r, alive),
     };
   } finally {

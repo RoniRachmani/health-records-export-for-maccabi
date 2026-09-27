@@ -107,7 +107,9 @@ re-run from the start** — a resume, a reconnect or a rewind through `OPENED_BY
 propagate out of a step and the runner decides (reconnect twice, then pause; stop; discard). Anything
 else thrown inside a step is recorded as a problem against that step and the run continues — so a single
 bad record never ends an export. Problems are filed under the current step and cleared when that step
-re-runs. Legacy steps don't get a 401, so `runner.ts` treats "Failed to fetch" in them as a dead session.
+re-runs. Legacy steps don't get a 401: an ended session answers them with a followed redirect to
+`/my.logout.php3` (a 200 web page), which `Collector.legacy` and `fetchBin` turn into `SessionEndedError`
+from the response's final URL, and `runner.ts` also treats "Failed to fetch" in them as a dead session.
 
 ### Other pieces
 

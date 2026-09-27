@@ -44,7 +44,9 @@ export async function purchases(c: Collector, _ctx: Ctx): Promise<void> {
     const raw = all.bytes;
     await c.sleep(PACE_MS);
     // Unwrap {d: "..."} without re-encoding: read each byte as one char, let
-    // JSON.parse undo the escapes (all ASCII), then write the chars back as bytes.
+    // JSON.parse undo the JSON escapes, then write the chars back as bytes. The
+    // Hebrew arrives as raw windows-1255 bytes, not \u escapes (measured 2026-09-27),
+    // so each survives as one char in 0x80-0xFF.
     let d = '';
     try {
       d = JSON.parse(Array.from(raw, (b) => String.fromCharCode(b)).join('')).d || '';

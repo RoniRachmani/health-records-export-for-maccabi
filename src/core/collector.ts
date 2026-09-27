@@ -14,6 +14,24 @@ export class SessionEndedError extends Error {
   }
 }
 
+/**
+ * A followed redirect that ended on the gateway's logout or policy page, or on the login site, is an
+ * ended session. Legacy requests follow redirects, so without this it would arrive as a 200 web page
+ * (seen 2026-09-27: /my.logout.php3) and be filed as a bad response instead of stopping the run.
+ */
+function signedOut(r: HttpResponse): string | null {
+  if (!r.url) return null;
+  let u: URL;
+  try {
+    u = new URL(r.url);
+  } catch {
+    return null;
+  }
+  const path = u.pathname.toLowerCase();
+  if (u.hostname === 'mac.maccabi4u.co.il' || path === '/my.logout.php3' || path === '/my.policy') return 'redirected to ' + u.hostname + u.pathname;
+  return null;
+}
+
 export class CancelledError extends Error {
   readonly cancelled = true;
   constructor() {
@@ -206,6 +224,8 @@ export class Collector {
         }
         throw new SessionEndedError('request failed (' + errMessage(e) + ')');
       }
+      const out = signedOut(r);
+      if (out) throw new SessionEndedError(out);
       if (r.status === 401 && !headers) throw new SessionEndedError('HTTP 401');
       if (r.status === 429) {
         await this.rateLimitPause(r, waited ? 1 : 2);
@@ -234,7 +254,10 @@ export class Collector {
   /** A legacy /online/ request: session cookies only, no Bearer, redirects followed. */
   async legacy(url: string, method: string, headers: Record<string, string>, body?: string): Promise<HttpResponse> {
     this.checkStop();
-    return this.deps.transport.fetch({ url, method, headers, body });
+    const r = await this.deps.transport.fetch({ url, method, headers, body });
+    const out = signedOut(r);
+    if (out) throw new SessionEndedError(out);
+    return r;
   }
 
   /** A legacy body in the charset its Content-Type declares, else `fallback`: what that service is

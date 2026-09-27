@@ -315,4 +315,22 @@ describe('full run against the fake site', () => {
     expect(s.problems[0]).toMatch(/^visits PROBLEM: SESSION ENDED/);
     expect([...(sink as MemorySink).files.keys()]).toEqual([]);
   });
+
+  // An ended session answers a legacy request with a followed redirect to the gateway's logout page:
+  // a 200 web page, which the step would otherwise file as a bad response and carry on past.
+  for (const step of ['hospitalStays', 'savedDocuments', 'purchases'] as const) {
+    it(`stops ${step} at SESSION ENDED when a legacy request lands on the logout page`, async () => {
+      const site = fakeMaccabi();
+      const logout: HttpResponse = {
+        status: 200, redirected: false, contentType: 'text/html; charset=utf-8', url: 'https://online.maccabi4u.co.il/my.logout.php3',
+        bytes: new TextEncoder().encode('<html>logged out</html>'),
+      };
+      const t = fakeTransport([(_req, url) => (url.pathname.startsWith('/online/') ? logout : undefined), ...site.routes]);
+      const { c, sink } = makeCollector(t);
+      const s = await runAll(c, newCtx(), [step]);
+      expect(s.stoppedAt).toBe(step);
+      expect(s.problems).toEqual([expect.stringMatching(new RegExp('^' + step + ' PROBLEM: SESSION ENDED: redirected to online\\.maccabi4u\\.co\\.il/my\\.logout\\.php3'))]);
+      expect([...(sink as MemorySink).files.keys()]).toEqual([]);
+    });
+  }
 });

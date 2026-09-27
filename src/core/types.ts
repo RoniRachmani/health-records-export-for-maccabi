@@ -27,6 +27,8 @@ export interface HttpResponse {
   bytes: Uint8Array;
   /** The Retry-After header, when the server sent one (with 429 or 503). Seconds or an HTTP date. */
   retryAfter?: string;
+  /** Where the response came from after followed redirects (fetch's Response.url), when known. */
+  url?: string;
 }
 
 export interface Transport {
