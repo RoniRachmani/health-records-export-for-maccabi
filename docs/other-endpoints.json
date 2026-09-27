@@ -1,0 +1,250 @@
+{
+  "_note": "Requests used by another Maccabi client, orenyomtov/maccabi-health (https://github.com/orenyomtov/maccabi-health, packages/core/src), that docs/endpoints.json does not list. Each was sent live on 2026-09-27 from a signed-in browser tab against one adult member's account, with that repo's method, body and query, one at a time, 300 ms apart. Nothing here is requested by this extension; it is a map of what else the site answers, so a future change can start from facts. No medical data: response shapes are field names and types, never values. Paths are relative to /sonline/<Service>/webapi/mac/ unless they start with /. {mid} = member id; the member id code is 0, as in endpoints.json.",
+  "conventions": {
+    "checked": "What the request returned on 2026-09-27. 'not checked' means the account had no row to build the request from, or the request was deliberately not sent (see the entry).",
+    "auth": "Bearer = Authorization: Bearer <token> from the sign-in bootstrap below, as for every /sonline/ API call in endpoints.json. PDF routes answer without it, as in endpoints.json. Legacy /online/ routes use cookies only.",
+    "pdf_size": "That repo caps every PDF at 2 MiB (PDF_BYTE_LIMIT) and rejects anything larger as INVALID_RESPONSE. The ordered medical file (letter_type 2 in endpoints.json) was 7.9 MB, so that client cannot download it."
+  },
+
+  "session_and_account": [
+    {
+      "method": "GET",
+      "url": "TokenServerAPI/v4/members/token/full?checksum=&sr_id=",
+      "auth": "cookies",
+      "checked": "200 JSON {token, current_customer_info, logged_customer_info, family_data, authorization_to_account, session_id}",
+      "notes": "The sign-in bootstrap that repo starts every session with: token.content is the Bearer token, logged_customer_info the member's profile (names in Hebrew and English, birth_date, sex, age, phones, email, addresses), current_customer_info the member currently selected (a dependent when one is chosen in the portal), session_id the seed for the legacy sr_id, and current_customer_info.checksum_id the per-member secret the imaging handoff needs. It returns session credentials, so this extension must not call it (endpoints.json not_called_by_design); the extension reads the token from the tab's sessionStorage instead. When the session has ended it answers 200 text/html after a redirect to /my.logout.php3, not 401."
+    },
+    {
+      "method": "GET",
+      "url": "MainAppAPI/v1/members/0/{mid}/alive",
+      "checked": "200, empty body",
+      "notes": "The portal's own keep-alive. That repo sends it every 240 s and found it keeps the server's idle clock from expiring, but it cannot extend the 3600 s absolute cap from sign-in (their docs/research/SESSION-LIFETIME.md). It does not re-arm the page's own 6-minute idle logout (endpoints.json auth.idle_logout): in this check, the session ended twice while a Maccabi page sat open in another tab with nobody using it, and held for a 4-minute run once no Maccabi page was open and this was sent every 60 s."
+    },
+    {
+      "method": "GET",
+      "url": "MainAppAPI/v1/members/0/{mid}/features",
+      "checked": "200 JSON array[56] of {feature_id, feature_enabled}",
+      "notes": "The site's feature flags. Two matter for downloads: isOpenPdfByLinkHandlerV2 (true: the site fetches a letter_type 2 file through MainAppAPI/v2/.../pdf, with a 202 first) and IshurMakdim (administrative case documents)."
+    },
+    {
+      "method": "GET",
+      "url": "DirectorshipAPI/v1/members/0/{mid}/accounts",
+      "checked": "200 JSON {messages: [{type, message}], users: null}",
+      "notes": "Who else is authorized to act on the account. With nobody authorized it answers a single warning message and users null. Grants and revocations exist on the site; this is only the read."
+    },
+    {
+      "method": "GET",
+      "url": "/sonline/DirectorshipAPI/webapi/mac/v1/payers/0/{mid}/debit_authorization",
+      "checked": "200 JSON {is_active_auth_exists, payment_method, bank_code, bank_name, branch_code, branch_name, account_number, credit_card_type, last_four_digits_credit_card, is_credit_auth_only, auth_start_date, payer_type, is_shaban_auth_only}",
+      "notes": "Payment-method metadata. Returns the full bank account number (0 when there is none). Touches bank details, so it stays out of the extension under endpoints.json not_called_by_design. Note the path shape: payers/<code>/<id>, not members/."
+    },
+    {
+      "method": "GET",
+      "url": "DirectorshipAPI/v1/members/0/{mid}/finance/debts?person_type=1",
+      "checked": "200 JSON {kupa_debt, shaban_debt, additional_charges_debt} (numbers)",
+      "notes": "Outstanding balance split into the basic fund (kupa), supplementary insurance (shaban) and other charges. Payment data, not a medical record."
+    }
+  ],
+
+  "appointments": [
+    {
+      "method": "GET",
+      "url": "AppointmentOrderAPI/v1/members/0/{mid}/providers/appointment_service_providers?is_minor=false",
+      "checked": "200 JSON array[4] of {pactitioner_name_title (sic), gender, practitioner_id, facility_parent_id, object_type, object_id, employee_id, phone_number, profession_areas[{code, description}], clinic_address{street, house_number, city}, summons_type, triage_type, last_appointment_date, concealment[], ascribed}",
+      "notes": "Providers the member saw recently, the list behind the site's 'book again'. That repo sends is_minor=false only for adults (profile age >= 18)."
+    },
+    {
+      "method": "POST",
+      "url": "AppointmentOrderAPI/v1/members/0/{mid}/appointments/eligibility",
+      "request_body": {"object_type": "<provider.object_type>", "object_id": "<provider.object_id>", "employee_id": "<provider.employee_id>", "action_type": 1},
+      "checked": "200 JSON {is_eligible, results, next_quarter, future_appointments}",
+      "notes": "Whether the member may book with that provider. A read: it books nothing."
+    },
+    {
+      "method": "POST",
+      "url": "MainAppAPI/v1/members/0/{mid}/providers",
+      "request_body": {"service_providers": [{"object_type": "<object_type>", "object_id": "<object_id>", "employee_id": "<employee_id, left out when '0'>"}], "retrieval_type": "1"},
+      "checked": "200 JSON {providers: {provider: [...]}}, one provider carrying provider_id, facility_id, provider_role and sap_key{object_type, object_Id, employee_id}",
+      "notes": "The same route endpoints.json uses for profile/providers.json, but with retrieval_type \"1\" (a string) instead of 5, which returns the scheduling identifiers the booking flow needs. The request that repo builds from a future appointment was not checked: the account had none."
+    },
+    {
+      "method": "POST",
+      "url": "AppointmentOrderAPI/v1/members/0/{mid}/appointments/instructions_for_visit_type",
+      "request_body": {"object_type": "<appointment.object_type>", "object_id": "<appointment.object_id>", "employee_id": "<0 when object_type is O, else appointment.employee_id>", "chosenVisitType": "<appointment.type>"},
+      "checked": "not checked: no future appointment in the account",
+      "notes": "Preparation instructions for an upcoming appointment."
+    },
+    {
+      "method": "POST",
+      "url": "AppointmentOrderAPI/v1/members/0/{mid}/odoro/session, then odoro/dialog",
+      "checked": "not called",
+      "notes": "That repo's clinic-availability read: it opens a session with the appointment system (odoro/session, with the member's name and phones and an 'authentication' value), picks clinic mode with {session_id, authentication, response: \"2\"}, and stops at the first list of free days and times. It opens a booking dialogue on the scheduling system, so it was not sent. It can no longer work anyway: 'authentication' is scraped from the pinned frontend asset in the next entry, which is gone."
+    },
+    {
+      "method": "GET",
+      "url": "/sonline/appointmentOrder/static/js/async/467.5c814e7c.js",
+      "checked": "200 text/html (the app's fallback page, not the script); chunk 467 is no longer in the current bundle's chunk map",
+      "notes": "A content-hashed file pinned by that repo to read the appointment API's 32-hex 'authentication' constant. Maccabi has redeployed since, so that repo now raises SOURCE_MOVED for clinic availability. A missing /sonline/ static file answers 200 with HTML, not 404."
+    }
+  ],
+
+  "medications": [
+    {
+      "method": "GET",
+      "url": "MedicalFileAPI/v1/members/0/{mid}/alternativeDrugs?largoCode=<prescription.drug_largo_code>",
+      "checked": "200 JSON {drugs: [...]}; empty for the drug checked",
+      "notes": "Alternative names and codes for a prescribed drug. That repo only asks for prescriptions with purchase_status 1, 2 or 3; both in the account were 6, and the route answered for one of them all the same."
+    }
+  ],
+
+  "communication_with_doctor": [
+    {
+      "method": "GET",
+      "url": "AppointmentOrderAPI/v1/members/0/{mid}/visits/<details.open_medical_record_number>/?isOpenMedicalRecordNumber=true",
+      "checked": "200 JSON with the same shape as a visit's details (visit_summary_pdf_link, timestamp, hash, visit_recommendations, service_provider_*, drugs/referrals/approvals/tutorials) for 8 of the 9 inquiries that carry an open_medical_record_number; 204 for the ninth",
+      "notes": "The visit a doctor's reply belongs to, when an inquiry was answered as a visit. Its summary PDF comes from the ordinary AppointmentOrderAPI/v1/.../pdf route in endpoints.json."
+    },
+    {
+      "method": "GET",
+      "url": "AppointmentOrderAPI/v1/members/0/{mid}/pdf?path=<encodeURIComponent(details.medical_forms_details[n].link_pdf)>&timestamp&hash",
+      "checked": "400 text/plain for all 16 forms in the account, body: פעולה זו אינה תקפה, אנא נסה/י מאוחר יותר ('this action is not valid, try again later'). MedicalFileAPI/v1/.../pdf with the same values answered the same.",
+      "notes": "Where that repo fetches an inquiry's documents: from the details' medical_forms_details (fields document_id, doc_form_id, link_pdf, valid_from, valid_until, document_status_id, is_delivered, delivery_date, document_type, document_description, file_name_title, token, hash, timestamp, form_type), and only when request_status_code is 1 or 8, the details carry no open_medical_record_number, and form_type is 1 to 5. Every form in the account had is_delivered false, document_status_id 2 and a valid_until already past (latest 2026-08-24), which is the likely reason. endpoints.json downloads from the list's medical_forms_documents[n].result_file instead ({result_file, hash, timestamp})."
+    }
+  ],
+
+  "test_results": [
+    {
+      "method": "GET",
+      "url": "/sonline/TestResultsAPI/webapi/mac/pdf/showresult?data=<encodeURIComponent(row.result_file)>&t=<row.time_stamp>&hash=<row.hash>&testDes=<row.test_desc>&labDate=<row.lab_date>",
+      "checked": "not checked: no result row in the account had a result_file",
+      "notes": "The attachment behind a single lab value (latest, followed or a result's group_values row)."
+    },
+    {
+      "method": "GET",
+      "url": "TestResultsAPI/v1/members/0/{mid}/labs/corona/Report?data=<request_id>&t=<details.corona_t>&hash=<details.corona_hash>",
+      "checked": "not checked: show_print_corona_english_report was false on the result checked",
+      "notes": "The English COVID test certificate a lab result can carry (getresultsbyid returns corona_t, corona_hash and show_print_corona_english_report)."
+    },
+    {
+      "method": "GET",
+      "url": "TestResultsAPI/pdf/members/0/{mid}/meddream/token/<StudyInstanceUID>?checksum=<current_customer_info.checksum_id>",
+      "checked": "302 (seen as an opaque redirect from fetch with redirect: 'manual')",
+      "notes": "Already in endpoints.json manual_not_fetched. That repo follows the whole chain from Node: this redirect to the login host, a SAML form posted to https://meddreamy.maccabi4u.co.il/saml/sp/profile/post/acs, /my.policy with a nonce, then the viewer's own study, image, thumbnail and pixel reads (readers/imaging-viewer.ts). From a page the chain cannot be followed, since every hop after this one is on another origin."
+    }
+  ],
+
+  "administrative_requests": [
+    {
+      "method": "GET",
+      "url": "RequestsAndApprovalsAPI/v1/members/0/{mid}/cases/<interaction_id> (classification Case) or service_requests/<interaction_id> (classification ServiceRequest)",
+      "checked": "not checked: requests_and_cases was empty",
+      "notes": "Detail of one administrative request: documents, provider_document, messages[].documents and extended_properties (obligation_details, medication_approval, obligation, refund, preauthorization, ombudsman)."
+    },
+    {
+      "method": "GET",
+      "url": "RequestsAndApprovalsAPI/v1/members/0/{mid}/service_requests_document?doc_uri=<document.uri>&timestamp&hash",
+      "checked": "not checked",
+      "notes": "A request's attachment. Some attachments come inline as base64 in the detail instead."
+    }
+  ],
+
+  "letters": [
+    {
+      "method": "POST",
+      "url": "DirectorshipAPI/v1/members/0/{mid}/all/letters_for_member",
+      "request_body": {"from_date": "YYYY-MM-DD", "to_date": "YYYY-MM-DD", "members": [{"member_id_code": "0", "member_id": "{mid}"}]},
+      "checked": "200 JSON {letters: [...]}: 1 letter for a one-year range, 4 (types 1 and 2) from 2010-01-01",
+      "notes": "Already in endpoints.json read_not_collected; recorded here because the letters section of endpoints.json says this POST returned 500. It answered on 2026-09-27. A letter row: status, from_date, to_date, link, item_date, original_item_date, hash, timestamp, letter_type, plus reference_id and name_document on type 1. name_document has the form <DDMMYY>_m<digits> and the digits contain the member id, so it must not become a file name. Type 1 letters seen were notices of changes to the supplementary-insurance plan."
+    },
+    {
+      "method": "GET",
+      "url": "MainAppAPI/v1/members/0/{mid}/pdf/http?file_path=<letter.tutorial.url>&timestamp=<letter.tutorial.timestamp>&hash=<letter.tutorial.hash>",
+      "checked": "not checked: no letter_type 3 in the account",
+      "notes": "letter_type 3: an information sheet sent as a letter, whose row carries a tutorial object instead of a link."
+    }
+  ],
+
+  "legacy": [
+    {
+      "method": "GET",
+      "url": "/online/directorship/personalreminders/?relative=-1&sr_id=<session>, then GET /online/webapi/PersonalRemindersESB/GetReminders/",
+      "checked": "200 text/html, then 200 JSON {MemberRegistrationDetails, StatusCode, PreferredLangCode, PushInfo{IsPushRegistered, Recipients}, ServiceGroups[11]{Code, Name, Description, IsRegistered, CanRegister, RestrictionDesc, Order, Services[]{Code, Name, Description, IsRegistered, DefaultChannelCode, ServiceChanneIdSelected (sic), IsMaccabitonType, Channels[]{Code, Name, IsRegistered, CanRegister, Order}}}, ContactDetails{CellPhone, Email}, ResultMessage{Code, Message, Description}, ShowIncludeChildsButton}",
+      "notes": "Notification preferences: which reminders and mailings (appointments, test results, approvals, preventive medicine, bills, letters, marketing) the member gets and on which channel. ResultMessage.Code 0 is success. sr_id is the cookie_sessionId_0_{mid} cookie's value, or the bootstrap's session_id when the cookie is absent. Saving preferences is a separate write; only the read was sent."
+    },
+    {
+      "method": "GET",
+      "url": "/online/directorship/debitsandcredits/?relative=-1&sr_id=<session>",
+      "checked": "200 text/html",
+      "notes": "Opens the billing service; the requests below need it. Its select#PeriodSelectDropDownList lists the quarterly periods (16 in the account, back to 2015); #isUnderConstruction value 1 means the service is down. Decoded as UTF-8 the Hebrew came back as replacement characters: legacy /online/ pages are not UTF-8 (see findings.legacy_encoding)."
+    },
+    {
+      "method": "POST",
+      "url": "/online/Ajax/DebitsAndCredits/WcDebitsAndCreditsManager.asmx/GetQuarterlyReport",
+      "request_body": "{'value':'<period option value>'} (single-quoted, as the site's script sends it; Content-Type application/json; charset=utf-8)",
+      "checked": "200 JSON {d: <HTML fragment>}",
+      "notes": "The reports issued for one period. Rows are .dataGrid > .quaterly_table > .maintable > ul.rowgroup > li; the third span's link has onclick QuarterlyReport.OpenReportPdf('<token>', '<reportType>'). 44 reports across the 16 periods: some periods have more than one."
+    },
+    {
+      "method": "POST",
+      "url": "/online/Ajax/DebitsAndCredits/WcDebitsAndCreditsManager.asmx/GetLTCReport",
+      "request_body": "(empty; Content-Type application/json; charset=utf-8)",
+      "checked": "200 JSON {d: <HTML fragment>}",
+      "notes": "The annual nursing-insurance (long-term care, 'Maccabi Siudi') reports: 8 in the account, 2011 to 2018. Links are LTCReport.OpenReportPdf('<token>', 'LTCReport'), written with HTML entities (&#39; and &#32;) in the onclick attribute."
+    },
+    {
+      "method": "POST",
+      "url": "/online/Ajax/DebitsAndCredits/WcDebitsAndCreditsManager.asmx/GetDocFromArchive, then GET /online/Pages/Popups/DebitsAndCredits/DebitsAndCreditsPdfReport.aspx?token=<token>&ReportType=<reportType>&FileName=DebitsAndCreditsReportInformation",
+      "request_body": "{'token':'<token>', 'reportType':'<reportType>'}",
+      "checked": "200 JSON {d: true}, then 200 application/pdf, for all 52 reports",
+      "notes": "The first call stages the document; the PDF request fails without it. The query key is token for a quarterly report and Token for a nursing-insurance report. Quarterly report (1 page, about 60 KB, with a text layer): Maccabi's payments-and-credits notice for three months. It shows the recipient's name and postal address, the production date and the member number, then which plans each family member holds (Maccabi Sheli, Zahav or Kesef, nursing insurance, Keren Maccabi) with that month's dues and the last 4 digits of the charged bank account or card, a monthly summary by charge type (membership dues, quarterly co-payments, other charges and credits), and a per-month breakdown. Nursing-insurance report (1 page, 35 to 70 KB): the insurer's annual report for the policy year (Clal through 2018; from 2019-01-01 the insurer is Phoenix), with the policy's coverages, status, start and end dates, annual premium and the premium month by month. It prints each insured person's full name and ID number. Its text layer draws the header's phone and address digits with symbol glyphs, so extracted text is wrong there; the tables extract correctly."
+    },
+    {
+      "method": "GET",
+      "url": "/online/medicalfile/mailingsfromhospitals/?relative=-1&sr_id=<session>",
+      "checked": "200 text/html",
+      "notes": "The page behind hospital-stays in endpoints.json. It holds one #mailingsFromHospitalsController and a script with var pageSettings = {..., \"YearsBack\": \"<1-99>\"} (7 in the account). That repo sends GetMailingsFromHospitals {isDateSelected: false, fromDate: <DDMMYYYY number> - YearsBack, toDate: <DDMMYYYY number>}, subtracting the years from the day digits exactly as the site's controller does; endpoints.json's body answers too. With no stay it returns {ReportHospitalizations: [], ResultMessage: {Code: 0}}."
+    }
+  ],
+
+  "public_directory": {
+    "_note": "serguide.maccabi4u.co.il, Maccabi's public provider directory. No account, no cookies, no Authorization. Answered normally from a real browser tab; that repo says its Node client gets a bot-challenge page instead. JSON POSTs with Content-Type application/json.",
+    "requests": [
+      {
+        "method": "GET",
+        "url": "https://serguide.maccabi4u.co.il/heb/doctors/",
+        "checked": "200 text/html (about 240 KB) with an inline window.__INITIAL_STATE__",
+        "notes": "The doctors search page. Its initial state holds the catalogs: Fields and Cities, each an array of {K, V} (key, Hebrew label)."
+      },
+      {
+        "method": "POST",
+        "url": "https://serguide.maccabi4u.co.il/webapi/api/SettingsForSearch/GetSettingsForSearch/",
+        "request_body": {"ModuleName": "labsandtherapists", "initiatorCode": "001"},
+        "checked": "200 JSON {Settings, Data, Description}, Settings.category LabsAndTherapists_003",
+        "notes": "The same catalogs for labs, institutes and therapists (chapter 003). Doctors are chapter 001."
+      },
+      {
+        "method": "POST",
+        "url": "https://serguide.maccabi4u.co.il/webapi/api/SearchPage/GetSearchPageSearch/",
+        "request_body": {"Field": "<Fields[].K>", "City": "<Cities[].K, optional>", "DocName": "<optional>", "ChapterId": "001", "InitiatorCode": "001", "isKosher": 0, "IsMobileApplication": 0, "PageNumber": 1, "RequestId": "<new UUID>"},
+        "checked": "200 JSON {SearchedTreatments, SearchedTreatmentsBaskets, ActiveFilters, Cities, CountOfTreatmentsSearched, CurrentLocationAddress, Errors, ProfAreas, Items[10], NumOfPages, TotalItems, SelectedTab, ...}; page 2 answered with the same RequestId plus Source: SearchPage and ModuleName: doctorssearchresults",
+        "notes": "A Field key that is not a catalog key answers 500 {ErrorCode, ErrorMessage}. Each item carries ItemKeyIndex, PositionId, EmployeeNumber, CHAPTER_CODE and PHONENUMBERS."
+      },
+      {
+        "method": "POST",
+        "url": "https://serguide.maccabi4u.co.il/webapi/api/ProviderDetails/",
+        "request_body": {"ItemKeyIndex": "<item.ItemKeyIndex>", "Source": "SearchPageResults", "RequestId": "<the search's RequestId>", "ChapterId": "001", "InitiatorCode": "001", "IsKosher": 0, "IsMobileApplication": 0},
+        "checked": "200 JSON {SearchedTreatments, SearchedTreatmentsBaskets, ConsultCosts, AbsencesList, NameRemarks, Facil_Services, Absences, ContactRemarks, ...}",
+        "notes": "One provider's page: contacts, hours, services, fees, absences and remarks."
+      }
+    ]
+  },
+
+  "findings": {
+    "legacy_encoding": "The legacy HTML pages (debitsandcredits, personalrecommendations, summary) and the WcDebitsAndCreditsManager.asmx JSON services returned Hebrew that decoded as replacement characters when read as UTF-8. So the .asmx services are not UTF-8 either, despite being JSON: they are almost certainly windows-1255, which this extension already decodes elsewhere (GetFileDetails, GetAllPurchasedPrescription). That repo reads legacy bodies with the Content-Type's charset, accepting utf-8 or windows-1255 and nothing else. Take the charset from Content-Type; never let fetch's .text() or .json() default it to UTF-8.",
+    "session_end_shape": "An ended session answered API and page requests with 200 text/html after a redirect to /my.logout.php3 (fetch follows it), not 401 or /my.policy. That repo's research saw a single 302 to /my.policy; a client should treat both as signed out.",
+    "idle_logout_from_other_tabs": "A Maccabi page left open in another tab signed the whole session out after a few minutes without mouse or keyboard input, even while this client's requests kept succeeding: the page's 6-minute idle logout (endpoints.json auth.idle_logout) ends the session for every tab. A 4-minute run held once no Maccabi page was open, the requests ran from a blank same-origin page, and the site's alive request was sent every 60 s.",
+    "lab_report_404": "getresultsbyid/report answered 404 for 4 of the 14 lab results again, the same count as in endpoints.json read_not_collected.lab_report_pdfs.",
+    "no_detail_visits": "visits/<appointment_id> answered 204 (no content) for 2 of the 9 past visits.",
+    "base64_reports": "sensitivity/pdf, vaccination/certificates/report and prescriptions/purchased/report answer JSON {type: 'pdf', base64}, not a PDF body."
+  }
+}
