@@ -39,8 +39,8 @@ export const PLAN = [
   // The member's details, then their medications, come first in the popup's list, as the natural
   // opening. Both are REST API steps, which do not care what page the tab is on, so they are
   // collected from the legacy page, next to the purchases that belong with the prescriptions (both
-  // write to medications-and-prescriptions/). The token is good for hours; the site's 6-minute idle
-  // logout is kept off by keepSessionAlive, on whatever page the tab is on.
+  // write to medications-and-prescriptions/). The token is good for hours; the site's idle logouts
+  // (the legacy page has its own, shorter one) are kept off by keepSessionAlive, on whatever page the tab is on.
   'profileAndDoctors',
   // Allergies, upcoming appointments and requests: three short requests, shown in the popup as part
   // of "Your details and doctor", which needs them right after it.

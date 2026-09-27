@@ -19,7 +19,7 @@ import { currentRoutes, currentSession, isVisible, keepSessionAlive, navigate, r
 import { updateBadge, notify } from './ui';
 
 const HEARTBEAT = 'hrem-heartbeat';
-/** Comfortably inside the site's 6-minute idle logout (see keepSessionAlive). */
+/** Comfortably inside the site's idle logouts, 330 s on legacy pages and 360 s elsewhere (see keepSessionAlive). */
 const ACTIVITY_MS = 240_000;
 
 let state: RunState | null = null;

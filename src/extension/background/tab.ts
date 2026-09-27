@@ -56,21 +56,37 @@ function clearTokenInPage(): void {
 
 const ACTIVITY_TIMEOUT_MS = 5000;
 
-function mousedownInPage(): void {
+function activityInPage(): void {
   document.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+  // Legacy /online/ pages run a second idle timer of their own, which mouse events do not reach.
+  const page = window as unknown as {
+    resetActive?: () => void;
+    closedialog?: () => void;
+    countDownStarted?: boolean;
+  };
+  if (typeof page.resetActive !== 'function') return;
+  // Once its countdown has started, resetActive leaves it running: stop it the way the dialog's own
+  // "keep browsing" button (renewSession) does, without that button's extra request.
+  const counting = page.countDownStarted === true;
+  if (counting) page.countDownStarted = false;
+  page.resetActive();
+  if (counting && typeof page.closedialog === 'function') page.closedialog();
 }
 
 /**
- * Keeps the site's own idle logout from cutting an export in half. Maccabi logs the tab out 6 min
- * after the last keydown or mousedown in the page, with a 25 s warning dialog (measured 2026-09-18);
- * requests do not count towards it, from the page or from here, and neither does the tab being
- * visible. So a run that asks nothing of the user looks idle to the site and dies partway. This
- * gives the page the one signal it watches for, and only while a run is using the session.
+ * Keeps the site's own idle logouts from cutting an export in half. Maccabi logs the tab out 6 min
+ * after the last keydown or mousedown in a /sonline/ page, with a 25 s warning dialog (measured
+ * 2026-09-18); requests do not count towards it, from the page or from here, and neither does the tab
+ * being visible. A legacy /online/ page has a shorter timer of its own: a dialog 330 s after the
+ * page's last jQuery request, then 31 s to SessionCleaner.aspx; it ignores mouse events and the
+ * extension's requests, and its reset is the page's resetActive (measured 2026-09-27). So a run that
+ * asks nothing of the user looks idle to the site and dies partway. This gives each kind of page the
+ * signal it watches for, and only while a run is using the session.
  * Failures are ignored: the run's next request reports a tab or session that has gone.
  */
 export async function keepSessionAlive(tabId: number): Promise<void> {
   try {
-    await inTab(tabId, mousedownInPage, [], ACTIVITY_TIMEOUT_MS);
+    await inTab(tabId, activityInPage, [], ACTIVITY_TIMEOUT_MS);
   } catch {
     /* nothing to do here */
   }

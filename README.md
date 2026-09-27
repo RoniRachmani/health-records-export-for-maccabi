@@ -102,9 +102,9 @@ Then load the `dist/` folder the same way.
   This is the only change the extension makes to your account, and it happens even if the export later fails.
 - **Keep the Maccabi Online tab in front.** Chrome pauses hidden tabs, which can end your session. If you switch away, the
   export waits until you come back.
-- **Your session is kept awake.** Maccabi Healthcare Services logs you out after six minutes without a click or a keypress on the page, and
-  an export asks nothing of you for far longer than that, so while it runs the extension signals activity in that tab
-  every few minutes. It stops as soon as the export does.
+- **Your session is kept awake.** Maccabi Healthcare Services logs you out after five and a half to six minutes without a click or a keypress on the page,
+  and an export asks nothing of you for far longer than that, so while it runs the extension signals activity in that
+  tab every few minutes, in the form each of the site's pages listens for. It stops as soon as the export does.
 
 ### If something goes wrong
 
