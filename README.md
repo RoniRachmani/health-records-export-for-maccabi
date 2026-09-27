@@ -102,6 +102,8 @@ Then load the `dist/` folder the same way.
   This is the only change the extension makes to your account, and it happens even if the export later fails.
 - **Keep the Maccabi Online tab in front.** Chrome pauses hidden tabs, which can end your session. If you switch away, the
   export waits until you come back.
+- **Don't log in to Maccabi Online anywhere else while it runs.** Maccabi keeps one session per member, so logging in
+  from another browser or computer ends the one the export is using.
 - **Your session is kept awake.** Maccabi Healthcare Services logs you out after five and a half to six minutes without a click or a keypress on the page,
   and an export asks nothing of you for far longer than that, so while it runs the extension signals activity in that
   tab every few minutes, in the form each of the site's pages listens for. It stops as soon as the export does.
@@ -110,7 +112,7 @@ Then load the `dist/` folder the same way.
 
 | The popup says | What to do |
 |---|---|
-| **Export paused** | Your session ended. Logging in to Maccabi on another device or browser can do this. Log in to Maccabi Online again, click the icon on that tab and press **Resume**. (The extension first tries to reconnect by itself.) Also shown after Chrome restarts mid-export. |
+| **Export paused** | Your session ended. Logging in to Maccabi Online anywhere else (another browser or computer) does this: Maccabi keeps one session per member. Log in to Maccabi Online again, click the icon on that tab and press **Resume**. (The extension first tries to reconnect by itself.) Also shown after Chrome restarts mid-export. |
 | **Waiting for the Maccabi Online tab** | Bring the tab back to the front. The export continues on its own. |
 | **Export stopped** | Press **Try again** on the Maccabi Online tab. It continues from the step that failed. |
 | **The ZIP was not saved** | Press **Save again**. |
