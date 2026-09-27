@@ -110,7 +110,7 @@ Then load the `dist/` folder the same way.
 
 | The popup says | What to do |
 |---|---|
-| **Export paused** | Your session ended. Log in to Maccabi Online again, click the icon on that tab and press **Resume**. (The extension first tries to reconnect by itself.) Also shown after Chrome restarts mid-export. |
+| **Export paused** | Your session ended. Logging in to Maccabi on another device or browser can do this. Log in to Maccabi Online again, click the icon on that tab and press **Resume**. (The extension first tries to reconnect by itself.) Also shown after Chrome restarts mid-export. |
 | **Waiting for the Maccabi Online tab** | Bring the tab back to the front. The export continues on its own. |
 | **Export stopped** | Press **Try again** on the Maccabi Online tab. It continues from the step that failed. |
 | **The ZIP was not saved** | Press **Save again**. |
