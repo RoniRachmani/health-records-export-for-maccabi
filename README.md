@@ -22,13 +22,13 @@ earliest visit. It helps you understand your records and prepare for your doctor
 </p>
 
 <p align="center">
-  <a href="https://youtu.be/tQkiFCoZLBg">
+  <a href="https://youtu.be/zY5TxwlsGjs">
     <img src="store/assets/video-poster.png" alt="Watch an export, start to finish: a one-minute video" width="720">
   </a>
 </p>
 
 <p align="center">
-  ▶︎ <a href="https://youtu.be/tQkiFCoZLBg">Watch an export, start to finish</a> · 1 minute, narrated
+  ▶︎ <a href="https://youtu.be/zY5TxwlsGjs">Watch an export, start to finish</a> · 1 minute, narrated
 </p>
 
 - **Ready for your AI assistant.** Open the folder in the Claude desktop app, Claude Code, ChatGPT Work or Codex, and the
