@@ -297,7 +297,7 @@
         "method": "GET",
         "url": "CommunicationWithDoctorAPI/v1/members/0/{mid}/inquiries/<request_id>/details",
         "output": "communication-with-doctor/details/<creation_date>_<request_id>_<title>.json",
-        "notes": "GET .../inquiries/<request_id> (without /details) returns 405. <title> is, from these details, request_subjects[].name, else general_question_subject, else the distinct medical_forms_details[].document_description; else the list's service_provider_name. Saved after the forms and the linked visit, with files[] (one {file} or {same_as}, plus description, per form saved) and visit (the linked visit's record)."
+        "notes": "GET .../inquiries/<request_id> (without /details) returns 405. <title> is, from these details, request_subjects[].name, else the distinct medical_forms_details[].document_description, else general_question_subject (which can be the opening of the member's message); else the list's service_provider_name. Saved after the forms and the linked visit, with files[] (one {file} or {same_as}, plus description, per form saved) and visit (the linked visit's record)."
       },
       {
         "method": "GET",

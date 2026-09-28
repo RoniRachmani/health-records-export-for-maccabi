@@ -116,14 +116,14 @@ export function fakeMaccabi(letterState: LetterState = { medicalFile: null }): {
           medical_forms_documents: [{ result_file: 'f/2.pdf', timestamp: 't', hash: 'h' }, { result_file: 'f/3.pdf', timestamp: 't', hash: 'h' }] },
       ],
     })],
-    // Q1 names no subject, so its forms name it; Q2 asks a question, and its forms do not pair with the list's.
+    // Q1 names no subject, so its forms name it; Q2's forms say no kind, so its question names it, and they do not pair with the list's.
     ['GET', api('CommunicationWithDoctorAPI/v1/members/0/{mid}/inquiries/Q1/details'), () => jsonResp({
       doctor_remark: 'synthetic', request_subjects: [], open_medical_record_number: 7001,
       medical_forms_details: [{ document_description: 'הפניה', link_pdf: 'l/1.pdf' }],
     })],
     ['GET', api('CommunicationWithDoctorAPI/v1/members/0/{mid}/inquiries/Q2/details'), () => jsonResp({
       doctor_remark: 'synthetic', general_question_subject: 'שאלה לרופא', open_medical_record_number: 7002,
-      medical_forms_details: [{ document_description: 'אישור', link_pdf: 'l/2.pdf' }, { document_description: 'אישור' }],
+      medical_forms_details: [{ link_pdf: 'l/2.pdf' }, {}],
     })],
     ['GET', api('MedicalFileAPI/v1/members/0/{mid}/sensitivity'), () => jsonResp({ intolerance: [] })],
     ['POST', api('AppointmentOrderAPI/v2/members/0/{mid}/appointments/future'), () => jsonResp([])],

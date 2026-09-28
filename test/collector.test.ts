@@ -323,6 +323,17 @@ describe('full run against the fake site', () => {
     });
   });
 
+  // general_question_subject can be the opening of the member's own message, so the forms say it better.
+  it('names an inquiry by its forms before its question', async () => {
+    const site = fakeMaccabi();
+    const details: Route = (_req, url) => (url.pathname.endsWith('/inquiries/Q2/details')
+      ? jsonResp({ general_question_subject: 'שלום, תוכלי בבקשה להוסיף', medical_forms_details: [{ document_description: 'הפניה', link_pdf: 'l' }] })
+      : undefined);
+    const { c, sink } = makeCollector(fakeTransport([details, ...site.routes]));
+    await runAll(c, newCtx(), ['doctorCommunications']);
+    expect((sink as MemorySink).files.has('communication-with-doctor/details/2026-04-05_Q2_הפניה.json')).toBe(true);
+  });
+
   it('reports hospital stays answered with a web page as a problem, and writes nothing', async () => {
     const site = fakeMaccabi();
     const logout: HttpResponse = { status: 200, redirected: false, contentType: 'text/html; charset=utf-8', bytes: new TextEncoder().encode('<html>logged out</html>') };

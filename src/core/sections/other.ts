@@ -47,8 +47,9 @@ export async function doctorCommunications(c: Collector, _ctx: Ctx): Promise<voi
 }
 
 /**
- * What an inquiry is about: the subjects the member picked, the question's own subject, or the kinds
- * of form the doctor sent back. '' when the details name none of them, and the doctor names it.
+ * What an inquiry is about: the subjects the member picked, the kinds of form the doctor sent back, or
+ * the question's own subject -- last, because it can be the opening of the member's message rather
+ * than a subject (seen 2026-09-28). '' when the details name none of them, and the doctor names it.
  */
 function inquiryTitle(details: Json): string {
   if (!details) return '';
@@ -58,7 +59,7 @@ function inquiryTitle(details: Json): string {
     const k = typeof f.document_description === 'string' ? f.document_description.trim() : '';
     if (k && !kinds.includes(k)) kinds.push(k);
   }
-  return title(subjects.join('-')) || title(details.general_question_subject) || title(kinds.join('-'));
+  return title(subjects.join('-')) || title(kinds.join('-')) || title(details.general_question_subject);
 }
 
 /**
