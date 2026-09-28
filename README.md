@@ -122,7 +122,8 @@ Resume refuses to continue if a different member is logged in. **Stop** ends the
 so far.
 
 A single item that fails doesn't stop the export. It's listed in the popup when the export finishes, and stays
-there until the next export starts.
+there until the next export starts. The ZIP records it too, in `export-errors.json`, so whoever reads the export
+later can tell a section that failed from one that had nothing in it.
 
 ## What's in the ZIP
 
@@ -146,7 +147,8 @@ One folder, `maccabi-export-YYYY-MM-DD/`:
 | `allergies-sensitivity/` | Your recorded sensitivities. Kept even when there are none, so an empty list says none are on record |
 | `appointments/` (future only), `requests-approvals/` | Only when the site has something in them |
 | `<date>_medical-file.pdf` | Your full medical file, freshly ordered: one document covering your whole history, and the place to start |
-| `README.md` | Instructions for an AI assistant, and the export's own data dictionary: what each folder holds, how a record is shaped, which fields carry no meaning, and what the export does **not** contain |
+| `README.md` | Instructions for an AI assistant, and the export's own data dictionary: what each folder holds, how a record is shaped, which fields carry no meaning, what the export does **not** contain, and which extension version and file layout made it |
+| `export-errors.json` | Everything the export failed to collect, by folder: `[]` when every request was answered |
 | `CLAUDE.md`, `AGENTS.md` | Point Claude Code and Codex at `README.md`, so they take it as their instructions without being told to |
 
 Every section keeps its list in `list.json`, one JSON file per record in `details/`, and documents in `files/`.
@@ -176,7 +178,9 @@ at your full medical file PDF as the one document to start from, then says what 
 data over 12 months — so a reader doesn't take an omission for an absence in your history. It then goes folder by
 folder, and through the values that mislead: a lab `result` of 0 that is really a text answer, placeholder dates,
 and fields that change on every request. It shares a reader's context with the records themselves, so it is kept
-to what the files don't say for themselves, and the field names are left to the JSON.
+to what the files don't say for themselves, and the field names are left to the JSON. Its first line names the
+extension version and file layout that made the export, so two exports made by different versions can be told apart,
+and a missing folder is said to have failed or to have had nothing on record, from `export-errors.json`.
 
 Each JSON file is the site's response as sent, wrapped with where it came from. Your member ID is never written into
 file paths or `endpoint` values:
@@ -329,6 +333,13 @@ documents it holds: `Collector.pdfOnce` saves a form, an upload or a linked visi
 has its bytes, and otherwise records it as a copy of that file, so a repeat makes no request for it either. A run
 paused before an update that renames files (`FILE_LAYOUT`) can't be continued, only discarded, or it would stage the
 same records twice under two names.
+
+A request that fails inside a step is filed as a problem under that step (and cleared when the step runs again), with
+the member id written as `{mid}`. Every section writes its folder whenever the site answers, and files a problem when
+it doesn't, so when the ZIP is written the problems become `export-errors.json`, each put against the folder it is
+about (`STEP_FOLDERS` in `src/extension/shared/readme.ts`), and the export's `README.md` says of each missing folder
+whether it failed or had nothing on record. A test walks every record a fake run writes and checks that each file it
+names (`file`, `same_as`, `visit`, `linked_from`) is in the export, with and without failures, and across a resume.
 
 The tab visits a single legacy page, `/online/medicalfile/summary/`. The legacy services answer only after some
 `/online/` page has been loaded in the session, and the medical file order has to be sent from that one, so the four

@@ -12,7 +12,7 @@ import {
 import {
   clearProblemsOfStep, clearStaging, listMeta, listProblems, putTextDirect, setCurrentStep, stagedTotals, stagingSink,
 } from '../shared/staging';
-import { exportReadme, INSTRUCTION_POINTERS } from '../shared/readme';
+import { EXPORT_ERRORS, exportErrors, exportReadme, INSTRUCTION_POINTERS } from '../shared/readme';
 import { callOffscreen, closeOffscreen, offscreenHtml } from './offscreenClient';
 import { capturingTransport, rawDumpOn } from './rawDump';
 import { currentRoutes, currentSession, extensionFetch, isVisible, keepSessionAlive, navigate, routedTransport, snapshot } from './tab';
@@ -402,9 +402,11 @@ async function runPlanStep(step: PlanStep): Promise<void> {
 // ---- finishing ---------------------------------------------------------
 /**
  * The export's own data dictionary and an assistant's instructions, at the root of the ZIP, with the
- * files that point Claude Code and Codex at it. Counts describe what this run got.
+ * files that point Claude Code and Codex at it, and the list of what the run failed to collect.
+ * Counts describe what this run got; the version is the one running, whose FILE_LAYOUT the run's
+ * files have (sameLayout discards a run started under another).
  */
-async function writeReadme(root: string): Promise<void> {
+async function writeReadme(root: string, run: RunState): Promise<void> {
   const files: Record<string, number> = {};
   let medicalFile: string | null = null;
   for (const m of await listMeta()) {
@@ -413,7 +415,11 @@ async function writeReadme(root: string): Promise<void> {
     // Named by date, so the newest sorts last.
     else if (m.rel.endsWith('_medical-file.pdf') && (!medicalFile || m.rel > medicalFile)) medicalFile = m.rel;
   }
-  await putTextDirect('README.md', exportReadme(root.replace(/^maccabi-export-/, ''), files, medicalFile));
+  // Always written: an empty list says nothing failed, where a missing one is an export from before it existed.
+  const errors = exportErrors(await listProblems());
+  await putTextDirect(EXPORT_ERRORS, JSON.stringify(errors, null, 2) + '\n');
+  const made = { version: chrome.runtime.getManifest().version, layout: FILE_LAYOUT, startedAt: run.startedAt, dev: __DEV_BRIDGE__ };
+  await putTextDirect('README.md', exportReadme(root.replace(/^maccabi-export-/, ''), files, medicalFile, errors, made));
   for (const [name, text] of Object.entries(INSTRUCTION_POINTERS)) await putTextDirect(name, text);
 }
 
@@ -423,7 +429,7 @@ async function saveZip(): Promise<void> {
   run.detail = LABELS.save;
   await save();
   const root = exportName(Date.now());
-  await writeReadme(root);
+  await writeReadme(root, run);
   const zip = await callOffscreen<{ url: string; bytes: number; files: number }>({ type: 'zip', root });
   run.zipName = root + '.zip';
   run.fileCount = zip.files;

@@ -251,6 +251,11 @@ export function percentOf(next: number, stepDone: number, stepTotal: number): nu
   return Math.min(100, Math.round(((before + current) / total) * 100));
 }
 
+/** The day it is in Israel at `now`, as YYYY-MM-DD: the date an export is named by. */
+export function israelDay(now: number): string {
+  return new Date(now).toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+}
+
 export function exportName(now: number): string {
-  return 'maccabi-export-' + new Date(now).toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+  return 'maccabi-export-' + israelDay(now);
 }

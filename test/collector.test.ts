@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { canon, newCtx, sha256Hex, type HttpResponse } from '../src/core';
-import { bytesResp, DICOM_ID, fakeMaccabi, fakeTransport, jsonResp, makeCollector, MemorySink, MID, PDF, pdfOf, PURCHASE_TABLE, runAll, win1255, type Route } from './fakes';
+import { bytesResp, danglingRefs, DICOM_ID, fakeMaccabi, fakeTransport, jsonResp, makeCollector, MemorySink, MID, PDF, pdfOf, PURCHASE_TABLE, runAll, win1255, type Route } from './fakes';
 
 describe('api()', () => {
   it('stops with SESSION ENDED on a redirect or 401', async () => {
@@ -415,4 +415,98 @@ describe('full run against the fake site', () => {
       expect([...(sink as MemorySink).files.keys()]).toEqual([]);
     });
   }
+});
+
+describe('problems', () => {
+  // A problem is shown in the popup and written into the export, and an error message can quote a request URL.
+  it('writes the member id as {mid}', async () => {
+    const { c, sink } = makeCollector(fakeTransport([]));
+    await c.problem('uploads/' + MID, 'GET /sonline/X/v1/members/0/' + MID + '/pdf failed');
+    expect((sink as MemorySink).problems).toEqual([{ where: 'uploads/{mid}', what: 'GET /sonline/X/v1/members/0/{mid}/pdf failed', at: expect.any(String) }]);
+    expect(JSON.stringify(c.log)).not.toContain(MID);
+  });
+
+  // The export's README reads a missing folder with no problem against it as "nothing on record".
+  it('files a failed allergies, appointments or requests request against its folder', async () => {
+    const site = fakeMaccabi();
+    const t = fakeTransport([(_req, url) => (/\/(sensitivity|future|requests_and_cases)$/.test(url.pathname) ? jsonResp({}, 403) : undefined), ...site.routes]);
+    const { c, sink } = makeCollector(t);
+    const s = await runAll(c, newCtx(), ['emptySections']);
+    expect(s.problems).toEqual([
+      'allergies-sensitivity/list.json PROBLEM: HTTP 403',
+      'appointments/list.json PROBLEM: HTTP 403',
+      'requests-approvals/list.json PROBLEM: HTTP 403',
+    ]);
+    expect([...(sink as MemorySink).files.keys()]).toEqual([]);
+  });
+
+  it('files an allergies answer without a list, and not empty appointments or requests', async () => {
+    const site = fakeMaccabi();
+    const t = fakeTransport([(_req, url) => (url.pathname.endsWith('/sensitivity') ? jsonResp(undefined, 204) : undefined), ...site.routes]);
+    const s = await runAll(makeCollector(t).c, newCtx(), ['emptySections']);
+    expect(s.problems).toEqual(['allergies-sensitivity/list.json PROBLEM: HTTP 204, no list']);
+  });
+});
+
+describe('references between files', () => {
+  const Q1 = 'communication-with-doctor/details/2026-04-02_Q1_הפניה.json';
+  const OLD_VISIT = 'visit-summaries/details/2024-06-01_7001_אורתופדיה.json';
+
+  it('every file a record names is in the export after a full run', async () => {
+    const { c, sink } = makeCollector(fakeTransport(fakeMaccabi().routes));
+    await runAll(c, newCtx());
+    const mem = sink as MemorySink;
+    expect(danglingRefs(mem)).toEqual([]);
+    // The check sees each kind of reference: take away the file one names, and it says so.
+    const cases: [string, string][] = [
+      ['referrals/files/2026-03-01_R1_הפניה-לרופא-עור.pdf', Q1], // same_as, in the inquiry's files[]
+      [OLD_VISIT, Q1], // visit
+      ['visit-summaries/files/2024-06-01_7001_אורתופדיה.pdf', OLD_VISIT], // file, in the visit's files[]
+      [Q1, OLD_VISIT], // linked_from
+    ];
+    for (const [gone, from] of cases) {
+      const copy = new MemorySink();
+      copy.files = new Map(mem.files);
+      copy.files.delete(gone);
+      expect(danglingRefs(copy)).toEqual([from + ' -> ' + gone]);
+    }
+  });
+
+  // One form that answers 404, one inquiry whose details answer 500 (it links a visit), and one
+  // linked visit that answers 500: each is filed, and no record points to what was not saved.
+  const failing: Route = (_req, url) => {
+    if (url.pathname.endsWith('/pdf') && url.searchParams.get('path') === 'f/2.pdf') return jsonResp({}, 404);
+    if (url.pathname.endsWith('/inquiries/Q1/details') || url.pathname.endsWith('/visits/7002/')) return jsonResp({}, 500);
+    return undefined;
+  };
+
+  it('every file a record names is in the export when some requests fail', async () => {
+    const { c, sink } = makeCollector(fakeTransport([failing, ...fakeMaccabi().routes]));
+    const s = await runAll(c, newCtx());
+    const mem = sink as MemorySink;
+    expect(danglingRefs(mem)).toEqual([]);
+    expect(s.problems).toEqual([
+      'communication-with-doctor/details/2026-04-02_Q1_ד״ר-ישראלי.json PROBLEM: HTTP 500',
+      'communication-with-doctor/files/2026-04-05_Q2-1_ד״ר-ישראלי.pdf PROBLEM: PDF download: HTTP 404 application/json',
+      'communication-with-doctor/details/2026-04-05_Q2_שאלה-לרופא.json PROBLEM: linked visit: HTTP 500',
+    ]);
+    // The inquiry without details is not saved, and neither is the visit only it would have linked.
+    expect([...mem.files.keys()].filter((k) => k.includes('_Q1') || k.includes('_7001_'))).toEqual([]);
+    const q2 = mem.json('communication-with-doctor/details/2026-04-05_Q2_שאלה-לרופא.json');
+    expect(q2.visit).toBeUndefined();
+    expect(q2.files).toEqual([{ file: 'communication-with-doctor/files/2026-04-05_Q2-2_ד״ר-ישראלי.pdf' }]);
+  });
+
+  it('every file a record names is still in the export after a resume, and after one that fails', async () => {
+    const sink = new MemorySink();
+    await runAll(makeCollector(fakeTransport(fakeMaccabi().routes), sink).c, newCtx());
+    await runAll(makeCollector(fakeTransport(fakeMaccabi().routes), sink).c, newCtx());
+    expect(danglingRefs(sink)).toEqual([]);
+    // Now every document and every linked visit fails: what is staged stays, and so do the references to it.
+    const broken: Route = (_req, url) => (/\/pdf$|openfile$|\.aspx$|\/visits\/700\d\/$/.test(url.pathname) ? jsonResp({}, 404) : undefined);
+    const before = [...sink.files.keys()].sort();
+    await runAll(makeCollector(fakeTransport([broken, ...fakeMaccabi().routes]), sink).c, newCtx());
+    expect([...sink.files.keys()].sort()).toEqual(before);
+    expect(danglingRefs(sink)).toEqual([]);
+  });
 });

@@ -9,6 +9,7 @@
    It says only what a reader cannot get by opening a file -- the layout, the gaps, the traps, the
    join keys -- and leaves the field names to the JSON, which carries them already. Before adding a
    line, ask whether a record would be read wrongly without it; if not, leave it out. */
+import { israelDay, type PlanStep } from './state';
 
 interface Folder {
   name: string;
@@ -126,18 +127,108 @@ member has none: check the medical file's sensitivities, and ask.`,
   { name: 'requests-approvals', summary: 'requests and cases the member has open with Maccabi Healthcare Services', detail: '' },
 ];
 
-/** Saved whenever the site answers, so its folder is missing only when the request failed. */
-const ALLERGIES = 'allergies-sensitivity';
+/** Core's MEDICAL_FILE, the name its problems are filed under, spelled out: this file imports nothing from core. */
+const MEDICAL_FILE = 'medical-file';
+
+/**
+ * The folders each plan step writes, for a problem filed under the step rather than a file: a step
+ * that failed as a whole. The medical file's steps write to the root, and are put against the file.
+ */
+export const STEP_FOLDERS: Record<PlanStep, string[]> = {
+  openLegacyPage: [],
+  orderMedicalFile: [MEDICAL_FILE],
+  profileAndDoctors: ['profile', 'my-doctor'],
+  emptySections: ['allergies-sensitivity', 'appointments', 'requests-approvals'],
+  medications: ['medications-and-prescriptions'],
+  purchases: ['medications-and-prescriptions'],
+  hospitalStays: ['hospital-stays'],
+  savedDocuments: ['uploads'],
+  returnToSonline: [],
+  testResults: ['test-results'],
+  visits: ['visit-summaries'],
+  referrals: ['referrals'],
+  approvals: ['approvals'],
+  vaccinations: ['vaccinations'],
+  letters: ['letters'],
+  doctorCommunications: ['communication-with-doctor'],
+  infoPages: ['info-pages'],
+  waitMedicalFile: [MEDICAL_FILE],
+  save: [],
+};
+
+/** The export's list of what it failed to collect, written beside the README. */
+export const EXPORT_ERRORS = 'export-errors.json';
+
+/**
+ * One entry of export-errors.json: a problem the run filed, with the folders it is about -- the one
+ * its path is in, else the ones its step writes, else none.
+ */
+export interface ExportError {
+  folders: string[];
+  step: string;
+  where: string;
+  what: string;
+  at: string;
+}
+
+const KNOWN = new Set([MEDICAL_FILE, ...FOLDERS.map((f) => f.name)]);
+
+/** The run's problems as the export records them. */
+export function exportErrors(problems: { step?: string; where: string; what: string; at: string }[]): ExportError[] {
+  return problems.map((p) => {
+    const top = p.where.split('/')[0];
+    const step = p.step ?? '';
+    const folders = KNOWN.has(top) ? [top] : (STEP_FOLDERS[step as PlanStep] ?? []);
+    return { folders, step, where: p.where, what: p.what, at: p.at };
+  });
+}
+
+/** What the export's version line says made it. startedAt is the run's start, an ISO time. */
+export interface MadeBy {
+  version: string;
+  layout: number;
+  startedAt: string;
+  dev: boolean;
+}
 
 /** "a", "a and b", "a, b and c". */
 function inWords(items: string[]): string {
   return items.length < 2 ? items.join('') : items.slice(0, -1).join(', ') + ' and ' + items[items.length - 1];
 }
 
+function count(n: number, what: string): string {
+  return n + ' ' + what + (n === 1 ? '' : 's');
+}
+
+/** One line per folder something failed in, in reading order, and one for the rest. */
+function failedSection(errors: ExportError[]): string {
+  if (!errors.length) return 'Every request in this run was answered: `' + EXPORT_ERRORS + '` is empty.';
+  const lines: string[] = [];
+  for (const name of [MEDICAL_FILE, ...FOLDERS.map((f) => f.name)]) {
+    const mine = errors.filter((e) => e.folders.includes(name));
+    if (!mine.length) continue;
+    if (name === MEDICAL_FILE) {
+      lines.push('- The full medical file: ordering or downloading a fresh one failed.');
+      continue;
+    }
+    // A path with an extension is one file; a bare folder or a step's name is the step failing partway.
+    const ext = (e: ExportError) => (e.where.split('/').pop() || '').match(/\.([a-z0-9]+)$/i)?.[1];
+    const records = mine.filter((e) => ext(e) === 'json').length;
+    const documents = mine.filter((e) => ext(e) && ext(e) !== 'json').length;
+    const parts = [records && count(records, 'record'), documents && count(documents, 'document')].filter(Boolean) as string[];
+    let line = parts.length ? inWords(parts) + ' could not be collected' : '';
+    if (records + documents < mine.length) line = line ? line + ', and collecting the rest stopped partway' : 'collecting it stopped partway';
+    lines.push('- `' + name + '/`: ' + line + '.');
+  }
+  const loose = errors.filter((e) => !e.folders.length).length;
+  if (loose) lines.push('- ' + count(loose, 'other failure') + ', not tied to a folder.');
+  return lines.join('\n') + '\n\n`' + EXPORT_ERRORS + '` lists each, with where it happened and the error it gave.';
+}
+
 function medicalFileSection(file: string | null): string {
   if (!file) {
-    return `**This export has no full medical file.** Ordering or downloading it failed, and the
-extension said why in its popup. Without it, this export reaches back only as far as the data below.`;
+    return `**This export has no full medical file.** Ordering or downloading it failed, and
+\`${EXPORT_ERRORS}\` says why. Without it, this export reaches back only as far as the data below.`;
   }
   return `\`${file}\`, beside this file, is Maccabi Healthcare Services's own printout of the member's record
 as of ${file.slice(0, 10)}: personal details, known problems (diagnoses, with the date each began),
@@ -154,27 +245,35 @@ as images.`;
 /**
  * The README for one export. present is the folders this export actually has, with how many files
  * each holds, so nothing is described that is not there; medicalFile is the name of the full
- * medical file PDF at the root, or null when the export has none.
+ * medical file PDF at the root, or null when the export has none; errors is what the run failed to
+ * collect (export-errors.json), and made names the extension and file layout that made it.
  */
-export function exportReadme(exportedOn: string, present: Record<string, number>, medicalFile: string | null): string {
+export function exportReadme(
+  exportedOn: string, present: Record<string, number>, medicalFile: string | null, errors: ExportError[], made: MadeBy,
+): string {
   const here = FOLDERS.filter((f) => present[f.name]);
-  // "None on record" and "not checked" read very differently for allergies, so they get their own line.
-  const missing = FOLDERS.filter((f) => !present[f.name] && f.name !== ALLERGIES).map((f) => '`' + f.name + '/`');
-  const absent = (missing.length
-    ? '\n  This export has no ' + inWords(missing) + ': the site returned nothing for ' +
-      (missing.length > 1 ? 'them' : 'it') + ', or the request failed.'
-    : '') + (present[ALLERGIES]
-    ? ''
-    : '\n  This export has no `' + ALLERGIES + '/` because its request failed: it cannot say whether any\n' +
-      '  sensitivity is on record. Look in the medical file, and ask.');
+  // A step writes its folder whenever the site answers, and files a problem when it does not: a
+  // missing folder with a problem against it failed, and one without had nothing on record.
+  const failedIn = new Set(errors.flatMap((e) => e.folders));
+  const missing = FOLDERS.filter((f) => !present[f.name]);
+  const empty = missing.filter((f) => !failedIn.has(f.name)).map((f) => '`' + f.name + '/`');
+  const failed = missing.filter((f) => failedIn.has(f.name)).map((f) => '`' + f.name + '/`');
+  const absent = (empty.length
+    ? '\n  This export has no ' + inWords(empty) + ': the site had nothing on record for ' + (empty.length > 1 ? 'them' : 'it') + '.'
+    : '') + (failed.length
+    ? '\n  This export has no ' + inWords(failed) + ' because collecting ' + (failed.length > 1 ? 'them' : 'it') +
+      ' failed: it cannot say what is\n  on record there. Look in the medical file, and ask.'
+    : '');
+  const started = israelDay(Date.parse(made.startedAt));
+  const version = 'version ' + made.version + ', file layout ' + made.layout + (made.dev ? ' (development build)' : '');
   const folders = here
     .map((f) => '**`' + f.name + '/`** · ' + present[f.name] + ' files — ' + f.summary + '.' +
       (f.detail ? '\n' + f.detail : ''))
     .join('\n\n');
   return `# Maccabi health records export
 
-Exported ${exportedOn} from online.maccabi4u.co.il with the Health Records Export for Maccabi
-browser extension; everything here belongs to one member. If you are an AI assistant working with
+Exported ${exportedOn}${started !== exportedOn ? ' (collected from ' + started + ')' : ''} from online.maccabi4u.co.il with the
+Health Records Export for Maccabi browser extension, ${version}; everything here belongs to one member. If you are an AI assistant working with
 these records, this file is your instructions and the records are your project files: read it
 before them. It says where to start, what the export lacks and which values mislead.
 
@@ -221,7 +320,7 @@ site returns, which is less than Maccabi Healthcare Services holds, which is les
 - Care outside Maccabi Healthcare Services, except what was filed with Maccabi Healthcare Services: external results, documents copied into
   the medical file, the member's own uploads.
 - Sections the site had nothing for. A folder exists only when the site returned something, so a
-  missing folder means "nothing was returned", not "this was not checked".${absent}
+  missing folder that did not fail means "nothing on record", not "this was not checked".${absent}
 
 ## What is in this export
 
@@ -229,6 +328,10 @@ A folder holds the site's list in \`list.json\`, one JSON file per item in \`det
 has one, and documents in \`files/\`; a record's JSON and its PDF share a file name.
 
 ${folders}
+
+## What this export failed to collect
+
+${failedSection(errors)}
 
 ## Lab values
 

@@ -107,9 +107,17 @@ export class Collector {
     return res.result;
   }
 
+  /**
+   * Files a problem under the current step. An error message can quote a request URL, and problems are
+   * shown in the popup and written into the export, so the member id becomes {mid} as in a record's endpoint.
+   */
   async problem(where: string, what: unknown): Promise<void> {
-    this.log.push([where, 'PROBLEM: ' + what]);
-    await this.deps.sink.problem({ where, what: String(what).slice(0, 300), at: new Date(this.now()).toISOString() });
+    const mid = this.session.mid;
+    const scrub = (s: string) => (mid ? s.split(mid).join('{mid}') : s);
+    where = scrub(where);
+    const text = scrub(String(what));
+    this.log.push([where, 'PROBLEM: ' + text]);
+    await this.deps.sink.problem({ where, what: text.slice(0, 300), at: new Date(this.now()).toISOString() });
   }
 
   // ---- Maccabi --------------------------------------------------------

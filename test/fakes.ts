@@ -227,6 +227,36 @@ export class MemorySink implements Sink {
   }
 }
 
+/**
+ * The fields of an exported record that name another file in the export, by its export-relative path.
+ * A new field that points to a file has to be added here, or the check below cannot see it.
+ */
+const REFERENCE_FIELDS = ['file', 'same_as', 'visit', 'linked_from'];
+
+/** What the site sent or was sent, kept as it was: its keys are the site's, not the export's references. */
+const AS_SENT = ['data', 'request_body'];
+
+/**
+ * Every reference in the sink's JSON records that names a file the sink does not hold, as
+ * "<record> -> <path>". Walks each record's wrapper at any depth, so a reference is found wherever it sits.
+ */
+export function danglingRefs(sink: MemorySink): string[] {
+  const out: string[] = [];
+  const walk = (rel: string, v: Json, top: boolean): void => {
+    if (Array.isArray(v)) v.forEach((x) => walk(rel, x, false));
+    else if (v && typeof v === 'object') {
+      for (const [k, x] of Object.entries(v as Record<string, Json>)) {
+        if (top && AS_SENT.includes(k)) continue;
+        if (REFERENCE_FIELDS.includes(k) && typeof x === 'string') {
+          if (!sink.files.has(x)) out.push(rel + ' -> ' + x);
+        } else walk(rel, x, false);
+      }
+    }
+  };
+  for (const rel of sink.files.keys()) if (rel.endsWith('.json')) walk(rel, sink.json(rel), true);
+  return out;
+}
+
 export class FakeClock implements Clock {
   t = Date.parse('2026-09-17T09:00:00Z');
   sleeps: number[] = [];

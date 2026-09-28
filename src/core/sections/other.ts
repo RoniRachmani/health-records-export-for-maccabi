@@ -248,5 +248,9 @@ export async function emptySections(c: Collector, _ctx: Ctx): Promise<void> {
     c.progress(i, checks.length, part);
     const r = await c.api(method, path, body);
     if (r.status === 200 && hasData(r.data)) await c.save(rel, c.rec(method, path, r));
+    // A folder missing without a problem filed against it is read as "nothing on record", so a failed
+    // request says so; and allergies are kept whenever the site answers, so for them anything else failed.
+    else if (r.status !== 200 && r.status !== 204) await c.problem(rel, 'HTTP ' + r.status);
+    else if (part === 'allergies') await c.problem(rel, r.status === 204 ? 'HTTP 204, no list' : 'no intolerance list in the answer');
   }
 }
