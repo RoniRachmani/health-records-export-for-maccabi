@@ -244,22 +244,40 @@ async function ensureExtension(page) {
   }
 }
 
+/**
+ * A command that is safe to send twice, sent until something answers: right after signing in the
+ * site is still redirecting, and a reply sent to a page that has just been replaced is lost.
+ */
+async function ask(page, msg) {
+  for (let i = 0; i < 10; i++) {
+    const res = await page.dev(msg);
+    if (res !== undefined) return res;
+    await sleep(2000);
+  }
+  return undefined;
+}
+
 async function main() {
   const page = await openBrowser();
   await sleep(2000);
   await signIn(page);
   await ensureExtension(page);
 
-  const before = await page.dev({ type: 'dev:state' });
+  const before = await ask(page, { type: 'dev:state' });
+  if (!before) throw new Error('The extension stopped answering after the sign-in.');
   if (before.run && ['running', 'saving', 'paused_session', 'paused_hidden'].includes(before.run.status)) {
     console.log('Discarding the unfinished run from last time.');
-    await page.dev({ type: 'dev:cancel' });
+    await ask(page, { type: 'dev:cancel' });
   } else if (before.run) {
-    await page.dev({ type: 'dev:dismiss' });
+    await ask(page, { type: 'dev:dismiss' });
   }
-  const skip = await page.dev({ type: 'dev:skipOrder', on: true });
-  if (!skip?.on) throw new Error('The extension did not confirm dev:skipOrder; not starting a run that could order.');
-  await page.dev({ type: 'dev:stopBefore', step: 'save' });
+  const skip = await ask(page, { type: 'dev:skipOrder', on: true });
+  if (skip?.on !== true) {
+    throw new Error('The extension did not confirm dev:skipOrder (it answered ' + JSON.stringify(skip ?? null)
+      + '); not starting a run that could order.');
+  }
+  const stop = await ask(page, { type: 'dev:stopBefore', step: 'save' });
+  if (stop?.ok !== true) throw new Error('The extension did not confirm dev:stopBefore save; not starting.');
 
   const started = await page.dev({ type: 'dev:start' });
   if (started?.error) throw new Error('dev:start: ' + started.error);
