@@ -31,7 +31,7 @@ earliest visit. It helps you understand your records and prepare for your doctor
   ▶︎ <a href="https://youtu.be/tQkiFCoZLBg">Watch an export, start to finish</a> · 1 minute, narrated
 </p>
 
-- **Ready for your AI assistant.** Open the folder in Claude Cowork, Claude Code, ChatGPT Work or Codex, and the
+- **Ready for your AI assistant.** Open the folder in the Claude desktop app, Claude Code, ChatGPT Work or Codex, and the
   ZIP's `README.md` becomes the assistant's instructions for your records. Assistants that connect to medical records
   reach U.S. providers, not Maccabi Healthcare Services; this is how yours get to one. See
   [Hand it to an AI assistant](#hand-it-to-an-ai-assistant).
@@ -208,54 +208,72 @@ in `files/` instead — those say so in their own `omitted` field.
 
 ### Hand it to an AI assistant
 
-The export is made to be worked on with an AI assistant. Assistants that connect to medical records reach U.S.
-providers, not Maccabi Healthcare Services, so this export is how your records get to one. Unzip it and open the folder in Claude Cowork, Claude Code,
-ChatGPT Work or Codex: `README.md` is the assistant's saved instructions, and the records are its project files.
-Claude Code reads `CLAUDE.md` and Codex reads `AGENTS.md` on their own, and both lead to `README.md`; elsewhere, add
-`README.md` as the project's instructions, or ask the assistant to read it first.
+Open your export in an AI assistant and ask about years of results, visits and letters. It reads the Hebrew, answers
+in English or whatever you speak, and shows you the record behind every answer. The extension's own page on this, which
+the popup's **See how** opens, shows it with pictures.
 
-What it helps you do:
+**What to ask.** Ask what you'd ask a doctor who had read everything. Five things it does well:
 
-- **See your whole history.** The full medical file reaches back to the earliest visit on record, far beyond the
-  few years the site's data covers.
-- **Ask in your own language.** The records are mostly in Hebrew; ask, and get answers, in English or whatever you
-  speak.
-- **Track changes over time.** Each lab measurement has its own history, often years long.
-- **Prepare for your next visit.** Known problems, the latest results, recent visits and open referrals, in one place.
-- **Check every answer.** The assistant is asked to name the file, and the page of a PDF, behind each fact.
+- **See your whole history.** *Summarize my health history from my full medical file.* The full medical file reaches
+  back to the earliest visit on record, far beyond the few years the site itself shows. Start here.
+- **Understand a result.** *Help me understand my latest blood test.* Every value next to its reference range, in plain
+  words, with what is worth asking about and what isn't.
+- **See a trend.** *How has my HbA1c changed over the years?* Each lab measurement has its own history, often years of
+  it, ready to chart.
+- **Prepare for a visit.** *What should I raise at my next appointment?* Known problems, the latest results, recent
+  visits and open referrals, turned into a short list to take with you.
+- **Find anything.** *When was my last tetanus shot?* A shot, a letter, a prescription from years ago: one question
+  instead of an afternoon in the portal.
 
-It supports your doctor and doesn't replace them. For urgent symptoms, call a doctor or emergency services, not an
-assistant.
+More to try: *What did the cardiologist write at my last visit?* · *Translate my latest letter from the clinic into
+English.* · *Which referrals and approvals are still open?* · *Which medications have I bought this year, and how
+often?* · *Make a one-page summary to bring to a new doctor.*
 
-Things to ask (the first is a good place to start):
+**Three steps to your first answer.**
 
-- *Summarize my health history from my full medical file.*
-- *Help me understand my latest blood test.*
-- *How has my HbA1c changed over the years?*
-- *What should I raise at my next appointment?*
-- *Translate my latest letter from the clinic into English.*
-- *Which referrals and approvals are still open?*
-- *What did the cardiologist write at my last visit?*
-- *When was my last tetanus shot?*
-- *Which medications have I bought this year, and how often?*
-- *Make a one-page summary to bring to a new doctor.*
+1. **Export.** Run the export. You get one ZIP, `maccabi-export-….zip`, in your Downloads.
+2. **Unzip.** Double-click it. Keep the folder together: the assistant needs every file in it.
+3. **Open the folder** in an assistant's desktop app, so it can read the whole folder. Then ask your first question.
 
-The instructions are the assistant's guardrails. They ask it to start from your full medical file, to say which file
-(and which page of a PDF) each fact comes from and give it a date, to write its own notes into a new folder rather than
-change the export, and to keep your name, ID number and contact details out of web searches and other tools unless you
-ask. They have it say plainly when a record suggests something needs a doctor soon, and explain in plain language
-rather than diagnose, and they say where to look for the common questions: a lab value's trend, the latest results,
-what changed since your last visit, what to raise at an appointment, your allergies.
+Where to open it:
+
+| | Best | Or |
+| --- | --- | --- |
+| **Claude** | **Claude**, in the Claude desktop app: give Claude access to the unzipped folder, then ask. If your message box still offers Chat and Cowork, choose Cowork first. Needs a paid plan for now. | **Claude Code**: run `claude` in the folder. It reads `CLAUDE.md` on its own. |
+| **ChatGPT** | **ChatGPT Work**, in the ChatGPT desktop app: open the unzipped folder as a local project, and choose Work. | **Codex**: run it in the folder. It reads `AGENTS.md` on its own. |
+
+Start with:
+
+> *Read README.md first. Then summarize my health history from my full medical file.*
+
+`README.md` is the assistant's instructions: where to start, what the export lacks, and which values mislead.
+
+**Why not drop it into a chat?** A chat or a web project takes a few dozen files at most. Your export has hundreds,
+and the assistant finds its way through them with the folder's own layout and `README.md`. The desktop apps read the
+folder as it is.
+
+**Built so you can check every answer.** The export comes with instructions the assistant reads first. They ask it to:
+
+- **Show its source:** the file, the page of a PDF and the date behind each fact, so you can open it and look.
+- **Leave your export alone:** its own notes and tables go in a new folder. It never edits, renames or deletes your
+  files.
+- **Keep you out of searches:** your name, ID number and contact details stay out of web searches and other tools
+  unless you ask.
+- **Say when it matters:** it explains rather than diagnoses, and says plainly when a record suggests seeing a doctor
+  soon.
+
+It supports your doctor and doesn't replace them. For urgent symptoms, call your doctor or Magen David Adom on
+**101**, not an assistant.
 
 > [!WARNING]
-> The extension sends your records nowhere, but an AI service you open them in can read them. Before you give it your
-> health information, check what it keeps and for how long. Where the service lets you, turn off training on your
-> chats, keep each person's records in a project of their own with memory kept to that project, and delete the
-> project when you're done with it.
+> **Your records go only where you take them.** The extension sends your records nowhere. The AI service you open them
+> in can read them, so before you do, check what it keeps and for how long, and where it lets you:
+> **turn off training** on your chats, **give each person a project** of their own, with memory kept to that project,
+> and **delete the project** when you're done with it.
 
-**What about ChatGPT Health?** As of September 2026, OpenAI offers Health in ChatGPT to users in the U.S., and it
-connects medical records from U.S. providers only, so it can't reach Maccabi Healthcare Services. Open the export in ChatGPT Work, or in
-any of the assistants above, instead.
+**Why not ChatGPT Health or Claude's health connectors?** As of September 2026, both connect medical records from U.S.
+providers only, and Health in ChatGPT is open to U.S. users only. Neither can reach Maccabi Healthcare Services. This
+export is how your records get to an assistant.
 
 ## Privacy and safety
 
@@ -379,7 +397,9 @@ The stylesheets ask for Roboto first and fall back to the system face. That is a
 ships no fonts and downloads none.
 
 The tokens live at the top of `src/extension/popup/popup.css`, with `public/pages.css` repeating the ones the privacy,
-terms and AI assistant pages need (`public/` is copied verbatim, so it cannot import them). Both pin `color-scheme: light` —
+terms and AI assistant pages need (`public/` is copied verbatim, so it cannot import them). The AI assistant page adds
+`public/ai-assistant.css` for its wider, picture-led layout: its pictures are HTML and inline SVG with made-up records,
+and its tabs are radio buttons, so it runs no script. `popup.css` and `pages.css` both pin `color-scheme: light` —
 there is no dark theme, and pinning it keeps Chrome's auto-dark-mode from repainting controls and scrollbars
 against a light page. Every text colour meets WCAG AA on the surface it sits on. Chrome caps a popup at 600px
 tall, so keep the states that are not disclosures under it; `npm run store-assets` re-renders the store images.

@@ -127,7 +127,7 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   for the two legacy HTML responses, and a `blob:` URL for the finished ZIP. Talk to it only through
   `offscreenClient.ts`.
 - **The export's `README.md`** (`shared/readme.ts`) is written for an AI assistant: the ZIP is made to be
-  opened in Claude Cowork, Claude Code, ChatGPT Work or Codex, with the README as the assistant's saved
+  opened in the Claude desktop app (formerly Claude Cowork), Claude Code, ChatGPT Work or Codex, with the README as the assistant's saved
   instructions and the records as its project files. It opens with how to work with the records, then is
   their data dictionary, and it is kept short because it shares the assistant's context with them.
   `INSTRUCTION_POINTERS` writes a `CLAUDE.md` (which imports it) and an `AGENTS.md` (which points to it) beside
@@ -142,8 +142,9 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   brand asset. The header says *Unofficial* in a chip on every screen, with the full disclaimer as its tooltip and
   its accessible description. The font stacks ask for `Roboto` first and fall back to the system face — a local lookup
   only: never ship or fetch a font here. Tokens are at the top of `popup.css`; `public/pages.css` repeats
-  the ones the shipped pages need, since `public/` is copied verbatim. There is no dark theme: both
-  files pin `color-scheme: light`, which also keeps Chrome's auto-dark-mode off them, and every text colour
+  the ones the shipped pages need, since `public/` is copied verbatim; `public/ai-assistant.css` adds that page's
+  picture-led layout (made-up records only, and no script: its tabs are radio buttons). There is no dark theme:
+  `popup.css` and `pages.css` `color-scheme: light`, which also keeps Chrome's auto-dark-mode off them, and every text colour
   must stay at WCAG AA. Chrome caps a popup at 600px tall: keep every non-disclosure state under it
   (`notice` and open `<details>` may scroll).
 - **Store assets**: `store/src/stage.ts` draws the images (one layout per `?shot=`), `store/src/video.ts` draws the

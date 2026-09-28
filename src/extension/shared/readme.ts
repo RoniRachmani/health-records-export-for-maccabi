@@ -1,5 +1,5 @@
 /* The README.md written at the root of the ZIP. The export is made to be handed to an AI assistant
-   -- Claude Cowork, Claude Code, ChatGPT Work, Codex -- and this file is that assistant's saved
+   -- the Claude desktop app, Claude Code, ChatGPT Work, Codex -- and this file is that assistant's saved
    instructions, the records its project files. So it opens with how to work with them, then is the
    export's data dictionary: where to start, what the export does not contain, how it is laid out,
    and the fields that do not mean what they appear to mean. It is written from real exports; every

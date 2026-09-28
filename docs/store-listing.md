@@ -78,7 +78,7 @@ HOW IT WORKS
 1. Log in to Maccabi Online as usual.
 2. On that tab, click the extension's icon and press Start export.
 3. Keep the tab open and in front. Usually after a few minutes (up to 20 if the medical file is slow to arrive), the ZIP is in your Downloads folder and Chrome lets you know.
-4. Unzip it and open the folder in Claude Cowork, Claude Code, ChatGPT Work or Codex.
+4. Unzip it and open the folder in the Claude desktop app, Claude Code, ChatGPT Work or Codex.
 5. Ask about your records, starting with "Summarize my health history from my full medical file".
 
 While the export runs, the tab moves to the site's medical-file page and back. The extension keeps your Maccabi Healthcare Services session from timing out until the export finishes. If the session ends anyway, the export pauses. Log in again and press Resume. Files collected so far are kept.

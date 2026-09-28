@@ -1,0 +1,723 @@
+/* The AI assistant page (ai-assistant.html): pages.css's tokens and type, laid out wider and led by pictures.
+   The pictures are HTML and inline SVG drawn from the same tokens, with made-up records; nothing is fetched.
+   The popup's register: navy headings, the one blue for actions, magenta for links and marks, pale-blue cards at 20px. */
+
+:root {
+  --surface-2: #f1f9fe;
+  --tint: #e3effd;
+  --primary: #296bed;
+  --primary-hover: #1f5bd6;
+  --chip: #eef1f6;
+  --ok: #0e7c5a;
+  --ok-bg: #e7f6f0;
+  --warn: #8a5a0b;
+  --r-card: 20px;
+  --r-pill: 999px;
+  --shadow: 0 6px 11px rgb(8 63 146 / 0.04);
+  --shadow-lift: 0 14px 32px rgb(8 63 146 / 0.1);
+  --accent-tint: #fbeef5;
+  --on-primary: #ffffff;
+  --wide: 68rem;
+}
+* {
+  box-sizing: border-box;
+}
+/* pages.css sets a 43rem column for the policies; this page runs wider, and each band keeps its own measure. */
+body.ai {
+  max-width: none;
+  padding: 0;
+}
+.hero,
+.band {
+  max-width: var(--wide);
+  margin: 0 auto;
+  padding-inline: 24px;
+}
+.band {
+  padding-block: 56px;
+}
+/* A tinted band runs edge to edge; its content keeps the column. */
+.band.tinted {
+  max-width: none;
+  background: var(--surface-2);
+  padding-inline: max(24px, calc((100% - var(--wide)) / 2 + 24px));
+}
+h2 {
+  font-size: 28px;
+  margin: 0 0 8px;
+}
+h3 {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--heading);
+  margin: 0 0 4px;
+}
+.sub {
+  color: var(--muted);
+  margin: 0 0 24px;
+}
+code {
+  font-size: 0.85em;
+}
+
+/* ---- hero ---- */
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: 48px;
+  align-items: center;
+  padding-block: 56px 48px;
+}
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 15px;
+}
+.chip {
+  padding: 1px 9px;
+  border-radius: var(--r-pill);
+  background: var(--chip);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.hero h1 {
+  font-size: clamp(32px, 4.4vw, 46px);
+  line-height: 1.12;
+  margin: 0 0 16px;
+}
+.lede {
+  font-size: 18px;
+  color: var(--fg);
+  margin: 0 0 24px;
+}
+.jumps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.pill {
+  display: inline-block;
+  padding: 9px 20px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-soft);
+  background: var(--bg);
+  color: var(--heading);
+  font-weight: 500;
+  text-decoration: none;
+}
+.pill:hover {
+  background: var(--surface-2);
+  color: var(--heading);
+}
+.pill.primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+.pill.primary:hover {
+  background: var(--primary-hover);
+  color: var(--on-primary);
+}
+
+/* The hero picture: a Hebrew record behind, the chat about it in front. */
+.hero-art {
+  position: relative;
+  margin: 0;
+  padding: 28px 0 0 48px;
+}
+.doc {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 70%;
+  padding: 16px 18px 40px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  transform: rotate(-3deg);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.doc p {
+  margin: 0 0 4px;
+}
+.doc .doc-title {
+  color: var(--heading);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.hero-art .chat {
+  position: relative;
+  margin-top: 96px;
+  box-shadow: var(--shadow-lift);
+}
+.hero-art figcaption {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--muted);
+  text-align: right;
+}
+
+/* ---- a chat, as drawn in every picture ---- */
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-card);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.msg {
+  margin: 0;
+  max-width: 88%;
+  font-size: 15px;
+}
+.msg.you {
+  align-self: flex-end;
+  padding: 9px 15px;
+  border-radius: 18px 18px 4px 18px;
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.msg.bot {
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 100%;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px 18px 18px 4px;
+  background: var(--bg);
+}
+.msg.bot p {
+  margin: 0;
+}
+/* The source line under each answer: the point of the whole page. */
+.src {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 3px 10px 3px 8px;
+  border-radius: var(--r-pill);
+  background: var(--accent-tint);
+  color: var(--accent);
+  font: 12px/1.5 ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+.src svg {
+  flex: none;
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+}
+.big {
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--heading);
+}
+.facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 6px 16px;
+  margin: 0;
+  font-size: 14px;
+}
+.facts dt {
+  color: var(--muted);
+}
+.facts dd {
+  margin: 0;
+}
+.ranges {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+  font-size: 14px;
+}
+.ranges li {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(60px, 1fr) max-content;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+.ranges .name span {
+  display: table;
+  font-size: 12px;
+  color: var(--muted);
+}
+/* The reference range is the middle band of the bar; the dot is the value. */
+.ranges .bar {
+  position: relative;
+  height: 8px;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, var(--chip) 0 20%, var(--ok-bg) 20% 80%, var(--chip) 80%);
+}
+.ranges .bar i {
+  position: absolute;
+  top: 50%;
+  left: var(--at);
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+  background: var(--ok);
+  transform: translate(-50%, -50%);
+}
+.ranges .val {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.ranges .high .bar i {
+  background: var(--warn-rule);
+}
+.ranges .high .val {
+  color: var(--warn);
+  font-weight: 500;
+}
+.trend {
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+}
+.trend .grid {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.trend .normal {
+  fill: var(--ok-bg);
+}
+.trend .tick {
+  fill: var(--muted);
+  font-size: 11px;
+}
+.trend .line {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.trend .dots circle {
+  fill: var(--bg);
+  stroke: var(--primary);
+  stroke-width: 2;
+}
+.trend .dots .end {
+  fill: var(--primary);
+}
+.checklist {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+}
+.checklist li {
+  margin-bottom: 6px;
+}
+.checklist li::marker {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* ---- use-case tabs: radio buttons, hidden, driving pill labels and one panel ---- */
+.tabs > input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.tab-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.tab-list label {
+  padding: 8px 18px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-pill);
+  background: var(--bg);
+  color: var(--heading);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.tab-list label:hover {
+  background: var(--surface-2);
+}
+#uc-summary:checked ~ .tab-list [for='uc-summary'],
+#uc-labs:checked ~ .tab-list [for='uc-labs'],
+#uc-trend:checked ~ .tab-list [for='uc-trend'],
+#uc-visit:checked ~ .tab-list [for='uc-visit'],
+#uc-find:checked ~ .tab-list [for='uc-find'] {
+  background: var(--heading);
+  border-color: var(--heading);
+  color: var(--on-primary);
+}
+#uc-summary:focus-visible ~ .tab-list [for='uc-summary'],
+#uc-labs:focus-visible ~ .tab-list [for='uc-labs'],
+#uc-trend:focus-visible ~ .tab-list [for='uc-trend'],
+#uc-visit:focus-visible ~ .tab-list [for='uc-visit'],
+#uc-find:focus-visible ~ .tab-list [for='uc-find'] {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.panel {
+  display: none;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 40px;
+  align-items: center;
+  padding: 32px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, var(--tint), var(--accent-tint));
+}
+#uc-summary:checked ~ #p-summary,
+#uc-labs:checked ~ #p-labs,
+#uc-trend:checked ~ #p-trend,
+#uc-visit:checked ~ #p-visit,
+#uc-find:checked ~ #p-find {
+  display: grid;
+}
+.panel-copy h3 {
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+.panel-copy p {
+  margin: 0;
+}
+.more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px 14px;
+  margin-top: 24px;
+}
+.more-label,
+.first-label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.prompts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.prompts li {
+  margin: 0;
+  padding: 6px 14px;
+  border: 1px dashed var(--line-soft);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* ---- three steps ---- */
+.steps {
+  list-style: none;
+  counter-reset: step;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin: 24px 0 48px;
+  padding: 0;
+}
+.steps li {
+  counter-increment: step;
+  position: relative;
+  margin: 0;
+  padding: 24px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-card);
+  background: var(--bg);
+  box-shadow: var(--shadow);
+}
+.steps li::before {
+  content: counter(step);
+  position: absolute;
+  top: 20px;
+  right: 22px;
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--line-soft);
+}
+.steps svg,
+.why-not svg {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 12px;
+  fill: none;
+  stroke: var(--heading);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.steps p {
+  margin: 0;
+}
+.pick-title {
+  font-size: 20px;
+  margin-bottom: 14px;
+}
+.apps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.app {
+  padding: 24px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-card);
+  background: var(--bg);
+}
+.app h4 {
+  margin: 0 0 2px;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--heading);
+}
+.app p {
+  margin: 0 0 10px;
+}
+.app-best {
+  color: var(--accent);
+  font-weight: 500;
+}
+.app-alt {
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 15px;
+}
+.app-alt:last-child {
+  margin-bottom: 0;
+}
+/* The first message, drawn as the user's bubble. */
+.first {
+  display: grid;
+  gap: 8px;
+  margin: 28px 0;
+  padding: 22px 24px;
+  border-radius: var(--r-card);
+  background: var(--bg);
+  border: 1px solid var(--line-soft);
+}
+.first-msg {
+  justify-self: start;
+  margin: 0;
+  padding: 10px 16px;
+  border-radius: 18px 18px 18px 4px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 16px;
+}
+.first-why {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+.why-not {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+.why-not svg {
+  flex: none;
+  stroke: var(--accent);
+  margin: 0;
+}
+.why-not p {
+  margin: 0;
+}
+
+/* ---- guardrails ---- */
+.guards {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  margin: 0 0 32px;
+  padding: 0;
+}
+.guards li {
+  margin: 0;
+}
+.guards svg {
+  width: 40px;
+  height: 40px;
+  padding: 8px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  background: var(--accent-tint);
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.guards p {
+  margin: 0;
+  font-size: 15px;
+}
+.care {
+  margin: 0;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+}
+
+/* ---- privacy ---- */
+.flow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 24px 0 28px;
+}
+.flow .node {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 18px 16px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-card);
+  background: var(--bg);
+  color: var(--heading);
+  font-weight: 500;
+  text-align: center;
+}
+.flow .node.here {
+  border: 2px solid var(--primary);
+}
+.flow .node span {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--primary);
+}
+.flow .arrow {
+  position: relative;
+  flex: 0 0 44px;
+  height: 2px;
+  background: var(--heading);
+}
+.flow .arrow::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: -4px;
+  border: 5px solid transparent;
+  border-left: 7px solid var(--heading);
+  border-right: 0;
+}
+.flow .arrow.dashed {
+  background: repeating-linear-gradient(90deg, var(--muted) 0 5px, transparent 5px 9px);
+}
+.flow .arrow.dashed::after {
+  border-left-color: var(--muted);
+}
+.settings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.settings li {
+  margin: 0;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: var(--warn-bg);
+  border: 1px solid color-mix(in srgb, var(--warn-rule) 45%, transparent);
+}
+.settings strong {
+  display: block;
+  color: var(--warn);
+  font-weight: 500;
+}
+
+/* ---- narrow screens ---- */
+@media (max-width: 860px) {
+  .hero,
+  .panel {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+  .guards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .hero,
+  .band {
+    padding-inline: 16px;
+  }
+  .band.tinted {
+    padding-inline: 16px;
+  }
+  .band {
+    padding-block: 40px;
+  }
+  .hero-art {
+    padding-left: 16px;
+  }
+  .panel {
+    padding: 20px 16px;
+  }
+  .steps,
+  .apps,
+  .guards,
+  .settings {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .flow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .flow .arrow {
+    flex-basis: 28px;
+    width: 2px;
+    height: 28px;
+    align-self: center;
+  }
+  .flow .arrow::after {
+    right: -4px;
+    top: auto;
+    bottom: -1px;
+    border: 5px solid transparent;
+    border-top: 7px solid var(--heading);
+    border-bottom: 0;
+  }
+  .flow .arrow.dashed {
+    background: repeating-linear-gradient(180deg, var(--muted) 0 5px, transparent 5px 9px);
+  }
+  .flow .arrow.dashed::after {
+    border-top-color: var(--muted);
+    border-left-color: transparent;
+  }
+}

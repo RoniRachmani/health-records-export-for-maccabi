@@ -1,6 +1,7 @@
 <!doctype html>
 <!-- Shipped at chrome-extension://<id>/ai-assistant.html, the popup's "See how". Keep in sync with the README's
-     "Hand it to an AI assistant". -->
+     "Hand it to an AI assistant". Every record, name and value in the pictures is made up. No script: the tabs are
+     radio buttons, so the page works under the extension's CSP and with nothing loaded. -->
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -8,83 +9,366 @@
     <meta name="color-scheme" content="light" />
     <title>Hand it to an AI assistant - Health Records Export for Maccabi</title>
     <link rel="stylesheet" href="pages.css" />
+    <link rel="stylesheet" href="ai-assistant.css" />
   </head>
-  <body>
-    <h1>Hand it to an AI assistant</h1>
-    <div class="doc-head">
-      <p>Health Records Export for Maccabi</p>
-    </div>
+  <body class="ai">
+    <!-- The hero: what you get, and a picture of it. -->
+    <header class="hero">
+      <div class="hero-text">
+        <p class="eyebrow">Health Records Export for Maccabi <span class="chip">Unofficial</span></p>
+        <h1>Your whole medical history, explained in your language</h1>
+        <p class="lede">
+          Open your export in an AI assistant and ask about years of results, visits and letters. It reads the Hebrew,
+          answers in English or whatever you speak, and shows you the record behind every answer.
+        </p>
+        <nav class="jumps" aria-label="On this page">
+          <a class="pill primary" href="#start">Get started</a>
+          <a class="pill" href="#ask">What to ask</a>
+          <a class="pill" href="#private">Keep it private</a>
+        </nav>
+      </div>
 
-    <p>
-      The export is made to be worked on with an AI assistant. Assistants that connect to medical records reach U.S.
-      providers, not Maccabi Healthcare Services, so this export is how your records get to one. Unzip it and open the
-      folder in Claude Cowork, Claude Code, ChatGPT Work or Codex: <code>README.md</code> is the assistant's saved
-      instructions, and the records are its project files. Claude Code reads <code>CLAUDE.md</code> and Codex reads
-      <code>AGENTS.md</code> on their own, and both lead to <code>README.md</code>; elsewhere, add <code>README.md</code>
-      as the project's instructions, or ask the assistant to read it first.
-    </p>
+      <figure class="hero-art" aria-label="An example: an assistant answers a question about a visit summary in Hebrew">
+        <div class="doc he" dir="rtl" lang="he" aria-hidden="true">
+          <p class="doc-title">סיכום ביקור · קרדיולוגיה</p>
+          <p>אקו לב: תפקוד חדר שמאל תקין, EF ‎60%.</p>
+          <p>אי ספיקה קלה של המסתם המיטרלי, ללא שינוי מ־2023.</p>
+          <p>המלצה: המשך טיפול, מעקב אקו בעוד שנתיים.</p>
+        </div>
+        <div class="chat">
+          <p class="msg you">What did the cardiologist write at my last visit?</p>
+          <div class="msg bot">
+            <p>
+              Your heart pumps normally (60%, in the normal range). The slight leak in one valve is the same as in 2023.
+              The advice was to carry on as you are and repeat the echo in two years.
+            </p>
+            <p class="src">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5l3 3v10H4z M9 1.5v3h3" /></svg>
+              visit-summaries/…_cardiology.pdf · page 1
+            </p>
+          </div>
+        </div>
+        <figcaption>An example. Every record in these pictures is made up.</figcaption>
+      </figure>
+    </header>
 
-    <h2>What it helps you do</h2>
-    <ul>
-      <li>
-        <strong>See your whole history.</strong> The full medical file reaches back to the earliest visit on record, far
-        beyond the few years the site's data covers.
-      </li>
-      <li>
-        <strong>Ask in your own language.</strong> The records are mostly in Hebrew; ask, and get answers, in English or
-        whatever you speak.
-      </li>
-      <li><strong>Track changes over time.</strong> Each lab measurement has its own history, often years long.</li>
-      <li>
-        <strong>Prepare for your next visit.</strong> Known problems, the latest results, recent visits and open
-        referrals, in one place.
-      </li>
-      <li>
-        <strong>Check every answer.</strong> The assistant is asked to name the file, and the page of a PDF, behind each
-        fact.
-      </li>
-    </ul>
-    <p>
-      It supports your doctor and doesn't replace them. For urgent symptoms, call a doctor or emergency services, not an
-      assistant.
-    </p>
+    <main>
+      <!-- Use cases, as tabs: radio buttons and labels, one panel each. -->
+      <section id="ask" class="band">
+        <h2>Ask what you'd ask a doctor who had read everything</h2>
+        <p class="sub">Five of the things it does well. Pick one to see an answer.</p>
 
-    <h2>Things to ask</h2>
-    <p>The first is a good place to start.</p>
-    <ul>
-      <li><em>Summarize my health history from my full medical file.</em></li>
-      <li><em>Help me understand my latest blood test.</em></li>
-      <li><em>How has my HbA1c changed over the years?</em></li>
-      <li><em>What should I raise at my next appointment?</em></li>
-      <li><em>Translate my latest letter from the clinic into English.</em></li>
-      <li><em>Which referrals and approvals are still open?</em></li>
-      <li><em>What did the cardiologist write at my last visit?</em></li>
-      <li><em>When was my last tetanus shot?</em></li>
-      <li><em>Which medications have I bought this year, and how often?</em></li>
-      <li><em>Make a one-page summary to bring to a new doctor.</em></li>
-    </ul>
+        <div class="tabs">
+          <input type="radio" name="uc" id="uc-summary" checked />
+          <input type="radio" name="uc" id="uc-labs" />
+          <input type="radio" name="uc" id="uc-trend" />
+          <input type="radio" name="uc" id="uc-visit" />
+          <input type="radio" name="uc" id="uc-find" />
+          <div class="tab-list" role="presentation">
+            <label for="uc-summary">Health summary</label>
+            <label for="uc-labs">Understand a result</label>
+            <label for="uc-trend">See a trend</label>
+            <label for="uc-visit">Prepare for a visit</label>
+            <label for="uc-find">Find anything</label>
+          </div>
 
-    <h2>The assistant's guardrails</h2>
-    <p>
-      The instructions ask it to start from your full medical file, to say which file (and which page of a PDF) each fact
-      comes from and give it a date, to write its own notes into a new folder rather than change the export, and to keep
-      your name, ID number and contact details out of web searches and other tools unless you ask. They have it say
-      plainly when a record suggests something needs a doctor soon, and explain in plain language rather than diagnose,
-      and they say where to look for the common questions: a lab value's trend, the latest results, what changed since
-      your last visit, what to raise at an appointment, your allergies.
-    </p>
-    <p class="warn">
-      <strong>Before you open it.</strong> The extension sends your records nowhere, but an AI service you open them in
-      can read them. Before you give it your health information, check what it keeps and for how long. Where the service
-      lets you, turn off training on your chats, keep each person's records in a project of their own with memory kept to
-      that project, and delete the project when you're done with it.
-    </p>
+          <div class="panel" id="p-summary">
+            <div class="panel-copy">
+              <h3>See your whole history</h3>
+              <p>
+                The full medical file reaches back to the earliest visit on record, far beyond the few years the site
+                itself shows. Start here.
+              </p>
+            </div>
+            <div class="chat">
+              <p class="msg you">Summarize my health history from my full medical file.</p>
+              <div class="msg bot">
+                <dl class="facts">
+                  <dt>Known problems</dt>
+                  <dd>High blood pressure, since 2014 · Asthma, mild, since childhood</dd>
+                  <dt>Operations</dt>
+                  <dd>Appendix removed, 2009</dd>
+                  <dt>Allergies</dt>
+                  <dd>Penicillin (a rash, 2011)</dd>
+                  <dt>Takes now</dt>
+                  <dd>Amlodipine 5 mg, daily</dd>
+                </dl>
+                <p class="src">
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5l3 3v10H4z M9 1.5v3h3" /></svg>
+                  medical-file.pdf · pages 1–4
+                </p>
+              </div>
+            </div>
+          </div>
 
-    <h2>What about ChatGPT Health?</h2>
-    <p>
-      As of September 2026, OpenAI offers Health in ChatGPT to users in the U.S., and it connects medical records from
-      U.S. providers only, so it can't reach Maccabi Healthcare Services. Open the export in ChatGPT Work, or in any of the
-      assistants above, instead.
-    </p>
+          <div class="panel" id="p-labs">
+            <div class="panel-copy">
+              <h3>Understand a result</h3>
+              <p>
+                Every value next to its reference range, in plain words, with what is worth asking about and what
+                isn't.
+              </p>
+            </div>
+            <div class="chat">
+              <p class="msg you">Help me understand my latest blood test.</p>
+              <div class="msg bot">
+                <ul class="ranges">
+                  <li>
+                    <span class="name">Hemoglobin <span lang="he" dir="rtl">המוגלובין</span></span>
+                    <span class="bar"><i style="--at: 48%"></i></span>
+                    <span class="val">14.1 g/dL</span>
+                  </li>
+                  <li>
+                    <span class="name">Glucose <span lang="he" dir="rtl">גלוקוז</span></span>
+                    <span class="bar"><i style="--at: 62%"></i></span>
+                    <span class="val">92 mg/dL</span>
+                  </li>
+                  <li class="high">
+                    <span class="name">LDL cholesterol <span lang="he" dir="rtl">כולסטרול LDL</span></span>
+                    <span class="bar"><i style="--at: 91%"></i></span>
+                    <span class="val">138 mg/dL</span>
+                  </li>
+                </ul>
+                <p>All in range but LDL, a little above it. Worth raising at your next visit, not urgent.</p>
+                <p class="src">
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5l3 3v10H4z M9 1.5v3h3" /></svg>
+                  test-results/details/2026-08-04_…_blood-count.json
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" id="p-trend">
+            <div class="panel-copy">
+              <h3>See a trend</h3>
+              <p>Each lab measurement has its own history, often years of it, ready to chart.</p>
+            </div>
+            <div class="chat">
+              <p class="msg you">How has my HbA1c changed over the years?</p>
+              <div class="msg bot">
+                <!-- To scale: x 2018 to 2026 over 40..300, y 5.5% to 7.5% over 120..20 (50 px per percent). -->
+                <svg class="trend" viewBox="0 0 320 150" role="img" aria-label="HbA1c from 7.2% in 2018 down to 6.1% in 2026">
+                  <line class="grid" x1="40" y1="20" x2="300" y2="20" />
+                  <line class="grid" x1="40" y1="70" x2="300" y2="70" />
+                  <line class="grid" x1="40" y1="120" x2="300" y2="120" />
+                  <rect class="normal" x="40" y="95" width="260" height="25" />
+                  <text class="tick" x="34" y="24" text-anchor="end">7.5</text>
+                  <text class="tick" x="34" y="74" text-anchor="end">6.5</text>
+                  <text class="tick" x="34" y="124" text-anchor="end">5.5</text>
+                  <text class="tick" x="296" y="112" text-anchor="end">normal, below 6.0</text>
+                  <polyline class="line" points="40,35 72.5,30 105,40 137.5,55 170,65 202.5,75 235,80 267.5,85 300,90" />
+                  <g class="dots">
+                    <circle cx="40" cy="35" r="3" /><circle cx="72.5" cy="30" r="3" /><circle cx="105" cy="40" r="3" />
+                    <circle cx="137.5" cy="55" r="3" /><circle cx="170" cy="65" r="3" /><circle cx="202.5" cy="75" r="3" />
+                    <circle cx="235" cy="80" r="3" /><circle cx="267.5" cy="85" r="3" />
+                    <circle class="end" cx="300" cy="90" r="4.5" />
+                  </g>
+                  <text class="tick" x="40" y="142" text-anchor="middle">2018</text>
+                  <text class="tick" x="170" y="142" text-anchor="middle">2022</text>
+                  <text class="tick" x="300" y="142" text-anchor="end">2026</text>
+                </svg>
+                <p>Down from 7.2% in 2018 to 6.1% this year, falling steadily since 2020 and now just above the normal range.</p>
+                <p class="src">
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5l3 3v10H4z M9 1.5v3h3" /></svg>
+                  test-results/history/…_HbA1c.json · 9 results
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" id="p-visit">
+            <div class="panel-copy">
+              <h3>Prepare for a visit</h3>
+              <p>
+                Known problems, the latest results, recent visits and open referrals, turned into a short list to take
+                with you.
+              </p>
+            </div>
+            <div class="chat">
+              <p class="msg you">What should I raise at my next appointment?</p>
+              <div class="msg bot">
+                <ol class="checklist">
+                  <li>LDL has risen two tests running: ask whether to recheck.</li>
+                  <li>The dermatology referral from May was never used, and expires in November.</li>
+                  <li>Your blood pressure medicine was last renewed in March.</li>
+                </ol>
+                <p class="src">
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5l3 3v10H4z M9 1.5v3h3" /></svg>
+                  test-results/ · referrals/ · medications-and-prescriptions/
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" id="p-find">
+            <div class="panel-copy">
+              <h3>Find anything</h3>
+              <p>A shot, a letter, a prescription from years ago: one question instead of an afternoon in the portal.</p>
+            </div>
+            <div class="chat">
+              <p class="msg you">When was my last tetanus shot?</p>
+              <div class="msg bot">
+                <p class="big">14 March 2017</p>
+                <p>Tetanus and diphtheria (Td), at your clinic. A booster is usually due every ten years, so 2027.</p>
+                <p class="src">
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5l3 3v10H4z M9 1.5v3h3" /></svg>
+                  vaccinations/list.json
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="more">
+          <p class="more-label">More to try</p>
+          <ul class="prompts">
+            <li>Translate my latest letter from the clinic into English.</li>
+            <li>Which referrals and approvals are still open?</li>
+            <li>Which medications have I bought this year, and how often?</li>
+            <li>Make a one-page summary to bring to a new doctor.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- How to open it: three steps, then where. -->
+      <section id="start" class="band tinted">
+        <h2>Three steps to your first answer</h2>
+        <ol class="steps">
+          <li>
+            <svg viewBox="0 0 48 48" aria-hidden="true">
+              <path d="M28 6H14a4 4 0 0 0-4 4v28a4 4 0 0 0 4 4h20a4 4 0 0 0 4-4V16z M28 6v10h10" />
+              <path d="M22 12h2M24 17h2M22 22h2M24 27h2" /><rect x="21" y="31" width="6" height="6" rx="1.5" />
+            </svg>
+            <h3>Export</h3>
+            <p>Run the export. You get one ZIP, <code>maccabi-export-….zip</code>, in your Downloads.</p>
+          </li>
+          <li>
+            <svg viewBox="0 0 48 48" aria-hidden="true">
+              <path d="M5 14a4 4 0 0 1 4-4h9l4 5h17a4 4 0 0 1 4 4v17a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z" />
+              <path d="M24 21v11M19 27l5 5 5-5" />
+            </svg>
+            <h3>Unzip</h3>
+            <p>Double-click it. Keep the folder together: the assistant needs every file in it.</p>
+          </li>
+          <li>
+            <svg viewBox="0 0 48 48" aria-hidden="true">
+              <rect x="5" y="8" width="38" height="30" rx="4" /><path d="M5 15h38M11 25h14M11 31h9" />
+              <path d="M33 22l5 4-5 4" />
+            </svg>
+            <h3>Open the folder</h3>
+            <p>In an assistant's desktop app, so it can read the whole folder. Then ask your first question.</p>
+          </li>
+        </ol>
+
+        <h3 class="pick-title">Where to open it</h3>
+        <div class="apps">
+          <article class="app">
+            <h4>Claude</h4>
+            <p class="app-best">Claude, in the Claude desktop app</p>
+            <p>
+              Give Claude access to the unzipped folder, then ask. If your message box still offers Chat and Cowork,
+              choose <strong>Cowork</strong> first. Needs a paid plan for now.
+            </p>
+            <p class="app-alt">
+              Or <strong>Claude Code</strong>: run <code>claude</code> in the folder. It reads <code>CLAUDE.md</code> on
+              its own.
+            </p>
+          </article>
+          <article class="app">
+            <h4>ChatGPT</h4>
+            <p class="app-best">ChatGPT Work, in the ChatGPT desktop app</p>
+            <p>Open the unzipped folder as a local project, and choose <strong>Work</strong>.</p>
+            <p class="app-alt">
+              Or <strong>Codex</strong>: run it in the folder. It reads <code>AGENTS.md</code> on its own.
+            </p>
+          </article>
+        </div>
+
+        <div class="first">
+          <p class="first-label">Start with</p>
+          <p class="first-msg">Read README.md first. Then summarize my health history from my full medical file.</p>
+          <p class="first-why">
+            <code>README.md</code> is the assistant's instructions: where to start, what the export lacks, and which
+            values mislead.
+          </p>
+        </div>
+
+        <aside class="why-not">
+          <svg viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M14 12h20v28H14z M18 6h20v28" /><path d="M20 20h8M20 26h8M20 32h5" />
+          </svg>
+          <div>
+            <h3>Why not drop it into a chat?</h3>
+            <p>
+              A chat or a web project takes a few dozen files at most. Your export has hundreds, and the assistant finds
+              its way through them with the folder's own layout and <code>README.md</code>. The desktop apps read the
+              folder as it is.
+            </p>
+          </div>
+        </aside>
+      </section>
+
+      <!-- What the README asks of the assistant. -->
+      <section class="band">
+        <h2>Built so you can check every answer</h2>
+        <p class="sub">The export comes with instructions the assistant reads first. They ask it to:</p>
+        <ul class="guards">
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l4 4v14H7z M14 3v4h4 M10 12h5M10 16h5" /></svg>
+            <h3>Show its source</h3>
+            <p>The file, the page of a PDF and the date behind each fact, so you can open it and look.</p>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11h14v10H5z M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+            <h3>Leave your export alone</h3>
+            <p>Its own notes and tables go in a new folder. It never edits, renames or deletes your files.</p>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6" /><path d="M20 20l-4.5-4.5 M8 11h6" /></svg>
+            <h3>Keep you out of searches</h3>
+            <p>Your name, ID number and contact details stay out of web searches and other tools unless you ask.</p>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 16H3z M12 10v4 M12 17v.5" /></svg>
+            <h3>Say when it matters</h3>
+            <p>It explains rather than diagnoses, and says plainly when a record suggests seeing a doctor soon.</p>
+          </li>
+        </ul>
+        <p class="care">
+          It supports your doctor and doesn't replace them. For urgent symptoms, call your doctor or Magen David Adom on
+          <strong>101</strong>, not an assistant.
+        </p>
+      </section>
+
+      <!-- Privacy: where the records go, and the settings to change. -->
+      <section id="private" class="band tinted">
+        <h2>Your records go only where you take them</h2>
+        <div class="flow" role="img" aria-label="Maccabi Online, to your computer, where the extension stops, to the assistant you choose">
+          <div class="node">Maccabi Online</div>
+          <div class="arrow"></div>
+          <div class="node here">Your computer<span>The extension stops here</span></div>
+          <div class="arrow dashed"></div>
+          <div class="node">The assistant you choose</div>
+        </div>
+        <p>
+          The extension sends your records nowhere. The AI service you open them in can read them, so before you do,
+          check what it keeps and for how long, and where it lets you:
+        </p>
+        <ul class="settings">
+          <li><strong>Turn off training</strong> on your chats.</li>
+          <li><strong>Give each person a project</strong> of their own, with memory kept to that project.</li>
+          <li><strong>Delete the project</strong> when you're done with it.</li>
+        </ul>
+      </section>
+
+      <section class="band">
+        <h2>Why not ChatGPT Health or Claude's health connectors?</h2>
+        <p>
+          As of September 2026, both connect medical records from U.S. providers only, and Health in ChatGPT is open to
+          U.S. users only. Neither can reach Maccabi Healthcare Services. This export is how your records get to an
+          assistant.
+        </p>
+      </section>
+    </main>
   </body>
 </html>
