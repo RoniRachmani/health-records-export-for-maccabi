@@ -164,67 +164,95 @@ async function openBrowser() {
   return page;
 }
 
-// The sign-in form is found by shape rather than by selector: the visible password field, and the
-// visible text field before it in the same form.
-const PASSWORD_FIELD = `[...document.querySelectorAll('input[type=password]')].find((e) => e.offsetParent)`;
-const HAS_PASSWORD_FIELD = `!!${PASSWORD_FIELD}`;
-const FOCUS_PASSWORD = `(() => { const p = ${PASSWORD_FIELD}; if (!p) return false; p.focus(); p.select(); return true; })()`;
-const FOCUS_USERNAME = `(() => {
-  const p = ${PASSWORD_FIELD};
-  if (!p) return false;
-  const fields = [...(p.form || document).querySelectorAll('input')]
-    .filter((e) => e.offsetParent && ['text', 'email', 'tel', 'number', ''].includes(e.type));
-  const before = fields.filter((e) => e.compareDocumentPosition(p) & Node.DOCUMENT_POSITION_FOLLOWING);
-  const u = before.at(-1);
-  if (!u) return false;
-  u.focus();
-  u.select();
-  return true;
-})()`;
-const PAGE_SHAPE = `(() => {
+// Maccabi's sign-in (mac.maccabi4u.co.il/login) takes three pages: the ID number and המשך
+// ("continue"); a choice of SMS code, voice-call code or כניסה עם סיסמה ("sign in with password");
+// then the ID and password and המשך again, which lands on /sonline/. Fields are found by shape and
+// buttons by their text, in the page and inside any shadow root, since the first pages are drawn in one.
+const CONTINUE = 'המשך';
+const WITH_PASSWORD = 'כניסה עם סיסמה';
+const HELPERS = `
+  const all = (sel, root = document) => {
+    const out = [...root.querySelectorAll(sel)];
+    for (const e of root.querySelectorAll('*')) if (e.shadowRoot) out.push(...all(sel, e.shadowRoot));
+    return out;
+  };
+  const shown = (e) => e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden';
+  const textFields = () => all('input').filter((e) => shown(e) && ['text', 'email', 'tel', 'number', ''].includes(e.type));
+  const passwordField = () => all('input[type=password]').find(shown);
+  const byText = (text) => all('a, button, [role=button]').find((e) => shown(e) && e.textContent.trim() === text);
+  const focus = (e) => { if (!e) return false; e.focus(); e.select?.(); return true; };
+`;
+const inPage = (body) => `(() => {${HELPERS}${body}})()`;
+
+/** Which of the three sign-in pages the tab is on, or 'signedIn', or 'other' (between pages). */
+const STAGE = inPage(`
+  if (location.origin === ${JSON.stringify(ORIGIN)} && sessionStorage.getItem('token')) return 'signedIn';
+  if (passwordField()) return 'password';
+  if (byText(${JSON.stringify(WITH_PASSWORD)})) return 'choose';
+  if (location.host === 'mac.maccabi4u.co.il' && textFields().length) return 'id';
+  return 'other';
+`);
+const FOCUS_ID = inPage(`return focus(textFields()[0]);`);
+// On the password page, the ID field is the text field before the password; it is usually filled already.
+const ID_BEFORE_PASSWORD_EMPTY = inPage(`
+  const p = passwordField();
+  const u = textFields().filter((e) => e.compareDocumentPosition(p) & Node.DOCUMENT_POSITION_FOLLOWING).at(-1);
+  if (!u || u.value) return false;
+  return focus(u);
+`);
+const FOCUS_PASSWORD = inPage(`return focus(passwordField());`);
+const clickText = (text) => inPage(`const b = byText(${JSON.stringify(text)}); if (!b) return false; b.click(); return true;`);
+const PAGE_SHAPE = inPage(`
   const inputs = {};
-  for (const e of document.querySelectorAll('input')) {
-    const k = (e.type || 'text') + (e.offsetParent ? '' : ' (hidden)');
+  for (const e of all('input')) {
+    const k = (e.type || 'text') + (shown(e) ? '' : ' (hidden)');
     inputs[k] = (inputs[k] || 0) + 1;
   }
-  const frames = [...document.querySelectorAll('iframe')].map((f) => { try { return new URL(f.src).host; } catch { return '(no src)'; } });
-  return { at: location.host + location.pathname, inputs, frames, shadowHosts: [...document.querySelectorAll('*')].filter((e) => e.shadowRoot).length };
-})()`;
-const SIGNED_IN = `location.origin === ${JSON.stringify(ORIGIN)} && !!sessionStorage.getItem('token')`;
+  const frames = all('iframe').map((f) => { try { return new URL(f.src).host; } catch { return '(no src)'; } });
+  return { at: location.host + location.pathname, inputs, frames };
+`);
 
 async function signIn(page) {
   const until = Date.now() + SIGN_IN_WAIT_MS;
-  let filled = false;
+  let creds;
+  const done = new Set(); // each page is answered once: nothing is submitted twice
   let hinted = false;
   let redirected = false;
-  const since = Date.now();
+  let lastChange = Date.now();
   while (Date.now() < until) {
-    if (await page.probe(SIGNED_IN, false)) return;
-    const onForm = await page.probe(HAS_PASSWORD_FIELD, false);
-    if (onForm && !filled) {
-      const { username, password } = credentials();
-      if (!(await page.probe(FOCUS_USERNAME, false))) throw new Error('Found a password field but no username field before it.');
-      await page.insertText(username);
-      await page.probe(FOCUS_PASSWORD, false);
-      await page.insertText(password);
-      await page.pressEnter();
-      filled = true;
-      console.log('Signed in with the username and password from 1Password; waiting for the site.');
-    } else if (!onForm && filled && !redirected && (await page.probe('location.origin', '')) === ORIGIN) {
+    const stage = await page.probe(STAGE, 'other');
+    if (stage === 'signedIn') return;
+    if (stage !== 'other' && !done.has(stage)) {
+      creds ||= credentials();
+      if (stage === 'id') {
+        if (!(await page.probe(FOCUS_ID, false))) throw new Error('Found the ID page but could not focus its field.');
+        await page.insertText(creds.username);
+        if (!(await page.probe(clickText(CONTINUE), false))) await page.pressEnter();
+        console.log('Sign-in: entered the ID number.');
+      } else if (stage === 'choose') {
+        await page.probe(clickText(WITH_PASSWORD), false);
+        console.log('Sign-in: chose to sign in with a password.');
+      } else if (stage === 'password') {
+        if (await page.probe(ID_BEFORE_PASSWORD_EMPTY, false)) await page.insertText(creds.username);
+        await page.probe(FOCUS_PASSWORD, false);
+        await page.insertText(creds.password);
+        if (!(await page.probe(clickText(CONTINUE), false))) await page.pressEnter();
+        console.log('Sign-in: entered the password; waiting for the site.');
+      }
+      done.add(stage);
+      lastChange = Date.now();
+    } else if (done.has('password') && !redirected && (await page.probe('location.origin', '')) === ORIGIN) {
       // Signed in, but landed on a page without the token (the legacy site): the token is issued on /sonline/.
       await sleep(POLL_MS);
-      if (!(await page.probe(SIGNED_IN, false))) {
+      if ((await page.probe(STAGE, 'other')) !== 'signedIn') {
         await page.navigate(START);
         redirected = true;
       }
-    } else if (!hinted && Date.now() - since > 20_000) {
-      console.log(filled
-        ? 'Still not signed in. If the site asks for anything more, answer it in the browser window. '
-          + 'The password is not submitted again.'
-        : 'No sign-in form yet. If the page offers a choice of how to sign in, pick username and password in the browser window.');
-      // What the page is made of, for when the form is where this script does not look. Shape only:
-      // the address without its query, counts of inputs, and the hosts of frames.
-      if (!filled) console.log('  page: ' + JSON.stringify(await page.probe(PAGE_SHAPE, null)));
+    } else if (!hinted && Date.now() - lastChange > 20_000) {
+      console.log('Sign-in is not moving. If the site asks for anything more, answer it in the browser window; '
+        + 'nothing already entered is submitted again.');
+      // Shape only: the address without its query, counts of inputs, and the hosts of frames.
+      console.log('  page: ' + JSON.stringify(await page.probe(PAGE_SHAPE, null)));
       hinted = true;
     }
     await sleep(1000);

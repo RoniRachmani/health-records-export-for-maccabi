@@ -410,7 +410,8 @@ browser and the paused run in place, to look at them.
 
 The username and password come from 1Password through its CLI (`brew install 1password-cli`, then
 *Settings > Developer > Integrate with 1Password CLI* in the app), from the item named by `MACCABI_OP_ITEM`
-(default `Maccabi`), and only when the page asks for them. They are filled once and never re-submitted, since a
+(default `Maccabi`), and only when the page asks for them. The script walks Maccabi's three sign-in pages itself:
+the ID number, then *sign in with password* (never the SMS or voice-call code), then the password. They are filled once and never re-submitted, since a
 script retrying a wrong password is how an account gets locked. The browser profile lives outside the repo
 (`~/.hrem-live-profile`, or `LIVE_PROFILE`) and is kept between runs, so a session that is still alive is
 reused: every new sign-in ends your other sessions. Branded Chrome ignores `--load-extension`; there, load
