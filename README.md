@@ -398,6 +398,7 @@ await dev({ type: 'dev:skipOrder', on: true });                  // test a full 
 | `dev:state` | Run state, staged files per folder, token status |
 | `dev:start`, `dev:resume`, `dev:cancel`, `dev:dismiss`, `dev:retrySave` | What the popup's buttons do |
 | `dev:problems` | Items that failed so far |
+| `dev:rootFiles` | Write the ZIP's root files as `save` does, without the ZIP, and reply with the README's version line, its failed-to-collect section and `export-errors.json` |
 | `dev:titleFields` | Which response fields hold a display string, and in which language. Field names only. |
 | `dev:stopBefore` `{step}` | Pause before a plan step. Without `step`, clears it. |
 | `dev:skipOrder` `{on}` | `orderMedicalFile` does nothing while on, and `waitMedicalFile` keeps the file Maccabi already has. Stays set until turned off. |
@@ -417,7 +418,9 @@ and drives the run through the commands above, printing the step, file count and
 turns on `dev:skipOrder` first, and will not start unless the extension confirms it, so a test never orders the
 medical file or makes Maccabi send an SMS; there is no option that would. It stops before `save`, prints the
 files collected per folder, and discards the run, so nothing is downloaded. `npm run live -- --keep` leaves the
-browser and the paused run in place, to look at them.
+browser and the paused run in place, to look at them. `npm run live -- --root-files` also writes the ZIP's root
+files before discarding the run (`dev:rootFiles`), and prints the README's version line, what it says failed, and
+`export-errors.json` beside the popup's problem count.
 
 The username and password come from 1Password through its CLI (`brew install 1password-cli`, then
 *Settings > Developer > Integrate with 1Password CLI* in the app), and only when the page asks for them. Put

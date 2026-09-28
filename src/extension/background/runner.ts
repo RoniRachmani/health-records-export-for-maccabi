@@ -12,7 +12,7 @@ import {
 import {
   clearProblemsOfStep, clearStaging, listMeta, listProblems, putTextDirect, setCurrentStep, stagedTotals, stagingSink,
 } from '../shared/staging';
-import { EXPORT_ERRORS, exportErrors, exportReadme, INSTRUCTION_POINTERS } from '../shared/readme';
+import { EXPORT_ERRORS, exportErrors, exportReadme, INSTRUCTION_POINTERS, type ExportError } from '../shared/readme';
 import { callOffscreen, closeOffscreen, offscreenHtml } from './offscreenClient';
 import { capturingTransport, rawDumpOn } from './rawDump';
 import { currentRoutes, currentSession, extensionFetch, isVisible, keepSessionAlive, navigate, routedTransport, snapshot } from './tab';
@@ -406,7 +406,7 @@ async function runPlanStep(step: PlanStep): Promise<void> {
  * Counts describe what this run got; the version is the one running, whose FILE_LAYOUT the run's
  * files have (sameLayout discards a run started under another).
  */
-async function writeReadme(root: string, run: RunState): Promise<void> {
+async function writeReadme(root: string, run: RunState): Promise<{ readme: string; errors: ExportError[] }> {
   const files: Record<string, number> = {};
   let medicalFile: string | null = null;
   for (const m of await listMeta()) {
@@ -419,8 +419,20 @@ async function writeReadme(root: string, run: RunState): Promise<void> {
   const errors = exportErrors(await listProblems());
   await putTextDirect(EXPORT_ERRORS, JSON.stringify(errors, null, 2) + '\n');
   const made = { version: chrome.runtime.getManifest().version, layout: FILE_LAYOUT, startedAt: run.startedAt, dev: __DEV_BRIDGE__ };
-  await putTextDirect('README.md', exportReadme(root.replace(/^maccabi-export-/, ''), files, medicalFile, errors, made));
+  const readme = exportReadme(root.replace(/^maccabi-export-/, ''), files, medicalFile, errors, made);
+  await putTextDirect('README.md', readme);
   for (const [name, text] of Object.entries(INSTRUCTION_POINTERS)) await putTextDirect(name, text);
+  return { readme, errors };
+}
+
+/**
+ * The root files the save step writes, written into staging as it writes them, for the dev bridge:
+ * a live test checks them without building a ZIP or downloading the member's records.
+ */
+export async function writeRootFiles(): Promise<{ readme: string; errors: ExportError[] }> {
+  const run = await loadRun();
+  if (!run) throw new UserError('There is no export to write the root files of.');
+  return writeReadme(exportName(Date.now()), run);
 }
 
 async function saveZip(): Promise<void> {

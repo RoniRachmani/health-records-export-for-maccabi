@@ -7,6 +7,8 @@
 //
 //   npm run live                  collects everything except the medical-file order, then stops before the ZIP
 //   npm run live -- --keep        leaves the browser open at the end
+//   npm run live -- --root-files  then writes the ZIP's root files as the save step does (still no ZIP), and
+//                                 prints the README's version line, what it says failed, and export-errors.json
 //
 // MACCABI_USERNAME and MACCABI_PASSWORD, from the environment or .env (gitignored), are 1Password secret
 // references (op://vault/item/field), read with the 1Password CLI, `op`, only when a sign-in is needed; so
@@ -33,6 +35,7 @@ const EXTENSION = join(root, 'dist-dev');
 const PROFILE = process.env.LIVE_PROFILE || join(homedir(), '.hrem-live-profile');
 const ITEM = process.env.MACCABI_OP_ITEM || 'Maccabi';
 const KEEP = process.argv.includes('--keep');
+const ROOT_FILES = process.argv.includes('--root-files');
 
 const SIGN_IN_WAIT_MS = 3 * 60_000;
 const POLL_MS = 5000;
@@ -368,6 +371,19 @@ async function main() {
   for (const p of problems) console.log('  problem: ' + p);
   const stopped = run.status === 'paused_session' && /dev:stopBefore/.test(run.message || '');
   if (stopped) for (const [folder, n] of Object.entries(state.staged.perFolder)) console.log(`  ${folder}: ${n} files`);
+  if (stopped && ROOT_FILES) {
+    const root = await page.dev({ type: 'dev:rootFiles' }, 30_000);
+    if (!root || root.error) {
+      // Reported, not thrown: the run below is still discarded.
+      console.log('dev:rootFiles: ' + (root?.error || 'no answer'));
+      process.exitCode = 1;
+    } else {
+      console.log('README: ' + root.made);
+      console.log(root.failedSection.replace(/^/gm, '  '));
+      console.log(`export-errors.json: ${root.errors.length} entries; the popup: ${problems.length} problems`);
+      for (const e of root.errors) console.log('  ' + e);
+    }
+  }
   // The staged files are the member's records: they go with the run unless --keep asked to look at them.
   if (run.status === 'paused_session' && !KEEP) await page.dev({ type: 'dev:cancel' });
   if (stopped) {
