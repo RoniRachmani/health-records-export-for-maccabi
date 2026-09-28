@@ -59,6 +59,9 @@ const TITLE_MAX = 40;
 // Hebrew abbreviations typed with ASCII quotes: ד"ר, שב"ן (gershayim), דר' (geresh).
 const GERSHAYIM = /(?<=[\u05D0-\u05EA])"(?=[\u05D0-\u05EA])/g;
 const GERESH = /(?<=[\u05D0-\u05EA])'/g;
+// ד'ר, as the site's doctor names often spell it, is ד״ר with the wrong quote. Only this word: elsewhere
+// an apostrophe inside a word is a geresh (ג'ירפה).
+const DOCTOR = /(?<![\u05D0-\u05EA])ד'ר(?![\u05D0-\u05EA])/g;
 
 /**
  * The readable half of a file name: a display string as the API sends it, Hebrew kept and never
@@ -73,6 +76,7 @@ export function title(s: Json): string {
   if (typeof s !== 'string') return '';
   const t = s
     .normalize('NFC')
+    .replace(DOCTOR, 'ד\u05F4ר')
     .replace(GERSHAYIM, '\u05F4')
     .replace(GERESH, '\u05F3')
     .replace(TITLE_DROP, '-')

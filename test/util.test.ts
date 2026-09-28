@@ -59,6 +59,9 @@ describe('title', () => {
     expect(title('התייעצות מומחה- נוירולוגיה')).toBe('התייעצות-מומחה-נוירולוגיה');
     expect(title('ד"ר גבריאלה סמסון')).toBe('ד״ר-גבריאלה-סמסון');
     expect(title("דר' גבריאלה")).toBe('דר׳-גבריאלה');
+    // ד'ר is written for ד״ר; an apostrophe inside another word is a geresh.
+    expect(title("ד'ר גבריאלה")).toBe('ד״ר-גבריאלה');
+    expect(title("ג'ירפה")).toBe('ג׳ירפה');
     // A quote that is not part of a Hebrew word is punctuation, as before.
     expect(title('Dr. "A"')).toBe('Dr.-A');
   });
