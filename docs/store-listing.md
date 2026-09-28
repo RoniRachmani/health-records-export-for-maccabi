@@ -180,7 +180,7 @@ nothing is suggested over the last frame.
 **Title:**
 
 ```
-Ask an AI assistant about your Maccabi Online medical records – free Chrome extension
+Ask Claude or ChatGPT about your Maccabi Online medical records – free Chrome extension
 ```
 
 **Description** (plain text; the chapter times are the film's parts, `runFrom`, `saved` and `privacy` in `T` in
@@ -201,19 +201,21 @@ AI assistants that connect to medical records reach U.S. providers, not Maccabi 
 
 WHAT IT SAVES
 • Test results, lab histories and result PDFs
-• Visit summaries from the last 12 months
-• Prescriptions, pharmacy purchases and the purchase report
+• Visit summaries from the last 12 months, with their PDFs
+• Prescriptions, your full pharmacy purchase history and the purchase report
 • Referrals, approvals and information pages
 • Vaccinations and the vaccination booklet
 • Letters, messages with your doctor, and documents you uploaded
-• Hospital stays
+• Hospital stays, with discharge letters when the site has them
+• Your member details, entitlements and assigned doctors
 • Your full medical file, freshly ordered to cover your whole history
 
 HOW IT WORKS
 1. Log in to Maccabi Online as usual.
-2. Click the extension's icon and press Start export.
-3. Keep the tab open. Usually after a few minutes (up to 20 if the medical file is slow to arrive), the ZIP is in your Downloads folder.
-4. Unzip it, open the folder in your AI assistant, and ask about your records.
+2. On that tab, click the extension's icon and press Start export.
+3. Keep the tab open and in front. Usually after a few minutes (up to 20 if the medical file is slow to arrive), the ZIP is in your Downloads folder.
+4. Unzip it and open the folder in the Claude desktop app, Claude Code, ChatGPT Work or Codex, which read the whole folder.
+5. Ask about your records, starting with "Summarize my health history from my full medical file".
 
 THINGS TO ASK
 • "Summarize my health history from my full medical file"
@@ -227,8 +229,9 @@ Each export orders a fresh copy of your full medical file, so Maccabi Healthcare
 
 PRIVATE BY DESIGN
 Your records stop at your computer. You choose which AI assistant, if any, reads them.
-• Connects only to online.maccabi4u.co.il. No servers, analytics or tracking.
-• Uses the session you're already logged in with. It never sees your password.
+• Connects only to online.maccabi4u.co.il. No servers, analytics, tracking or remote code.
+• Uses the session you're already logged in with. It never sees your password or one-time codes.
+• Deletes its own copy of your files as soon as the ZIP is saved.
 • Open source, and what ships isn't minified: https://github.com/RoniRachmani/health-records-export-for-maccabi
 • Privacy policy: https://github.com/RoniRachmani/health-records-export-for-maccabi/blob/main/docs/privacy.md
 
