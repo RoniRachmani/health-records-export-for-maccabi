@@ -24,7 +24,9 @@
     "icons": "node scripts/make-icons.mjs",
     "store-assets": "node scripts/store-assets.mjs",
     "store-video": "node scripts/store-video.mjs",
-    "package": "npm run build && node scripts/package.mjs"
+    "package": "npm run build && node scripts/package.mjs",
+    "clean": "node -e \"for (const d of ['dist', 'dist-dev', 'dist-store', 'release']) require('node:fs').rmSync(d, { recursive: true, force: true })\"",
+    "release": "npm run clean && npm test && npm run build:dev && npm run package && npm run store-assets && npm run store-video"
   },
   "dependencies": {
     "fflate": "0.8.3"

@@ -400,6 +400,8 @@ Replies carry statuses, sizes and counts, never record contents. None of this is
 ### Releasing
 
 ```sh
+npm run release        # all of it from clean: tests, dist-dev/, the release ZIP, the store images and the video
+npm run clean          # remove dist/, dist-dev/, dist-store/ and release/
 npm run package        # release/health-records-export-for-maccabi-<version>.zip for the Chrome Web Store and GitHub release
 npm run store-assets   # store/assets/ screenshots, promo tiles and the video's poster (needs Chrome, Chromium or Edge; set CHROME_PATH if not found)
 npm run store-video    # store/assets/promo-video.mp4, the promo video (same browser; ffmpeg if you have it)

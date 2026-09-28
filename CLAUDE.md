@@ -16,6 +16,8 @@ npm run typecheck                 # tsc --noEmit
 npm run dev                       # watch build into dist-dev/ (dev build, extra dev bridge)
 npm run build                     # typecheck + store build into dist/
 npm run package                   # build + release/<name>-<version>.zip (refuses a dev build)
+npm run clean                     # remove dist/, dist-dev/, dist-store/, release/
+npm run release                   # clean, test, build:dev, package, store-assets, store-video
 npm run store-assets              # re-render store/assets/ images (needs Chrome; CHROME_PATH)
 npm run store-assets -- marquee   # just one, by shot name
 npm run store-video               # re-render store/assets/promo-video.mp4 (not committed; ffmpeg or macOS)
