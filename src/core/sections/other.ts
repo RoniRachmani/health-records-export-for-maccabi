@@ -87,6 +87,8 @@ async function linkedVisit(c: Collector, number: Json, from: string): Promise<st
   const path = 'AppointmentOrderAPI/v1/members/0/{mid}/visits/' + encodeURIComponent(number) + '/?isOpenMedicalRecordNumber=true';
   const r = await c.api('GET', path);
   const v: Json = r.data;
+  // 204: Maccabi has no visit under that number (seen live, 2026-09-28). The inquiry simply has none to point to.
+  if (r.status === 204) return null;
   if (r.status !== 200 || !v || typeof v !== 'object') {
     await c.problem(from, 'linked visit: HTTP ' + r.status + (r.status === 200 ? ', no visit in it' : ''));
     return null;

@@ -293,12 +293,12 @@ describe('full run against the fake site', () => {
     expect(site.calls.filter((u) => u.includes('isOpenMedicalRecordNumber'))).toHaveLength(2);
   });
 
-  it('keeps an inquiry whose linked visit has no summary, and says so', async () => {
+  it('keeps an inquiry whose linked visit Maccabi does not have, without a problem', async () => {
     const site = fakeMaccabi();
     const t = fakeTransport([(_req, url) => (url.pathname.endsWith('/visits/7001/') ? jsonResp(undefined, 204) : undefined), ...site.routes]);
     const { c, sink } = makeCollector(t);
     const s = await runAll(c, newCtx(), ['doctorCommunications']);
-    expect(s.problems).toEqual(['communication-with-doctor/details/2026-04-02_Q1_הפניה.json PROBLEM: linked visit: HTTP 204']);
+    expect(s.problems).toEqual([]);
     const mem = sink as MemorySink;
     expect(mem.json('communication-with-doctor/details/2026-04-02_Q1_הפניה.json').visit).toBeUndefined();
     expect([...mem.files.keys()].some((k) => k.includes('_7001_'))).toBe(false);
