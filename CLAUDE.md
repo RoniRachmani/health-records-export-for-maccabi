@@ -16,7 +16,7 @@ npm run typecheck                 # tsc --noEmit
 npm run dev                       # watch build into dist-dev/ (dev build, extra dev bridge)
 npm run build                     # typecheck + store build into dist/
 npm run package                   # build + release/<name>-<version>.zip (refuses a dev build)
-npm run live                      # a live export on your own account, never ordering, no ZIP (1Password CLI)
+npm run live                      # a live export on your own account, never ordering, no ZIP (1Password refs in .env)
 npm run clean                     # remove dist/, dist-dev/, dist-store/, release/
 npm run release:zip               # clean, test, build:dev, package
 npm run release                   # release:zip, then store-assets, store-video

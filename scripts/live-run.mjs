@@ -8,8 +8,10 @@
 //   npm run live                  collects everything except the medical-file order, then stops before the ZIP
 //   npm run live -- --keep        leaves the browser open at the end
 //
-// MACCABI_OP_ITEM names the 1Password item (default "Maccabi"); it is read with the 1Password CLI,
-// `op`, only when a sign-in is needed. LIVE_PROFILE is the browser profile (default
+// MACCABI_USERNAME and MACCABI_PASSWORD, from the environment or .env (gitignored), are 1Password secret
+// references (op://vault/item/field), read with the 1Password CLI, `op`, only when a sign-in is needed; so
+// .env holds where the credentials are, never the credentials. Without them, MACCABI_OP_ITEM names the
+// item (default "Maccabi"). LIVE_PROFILE is the browser profile (default
 // ~/.hrem-live-profile), kept outside the repo and between runs, so a session that is still alive is
 // reused rather than replaced: every new sign-in ends the member's other sessions.
 //
@@ -17,11 +19,13 @@
 // statuses, counts and problem lines. The password is filled once per run and never re-submitted,
 // because a script retrying a wrong password is how an account gets locked.
 import { execFileSync, spawn } from 'node:child_process';
-import { mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { BROWSERS, isFile, root, sleep } from './stage.mjs';
+
+if (existsSync(join(root, '.env'))) process.loadEnvFile(join(root, '.env'));
 
 const ORIGIN = 'https://online.maccabi4u.co.il';
 const START = ORIGIN + '/sonline/';
@@ -33,8 +37,26 @@ const KEEP = process.argv.includes('--keep');
 const SIGN_IN_WAIT_MS = 3 * 60_000;
 const POLL_MS = 5000;
 
-/** Username and password of the 1Password item, read only when the page asks for them. */
+const NO_OP = 'The 1Password CLI (op) is not installed: brew install 1password-cli, then turn on '
+  + '"Integrate with 1Password CLI" in the 1Password app (Settings > Developer).';
+
+/** A secret reference's value; anything else is taken as the value itself (as `op run` passes it). */
+function resolve(name) {
+  const value = process.env[name];
+  if (!value.startsWith('op://')) return value;
+  try {
+    return execFileSync('op', ['read', '--no-newline', value], { encoding: 'utf8', stdio: ['inherit', 'pipe', 'inherit'] });
+  } catch (e) {
+    if (e.code === 'ENOENT') throw new Error(NO_OP);
+    throw new Error(`op could not read ${name} (${value}).`);
+  }
+}
+
+/** Username and password, from the references in .env or the 1Password item, read only when the page asks for them. */
 function credentials() {
+  if (process.env.MACCABI_USERNAME && process.env.MACCABI_PASSWORD) {
+    return { username: resolve('MACCABI_USERNAME'), password: resolve('MACCABI_PASSWORD') };
+  }
   let out;
   try {
     out = execFileSync('op', ['item', 'get', ITEM, '--format', 'json', '--reveal'], {
@@ -42,11 +64,8 @@ function credentials() {
       stdio: ['inherit', 'pipe', 'inherit'],
     });
   } catch (e) {
-    if (e.code === 'ENOENT') {
-      throw new Error('The 1Password CLI (op) is not installed: brew install 1password-cli, then turn on '
-        + '"Integrate with 1Password CLI" in the 1Password app (Settings > Developer).');
-    }
-    throw new Error(`op could not read the 1Password item "${ITEM}"; set MACCABI_OP_ITEM to its name.`);
+    if (e.code === 'ENOENT') throw new Error(NO_OP);
+    throw new Error(`op could not read the 1Password item "${ITEM}"; set MACCABI_USERNAME and MACCABI_PASSWORD in .env, or MACCABI_OP_ITEM.`);
   }
   const fields = JSON.parse(out).fields || [];
   const username = fields.find((f) => f.purpose === 'USERNAME')?.value;
