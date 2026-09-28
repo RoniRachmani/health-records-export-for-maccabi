@@ -183,7 +183,7 @@ nothing is suggested over the last frame.
 Ask Claude or ChatGPT about your Maccabi Online medical records – free Chrome extension
 ```
 
-**Description** (plain text; the chapter times are the film's parts, `runFrom`, `saved` and `privacy` in `T` in
+**Description** (plain text with no links; the chapter times are the film's parts, `runFrom`, `saved` and `privacy` in `T` in
 `store/src/video.ts`, so retiming the film means changing them here and on YouTube; YouTube shows chapters only
 when each is at least 10 seconds long. The lists repeat the store description's, so change them together):
 
@@ -192,7 +192,7 @@ Ask an AI assistant about your Maccabi Online medical records, in plain language
 
 AI assistants that connect to medical records reach U.S. providers, not Maccabi Healthcare Services. This export is how your Maccabi health records get to one.
 
-▶ Install from the Chrome Web Store: https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp
+▶ Find it on the Chrome Web Store: Health Records Export for Maccabi
 
 0:00 Ask about your records, then get them in one ZIP
 0:19 The export, start to finish (sped up)
@@ -232,8 +232,7 @@ Your records stop at your computer. You choose which AI assistant, if any, reads
 • Connects only to online.maccabi4u.co.il. No servers, analytics, tracking or remote code.
 • Uses the session you're already logged in with. It never sees your password or one-time codes.
 • Deletes its own copy of your files as soon as the ZIP is saved.
-• Open source, and what ships isn't minified: https://github.com/RoniRachmani/health-records-export-for-maccabi
-• Privacy policy: https://github.com/RoniRachmani/health-records-export-for-maccabi/blob/main/docs/privacy.md
+• Open source, and what ships isn't minified, so you can read exactly what runs.
 
 תוסף לא רשמי לכרום ששומר במחשב שלכם עותק של הרשומות הרפואיות ממכבי אונליין – בדיקות, ביקורים, מרשמים, מכתבים והתיק הרפואי המלא – בקובץ ZIP אחד. ממשק התוסף באנגלית.
 
