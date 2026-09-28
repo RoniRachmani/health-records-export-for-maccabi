@@ -321,11 +321,20 @@ async function main() {
 
   let last = '';
   let run;
+  let answeredAt = Date.now();
   let state;
   for (;;) {
     await sleep(POLL_MS);
     const s = await page.dev({ type: 'dev:state' });
-    if (!s) continue; // the tab is between pages
+    if (!s) {
+      // Between pages for a moment is normal; for two minutes, the tab has been closed or has hung.
+      if (Date.now() - answeredAt > 120_000) {
+        throw new Error('The Maccabi tab has not answered for two minutes; was it closed? The run is paused '
+          + 'there with what it collected, and the next npm run live discards it.');
+      }
+      continue;
+    }
+    answeredAt = Date.now();
     state = s;
     run = s.run;
     if (!run) throw new Error('The run disappeared.');
