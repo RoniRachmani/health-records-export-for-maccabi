@@ -680,10 +680,10 @@ details.more summary:hover {
   flex: 1;
   min-width: 0;
 }
-/* A finished line's files. */
+/* A finished line's files, in --muted: they are read, so they keep AA like every other text. */
 .stages .count {
   flex: none;
-  color: var(--faint);
+  color: var(--muted);
   font-weight: 400;
   font-variant-numeric: tabular-nums;
 }
