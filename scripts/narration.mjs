@@ -21,9 +21,9 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 const CACHE = join(root, '.cache', 'narration');
 const API = 'https://api.elevenlabs.io/v1';
 
-// Vino, from ElevenLabs' Voice Library: a warm, calm American narrator. Library voices like this one
+// Emma (Professional Commercial Voice), from ElevenLabs' Voice Library: a clear, confident American narrator. Library voices like this one
 // need its Creator plan or above; Brian (nPczCjzI2devNBz1zQrb), one of its own voices, works on any.
-const VOICE = process.env.ELEVENLABS_VOICE || '0eoTRDoAaymfOXt2wp08';
+const VOICE = process.env.ELEVENLABS_VOICE || '9HBoEQ8LqyvVZFYDodnr';
 const MODEL = process.env.ELEVENLABS_MODEL || 'eleven_multilingual_v2';
 const SETTINGS = { stability: 0.55, similarity_boost: 0.75, style: 0.1, use_speaker_boost: true };
 // Asked for so the same line comes back the same way; ElevenLabs treats it as best effort.

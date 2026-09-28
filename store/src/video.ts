@@ -58,7 +58,7 @@ const T = {
   ask: OPEN + 43.7,
   // 8 · Where to get it.
   close: OPEN + 49.0,
-  end: OPEN + 55.4,
+  end: OPEN + 55.85,
 };
 
 /** The second the README's poster is taken from: the export running, which is what the film is about. */
@@ -402,12 +402,12 @@ const NARRATION: { at: number; text: string }[] = [
   { at: T.hookLine, text: 'Years of test results, visits, prescriptions and letters.' },
   { at: T.title + 0.5, text: 'All in one ZIP, saved to your own computer.' },
   { at: T.browser + 0.7, text: 'Log in as usual, click the icon, and press Start export.' },
-  { at: T.runFrom + 0.5, text: 'It works through every section on its own, saving every PDF, and the data behind it.' },
-  { at: T.runFrom + 6.9, text: 'A real export takes five to twenty minutes.' },
+  { at: T.runFrom + 0.5, text: 'It works through every section by itself, collecting each PDF and the data behind it.' },
+  { at: T.runFrom + 6.9, text: 'Sped up here. The real thing takes five to twenty minutes.' },
   { at: T.saved + 0.3, text: 'When it’s done, one dated ZIP lands in your Downloads folder.' },
-  { at: T.open + 0.85, text: 'Inside: every record, every PDF, and your full medical file.' },
-  { at: T.drill + 0.3, text: 'Each record’s data sits right beside its PDF, under the same name.' },
-  { at: T.privacy + 0.4, text: 'It’s private by design: nothing between Maccabi Healthcare Services and your computer.' },
+  { at: T.open + 0.85, text: 'Inside: your full medical file, and a folder for each kind of record.' },
+  { at: T.drill + 0.3, text: 'Every PDF has its data beside it, ready for an assistant to read.' },
+  { at: T.privacy + 0.4, text: 'Private by design: your records go straight to your computer, and nowhere else.' },
   { at: T.ask + 0.4, text: 'Then open it in the AI assistant you choose, and ask in plain language.' },
   { at: T.close + 0.4, text: 'Health Records Export for Maccabi. Free, on the Chrome Web Store.' },
 ];
