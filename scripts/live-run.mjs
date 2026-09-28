@@ -262,6 +262,14 @@ async function main() {
   await sleep(2000);
   await signIn(page);
   await ensureExtension(page);
+  // The browser keeps running the service worker it cached last time, even for an unpacked extension it
+  // loads from dist-dev: have it re-read the build this script has just made, then reload the page so
+  // the bridge is the new one's.
+  await page.dev({ type: 'dev:reload' });
+  await sleep(2000);
+  await page.navigate(START);
+  await sleep(3000);
+  await ensureExtension(page);
 
   const before = await ask(page, { type: 'dev:state' });
   if (!before) throw new Error('The extension stopped answering after the sign-in.');
