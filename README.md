@@ -420,7 +420,10 @@ medical file or makes Maccabi send an SMS; there is no option that would. It sto
 files collected per folder, and discards the run, so nothing is downloaded. `npm run live -- --keep` leaves the
 browser and the paused run in place, to look at them. `npm run live -- --root-files` also writes the ZIP's root
 files before discarding the run (`dev:rootFiles`), and prints the README's version line, what it says failed, and
-`export-errors.json` beside the popup's problem count.
+`export-errors.json` beside the popup's problem count. `npm run live -- --screenshots` photographs the popup
+before the start and at every step, into `.cache/live-screenshots/` (gitignored, since the problems it lists come
+from your records): it opens the toolbar popup itself, photographs it and closes it, so leave the browser window
+in front while it runs.
 
 The username and password come from 1Password through its CLI (`brew install 1password-cli`, then
 *Settings > Developer > Integrate with 1Password CLI* in the app), and only when the page asks for them. Put

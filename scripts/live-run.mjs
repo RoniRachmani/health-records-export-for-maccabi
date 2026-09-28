@@ -9,6 +9,9 @@
 //   npm run live -- --keep        leaves the browser open at the end
 //   npm run live -- --root-files  then writes the ZIP's root files as the save step does (still no ZIP), and
 //                                 prints the README's version line, what it says failed, and export-errors.json
+//   npm run live -- --screenshots opens the toolbar popup and photographs it before the start and at every
+//                                 step, bringing the browser window to the front for each, into .cache/live-screenshots/<time>/ (gitignored:
+//                                 the problem lines it can show come from the member's records)
 //
 // MACCABI_USERNAME and MACCABI_PASSWORD, from the environment or .env (gitignored), are 1Password secret
 // references (op://vault/item/field), read with the 1Password CLI, `op`, only when a sign-in is needed; so
@@ -21,7 +24,7 @@
 // statuses, counts and problem lines. The password is filled once per run and never re-submitted,
 // because a script retrying a wrong password is how an account gets locked.
 import { execFileSync, spawn } from 'node:child_process';
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
@@ -36,6 +39,9 @@ const PROFILE = process.env.LIVE_PROFILE || join(homedir(), '.hrem-live-profile'
 const ITEM = process.env.MACCABI_OP_ITEM || 'Maccabi';
 const KEEP = process.argv.includes('--keep');
 const ROOT_FILES = process.argv.includes('--root-files');
+const SHOTS = process.argv.includes('--screenshots')
+  ? join(root, '.cache', 'live-screenshots', new Date().toISOString().slice(0, 19).replace(/:/g, '-'))
+  : null;
 
 const SIGN_IN_WAIT_MS = 3 * 60_000;
 const POLL_MS = 5000;
@@ -144,6 +150,7 @@ async function openBrowser() {
       || (i > 20 && targetInfos.find((t) => t.type === 'page'));
     if (!target) await sleep(500);
   }
+  const target0 = target;
   const { sessionId } = await send('Target.attachToTarget', { targetId: target.targetId, flatten: true });
 
   const page = {
@@ -183,7 +190,64 @@ async function openBrowser() {
       postMessage({ __hremDev: 'req', id, msg: ${JSON.stringify(msg)} }, '*');
     })`, undefined),
   };
+
+  /**
+   * The real popup, opened from the toolbar with chrome.action.openPopup() and photographed as Chrome draws
+   * it, then closed. Not popup.html in a tab: the background refuses commands sent from a tab, and the
+   * Maccabi tab has to stay in front, since the run pauses when it is hidden.
+   */
+  let worker;
+  let popupUrl;
+  page.shoot = async (name) => {
+    if (!worker) {
+      const { targetInfos } = await send('Target.getTargets');
+      for (const t of targetInfos.filter((t) => t.type === 'service_worker' && t.url.startsWith('chrome-extension://'))) {
+        const { sessionId: sw } = await send('Target.attachToTarget', { targetId: t.targetId, flatten: true });
+        const { result } = await send('Runtime.evaluate', { expression: 'chrome.runtime.getManifest()', returnByValue: true }, sw)
+          .catch(() => ({}));
+        if (result?.value?.name?.endsWith('(dev)')) {
+          worker = sw;
+          popupUrl = new URL(result.value.action.default_popup, t.url).href;
+        }
+      }
+      if (!worker) throw new Error('no service worker of the development build to open the popup from');
+      mkdirSync(SHOTS, { recursive: true });
+    }
+    // Chrome opens a popup only in a focused window, and the one this script started sits behind the terminal.
+    await send('Target.activateTarget', { targetId: target0.targetId });
+    const { exceptionDetails } = await send('Runtime.evaluate', {
+      expression: `chrome.tabs.query({ url: ${JSON.stringify(ORIGIN + '/*')} })
+        .then(([tab]) => chrome.action.openPopup(tab ? { windowId: tab.windowId } : {}))`,
+      awaitPromise: true,
+    }, worker);
+    if (exceptionDetails) throw new Error('openPopup: ' + (exceptionDetails.exception?.description || exceptionDetails.text));
+    let target;
+    for (let i = 0; i < 20 && !target; i++) {
+      await sleep(250);
+      target = (await send('Target.getTargets')).targetInfos.find((t) => t.url === popupUrl);
+    }
+    if (!target) throw new Error('the popup did not open');
+    const { sessionId: popup } = await send('Target.attachToTarget', { targetId: target.targetId, flatten: true });
+    await sleep(1200); // it asks the background for the state and renders, and Chrome sizes it to fit
+    const { data } = await send('Page.captureScreenshot', { format: 'png' }, popup);
+    writeFileSync(join(SHOTS, name + '.png'), Buffer.from(data, 'base64'));
+    await send('Runtime.evaluate', { expression: 'window.close()' }, popup).catch(() => {});
+  };
   return page;
+}
+
+/** A screenshot of the popup when --screenshots asked for them; a failure is reported once and ends the shots. */
+let shotCount = 0;
+let shotsFailed = false;
+async function shoot(page, label) {
+  if (!SHOTS || shotsFailed) return;
+  try {
+    await page.shoot(String(shotCount + 1).padStart(2, '0') + '-' + label);
+    shotCount++;
+  } catch (e) {
+    shotsFailed = true;
+    console.log('Screenshots stopped: ' + e.message);
+  }
 }
 
 // Maccabi's sign-in (mac.maccabi4u.co.il/login) takes three pages: the ID number and המשך
@@ -337,6 +401,7 @@ async function main() {
   const stop = await ask(page, { type: 'dev:stopBefore', step: 'save' });
   if (stop?.ok !== true) throw new Error('The extension did not confirm dev:stopBefore save; not starting.');
 
+  await shoot(page, 'ready');
   const started = await page.dev({ type: 'dev:start' });
   if (started?.error) throw new Error('dev:start: ' + started.error);
   console.log('Export started: no medical-file order, and it stops before saving the ZIP.');
@@ -362,11 +427,14 @@ async function main() {
     if (!run) throw new Error('The run disappeared.');
     const line = `${run.status} ${run.nextStep} ${run.percent}% | ${s.staged.files} files, ${s.problems} problems`;
     if (line !== last) console.log(line);
+    if (line.split(' ', 2).join(' ') !== last.split(' ', 2).join(' ')) await shoot(page, run.status + '-' + run.nextStep);
     last = line;
     if (run.status === 'paused_hidden') console.log('Bring the Maccabi tab to the front of the browser window.');
     if (run.status === 'done' || run.status === 'error' || run.status === 'paused_session') break;
   }
 
+  await shoot(page, 'end-' + run.status);
+  if (SHOTS && shotCount) console.log(`${shotCount} popup screenshots in ${SHOTS}`);
   const problems = (await page.dev({ type: 'dev:problems' })) || [];
   for (const p of problems) console.log('  problem: ' + p);
   const stopped = run.status === 'paused_session' && /dev:stopBefore/.test(run.message || '');
