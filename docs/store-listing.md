@@ -77,7 +77,7 @@ Health Records Export for Maccabi collects the records that Maccabi Online shows
 HOW IT WORKS
 1. Log in to Maccabi Online as usual.
 2. On that tab, click the extension's icon and press Start export.
-3. Keep the tab open and in front. After 5 to 20 minutes, the ZIP is in your Downloads folder and Chrome lets you know.
+3. Keep the tab open and in front. Usually after a few minutes (up to 20 if the medical file is slow to arrive), the ZIP is in your Downloads folder and Chrome lets you know.
 4. Unzip it and open the folder in Claude Cowork, Claude Code, ChatGPT Work or Codex.
 5. Ask about your records, starting with "Summarize my health history from my full medical file".
 
@@ -152,7 +152,7 @@ finished ZIP, which opens into its folders, and `test-results/` opened to show a
 name · "Private by design", with records travelling from the site to a computer and nothing in between · "Then ask
 your AI assistant": the assistant again, answering a made-up question from a made-up lab history and naming the file
 (the same `chatWindow` as screenshot 1) · the closing card with the repository's address. The
-disclaimer is on the title and closing cards, and the popup's own "Unofficial · Not affiliated with Maccabi Healthcare Services" is on
+disclaimer is on the title and closing cards, and the popup's own "Unofficial · Not affiliated with Maccabi" is on
 screen whenever the popup is.
 
 The README shows the video as a poster that links to it: `store/assets/video-poster.png`, one frame of the same film
@@ -212,7 +212,7 @@ WHAT IT SAVES
 HOW IT WORKS
 1. Log in to Maccabi Online as usual.
 2. Click the extension's icon and press Start export.
-3. Keep the tab open. After 5 to 20 minutes, the ZIP is in your Downloads folder.
+3. Keep the tab open. Usually after a few minutes (up to 20 if the medical file is slow to arrive), the ZIP is in your Downloads folder.
 4. Unzip it, open the folder in your AI assistant, and ask about your records.
 
 THINGS TO ASK

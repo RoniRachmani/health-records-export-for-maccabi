@@ -62,9 +62,12 @@ describe('popup', () => {
   it('shows the first-use notice, linking the Terms and Privacy Policy, until it is accepted', async () => {
     await openPopup({ run: null, noticeAccepted: false, tab: { onMaccabi: false, loggedIn: false } });
     expect(document.querySelector('h2')?.textContent).toBe('How the export works');
-    expect(document.querySelector('.points')?.textContent).toContain('Use it only with your own account');
+    expect(document.querySelector('.points')?.textContent).toContain('Only for records you may legally access.');
     expect(document.querySelector('.note.warn')?.textContent).toContain('Each export orders a fresh copy of your full medical file.');
     expect(document.querySelector('.note.warn')?.textContent).toContain('a wider range than the site’s own form offers');
+    // The order is the one thing here with consequences: it comes before the points, above the fold.
+    const main = [...document.querySelectorAll('.note.warn, .points')];
+    expect(main.map((e) => e.className)).toEqual(['note warn', 'points']);
     const links = [...document.querySelectorAll('.consent a')].map((a) => [a.textContent, a.getAttribute('href'), a.getAttribute('target')]);
     expect(links).toEqual([['Terms of Use', '/terms.html', '_blank'], ['Privacy Policy', '/privacy.html', '_blank']]);
     expect(document.querySelectorAll('button')).toHaveLength(1);
@@ -78,14 +81,14 @@ describe('popup', () => {
 
   it('applies progress in place, keeping the Stop button under the pointer', async () => {
     await openPopup({ run: running({ fileCount: 40, byteCount: 2_300_000 }), tab });
-    const stop = buttonNamed('Stop');
+    const stop = buttonNamed('Stop…');
     expect(document.querySelector('.status')?.textContent).toBe('Exporting · 12%');
     expect(document.querySelector('.stages [aria-current=step]')?.textContent).toBe('Lab historiesSaving how each lab value changed over time');
     expect([...document.querySelectorAll('.stages .detail')].filter((d) => d.textContent)).toHaveLength(1);
     expect(document.querySelector('.stats > :first-child')?.textContent).toBe('40 files · 2.3 MB · 6 min elapsed');
 
     storageChange(running({ next: PLAN.indexOf('approvals'), percent: 48, detail: 'Approvals: approvals', fileCount: 212, byteCount: 14_800_000 }));
-    expect(buttonNamed('Stop')).toBe(stop);
+    expect(buttonNamed('Stop…')).toBe(stop);
     expect(document.querySelector('.status')?.textContent).toBe('Exporting · 48%');
     expect(document.querySelector('.stages .current .detail')?.textContent).toBe('Downloading each approval as a PDF');
     expect([...document.querySelectorAll('.stages .detail')].filter((d) => d.textContent)).toHaveLength(1);
@@ -98,13 +101,13 @@ describe('popup', () => {
 
   it('confirms Stop inline, then shows Stopping until the run is gone', async () => {
     await openPopup({ run: running(), tab });
-    buttonNamed('Stop').click();
+    buttonNamed('Stop…').click();
     expect(document.querySelector('.confirm')).not.toBeNull();
 
     buttonNamed('Keep exporting').click();
     expect(document.querySelector('.confirm')).toBeNull();
 
-    buttonNamed('Stop').click();
+    buttonNamed('Stop…').click();
     buttonNamed('Stop and delete').click();
     await flush();
     expect(sent.map((m) => m.type)).toContain('cancel');
@@ -136,7 +139,7 @@ describe('popup', () => {
   it('offers Start export straight away, with the SMS warning beside it', async () => {
     await openPopup({ run: null, tab });
     expect(buttonNamed('Start export')).toBeTruthy();
-    expect(document.querySelector('.note')?.textContent).toContain('Maccabi Healthcare Services will text you.');
+    expect(document.querySelector('.note')?.textContent).toContain('Maccabi will text you:');
     expect(document.querySelector('details.more')?.hasAttribute('open')).toBe(false);
 
     buttonNamed('Start export').click();

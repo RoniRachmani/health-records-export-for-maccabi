@@ -1,6 +1,6 @@
 import { PLAN, type Request, type RunState, type StateReply } from '../shared/state';
 import {
-  countOf, formatBytes, formatDuration, groupProblems, STAGES, stageStates, statsText, stepText, viewKey, type Confirm, type UiFlags,
+  countOf, formatBytes, formatDuration, groupProblems, hintText, STAGES, stageStates, statsText, stepText, viewKey, type Confirm, type UiFlags,
 } from './model';
 
 const view = document.getElementById('view') as HTMLElement;
@@ -129,8 +129,9 @@ function confirmPanel(question: string, yes: string, req: Request, busyLabel: st
     actions(keep, actionButton(yes, req, 'danger', busyLabel)));
 }
 
+/** Stop… : the ellipsis says a question follows, since stopping deletes what was collected. */
 function cancelButton(cls = ''): HTMLElement {
-  return button('Stop', () => askConfirm('cancel'), cls);
+  return button('Stop…', () => askConfirm('cancel'), cls);
 }
 
 function cancelConfirm(): HTMLElement {
@@ -147,29 +148,28 @@ function progressBar(percent: number, active: boolean): { bar: HTMLElement; fill
   return { bar, fill };
 }
 
-function hintFor(run: RunState): string {
-  // One line, in any font: the running view has no room to spare under Chrome's 600px cap.
-  if (run.status === 'saving') return 'It will be in your Downloads folder in a moment.';
-  if (PLAN[run.next] === 'waitMedicalFile') return 'Usually ready within minutes, 15 at most.';
-  return 'Keep the Maccabi Online tab open and in front.';
-}
-
 // ---- views -------------------------------------------------------------
-/** Shown once, before anything is read from the tab. The links open the pages shipped in the extension. */
+/**
+ * Shown once, before anything is read from the tab. The links open the pages shipped in the extension. It fits the
+ * popup: the medical-file order, the one thing here with consequences, comes first, and nothing is below the fold
+ * when Agree is clicked. That the tab moves between pages is under "What’s included" on the next view.
+ */
 function noticeView(): Child[] {
   const link = (href: string, text: string) => h('a', { href, target: '_blank' }, text);
   return [
     status('Before you start'),
     h('h2', {}, 'How the export works'),
-    h('ul', { class: 'points' },
-      h('li', {}, 'It reads your records from Maccabi Online while you are logged in, and saves them as one ZIP file on this computer. Nothing is sent anywhere else.'),
-      h('li', {}, 'Use it only with your own account, or one whose records you are legally entitled to access.'),
-      h('li', {}, 'While it works, your Maccabi Online tab moves to the medical-file page and back, and it keeps your session from timing out until the export finishes.'),
-      h('li', {}, 'The ZIP contains sensitive health information. Store and share it with care.')),
     note('warn', h('strong', {}, 'Each export orders a fresh copy of your full medical file.'),
-      ' It asks for your whole history, a wider range than the site’s own form offers. Maccabi Healthcare Services texts you about it, and the' +
-      ' new file replaces the previous one on the site. A copy already ordered today is used as it is.'),
-    // Pinned with the button: what the click agrees to must be in view when it is clicked.
+      ' It asks for your whole history, a wider range than the site’s own form offers. Maccabi Healthcare Services' +
+      ' texts you about it, and it replaces the previous one on the site. A copy already ordered today is reused.'),
+    h('ul', { class: 'points' },
+      // One line each: two would take the view past the popup's 600px.
+      h('li', {}, 'Everything stays on this computer, in one ZIP.'),
+      h('li', {}, 'Only for records you may legally access.'),
+      h('li', {}, 'It keeps your Maccabi session from timing out.'),
+      h('li', {}, 'The ZIP holds sensitive health information.')),
+    // Pinned with the button, in case a larger font takes the text past the popup's height: what the click
+    // agrees to must be in view when it is clicked.
     stickyActions(
       h('p', { class: 'consent small muted' },
         'By continuing, you agree to the ', link('/terms.html', 'Terms of Use'), ' and the ', link('/privacy.html', 'Privacy Policy'), '.'),
@@ -202,7 +202,7 @@ function includedDetails(): HTMLElement {
         h('li', {}, 'Only the logged-in member’s records.'),
         h('li', {}, 'No imaging studies (DICOM).'),
         h('li', {}, 'Visits from the last 12 months, as on the site. The purchase report PDF covers 2 years; the purchase table, everything.'),
-        h('li', {}, 'While it works, your Maccabi Online tab moves to the medical-file page and back.'))));
+        h('li', {}, 'While it works, your Maccabi Online tab moves to the medical-file page and back, and your session is kept from timing out.'))));
 }
 
 function idleView(st: StateReply): Child[] {
@@ -221,9 +221,10 @@ function idleView(st: StateReply): Child[] {
     accountRow(st),
     status('Ready to export'),
     h('h2', {}, 'Your records, one ZIP'),
-    h('p', { class: 'lead' }, 'Tests, visits, prescriptions, letters, your full medical file and more. Takes about 5 to 20 minutes.'),
+    h('p', { class: 'lead' }, 'Tests, visits, prescriptions, letters, your full medical file and more. Usually a few minutes; up to 20 if the medical file is slow to arrive.'),
     actions(actionButton('Start export', { type: 'start' }, 'primary block', 'Checking your login…')),
-    note('', h('strong', {}, 'Maccabi Healthcare Services will text you.'), ' Each export orders a fresh copy of your full medical file, covering your whole history. It replaces the previous one on the site.'),
+    // The notice said it in full before the first export; this is the reminder.
+    note('', h('strong', {}, 'Maccabi will text you:'), ' this orders a fresh copy of your medical file.'),
     includedDetails(),
   ];
 }
@@ -379,7 +380,7 @@ function updateLive(run: RunState): void {
     });
     if (live.stagesDone) live.stagesDone.textContent = states.filter((s) => s === 'done').length + ' of ' + states.length + ' sections';
   }
-  if (live.hint) live.hint.textContent = hintFor(run);
+  if (live.hint) live.hint.textContent = hintText(run);
   updateStats();
 }
 

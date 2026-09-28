@@ -40,7 +40,7 @@ const SHOTS: Record<string, Shot> = {
     title: 'It works through your records on its own',
     text: 'Progress shows on the toolbar icon. You can close the popup; keep the Maccabi Online tab open and in front.',
     points: [
-      'Usually done in 5 to 20 minutes',
+      'Usually done in a few minutes',
       'Read-only, except for ordering your medical file',
       'Session timed out? Log in again and press Resume',
     ],

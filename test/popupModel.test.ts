@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DESCRIPTIONS, formatBytes, formatDuration, groupProblems, STAGES, stageStates, statsText, stepText, viewKey, type UiFlags } from '../src/extension/popup/model';
+import { DESCRIPTIONS, formatBytes, formatDuration, groupProblems, hintText, STAGES, stageStates, statsText, stepText, viewKey, type UiFlags } from '../src/extension/popup/model';
 import { LABELS, PLAN, type RunState, type StateReply } from '../src/extension/shared/state';
 
 describe('STAGES', () => {
@@ -86,9 +86,19 @@ describe('statsText and stepText', () => {
   const start = Date.parse(base.startedAt);
 
   it('shows files, size and elapsed time once known', () => {
-    expect(statsText(base, start + 20_000)).toBe('just started');
-    expect(statsText({ ...base, fileCount: 1, byteCount: 512 }, start + 20_000)).toBe('1 file · 512 B · just started');
+    expect(statsText(base, start + 20_000)).toBe('<1 min elapsed');
+    expect(statsText({ ...base, fileCount: 1, byteCount: 512 }, start + 20_000)).toBe('1 file · 512 B · <1 min elapsed');
     expect(statsText({ ...base, fileCount: 1234, byteCount: 3_240_000 }, start + 72 * 60_000)).toBe('1,234 files · 3.2 MB · 1 h 12 min elapsed');
+  });
+
+  it('says how long the medical file can take only while it is being prepared', () => {
+    const wait = { ...base, next: PLAN.indexOf('waitMedicalFile') };
+    const front = 'Keep the Maccabi Online tab open and in front.';
+    expect(hintText(base)).toBe(front);
+    expect(hintText(wait)).toBe('Usually ready within minutes, 15 at most.');
+    expect(hintText({ ...wait, detail: LABELS.waitMedicalFile + ': medical file status 2' })).toBe('Usually ready within minutes, 15 at most.');
+    expect(hintText({ ...wait, detail: LABELS.waitMedicalFile + ': letters' })).toBe(front);
+    expect(hintText({ ...base, status: 'saving', next: PLAN.indexOf('save') })).toBe('It will be in your Downloads folder in a moment.');
   });
 
   it('describes what the current part of the step collects', () => {

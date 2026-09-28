@@ -102,14 +102,29 @@ export function countOf(n: number, one: string, many: string): string {
   return n.toLocaleString('en-US') + ' ' + (n === 1 ? one : many);
 }
 
-/** The running export's counters: files and size staged so far, and time since it started. */
+/**
+ * The running export's counters: files and size staged so far, and time since it started. The first sections are
+ * quick, so the first minute says how long it has been, not "just started" beside a bar a fifth of the way along.
+ * One line beside "n of 17 sections", so "<1 min", not "under a minute".
+ */
 export function statsText(run: RunState, now: number): string {
   const elapsed = now - Date.parse(run.startedAt);
   return [
     run.fileCount !== undefined && countOf(run.fileCount, 'file', 'files'),
     run.byteCount !== undefined && formatBytes(run.byteCount),
-    elapsed >= 60_000 ? formatDuration(elapsed) + ' elapsed' : 'just started',
+    (elapsed >= 60_000 ? formatDuration(elapsed) : '<1 min') + ' elapsed',
   ].filter(Boolean).join(' · ');
+}
+
+/**
+ * The line under the counters. While the medical file is still being prepared it says how long that can take; once
+ * it is downloading (the collector's `letters` part) that would contradict the line above it, which says so.
+ * One line, in any font: the running view has no room to spare under Chrome's 600px cap.
+ */
+export function hintText(run: RunState): string {
+  if (run.status === 'saving') return 'It will be in your Downloads folder in a moment.';
+  if (PLAN[run.next] === 'waitMedicalFile' && partOf(run) !== 'letters') return 'Usually ready within minutes, 15 at most.';
+  return 'Keep the Maccabi Online tab open and in front.';
 }
 
 /**

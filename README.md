@@ -89,7 +89,7 @@ Then load the `dist/` folder the same way.
    **Agree and continue**. Nothing is read from the tab until you do.
 3. Leave the tab open and in front. It starts on the old site's medical-file page, to order your file and collect the
    parts that live there, then returns to the new site for the rest. The toolbar badge shows progress.
-4. After 5 to 20 minutes, `maccabi-export-YYYY-MM-DD.zip` is in your Downloads folder and Chrome notifies you.
+4. Usually after a few minutes (up to 20 if the medical file is slow to arrive), `maccabi-export-YYYY-MM-DD.zip` is in your Downloads folder and Chrome notifies you.
 5. Unzip it, open the folder in your AI assistant and ask about your records. See
    [Hand it to an AI assistant](#hand-it-to-an-ai-assistant).
 
@@ -370,7 +370,7 @@ The popup and the pages that ship with it share one design system: navy headings
 for actions and progress, magenta for links, pale-blue cards at a 20px radius, pill buttons, and a soft
 navy-tinted shadow. The register is meant to feel at home next to Maccabi Online rather than foreign to it, while
 staying plainly the extension's own — there is no Maccabi Healthcare Services logo or wordmark anywhere, and the header says
-"Unofficial · Not affiliated with Maccabi Healthcare Services" on every screen.
+"Unofficial · Not affiliated with Maccabi" on every screen.
 
 The stylesheets ask for Roboto first and fall back to the system face. That is a local lookup only: the extension
 ships no fonts and downloads none.
