@@ -98,6 +98,11 @@ async function handleDevImpl(msg: DevMsg, sender: chrome.runtime.MessageSender):
       if (msg.step) await chrome.storage.local.set({ devStopBefore: msg.step });
       else await chrome.storage.local.remove('devStopBefore');
       return { ok: true };
+    case 'dev:skipOrder':
+      // orderMedicalFile does nothing while this is on, so a test run never orders the file or sends an SMS.
+      if (msg.on) await chrome.storage.local.set({ devSkipOrder: true });
+      else await chrome.storage.local.remove('devSkipOrder');
+      return { on: !!msg.on };
     case 'dev:rawDump':
       // Every response of the next run is staged under _raw/ in the ZIP, byte for byte, beside
       // the export itself. Set it before dev:start: it is read once per step.

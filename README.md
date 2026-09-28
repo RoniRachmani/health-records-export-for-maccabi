@@ -379,7 +379,7 @@ DevTools console:
 const dev = (msg) => new Promise((ok) => { const id = Math.random(); addEventListener('message', function f(e) { if (e.data?.__hremDev === 'res' && e.data.id === id) { removeEventListener('message', f); ok(e.data.res); } }); postMessage({ __hremDev: 'req', id, msg }, '*'); });
 
 await dev({ type: 'dev:state' });
-await dev({ type: 'dev:stopBefore', step: 'orderMedicalFile' });   // test a full run without ordering
+await dev({ type: 'dev:skipOrder', on: true });                  // test a full run without ordering
 ```
 
 | Command | Does |
@@ -389,6 +389,7 @@ await dev({ type: 'dev:stopBefore', step: 'orderMedicalFile' });   // test a ful
 | `dev:problems` | Items that failed so far |
 | `dev:titleFields` | Which response fields hold a display string, and in which language. Field names only. |
 | `dev:stopBefore` `{step}` | Pause before a plan step. Without `step`, clears it. |
+| `dev:skipOrder` `{on}` | `orderMedicalFile` does nothing while on, and `waitMedicalFile` keeps the file Maccabi already has. Stays set until turned off. |
 | `dev:breakSession` | Invalidate the stored token, to test reconnecting |
 | `dev:rawDump` `{on}` | Stage every response of the next run under `_raw/` in the ZIP, byte for byte, beside the export. Set it before `dev:start`. |
 | `dev:routes` `{routes}` | Choose whether `/sonline/` and `/online/` requests go from the extension or the tab |
@@ -402,8 +403,10 @@ Replies carry statuses, sizes and counts, never record contents. None of this is
 `npm run live` builds the development build and runs an export against your own account: it opens a browser
 (Chrome, Chromium or Edge; `CHROME_PATH` picks one) with `dist-dev/` loaded, signs in if the session has ended,
 and drives the run through the commands above, printing the step, file count and problems as it goes. It always
-stops before `orderMedicalFile` and discards the paused run, so a test never orders the medical file or makes
-Maccabi send an SMS; there is no option that would. `npm run live -- --keep` leaves the browser open.
+turns on `dev:skipOrder` first, and will not start unless the extension confirms it, so a test never orders the
+medical file or makes Maccabi send an SMS; there is no option that would. It stops before `save`, prints the
+files collected per folder, and discards the run, so nothing is downloaded. `npm run live -- --keep` leaves the
+browser and the paused run in place, to look at them.
 
 The username and password come from 1Password through its CLI (`brew install 1password-cli`, then
 *Settings > Developer > Integrate with 1Password CLI* in the app), from the item named by `MACCABI_OP_ITEM`

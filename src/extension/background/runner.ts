@@ -354,6 +354,9 @@ async function runPlanStep(step: PlanStep): Promise<void> {
       // The steps that follow rewind to openLegacyPage when a paused run resumes, which comes back
       // through here: one order per run, or Maccabi would build the file again and text again.
       if (run.order && (run.order.ordered || run.order.skipped_ready_today)) return;
+      // dev:skipOrder: a test run collects everything else without ordering, and waitMedicalFile then keeps
+      // the file Maccabi already has, as it does when an order fails.
+      if (__DEV_BRIDGE__ && (await chrome.storage.local.get('devSkipOrder')).devSkipOrder) return;
       // Normally the tab is still on the page openLegacyPage opened; after a Resume or a reconnect it
       // is back on /sonline/, and the order needs this page again.
       if (!SUMMARY_PATH.test((await snapshot(run.tabId)).path)) await navigate(run.tabId, SUMMARY_PAGE, SUMMARY_PATH);

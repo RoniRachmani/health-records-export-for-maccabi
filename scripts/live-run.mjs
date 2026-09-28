@@ -1,10 +1,11 @@
 // A live test run against your own Maccabi Online account: opens a browser with the development
 // build loaded, signs in with the username and password from 1Password if the session has ended,
 // and drives an export through the dev bridge (see *Driving a run from the console* in the README).
-// It always stops before orderMedicalFile, the one request that changes anything: a test never orders
-// the medical file or makes Maccabi send an SMS, and there is deliberately no option that would.
+// It always skips orderMedicalFile (dev:skipOrder), the one request that changes anything: a test never
+// orders the medical file or makes Maccabi send an SMS, and there is deliberately no option that would.
+// It stops before save, so no ZIP is downloaded; what it reports is what was collected.
 //
-//   npm run live                  runs every step before orderMedicalFile, then stops
+//   npm run live                  collects everything except the medical-file order, then stops before the ZIP
 //   npm run live -- --keep        leaves the browser open at the end
 //
 // MACCABI_OP_ITEM names the 1Password item (default "Maccabi"); it is read with the 1Password CLI,
@@ -180,6 +181,15 @@ const FOCUS_USERNAME = `(() => {
   u.select();
   return true;
 })()`;
+const PAGE_SHAPE = `(() => {
+  const inputs = {};
+  for (const e of document.querySelectorAll('input')) {
+    const k = (e.type || 'text') + (e.offsetParent ? '' : ' (hidden)');
+    inputs[k] = (inputs[k] || 0) + 1;
+  }
+  const frames = [...document.querySelectorAll('iframe')].map((f) => { try { return new URL(f.src).host; } catch { return '(no src)'; } });
+  return { at: location.host + location.pathname, inputs, frames, shadowHosts: [...document.querySelectorAll('*')].filter((e) => e.shadowRoot).length };
+})()`;
 const SIGNED_IN = `location.origin === ${JSON.stringify(ORIGIN)} && !!sessionStorage.getItem('token')`;
 
 async function signIn(page) {
@@ -212,6 +222,9 @@ async function signIn(page) {
         ? 'Still not signed in. If the site asks for anything more, answer it in the browser window. '
           + 'The password is not submitted again.'
         : 'No sign-in form yet. If the page offers a choice of how to sign in, pick username and password in the browser window.');
+      // What the page is made of, for when the form is where this script does not look. Shape only:
+      // the address without its query, counts of inputs, and the hosts of frames.
+      if (!filled) console.log('  page: ' + JSON.stringify(await page.probe(PAGE_SHAPE, null)));
       hinted = true;
     }
     await sleep(1000);
@@ -244,18 +257,22 @@ async function main() {
   } else if (before.run) {
     await page.dev({ type: 'dev:dismiss' });
   }
-  await page.dev({ type: 'dev:stopBefore', step: 'orderMedicalFile' });
+  const skip = await page.dev({ type: 'dev:skipOrder', on: true });
+  if (!skip?.on) throw new Error('The extension did not confirm dev:skipOrder; not starting a run that could order.');
+  await page.dev({ type: 'dev:stopBefore', step: 'save' });
 
   const started = await page.dev({ type: 'dev:start' });
   if (started?.error) throw new Error('dev:start: ' + started.error);
-  console.log('Export started; it will stop before orderMedicalFile.');
+  console.log('Export started: no medical-file order, and it stops before saving the ZIP.');
 
   let last = '';
   let run;
+  let state;
   for (;;) {
     await sleep(POLL_MS);
     const s = await page.dev({ type: 'dev:state' });
     if (!s) continue; // the tab is between pages
+    state = s;
     run = s.run;
     if (!run) throw new Error('The run disappeared.');
     const line = `${run.status} ${run.nextStep} ${run.percent}% | ${s.staged.files} files, ${s.problems} problems`;
@@ -268,10 +285,11 @@ async function main() {
   const problems = (await page.dev({ type: 'dev:problems' })) || [];
   for (const p of problems) console.log('  problem: ' + p);
   const stopped = run.status === 'paused_session' && /dev:stopBefore/.test(run.message || '');
-  // A run left paused here would order the medical file the moment someone pressed Resume in the popup.
-  if (run.status === 'paused_session') await page.dev({ type: 'dev:cancel' });
+  if (stopped) for (const [folder, n] of Object.entries(state.staged.perFolder)) console.log(`  ${folder}: ${n} files`);
+  // The staged files are the member's records: they go with the run unless --keep asked to look at them.
+  if (run.status === 'paused_session' && !KEEP) await page.dev({ type: 'dev:cancel' });
   if (stopped) {
-    console.log('Stopped before orderMedicalFile, as it should.');
+    console.log('Collected everything; stopped before saving the ZIP.');
   } else {
     console.log(run.status + ': ' + (run.message || ''));
     process.exitCode = 1;
