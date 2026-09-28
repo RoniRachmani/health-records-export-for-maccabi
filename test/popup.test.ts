@@ -1,4 +1,5 @@
 // @vitest-environment happy-dom
+import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PLAN, type RunState, type StateReply } from '../src/extension/shared/state';
 
@@ -79,36 +80,94 @@ describe('popup', () => {
     expect(buttonNamed('Start export')).toBeTruthy();
   });
 
-  it('applies progress in place, keeping the Stop button under the pointer', async () => {
-    await openPopup({ run: running({ fileCount: 40, byteCount: 2_300_000 }), tab });
-    const stop = buttonNamed('Stop…');
-    expect(document.querySelector('.status')?.textContent).toBe('Exporting · 12%');
-    expect(document.querySelector('.stages [aria-current=step]')?.textContent).toBe('Lab historiesSaving how each lab value changed over time');
-    expect([...document.querySelectorAll('.stages .detail')].filter((d) => d.textContent)).toHaveLength(1);
-    expect(document.querySelector('.stats > :first-child')?.textContent).toBe('40 files · 2.3 MB · 6 min elapsed');
+  it('has a one-line header with the Unofficial chip, and a footer grouped by purpose', () => {
+    // Without its stylesheet, which happy-dom would try to fetch.
+    const html = readFileSync('src/extension/popup/popup.html', 'utf8').replace(/<link [^>]*>/g, '');
+    const page = new DOMParser().parseFromString(html, 'text/html');
+    expect(page.querySelector('header h1')?.textContent).toBe('Health Records Export');
+    const chip = page.querySelector('header .chip') as HTMLElement;
+    expect(chip.firstChild?.textContent).toBe('Unofficial');
+    expect(chip.title).toBe('Not affiliated with Maccabi Healthcare Services');
+    // Screen readers hear the whole disclaimer, not only "Unofficial".
+    expect(chip.textContent).toBe('Unofficial: not affiliated with Maccabi Healthcare Services');
+    expect(chip.querySelector('.visually-hidden')).not.toBeNull();
+    expect(page.querySelector('.tagline')).toBeNull();
 
-    storageChange(running({ next: PLAN.indexOf('approvals'), percent: 48, detail: 'Approvals: approvals', fileCount: 212, byteCount: 14_800_000 }));
-    expect(buttonNamed('Stop…')).toBe(stop);
-    expect(document.querySelector('.status')?.textContent).toBe('Exporting · 48%');
-    expect(document.querySelector('.stages .current .detail')?.textContent).toBe('Downloading each approval as a PDF');
-    expect([...document.querySelectorAll('.stages .detail')].filter((d) => d.textContent)).toHaveLength(1);
-    expect(document.querySelector('.stats > :first-child')?.textContent).toBe('212 files · 15 MB · 6 min elapsed');
-    expect(document.querySelector('[role=progressbar]')?.getAttribute('aria-valuenow')).toBe('48');
-    expect(document.querySelector('.stages [aria-current=step] > span')?.firstChild?.textContent).toBe('Approvals');
-    expect(document.querySelectorAll('.stages li.done')).toHaveLength(10);
-    expect(document.querySelector('.stats > :last-child')?.textContent).toBe('10 of 17 sections');
+    const footer = page.querySelector('footer') as HTMLElement;
+    expect(footer.textContent).not.toContain('No servers');
+    const groups = [...footer.querySelectorAll('nav')].map((nav) =>
+      [...nav.querySelectorAll('a')].map((a) => [a.textContent?.trim() || a.getAttribute('aria-label'), a.getAttribute('href'), a.getAttribute('target'), a.getAttribute('rel')]));
+    const repo = 'https://github.com/RoniRachmani/health-records-export-for-maccabi';
+    expect(groups).toEqual([
+      [['Privacy', '/privacy.html', '_blank', null], ['Terms', '/terms.html', '_blank', null]],
+      [['Report a problem', repo + '/issues/new/choose', '_blank', 'noreferrer'], ['Source code on GitHub', repo, '_blank', 'noreferrer']],
+    ]);
+    expect(footer.querySelector('nav:last-child #version')).not.toBeNull();
+    expect([...footer.querySelectorAll('.sep')].every((s) => s.getAttribute('aria-hidden') === 'true')).toBe(true);
   });
 
-  it('confirms Stop inline, then shows Stopping until the run is gone', async () => {
+  it('applies progress in place, keeping the Cancel button under the pointer', async () => {
+    await openPopup({ run: running({ fileCount: 40, byteCount: 2_300_000, items: { done: 38, total: 61 } }), tab });
+    const cancel = buttonNamed('Cancel export');
+    // The panel, in reading order: status and Cancel, what is happening and its count, the bar, the totals.
+    const panel = document.querySelector('.panel') as HTMLElement;
+    expect([...panel.children].map((e) => e.className)).toEqual(['status-row', 'activity', 'bar active', 'stats']);
+    expect(document.querySelector('.status')?.textContent).toBe('Exporting · 12%');
+    expect(panel.querySelector('.activity .what')?.textContent).toBe('Saving how each lab value changed over time');
+    expect(panel.querySelector('.activity .count')?.textContent).toBe('38 of 61');
+    expect(document.querySelector('.stats')?.textContent).toBe('40 files · 2.3 MB · 6 min elapsed');
+    // The list names the sections: the current line by its name only.
+    expect(document.querySelector('.stages [aria-current=step]')?.textContent).toBe('Lab histories');
+    expect(document.querySelector('.stages .detail')).toBeNull();
+    expect(document.getElementById('view')?.textContent).not.toMatch(/sections/);
+    expect(document.querySelector('.reminder')?.textContent).toBe('Keep the Maccabi Online tab open and in front.');
+    expect(document.querySelector('.reminder svg')?.getAttribute('aria-hidden')).toBe('true');
+
+    storageChange(running({
+      next: PLAN.indexOf('approvals'), percent: 48, detail: 'Approvals: approvals', fileCount: 212, byteCount: 14_800_000,
+      filesByKey: { profileAndDoctors: 6, 'testResults:test results': 96, 'testResults:lab histories': 61, visits: 1, 'visits:visits': 30 },
+    }));
+    expect(buttonNamed('Cancel export')).toBe(cancel);
+    expect(document.querySelector('.status')?.textContent).toBe('Exporting · 48%');
+    expect(panel.querySelector('.activity .what')?.textContent).toBe('Downloading each approval as a PDF');
+    // No count reported: no right side.
+    expect(panel.querySelector('.activity .count')?.textContent).toBe('');
+    expect(document.querySelector('.stats')?.textContent).toBe('212 files · 15 MB · 6 min elapsed');
+    expect(document.querySelector('[role=progressbar]')?.getAttribute('aria-valuenow')).toBe('48');
+    expect(document.querySelector('.stages [aria-current=step] .name')?.textContent).toBe('Approvals');
+    expect(document.querySelectorAll('.stages li.done')).toHaveLength(10);
+    // Finished lines show the files they collected, and nothing when there were none.
+    const counts = Object.fromEntries([...document.querySelectorAll('.stages li')].map((li) => [li.querySelector('.name')?.textContent, li.querySelector('.count')?.textContent]));
+    expect(counts).toMatchObject({
+      'Ordering your medical file': '', 'Your details and doctor': '6 files', 'Test results': '96 files', 'Lab histories': '61 files',
+      'Visit summaries': '31 files', Referrals: '', Approvals: '',
+    });
+    // The band covers the rest of the current section, from the fill's end.
+    const band = document.querySelector('.bar .band') as HTMLElement;
+    expect(band.style.left).toBe('48%');
+    expect(parseFloat(band.style.width)).toBeGreaterThan(0);
+  });
+
+  it('keeps the reminder strip saying what to do', async () => {
+    await openPopup({ run: running({ next: PLAN.indexOf('waitMedicalFile'), detail: 'Collecting your medical file: medical file status 2' }), tab });
+    expect(document.querySelector('.reminder')?.textContent).toBe('Usually ready within minutes, 15 at most.');
+    storageChange(running({ status: 'saving', next: PLAN.indexOf('save'), detail: 'Saving the ZIP' }));
+    expect(document.querySelector('.reminder')?.textContent).toBe('It will be in your Downloads folder in a moment.');
+    expect(document.querySelector('.status')?.textContent).toBe('Saving');
+    expect([...document.querySelectorAll('button')].map((b) => b.textContent)).not.toContain('Cancel export');
+  });
+
+  it('confirms Cancel inline, then shows Stopping until the run is gone', async () => {
     await openPopup({ run: running(), tab });
-    buttonNamed('Stop…').click();
-    expect(document.querySelector('.confirm')).not.toBeNull();
+    buttonNamed('Cancel export').click();
+    expect(document.querySelector('.confirm p')?.textContent).toBe('Cancel the export and delete the files collected so far?');
+    expect(document.querySelector('.stages')).toBeNull();
 
     buttonNamed('Keep exporting').click();
     expect(document.querySelector('.confirm')).toBeNull();
 
-    buttonNamed('Stop…').click();
-    buttonNamed('Stop and delete').click();
+    buttonNamed('Cancel export').click();
+    buttonNamed('Delete and stop').click();
     await flush();
     expect(sent.map((m) => m.type)).toContain('cancel');
     expect(document.querySelector('h2')?.textContent).toBe('Stopping the export…');

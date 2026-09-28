@@ -17,7 +17,7 @@ export async function testResults(c: Collector, _ctx: Ctx): Promise<void> {
   const touched: Record<string, boolean> = {};
   for (let i = 0; i < tests.length; i++) {
     const t = tests[i];
-    c.progress(i, tests.length * 2, 'test results');
+    c.progress(i, tests.length * 2, 'test results', { done: i, total: tests.length });
     // The API gives a test no single id: the pair (request_id, type) is what identifies it. An
     // imaging study's request_id is its DICOM id, 55 characters; one that long is named by a hash of
     // it instead (the wrapper keeps the id itself).
@@ -53,7 +53,7 @@ export async function testResults(c: Collector, _ctx: Ctx): Promise<void> {
   const ids = Object.keys(latestDate).sort();
   for (let j = 0; j < ids.length; j++) {
     const tid = ids[j];
-    c.progress(tests.length + Math.round((j * tests.length) / ids.length), tests.length * 2, 'lab histories');
+    c.progress(tests.length + Math.round((j * tests.length) / ids.length), tests.length * 2, 'lab histories', { done: j, total: ids.length });
     const rel = 'test-results/history/' + stem(safe(tid), title(desc[tid])) + '.json';
     if (!touched[tid] && (await c.exists(rel))) continue;
     await c.getSave(rel, 'GET',

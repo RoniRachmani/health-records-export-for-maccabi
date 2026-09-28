@@ -12,7 +12,8 @@ export async function vaccinations(c: Collector, ctx: Ctx): Promise<void> {
   const groups: Json[] = (g.r.data && g.r.data.timeline) || [];
   if (!ctx.birthDate && groups.length) await c.problem('vaccinations/details', 'no birth date from profile; per-group details skipped');
   for (let i = 0; ctx.birthDate && i < groups.length; i++) {
-    c.progress(i, groups.length + 1, 'vaccinations');
+    // The booklet is the + 1: a step, not a record, so the count leaves it out.
+    c.progress(i, groups.length + 1, 'vaccinations', { done: i, total: groups.length });
     const code = groups[i].vaccine_group_code;
     const d = await c.getSave('vaccinations/details/' + stem(safe(code), titleOf(groups[i], GROUP_TITLE)) + '.json', 'GET',
       'MedicalFileAPI/v1/members/0/{mid}/vaccinations?vaccine_group_code=' + code + '&birth_date=' + ctx.birthDate + 'T00:00:00',

@@ -1,6 +1,7 @@
 import { PLAN, type Request, type RunState, type StateReply } from '../shared/state';
 import {
-  countOf, formatBytes, formatDuration, groupProblems, hintText, STAGES, stageStates, statsText, stepText, viewKey, type Confirm, type UiFlags,
+  countOf, countText, currentStage, formatBytes, formatDuration, groupProblems, hintText, STAGES, stageFileCounts, stageSpan, stageStates, statsText,
+  stepText, viewKey, type Confirm, type UiFlags,
 } from './model';
 
 const view = document.getElementById('view') as HTMLElement;
@@ -20,9 +21,11 @@ let live: {
   status?: HTMLElement;
   bar?: HTMLElement;
   fill?: HTMLElement;
+  band?: HTMLElement;
+  activity?: HTMLElement;
+  count?: HTMLElement;
   stats?: HTMLElement;
   stages?: HTMLElement[];
-  stagesDone?: HTMLElement;
   hint?: HTMLElement;
 } = {};
 
@@ -129,24 +132,31 @@ function confirmPanel(question: string, yes: string, req: Request, busyLabel: st
     actions(keep, actionButton(yes, req, 'danger', busyLabel)));
 }
 
-/** Stop… : the ellipsis says a question follows, since stopping deletes what was collected. */
+/**
+ * Asks first, since cancelling deletes what was collected. The destructive answer starts with what it does
+ * ("Delete and stop"), not with "Cancel", which in a question reads as "never mind".
+ */
 function cancelButton(cls = ''): HTMLElement {
-  return button('Stop…', () => askConfirm('cancel'), cls);
+  return button('Cancel export', () => askConfirm('cancel'), cls);
 }
 
 function cancelConfirm(): HTMLElement {
-  return confirmPanel('Stop the export and delete the files collected so far?', 'Stop and delete', { type: 'cancel' }, 'Stopping…', 'Keep exporting');
+  return confirmPanel('Cancel the export and delete the files collected so far?', 'Delete and stop', { type: 'cancel' }, 'Stopping…', 'Keep exporting');
 }
 
-function progressBar(percent: number, active: boolean): { bar: HTMLElement; fill: HTMLElement } {
+/** With a band, the bar also marks the rest of the current section, behind the fill: the fill eats it as the count rises. */
+function progressBar(percent: number, active: boolean, withBand = false): { bar: HTMLElement; fill: HTMLElement; band?: HTMLElement } {
   const fill = h('div', { class: 'fill' });
   fill.style.width = percent + '%';
+  const band = withBand ? h('div', { class: 'band' }) : undefined;
   const bar = h('div', {
     class: 'bar' + (active ? ' active' : ''), role: 'progressbar', 'aria-label': 'Export progress',
     'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(percent),
-  }, fill);
-  return { bar, fill };
+  }, band, fill);
+  return { bar, fill, band };
 }
+
+const TAB_ICON = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="1.5" y="2.5" width="13" height="11" rx="1.8" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M1.5 6h13" stroke="currentColor" stroke-width="1.4"/><circle cx="4" cy="4.3" r=".7" fill="currentColor"/><circle cx="6" cy="4.3" r=".7" fill="currentColor"/></svg>';
 
 // ---- views -------------------------------------------------------------
 /**
@@ -229,25 +239,32 @@ function idleView(st: StateReply): Child[] {
   ];
 }
 
+/**
+ * Each fact once: the panel holds everything that moves (how far, what the current section is doing, its count, the
+ * totals), the list names the sections, and its ticks are the only count of sections done.
+ */
 function progressView(run: RunState): Child[] {
   const pill = status('');
-  const { bar, fill } = progressBar(run.percent, true);
-  const stats = h('span');
-  const hint = h('p', { class: 'hint' });
-  // The list is the view of the run: the current line carries what it is doing, in its .detail.
-  const stages = STAGES.map((s) => h('li', {}, h('span', {}, s.label, h('span', { class: 'detail' }))));
-  const stagesDone = h('span');
-  live = { status: pill, bar, fill, stats, stages, stagesDone, hint };
+  const { bar, fill, band } = progressBar(run.percent, true, true);
+  const activity = h('span', { class: 'what' });
+  const count = h('span', { class: 'count' });
+  const stats = h('p', { class: 'stats' });
+  const hint = h('span');
+  const stages = STAGES.map((s) => h('li', {}, h('span', { class: 'name' }, s.label), h('span', { class: 'count' })));
+  const reminder = h('p', { class: 'reminder' }, hint);
+  reminder.insertAdjacentHTML('afterbegin', TAB_ICON);
+  live = { status: pill, bar, fill, band, activity, count, stats, stages, hint };
   return [
     h('h2', { class: 'visually-hidden' }, 'Export in progress'),
-    h('div', { class: 'status-row' }, pill, run.status === 'running' && ui.confirm !== 'cancel' && cancelButton('small')),
-    bar,
-    // The counters, and on the right how many sections are done: the list below needs every row it can get.
-    h('p', { class: 'stats' }, stats, stagesDone),
-    // The list is hidden while Stop is being confirmed, so the question fits without scrolling.
+    h('div', { class: 'panel' },
+      h('div', { class: 'status-row' }, pill, run.status === 'running' && ui.confirm !== 'cancel' && cancelButton('small')),
+      h('p', { class: 'activity' }, activity, count),
+      bar,
+      stats),
+    // The list is hidden while Cancel is being confirmed, so the question fits without scrolling.
     ui.confirm === 'cancel' && cancelConfirm(),
-    hint,
     ui.confirm !== 'cancel' && h('ol', { class: 'stages', 'aria-label': 'Sections' }, ...stages),
+    reminder,
   ];
 }
 
@@ -352,35 +369,53 @@ function stoppingView(): Child[] {
 // ---- rendering ---------------------------------------------------------
 function updateStats(): void {
   const run = last?.run;
-  if (live.stats && run) live.stats.textContent = statsText(run, Date.now());
+  if (run) setText(live.stats, statsText(run, Date.now()));
+}
+
+function setText(el: HTMLElement | undefined, text: string): void {
+  if (el && el.textContent !== text) el.textContent = text;
 }
 
 /** Applies progress to the current view without rebuilding it. */
 function updateLive(run: RunState): void {
   const { title, detail } = stepText(run);
-  if (live.status) live.status.textContent = run.status === 'saving' ? 'Saving' : 'Exporting · ' + run.percent + '%';
+  const count = countText(run);
+  setText(live.status, run.status === 'saving' ? 'Saving' : 'Exporting · ' + run.percent + '%');
+  if (live.activity && live.activity.textContent !== detail) {
+    live.activity.textContent = detail;
+    live.activity.title = detail;
+  }
+  setText(live.count, count);
   if (live.fill) live.fill.style.width = run.percent + '%';
+  if (live.band) {
+    const at = currentStage(run);
+    const end = at < STAGES.length ? stageSpan(at).end : run.percent;
+    live.band.style.left = run.percent + '%';
+    live.band.style.width = Math.max(0, end - run.percent) + '%';
+  }
   if (live.bar) {
     live.bar.setAttribute('aria-valuenow', String(run.percent));
-    live.bar.setAttribute('aria-valuetext', run.percent + '%' + (title ? ', ' + title : '') + (detail ? ': ' + detail : ''));
+    live.bar.setAttribute('aria-valuetext',
+      run.percent + '%' + (title ? ', ' + title : '') + (detail ? ': ' + detail : '') + (count ? ', ' + count : ''));
   }
   if (live.stages) {
     const states = stageStates(run);
+    const files = stageFileCounts(run);
     live.stages.forEach((li, i) => {
-      const text = states[i] === 'current' ? detail : '';
-      const d = li.querySelector('.detail') as HTMLElement;
-      if (d.textContent !== text) {
-        d.textContent = text;
-        d.title = text;
+      // A finished line's files; screen readers hear what the number counts.
+      const n = states[i] === 'done' ? files[i] : undefined;
+      const count = li.querySelector('.count') as HTMLElement;
+      if (count.dataset.n !== String(n ?? '')) {
+        count.dataset.n = String(n ?? '');
+        count.replaceChildren(...(n ? [n.toLocaleString('en-US'), h('span', { class: 'visually-hidden' }, n === 1 ? ' file' : ' files')] : []));
       }
       if (li.className === states[i]) return;
       li.className = states[i];
       if (states[i] === 'current') li.setAttribute('aria-current', 'step');
       else li.removeAttribute('aria-current');
     });
-    if (live.stagesDone) live.stagesDone.textContent = states.filter((s) => s === 'done').length + ' of ' + states.length + ' sections';
   }
-  if (live.hint) live.hint.textContent = hintText(run);
+  setText(live.hint, hintText(run));
   updateStats();
 }
 

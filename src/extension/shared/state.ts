@@ -146,6 +146,8 @@ export interface RunState {
   stepDone: number;
   stepTotal: number;
   detail?: string;
+  /** Records handled of those listed, when the current step counts records (not every step's stepDone does). */
+  items?: { done: number; total: number };
   percent: number;
   message?: string;
   /** The first problems, for the popup; problemCount has the total. */
@@ -155,6 +157,8 @@ export interface RunState {
   fileCount?: number;
   /** Bytes staged so far, uncompressed. */
   byteCount?: number;
+  /** Files staged so far by the step, or `step:part`, that first wrote them (stagingKey), for the popup's list. */
+  filesByKey?: Record<string, number>;
   zipName?: string;
   /** Size of the saved ZIP. */
   zipBytes?: number;

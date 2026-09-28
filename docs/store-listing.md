@@ -152,8 +152,8 @@ finished ZIP, which opens into its folders, and `test-results/` opened to show a
 name · "Private by design", with records travelling from the site to a computer and nothing in between · "Then ask
 your AI assistant": the assistant again, answering a made-up question from a made-up lab history and naming the file
 (the same `chatWindow` as screenshot 1) · the closing card with the repository's address. The
-disclaimer is on the title and closing cards, and the popup's own "Unofficial · Not affiliated with Maccabi" is on
-screen whenever the popup is.
+disclaimer is on the title and closing cards, and the popup's own *Unofficial* chip (the whole disclaimer is its
+tooltip) is on screen whenever the popup is.
 
 The README shows the video as a poster that links to it: `store/assets/video-poster.png`, one frame of the same film
 with a play badge over it, drawn by `npm run store-assets -- poster`. Re-render it whenever the video changes.

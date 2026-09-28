@@ -14,7 +14,7 @@ export async function doctorCommunications(c: Collector, _ctx: Ctx): Promise<voi
   const list: Json[] = (q.r.data && q.r.data.inquiries) || [];
   for (let i = 0; i < list.length; i++) {
     const x = list[i];
-    c.progress(i, list.length, 'doctor inquiries');
+    c.progress(i, list.length, 'doctor inquiries', { done: i, total: list.length });
     const date = iso(x.creation_date);
     const byDoctor = titleOf(x, INQUIRY_TITLE);
     // The name comes from the details, so they are asked for first and saved last, once they can
@@ -121,7 +121,7 @@ export async function savedDocuments(c: Collector, _ctx: Ctx): Promise<void> {
     // PHR.OpenFile('<name>') passes it (DocumentSystemName plus extension).
     const { ids, openArgs } = await c.deps.html.phrGrid(s.data.d || '');
     for (let i = 0; i < ids.length; i++) {
-      c.progress(i, ids.length, 'saved documents');
+      c.progress(i, ids.length, 'saved documents', { done: i, total: ids.length });
       const d = await post('GetFileDetails', JSON.stringify({ fileId: ids[i] }));
       const info: Json = (d.data.d || [])[0] || {};
       const arg = info.DocumentSystemName && openArgs.find((a) => a.indexOf(info.DocumentSystemName) === 0);
@@ -209,7 +209,7 @@ export async function hospitalStays(c: Collector, _ctx: Ctx): Promise<void> {
     const done = new Set<string>();
     for (let i = 0; i < letters.length; i++) {
       const s = trimmed(letters[i]);
-      c.progress(i, letters.length, 'hospital letters');
+      c.progress(i, letters.length, 'hospital letters', { done: i, total: letters.length });
       // A stay has no id of its own; these four fields are what the site lists it by.
       const name = stem(iso(s.Date), await shortHash([s.Date, s.NameHospital, s.Department, s.TypeCommitmentEgenKey]), titleOf(s, ['NameHospital']));
       if (done.has(name)) continue;

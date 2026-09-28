@@ -10,7 +10,7 @@ import {
   alignToPlan, exportName, FILE_LAYOUT, LABELS, MACCABI_ORIGIN, percentOf, PLAN, resumeIndex, sameLayout, SONLINE_PAGE, SUMMARY_PAGE, type PlanStep, type RunState,
 } from '../shared/state';
 import {
-  clearProblemsOfStep, clearStaging, listMeta, listProblems, putTextDirect, setCurrentStep, stagedTotals, stagingSink,
+  clearProblemsOfStep, clearStaging, listMeta, listProblems, putTextDirect, setCurrentPart, setCurrentStep, stagedTotals, stagingSink,
 } from '../shared/staging';
 import { EXPORT_ERRORS, exportErrors, exportReadme, INSTRUCTION_POINTERS, type ExportError } from '../shared/readme';
 import { callOffscreen, closeOffscreen, offscreenHtml } from './offscreenClient';
@@ -54,6 +54,7 @@ async function save(): Promise<void> {
     if (state) {
       state.fileCount = t.files;
       state.byteCount = t.bytes;
+      state.filesByKey = t.byKey;
     }
   }
   if (state) {
@@ -203,6 +204,7 @@ function loop(): Promise<void> {
         const step = PLAN[state.next];
         state.stepDone = 0;
         state.stepTotal = 0;
+        state.items = undefined;
         state.detail = LABELS[step];
         state.percent = percentOf(state.next, 0, 0);
         await save();
@@ -332,6 +334,8 @@ async function collector(): Promise<Collector> {
         if (!state) return;
         state.stepDone = ev.done;
         state.stepTotal = ev.total;
+        state.items = ev.items;
+        setCurrentPart(ev.detail ?? '');
         state.detail = ev.detail ? LABELS[PLAN[state.next]] + ': ' + ev.detail : LABELS[PLAN[state.next]];
         state.percent = percentOf(state.next, ev.done, ev.total);
         saveSoon();

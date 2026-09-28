@@ -86,7 +86,7 @@ worker or a Chrome restart continues from there. When you touch `PLAN`:
   run: stages are **in `PLAN` order**, one line per thing the member gets (a long step may take a line per part,
   with `parts`), and the first stage holding a step is labelled with its `LABELS` entry. A step that only
   serves another (a page change, a wait) shares that one's line and label and says what it does in
-  `DESCRIPTIONS`, which the current line shows under its name. 20 lines is what fits under the 600px cap.
+  `DESCRIPTIONS`, which the panel above the list shows while that line is current. 19 lines is what fits under the 600px cap.
   `docs/sections.md` maps each line to its steps, parts and files: update it with `STAGES`;
 - add an entry to `OPENED_BY` if the step only works on a page an earlier step opened (`resumeIndex`
   rewinds a resume to that opener);
@@ -139,7 +139,8 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
 - **Design system**: navy (`#083f92`) headings, one blue (`#296bed`) for actions and progress, magenta
   (`#b83b7c`) for links, pale-blue cards at 20px, pill buttons — a register meant to sit comfortably next
   to Maccabi Online while staying the extension's own. Never add Maccabi's logo, wordmark or any other
-  brand asset. The font stacks ask for `Roboto` first and fall back to the system face — a local lookup
+  brand asset. The header says *Unofficial* in a chip on every screen, with the full disclaimer as its tooltip and
+  its accessible description. The font stacks ask for `Roboto` first and fall back to the system face — a local lookup
   only: never ship or fetch a font here. Tokens are at the top of `popup.css`; `public/pages.css` repeats
   the ones the shipped pages need, since `public/` is copied verbatim. There is no dark theme: both
   files pin `color-scheme: light`, which also keeps Chrome's auto-dark-mode off them, and every text colour

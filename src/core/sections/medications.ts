@@ -12,7 +12,7 @@ export async function medications(c: Collector, _ctx: Ctx): Promise<void> {
   const items: Json[] = (r.data && r.data.results) || [];
   for (let i = 0; i < items.length; i++) {
     const p = items[i];
-    c.progress(i, items.length, 'prescriptions');
+    c.progress(i, items.length, 'prescriptions', { done: i, total: items.length });
     if (!p.file_link) continue;
     // doc_id carries the member's ID number, so it is used only hashed.
     const id = p.prescription_number ? safe(p.prescription_number) : await shortHash([p.doc_id]);

@@ -9,9 +9,10 @@
   <body>
     <header>
       <img src="/icons/icon-128.png" width="38" height="38" alt="" />
-      <div>
+      <div class="title">
         <h1>Health Records Export</h1>
-        <p class="tagline">Unofficial · Not affiliated with Maccabi</p>
+        <!-- The whole disclaimer, for hover and for screen readers: the chip itself says only its first word. -->
+        <p class="chip" title="Not affiliated with Maccabi Healthcare Services">Unofficial<span class="visually-hidden">: not affiliated with Maccabi Healthcare Services</span></p>
       </div>
     </header>
     <main id="view">
@@ -19,10 +20,19 @@
     </main>
     <p id="announce" class="visually-hidden" role="status" aria-live="polite"></p>
     <footer>
-      <p>No servers, no analytics.</p>
-      <nav aria-label="About the extension">
+      <nav aria-label="Policies">
         <a href="/privacy.html" target="_blank">Privacy</a>
+        <span class="sep" aria-hidden="true">·</span>
         <a href="/terms.html" target="_blank">Terms</a>
+      </nav>
+      <nav aria-label="About the extension">
+        <a
+          href="https://github.com/RoniRachmani/health-records-export-for-maccabi/issues/new/choose"
+          target="_blank"
+          rel="noreferrer"
+          >Report a problem</a
+        >
+        <span class="sep" aria-hidden="true">·</span>
         <span id="version" class="version"></span>
         <a
           class="gh"

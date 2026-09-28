@@ -1,6 +1,6 @@
 /* What the popup shows, as pure functions of the run state (unit-tested, no DOM). */
 import type { Problem } from '../../core';
-import { LABELS, PLAN, type PlanStep, type RunState, type StateReply } from '../shared/state';
+import { LABELS, PLAN, WEIGHTS, type PlanStep, type RunState, type StateReply } from '../shared/state';
 
 export interface Stage {
   label: string;
@@ -15,14 +15,14 @@ export interface Stage {
 /**
  * The run plan as the user sees it, and the popup's main view of the run: one line per part of the export,
  * named for what it collects, so the list reads as an inventory of the member's records and ticks along at a
- * steady pace. Page changes and bookkeeping steps are folded into the line they serve. The current line says what
- * it is doing under its name (DESCRIPTIONS). Stages are in PLAN order, a step's stages consecutive, and the first
+ * steady pace. Page changes and bookkeeping steps are folded into the line they serve. What the current line is
+ * doing (DESCRIPTIONS) is said in the panel above the list, and a finished line shows the files it collected. Stages are in PLAN order, a step's stages consecutive, and the first
  * stage is labelled with one of its steps' LABELS entries, so errors and problems name it the same way. A step that
  * only serves another shares its label; a step that collects something of its own keeps its own name there, and a
  * step split into parts is named as a whole.
  *
- * Room is the constraint: Chrome caps the popup at 600px, which leaves 20 lines here (16px each, plus the current
- * line's description). Merge before adding a twenty-first.
+ * Room is the constraint: Chrome caps the popup at 600px, which leaves 19 lines here (16px each). Merge before adding
+ * a twentieth.
  */
 export const STAGES: Stage[] = [
   // Ordering comes first so Maccabi can build the file while everything else is collected; collecting it is the
@@ -61,14 +61,53 @@ export function partOf(run: Position): string {
   return part.replace(/^medical file status .*/, 'medical file status');
 }
 
+/** The line a part of a step is on. A part no stage names (or a step with one line) is on the step's first line. */
+function stageOf(step: PlanStep, part: string): number {
+  const own = STAGES.findIndex((s) => s.steps.includes(step) && s.parts?.includes(part));
+  return own >= 0 ? own : STAGES.findIndex((s) => s.steps.includes(step));
+}
+
 /** The index in STAGES of the line the run is on; STAGES.length once it has finished. */
 export function currentStage(run: Position): number {
   if (run.next >= PLAN.length) return STAGES.length;
-  const step = PLAN[run.next];
-  const part = partOf(run);
-  const own = STAGES.findIndex((s) => s.steps.includes(step) && s.parts?.includes(part));
-  // A part no stage names (or a step with one line) stays on the step's first line.
-  return own >= 0 ? own : STAGES.findIndex((s) => s.steps.includes(step));
+  return stageOf(PLAN[run.next], partOf(run));
+}
+
+/**
+ * Each line's share of the run's weight, counted as percentOf counts it. A step split over several lines gives each
+ * an equal share, which is how the collector reports it: testResults counts its two halves as tests.length each.
+ */
+const SHARES = STAGES.map((s) => s.steps.reduce((a, step) => a + WEIGHTS[step] / STAGES.filter((t) => t.steps.includes(step)).length, 0));
+const TOTAL_WEIGHT = PLAN.reduce((a, s) => a + WEIGHTS[s], 0);
+
+/** Where a line starts and ends on the progress bar, in percent: the bar's band marks the rest of the current one. */
+export function stageSpan(stage: number): { start: number; end: number } {
+  const before = SHARES.slice(0, stage).reduce((a, w) => a + w, 0);
+  return { start: (before / TOTAL_WEIGHT) * 100, end: ((before + (SHARES[stage] ?? 0)) / TOTAL_WEIGHT) * 100 };
+}
+
+/**
+ * Records done of those listed, for the panel's activity line ("38 of 61"), or '' where the step counts none. The
+ * medical-file wait reads the letters list to find the file: those are not what it is collecting.
+ */
+export function countText(run: Pick<RunState, 'next' | 'items'>): string {
+  if (!run.items || PLAN[run.next] === 'waitMedicalFile') return '';
+  return run.items.done.toLocaleString('en-US') + ' of ' + run.items.total.toLocaleString('en-US');
+}
+
+/**
+ * How many files each line collected, from the staged files' keys (the step, or `step:part`, that first wrote each):
+ * undefined for a line that wrote none, or whose files were staged by a version that kept no keys.
+ */
+export function stageFileCounts(run: Pick<RunState, 'filesByKey'>): (number | undefined)[] {
+  const counts: (number | undefined)[] = STAGES.map(() => undefined);
+  for (const [key, n] of Object.entries(run.filesByKey ?? {})) {
+    const at = key.indexOf(':');
+    const step = (at < 0 ? key : key.slice(0, at)) as PlanStep;
+    const stage = PLAN.includes(step) ? stageOf(step, at < 0 ? '' : key.slice(at + 1)) : -1;
+    if (stage >= 0 && n > 0) counts[stage] = (counts[stage] ?? 0) + n;
+  }
+  return counts;
 }
 
 export function stageStates(run: Position): StageState[] {
@@ -105,7 +144,7 @@ export function countOf(n: number, one: string, many: string): string {
 /**
  * The running export's counters: files and size staged so far, and time since it started. The first sections are
  * quick, so the first minute says how long it has been, not "just started" beside a bar a fifth of the way along.
- * One line beside "n of 17 sections", so "<1 min", not "under a minute".
+ * One line in the panel, so "<1 min", not "under a minute".
  */
 export function statsText(run: RunState, now: number): string {
   const elapsed = now - Date.parse(run.startedAt);
@@ -117,8 +156,8 @@ export function statsText(run: RunState, now: number): string {
 }
 
 /**
- * The line under the counters. While the medical file is still being prepared it says how long that can take; once
- * it is downloading (the collector's `letters` part) that would contradict the line above it, which says so.
+ * The reminder under the list. While the medical file is still being prepared it says how long that can take; once
+ * it is downloading (the collector's `letters` part) that would contradict the panel, which says so.
  * One line, in any font: the running view has no room to spare under Chrome's 600px cap.
  */
 export function hintText(run: RunState): string {
@@ -128,7 +167,7 @@ export function hintText(run: RunState): string {
 }
 
 /**
- * What the line under the heading says, per step and per part of it: the key is the collector's progress detail
+ * What the panel says the current line is doing, per step and per part of it: the key is the collector's progress detail
  * ("lab histories"), and '' is the step before its first progress report. Kept short enough for one line.
  */
 export const DESCRIPTIONS: Record<PlanStep, Record<string, string>> = {
@@ -171,7 +210,7 @@ export const DESCRIPTIONS: Record<PlanStep, Record<string, string>> = {
   save: { '': 'Packing all files into one ZIP' },
 };
 
-/** The current line's name, and a plain description of what it is collecting right now. */
+/** The current line's name, and a plain description of what it is collecting right now (the panel's activity line). */
 export function stepText(run: RunState): { title: string; detail: string } {
   if (run.next >= PLAN.length) return { title: '', detail: '' };
   const step = PLAN[run.next];

@@ -41,7 +41,20 @@ const STATES: Record<string, Omit<StateReply, 'noticeAccepted'> & { noticeAccept
   ready: { run: null, tab },
   login: { run: null, tab: { onMaccabi: false, loggedIn: false } },
   running: {
-    run: run({ next: PLAN.indexOf('testResults'), detail: 'Test results: lab histories', percent: 34, fileCount: 312, byteCount: 21_700_000 }),
+    run: run({
+      next: PLAN.indexOf('testResults'),
+      detail: 'Test results: lab histories',
+      items: { done: 38, total: 61 },
+      percent: 47,
+      fileCount: 260,
+      byteCount: 21_700_000,
+      // The files each finished line wrote, keyed as the staging sink keys them: the step, and the part of it.
+      filesByKey: {
+        profileAndDoctors: 7, emptySections: 3, medications: 1, 'medications:prescriptions': 8, 'purchases:purchase history': 2,
+        'purchases:purchase report': 2, 'hospitalStays:hospital stays': 1, 'hospitalStays:hospital letters': 2,
+        'savedDocuments:saved documents': 11, testResults: 3, 'testResults:test results': 182, 'testResults:lab histories': 38,
+      },
+    }),
     tab,
   },
   paused: {

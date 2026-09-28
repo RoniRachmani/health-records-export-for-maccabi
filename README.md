@@ -118,8 +118,8 @@ Then load the `dist/` folder the same way.
 | **Export stopped** | Press **Try again** on the Maccabi Online tab. It continues from the step that failed. |
 | **The ZIP was not saved** | Press **Save again**. |
 
-Resume refuses to continue if a different member is logged in. **Stop** ends the export and deletes the files collected
-so far.
+Resume refuses to continue if a different member is logged in. **Cancel export** ends the export and deletes the files
+collected so far, once you confirm it.
 
 A single item that fails doesn't stop the export. It's listed in the popup when the export finishes, and stays
 there until the next export starts. The ZIP records it too, in `export-errors.json`, so whoever reads the export
@@ -330,7 +330,9 @@ checkpointed in `chrome.storage.local`, so a paused run, or a restarted service 
 A step that continues is run again from its start, so every step is safe to repeat: JSON is rewritten only when
 its content changed, and a document already staged is not asked for again. Staging also keeps a SHA-256 index of the
 documents it holds: `Collector.pdfOnce` saves a form, an upload or a linked visit's summary only when no staged file
-has its bytes, and otherwise records it as a copy of that file, so a repeat makes no request for it either. A run
+has its bytes, and otherwise records it as a copy of that file, so a repeat makes no request for it either. Each staged
+file also keeps the step, and the part of it, that first wrote it: the popup counts the files each finished section
+collected from those, so a resumed run's sections still show what they hold. A run
 paused before an update that renames files (`FILE_LAYOUT`) can't be continued, only discarded, or it would stage the
 same records twice under two names.
 
@@ -370,7 +372,8 @@ The popup and the pages that ship with it share one design system: navy headings
 for actions and progress, magenta for links, pale-blue cards at a 20px radius, pill buttons, and a soft
 navy-tinted shadow. The register is meant to feel at home next to Maccabi Online rather than foreign to it, while
 staying plainly the extension's own — there is no Maccabi Healthcare Services logo or wordmark anywhere, and the header says
-"Unofficial · Not affiliated with Maccabi" on every screen.
+*Unofficial* on every screen, in a chip beside the name whose tooltip, and what a screen reader reads, is the whole
+disclaimer: "Not affiliated with Maccabi Healthcare Services".
 
 The stylesheets ask for Roboto first and fall back to the system face. That is a local lookup only: the extension
 ships no fonts and downloads none.

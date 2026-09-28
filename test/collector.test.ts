@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canon, newCtx, sha256Hex, type HttpResponse } from '../src/core';
+import { canon, newCtx, sha256Hex, STEP_ORDER, type HttpResponse, type ProgressEvent } from '../src/core';
 import { bytesResp, danglingRefs, DICOM_ID, fakeMaccabi, fakeTransport, jsonResp, makeCollector, MemorySink, MID, PDF, pdfOf, PURCHASE_TABLE, runAll, win1255, type Route } from './fakes';
 
 describe('api()', () => {
@@ -135,6 +135,33 @@ describe('fetchBin()', () => {
     const s = await runAll(c, newCtx(), ['medications']);
     expect(s.problems).toEqual([]);
     expect([...(sink as MemorySink).files.keys()].filter((k) => k.endsWith('.pdf'))).toHaveLength(2);
+  });
+});
+
+describe('progress', () => {
+  it('reports a record count only where a step counts records', async () => {
+    const events: (ProgressEvent & { step: string })[] = [];
+    let step = '';
+    const { c } = makeCollector(fakeTransport(fakeMaccabi().routes), new MemorySink(), undefined, { progress: (ev) => events.push({ ...ev, step }) });
+    const ctx = newCtx();
+    for (const name of STEP_ORDER) {
+      step = name;
+      await runAll(c, ctx, [name]);
+    }
+    const counted = new Set(events.filter((e) => e.items).map((e) => e.step + ': ' + e.detail));
+    for (const e of events.filter((x) => x.items)) {
+      expect(e.items!.done).toBeGreaterThanOrEqual(0);
+      expect(e.items!.done).toBeLessThan(e.items!.total);
+    }
+    // Phases, not records: no count.
+    for (const e of events.filter((x) => ['profileAndDoctors', 'purchases', 'emptySections'].includes(x.step))) expect(e.items).toBeUndefined();
+    expect(counted).toContain('testResults: test results');
+    expect(counted).toContain('testResults: lab histories');
+    expect(counted).toContain('visits: visits');
+    // The vaccination booklet is a step of its own, not a record: the count is the groups.
+    const vac = events.filter((e) => e.step === 'vaccinations' && e.items);
+    expect(vac.length).toBeGreaterThan(0);
+    for (const e of vac) expect(e.items!.total).toBe(e.total - 1);
   });
 });
 

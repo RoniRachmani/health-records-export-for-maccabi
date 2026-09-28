@@ -13,7 +13,7 @@
    so the bar, the step names and the section list move as they do in an export. Every record,
    date, id and file name around it is made up here. */
 import '@fontsource-variable/heebo';
-import { DESCRIPTIONS, formatBytes } from '../../src/extension/popup/model';
+import { currentStage, DESCRIPTIONS, formatBytes, STAGES, stageSpan } from '../../src/extension/popup/model';
 import { LABELS, PLAN, WEIGHTS, percentOf, type PlanStep, type RunState } from '../../src/extension/shared/state';
 import {
   between, clamp01, fade, inCubic, inOut, kinetic, lerp, linear, out, outBack, outQuint, place, pulse, ramp, rise, showing,
@@ -73,6 +73,25 @@ const DISCLAIMER = 'Unofficial. Not affiliated with, endorsed by or sponsored by
 // ---- the run, as the popup will be given it -----------------------------
 const TOTAL_WEIGHT = PLAN.reduce((sum, step) => sum + WEIGHTS[step], 0);
 
+/** How many records each counting part lists, for the panel's "38 of 61". */
+const RECORDS: Record<string, number> = {
+  prescriptions: 9, 'hospital letters': 2, 'saved documents': 11, 'test results': 96, 'lab histories': 61, visits: 24,
+  referrals: 31, approvals: 12, vaccinations: 14, letters: 8, 'doctor inquiries': 17, 'information pages': 4,
+};
+
+/** The staged-file keys of the lines finished before `stage`, each with its share of the export's files by weight. */
+function filesBefore(stage: number): Record<string, number> {
+  const byKey: Record<string, number> = {};
+  // The first line orders the file, and writes none of its own.
+  for (let i = 1; i < stage; i++) {
+    const s = STAGES[i];
+    const part = s.parts?.at(-1);
+    const { start, end } = stageSpan(i);
+    byKey[part ? s.steps.at(-1) + ':' + part : s.steps[0]] = Math.max(1, Math.round((FILES * (end - start)) / 100));
+  }
+  return byKey;
+}
+
 /** The run state a fraction `u` of the way through the plan, weighted as a real run is. */
 function runAt(u: number): RunState {
   const target = clamp01(u) * TOTAL_WEIGHT;
@@ -90,7 +109,10 @@ function runAt(u: number): RunState {
   const step = PLAN[i];
   // The step's own progress detail, as the collector reports it: its parts in the order they run.
   const parts = Object.keys(DESCRIPTIONS[step]);
-  const part = parts[Math.min(parts.length - 1, Math.floor(frac * parts.length))];
+  const at = Math.min(parts.length - 1, Math.floor(frac * parts.length));
+  const part = parts[at];
+  const records = RECORDS[part];
+  const detail = part ? LABELS[step] + ': ' + part : undefined;
   return {
     id: 'demo',
     status: step === 'save' ? 'saving' : 'running',
@@ -102,10 +124,12 @@ function runAt(u: number): RunState {
     ctx: {},
     stepDone: frac,
     stepTotal: 1,
-    detail: part ? LABELS[step] + ': ' + part : undefined,
+    detail,
+    items: records ? { done: Math.floor(clamp01(frac * parts.length - at) * records), total: records } : undefined,
     percent: percentOf(i, frac, 1),
     fileCount: Math.round(u * FILES),
     byteCount: Math.round(u * BYTES),
+    filesByKey: filesBefore(currentStage({ next: i, detail })),
   };
 }
 

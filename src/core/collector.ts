@@ -82,8 +82,8 @@ export class Collector {
     return this.deps.clock.sleep(ms);
   }
 
-  progress(done: number, total: number, detail?: string): void {
-    this.deps.progress?.({ done, total, detail });
+  progress(done: number, total: number, detail?: string, items?: { done: number; total: number }): void {
+    this.deps.progress?.({ done, total, detail, items });
   }
 
   private checkStop(): void {

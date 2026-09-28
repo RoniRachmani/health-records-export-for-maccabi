@@ -10,7 +10,7 @@ export async function letters(c: Collector, ctx: Ctx): Promise<Json[]> {
   const list: Json[] = (l.r.data && l.r.data.letters) || [];
   for (let i = 0; i < list.length; i++) {
     const x = list[i];
-    c.progress(i, list.length, 'letters');
+    c.progress(i, list.length, 'letters', { done: i, total: list.length });
     if (x.letter_type === 1 && x.reference_id) {
       await c.pdfIfMissing('letters/files/' + stem(iso(x.original_item_date || x.item_date), safe(x.reference_id), titleOf(x, LETTER_TITLE)) + '.pdf',
         '/sonline/DirectorshipAPI/webapi/mac/v1/members/' + x.recipient_id_code + '/' + x.recipient_id + '/letters_for_member/' +

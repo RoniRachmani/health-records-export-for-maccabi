@@ -11,6 +11,28 @@ export interface FileMeta {
   rel: string;
   size: number;
   sha256: string;
+  /** The step, or `step:part`, that first wrote the file (stagingKey); none for files staged past the sink or by an older version. */
+  key?: string;
+}
+
+/** What the popup counts a file under: the plan step, and the part of it as the collector's progress names it. */
+export function stagingKey(step: string, part: string): string {
+  return part ? step + ':' + part : step;
+}
+
+/**
+ * The key a write leaves on a file: the first writer's. A re-run step that rewrites a file, or a later step that
+ * updates one, does not move it to another line of the popup's list.
+ */
+export function keyAfterWrite(prev: FileMeta | undefined, key: string | undefined): string | undefined {
+  return prev ? prev.key : key;
+}
+
+/** Staged files per key; files without one count nowhere. */
+export function countByKey(metas: FileMeta[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const m of metas) if (m.key) counts[m.key] = (counts[m.key] ?? 0) + 1;
+  return counts;
 }
 
 let dbPromise: Promise<IDBDatabase> | null = null;
@@ -58,21 +80,34 @@ export async function getFile(rel: string): Promise<Uint8Array | undefined> {
   return request(tx.objectStore('files').get(rel) as IDBRequest<Uint8Array | undefined>);
 }
 
-/** Files and bytes staged, for the popup. Loaded from the meta store once, then kept up to date by writes. */
-let totals: { files: number; bytes: number } | null = null;
+export interface StagedTotals {
+  files: number;
+  bytes: number;
+  byKey: Record<string, number>;
+}
 
-async function putFile(rel: string, bytes: Uint8Array): Promise<void> {
+/** Files and bytes staged, for the popup. Loaded from the meta store once, then kept up to date by writes. */
+let totals: StagedTotals | null = null;
+
+async function putFile(rel: string, bytes: Uint8Array, key?: string): Promise<void> {
   const meta: FileMeta = { rel, size: bytes.length, sha256: await sha256Hex(bytes) };
   const tx = (await db()).transaction(['files', 'meta'], 'readwrite');
   const metaStore = tx.objectStore('meta');
-  // Queued before the put, so it reads the file this write replaces.
-  const prev = metaStore.get(rel) as IDBRequest<FileMeta | undefined>;
+  let prev: FileMeta | undefined;
+  // The meta is put once the file it replaces has been read, in the same transaction: it keeps that one's key.
+  (metaStore.get(rel) as IDBRequest<FileMeta | undefined>).onsuccess = (ev) => {
+    prev = (ev.target as IDBRequest<FileMeta | undefined>).result;
+    const k = keyAfterWrite(prev, key);
+    metaStore.put(k ? { ...meta, key: k } : meta);
+  };
   tx.objectStore('files').put(bytes, rel);
-  metaStore.put(meta);
   await done(tx);
   if (totals) {
-    if (!prev.result) totals.files++;
-    totals.bytes += meta.size - (prev.result?.size ?? 0);
+    if (!prev) {
+      totals.files++;
+      if (key) totals.byKey[key] = (totals.byKey[key] ?? 0) + 1;
+    }
+    totals.bytes += meta.size - (prev?.size ?? 0);
   }
 }
 
@@ -81,12 +116,12 @@ export async function listMeta(): Promise<FileMeta[]> {
   return request(tx.objectStore('meta').getAll() as IDBRequest<FileMeta[]>);
 }
 
-export async function stagedTotals(): Promise<{ files: number; bytes: number }> {
+export async function stagedTotals(): Promise<StagedTotals> {
   if (!totals) {
     const metas = await listMeta();
-    totals ??= { files: metas.length, bytes: metas.reduce((a, m) => a + m.size, 0) };
+    totals ??= { files: metas.length, bytes: metas.reduce((a, m) => a + m.size, 0), byKey: countByKey(metas) };
   }
-  return { ...totals };
+  return { ...totals, byKey: { ...totals.byKey } };
 }
 
 export type StagedProblem = Problem & { step: string };
@@ -98,9 +133,15 @@ export async function listProblems(): Promise<StagedProblem[]> {
 
 // Problems are filed under the step that recorded them, so a step that is run
 // again (after a pause) starts clean and records only what still goes wrong.
+// Files the sink writes are keyed by the step and the part of it the collector last reported.
 let currentStep = '';
+let currentPart = '';
 export function setCurrentStep(step: string): void {
   currentStep = step;
+  currentPart = '';
+}
+export function setCurrentPart(part: string): void {
+  currentPart = part;
 }
 
 export async function clearProblemsOfStep(step: string): Promise<void> {
@@ -119,7 +160,7 @@ export async function clearStaging(): Promise<void> {
   const tx = (await db()).transaction(stores, 'readwrite');
   for (const s of stores) tx.objectStore(s).clear();
   await done(tx);
-  totals = { files: 0, bytes: 0 };
+  totals = { files: 0, bytes: 0, byKey: {} };
 }
 
 export async function putTextDirect(rel: string, text: string): Promise<void> {
@@ -141,7 +182,7 @@ export const stagingSink: Sink = {
     const bad = badPath(rel);
     if (bad) return { error: bad };
     const result = jsonResult(await getFile(rel), obj);
-    if (result !== 'unchanged') await putFile(rel, jsonBytes(obj));
+    if (result !== 'unchanged') await putFile(rel, jsonBytes(obj), stagingKey(currentStep, currentPart));
     return { result };
   },
   async putBin(rel, bytes, replace): Promise<SaveReply> {
@@ -149,7 +190,7 @@ export const stagingSink: Sink = {
     if (bad) return { error: bad };
     const result = binResult(await getFile(rel), bytes, replace);
     if (result === 'written' || result === 'updated') {
-      await putFile(rel, bytes);
+      await putFile(rel, bytes, stagingKey(currentStep, currentPart));
       const tx = (await db()).transaction('shas', 'readwrite');
       tx.objectStore('shas').put(rel, await sha256Hex(bytes));
       await done(tx);

@@ -7,8 +7,8 @@ line to the run steps behind it, the parts of a step it stands for, and what tho
   checkpoints after each one.
 - **Parts**: the name a step gives each phase in its progress detail (`c.progress(done, total, part)`). A line with
   `parts` in `STAGES` (`src/extension/popup/model.ts`) is current only while its step reports one of them; `''` is
-  the step before its first report. The part also picks the description shown under the current line
-  (`DESCRIPTIONS`).
+  the step before its first report. The part also picks the description the panel shows for the current line
+  (`DESCRIPTIONS`), and it keys the files the part writes, which the line counts once it is done.
 - **Writes**: paths inside the ZIP, from `src/core/sections/`. A folder exists only when the site returned
   something. `docs/endpoints.json` lists every request with the file it produces.
 

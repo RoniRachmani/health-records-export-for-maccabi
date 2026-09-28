@@ -16,7 +16,7 @@ export async function referrals(c: Collector, _ctx: Ctx): Promise<void> {
   const list: Json[] = (ref.r.data && ref.r.data.referrals) || [];
   for (let i = 0; i < list.length; i++) {
     const x = list[i];
-    c.progress(i, list.length, 'referrals');
+    c.progress(i, list.length, 'referrals', { done: i, total: list.length });
     if (!x.pdf_link) continue;
     await c.pdfIfMissing('referrals/files/' + stem(iso(x.referral_date), safe(x.referral_id), titleOf(x, REFERRAL_TITLE)) + '.pdf',
       pdfBase + '?path=' + x.pdf_link + '&timestamp=' + x.timestamp + '&hash=' + x.hash);
@@ -29,7 +29,7 @@ export async function approvals(c: Collector, _ctx: Ctx): Promise<void> {
   const list: Json[] = (ap.r.data && ap.r.data.approval) || [];
   for (let i = 0; i < list.length; i++) {
     const a = list[i];
-    c.progress(i, list.length, 'approvals');
+    c.progress(i, list.length, 'approvals', { done: i, total: list.length });
     if (!a.pdf_link) continue;
     const ak = await shortHash([a.title_name, a.practitioner_full_name, a.specialization_description, a.approval_date, a.approval_date_from, a.approval_date_to, a.approval_type_code]);
     await c.pdfIfMissing('approvals/files/' + stem(iso(a.approval_date), ak, titleOf(a, APPROVAL_TITLE)) + '.pdf',
@@ -42,7 +42,7 @@ export async function infoPages(c: Collector, _ctx: Ctx): Promise<void> {
   const list: Json[] = (tu.r.data && tu.r.data.tutorials) || [];
   for (let i = 0; i < list.length; i++) {
     const t = list[i];
-    c.progress(i, list.length, 'information pages');
+    c.progress(i, list.length, 'information pages', { done: i, total: list.length });
     if (!t.url) continue;
     const tk = await shortHash([t.session_datetime, t.practitioner_name, t.specialization, t.type_id, t.display_text]);
     await c.pdfIfMissing('info-pages/files/' + stem(iso(t.session_datetime), tk, titleOf(t, INFO_TITLE)) + '.pdf',

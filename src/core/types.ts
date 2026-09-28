@@ -91,6 +91,8 @@ export interface ProgressEvent {
   done: number;
   total: number;
   detail?: string;
+  /** Records handled of the records listed, where the step counts records (done and total above may count phases). */
+  items?: { done: number; total: number };
 }
 
 export interface Deps {

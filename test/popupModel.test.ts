@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { DESCRIPTIONS, formatBytes, formatDuration, groupProblems, hintText, STAGES, stageStates, statsText, stepText, viewKey, type UiFlags } from '../src/extension/popup/model';
-import { LABELS, PLAN, type RunState, type StateReply } from '../src/extension/shared/state';
+import {
+  countText, currentStage, DESCRIPTIONS, formatBytes, formatDuration, groupProblems, hintText, STAGES, stageFileCounts, stageSpan, stageStates, statsText,
+  stepText, viewKey, type UiFlags,
+} from '../src/extension/popup/model';
+import { LABELS, PLAN, percentOf, WEIGHTS, type RunState, type StateReply } from '../src/extension/shared/state';
 
 describe('STAGES', () => {
   it('covers every plan step, in plan order, each step’s lines together', () => {
@@ -50,6 +53,92 @@ describe('stageStates', () => {
   it('marks everything but saving done at the save step, and everything done after it', () => {
     expect(stageStates(at('save'))).toEqual([...Array(STAGES.length - 1).fill('done'), 'current']);
     expect(stageStates({ next: PLAN.length }).every((x) => x === 'done')).toBe(true);
+  });
+});
+
+describe('stageSpan', () => {
+  const line = (label: string) => STAGES.findIndex((s) => s.label === label);
+
+  it('spans the lines end to end, from 0 to 100', () => {
+    expect(stageSpan(0).start).toBe(0);
+    expect(stageSpan(STAGES.length - 1).end).toBeCloseTo(100);
+    for (let i = 1; i < STAGES.length; i++) expect(stageSpan(i).start).toBeCloseTo(stageSpan(i - 1).end);
+  });
+
+  it('agrees with percentOf where each line starts, and splits test results in two halves', () => {
+    for (let i = 0; i < STAGES.length; i++) {
+      const step = PLAN.findIndex((s) => STAGES[i].steps.includes(s));
+      // A line on the second half of a split step starts halfway through it.
+      const half = STAGES.findIndex((s) => s.steps.includes(PLAN[step])) < i;
+      // percentOf rounds to a whole percent.
+      expect(Math.abs(stageSpan(i).start - percentOf(step, half ? 1 : 0, half ? 2 : 1)), STAGES[i].label).toBeLessThanOrEqual(0.5);
+    }
+    // The spec's numbers: a total weight of 85, lab histories from 36.5% to 54.1%, and 38 of 61 lab histories at 47%.
+    expect(PLAN.reduce((a, s) => a + WEIGHTS[s], 0)).toBe(85);
+    expect(stageSpan(line('Lab histories')).start).toBeCloseTo(36.47, 2);
+    expect(stageSpan(line('Lab histories')).end).toBeCloseTo(54.12, 2);
+    const tests = 61;
+    const at = percentOf(PLAN.indexOf('testResults'), tests + Math.round((38 * tests) / 61), tests * 2);
+    expect(at).toBe(47);
+    expect(at).toBeGreaterThan(stageSpan(line('Lab histories')).start);
+    expect(at).toBeLessThan(stageSpan(line('Lab histories')).end);
+  });
+
+  it('puts the run inside the current line’s span all the way through each step', () => {
+    for (let next = 0; next < PLAN.length; next++) {
+      const parts = STAGES.filter((s) => s.steps.includes(PLAN[next]) && s.parts).flatMap((s) => s.parts as string[]);
+      const halves = parts.includes('lab histories') ? [['test results', 0, 1], ['lab histories', 1, 2]] as const : [['', 0, 1]] as const;
+      for (const [part, from, to] of halves) {
+        for (const f of [0, 0.25, 0.5, 0.75, 1]) {
+          const done = from + f * (to - from);
+          const exact = percentOf(next, done * 1000, halves.length * 1000);
+          const stage = currentStage({ next, detail: part ? LABELS[PLAN[next]] + ': ' + part : undefined });
+          const { start, end } = stageSpan(stage);
+          expect(exact, PLAN[next] + ' ' + part + ' ' + f).toBeGreaterThanOrEqual(Math.floor(start));
+          expect(exact, PLAN[next] + ' ' + part + ' ' + f).toBeLessThanOrEqual(Math.ceil(end));
+        }
+      }
+    }
+  });
+});
+
+describe('countText', () => {
+  const at = (step: (typeof PLAN)[number]) => PLAN.indexOf(step);
+
+  it('says how many records of those listed, where the step counts records', () => {
+    expect(countText({ next: at('testResults'), items: { done: 38, total: 61 } })).toBe('38 of 61');
+    expect(countText({ next: at('visits'), items: { done: 1200, total: 1432 } })).toBe('1,200 of 1,432');
+    expect(countText({ next: at('profileAndDoctors') })).toBe('');
+  });
+
+  it('shows no count while the medical file is collected, though it reads the letters list', () => {
+    expect(countText({ next: at('waitMedicalFile'), items: { done: 2, total: 9 } })).toBe('');
+  });
+});
+
+describe('stageFileCounts', () => {
+  const line = (label: string) => STAGES.findIndex((s) => s.label === label);
+
+  it('adds up each line’s files from the keys of the steps and parts that wrote them', () => {
+    const counts = stageFileCounts({
+      filesByKey: {
+        profileAndDoctors: 6, 'emptySections:allergies': 1, testResults: 3, 'testResults:test results': 90, 'testResults:lab histories': 38,
+        // A part no line names is on the step's first line, as currentStage places it.
+        'testResults:imaging reports': 2, 'waitMedicalFile:medical file status 2': 1, 'waitMedicalFile:letters': 1, visits: 0,
+      },
+    });
+    expect(counts[line('Your details and doctor')]).toBe(7);
+    expect(counts[line('Test results')]).toBe(95);
+    expect(counts[line('Lab histories')]).toBe(38);
+    expect(counts[line('Collecting your medical file')]).toBe(2);
+    expect(counts[line('Visit summaries')]).toBeUndefined();
+    expect(counts[line('Ordering your medical file')]).toBeUndefined();
+    expect(counts).toHaveLength(STAGES.length);
+  });
+
+  it('counts nothing for a run without keys, or for keys no step has', () => {
+    expect(stageFileCounts({}).every((n) => n === undefined)).toBe(true);
+    expect(stageFileCounts({ filesByKey: { removedStep: 4, '': 2 } }).every((n) => n === undefined)).toBe(true);
   });
 });
 

@@ -2,7 +2,7 @@
    magenta for links and accents, pale-blue cards at a 20px radius, pill buttons and a soft
    navy-tinted shadow. The register is chosen so the popup feels at home next to Maccabi Online
    rather than foreign to it, while staying plainly its own — no logo, no wordmark, and the header
-   says it is unofficial on every screen.
+   says it is unofficial on every screen: an Unofficial chip, whose description is the full disclaimer.
    Every text colour meets WCAG AA (4.5:1) on the surface it sits on, in both themes. */
 
 :root {
@@ -15,6 +15,8 @@
   /* Lines: a soft blue for cards, and a neutral for plain rules. */
   --line: #e4eaf2;
   --line-soft: #c4e5f8;
+  /* A neutral fill for the header's chip: --muted on it is 5:1. */
+  --chip: #eef1f6;
   /* Text. --heading is the deep navy; --brand-text is that navy used on a tint. */
   --fg: #24283f;
   --heading: #083f92;
@@ -64,6 +66,7 @@ body {
 }
 
 /* ---- frame ---- */
+/* One line, on one axis: the middle of the icon, of the name's capitals and of the chip are one horizontal line. */
 header {
   display: flex;
   align-items: center;
@@ -78,46 +81,68 @@ header img {
   border-radius: 12px;
   background: var(--tint);
 }
+header .title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
 h1 {
-  font-size: 15px;
-  line-height: 1.25;
+  font-size: 20px;
+  line-height: 24px;
   margin: 0;
   font-weight: 500;
   color: var(--heading);
+  white-space: nowrap;
 }
-.tagline {
-  margin: 1px 0 0;
+.chip {
+  flex: none;
+  margin: 0;
+  padding: 3px 7px;
+  border-radius: var(--r-pill);
+  background: var(--chip);
   color: var(--muted);
-  font-size: 11.5px;
-  /* One line: it is on every screen, and a second would cost each of them a row. */
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
   white-space: nowrap;
 }
 main {
-  padding: 3px 16px 14px;
+  padding: 3px 16px 12px;
 }
+/* Legal on the left, the project on the right. */
 footer {
   display: flex;
-  align-items: baseline;
+  justify-content: space-between;
+  align-items: center;
   gap: 12px;
   border-top: 1px solid var(--line);
   padding: 9px 16px 10px;
   color: var(--muted);
   font-size: 11.5px;
-}
-footer p {
-  margin: 0;
+  line-height: 19px;
 }
 footer nav {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
-  margin-left: auto;
+  align-items: center;
+  gap: 6px;
+}
+footer .sep {
+  color: var(--faint);
 }
 footer a,
 .consent a,
 .note a {
   color: var(--accent);
   text-underline-offset: 2px;
+}
+/* The footer's links are quiet until pointed at. */
+footer a {
+  text-decoration: none;
+}
+footer a:hover,
+footer a:focus-visible {
+  text-decoration: underline;
 }
 footer a:hover,
 .consent a:hover,
@@ -130,7 +155,6 @@ footer a:hover,
 }
 /* The repository link: the GitHub mark, muted until hovered. */
 .gh {
-  align-self: center;
   color: var(--faint);
   line-height: 0;
 }
@@ -543,32 +567,77 @@ details.more summary:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* The running view: status and Stop on one row, then the bar, the counters and the list, which is the
-   view of the run. Every line here is kept to one line: a second would take the view past Chrome's 600px
-   cap. */
+/* The running view: a pale-blue panel holds everything that moves (status and Cancel, what the current section is
+   doing and its count, the bar, the totals), then the list of sections, then the one thing to do meanwhile. Every
+   line here is kept to one line: a second would take the view past Chrome's 600px cap. One rhythm: 12px around and
+   inside the panel (11px padding and its border), 8px between its parts. */
+.panel {
+  display: grid;
+  /* One column no wider than the panel: its one-line rows end in an ellipsis instead of widening it. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  padding: 11px;
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  background: var(--surface-2);
+}
 .status-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  min-height: 28px;
-  margin: 0 0 6px;
+  /* Cancel's height, so the panel keeps its size when the button goes (saving, or while Cancel is confirmed). */
+  min-height: 30px;
 }
 .status-row .status {
   margin: 0;
 }
+.activity {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--heading);
+  font-size: 12.5px;
+  line-height: 17px;
+  white-space: nowrap;
+}
+.activity .what {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.activity .count {
+  flex: none;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
 .bar {
+  position: relative;
   height: 8px;
   background: var(--tint);
   border-radius: var(--r-pill);
   overflow: hidden;
 }
+/* On the panel the track is white, ringed, so the fill and the band keep their contrast. */
+.panel .bar {
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+}
 .bar > .fill {
+  position: relative;
   height: 100%;
   min-width: 8px;
   background: var(--primary);
   border-radius: var(--r-pill);
   transition: width 0.3s;
+}
+/* The rest of the current section, from the fill's end to where the section ends: the fill eats it, then the line ticks. */
+.bar > .band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--primary) 30%, var(--tint));
+  transition: left 0.3s, width 0.3s;
 }
 .bar.active > .fill {
   background-image: linear-gradient(90deg, transparent 0, rgb(255 255 255 / 0.35) 50%, transparent 100%);
@@ -586,67 +655,46 @@ details.more summary:hover {
   }
 }
 .stats {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  margin: 7px 0 0;
   color: var(--muted);
   font-size: 12.5px;
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-/* A long run's counters give way to the section count, not the other way round. */
-.stats > :first-child {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.stats > :last-child {
-  flex: none;
-}
-.hint {
-  margin: 4px 0 0;
-  color: var(--muted);
-  font-size: 12.5px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .stages {
   list-style: none;
-  margin: 7px 0 0;
-  padding: 7px 0 0;
-  border-top: 1px solid var(--line);
+  margin: 12px 0 0;
+  padding: 0;
 }
 .stages li {
   display: flex;
   align-items: flex-start;
   gap: 9px;
   color: var(--muted);
-  /* 16px a line: twenty sections and the current one's description keep the popup under Chrome's
-     600px cap without crowding the 15px marks. */
+  /* 16px a line, back to back: the sections keep the popup under Chrome's 600px cap without crowding the 15px marks. */
   font-size: 12.5px;
   line-height: 16px;
 }
-.stages li > span {
+.stages .name {
+  flex: 1;
   min-width: 0;
 }
-.stages .detail {
-  display: block;
-  min-height: 0;
-  margin: 0 0 2px;
-  color: var(--muted);
-  font-size: 12px;
+/* A finished line's files. */
+.stages .count {
+  flex: none;
+  color: var(--faint);
   font-weight: 400;
+  font-variant-numeric: tabular-nums;
 }
-.stages .detail:empty {
-  display: none;
-}
+/* 15px with its border: the rule at the top of the file does not reach pseudo-elements, and a border outside the 15px
+   made each line 17px (18px on a high-density screen). */
 .stages li::before {
   content: '';
   flex: none;
   display: grid;
   place-items: center;
+  box-sizing: border-box;
   width: 15px;
   height: 15px;
   border: 1.5px solid var(--line-soft);
@@ -677,6 +725,28 @@ details.more summary:hover {
   50% {
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
   }
+}
+/* The one thing to do while it runs, in the style of the notes, with a browser window (not a folder: that is the mark). */
+.reminder {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 12px 0 0;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--heading);
+  font-size: 12px;
+}
+.reminder svg {
+  flex: none;
+  color: var(--primary);
+}
+.reminder span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ---- done ---- */

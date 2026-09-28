@@ -16,7 +16,7 @@ export async function visits(c: Collector, _ctx: Ctx): Promise<void> {
   const results: Json[] = (real.data && real.data.results) || [];
   for (let i = 0; i < results.length; i++) {
     const v = results[i];
-    c.progress(i, results.length, 'visits');
+    c.progress(i, results.length, 'visits', { done: i, total: results.length });
     const name = stem(iso(v.appointment_date), safe(v.appointment_id), titleOf(v, VISIT_TITLE));
     const d = await c.getSave('visit-summaries/details/' + name + '.json', 'GET',
       'AppointmentOrderAPI/v1/members/0/{mid}/visits/' + v.appointment_id, undefined, { appointment_date: v.appointment_date });
