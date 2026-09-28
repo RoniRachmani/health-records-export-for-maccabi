@@ -12,7 +12,7 @@ import { build } from 'vite';
 export const root = fileURLToPath(new URL('..', import.meta.url));
 const outDir = join(root, 'dist-store');
 
-const BROWSERS = [
+export const BROWSERS = [
   process.env.CHROME_PATH,
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   '/Applications/Chromium.app/Contents/MacOS/Chromium',

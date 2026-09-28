@@ -397,6 +397,22 @@ await dev({ type: 'dev:stopBefore', step: 'orderMedicalFile' });   // test a ful
 
 Replies carry statuses, sizes and counts, never record contents. None of this is in the store build.
 
+### A live run from the terminal
+
+`npm run live` builds the development build and runs an export against your own account: it opens a browser
+(Chrome, Chromium or Edge; `CHROME_PATH` picks one) with `dist-dev/` loaded, signs in if the session has ended,
+and drives the run through the commands above, printing the step, file count and problems as it goes. It always
+stops before `orderMedicalFile` and discards the paused run, so a test never orders the medical file or makes
+Maccabi send an SMS; there is no option that would. `npm run live -- --keep` leaves the browser open.
+
+The username and password come from 1Password through its CLI (`brew install 1password-cli`, then
+*Settings > Developer > Integrate with 1Password CLI* in the app), from the item named by `MACCABI_OP_ITEM`
+(default `Maccabi`), and only when the page asks for them. They are filled once and never re-submitted, since a
+script retrying a wrong password is how an account gets locked. The browser profile lives outside the repo
+(`~/.hrem-live-profile`, or `LIVE_PROFILE`) and is kept between runs, so a session that is still alive is
+reused: every new sign-in ends your other sessions. Branded Chrome ignores `--load-extension`; there, load
+`dist-dev/` by hand once in that profile, and the script says so when it finds no extension answering.
+
 ### Releasing
 
 ```sh
