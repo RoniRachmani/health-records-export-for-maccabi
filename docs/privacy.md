@@ -2,7 +2,7 @@
 
 Health Records Export for Maccabi
 
-Effective 24 September 2026
+Effective 28 September 2026
 
 <!-- Keep in sync with public/privacy.html, which ships in the extension at chrome-extension://<id>/privacy.html. -->
 
@@ -60,7 +60,8 @@ Removing the extension from Chrome deletes everything it stores. It does not del
 ## What is sent, and to whom
 
 - The extension communicates only with `online.maccabi4u.co.il`, the site you log in to, and only to read
-  your name and records and order your medical file. The requests carry your login session, so Maccabi Healthcare Services links them to
+  your name and records, order your medical file, and keep your login session from timing out while an export waits for
+  you. The requests carry your login session, so Maccabi Healthcare Services links them to
   your account, and handles them under its own privacy policy.
 - Nothing is sent to the developer. The developer runs no server that could receive it.
 - Your information is not sold, not shared with third parties, and not used for advertising, analytics,
@@ -84,7 +85,7 @@ extension does not change or delete anything else, mark items as read, or access
 - Access to `online.maccabi4u.co.il`: to read your records from the site you are logged in to.
 - `scripting`: to read the login session from the Maccabi Online tab (and clear the old token there so the site issues a
   fresh one), send the requests the site accepts only from its own pages, and, while an export is running, signal
-  activity in that tab every few minutes so Maccabi Healthcare Services's six-minute idle logout does not end the export partway.
+  activity in that tab every few minutes so Maccabi Healthcare Services's idle logouts do not end the export partway.
 - `downloads`: to save the ZIP file.
 - `storage` and `unlimitedStorage`: to keep export progress and collected files until the ZIP is saved (PDF files can be large).
 - `offscreen`: to build the ZIP file, and read two HTML tables from the site.

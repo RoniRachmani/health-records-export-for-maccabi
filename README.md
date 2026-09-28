@@ -106,7 +106,8 @@ Then load the `dist/` folder the same way.
   from another browser or computer ends the one the export is using.
 - **Your session is kept awake.** Maccabi Healthcare Services logs you out after five and a half to six minutes without a click or a keypress on the page,
   and an export asks nothing of you for far longer than that, so while it runs the extension signals activity in that
-  tab every few minutes, in the form each of the site's pages listens for. It stops as soon as the export does.
+  tab every few minutes, in the form each of the site's pages listens for. If the export pauses because you switched away, it also sends the site's own keep-alive request every few
+  minutes, since the site ends a session after 6 to 8 minutes without one. It stops as soon as the export does.
 
 ### If something goes wrong
 
