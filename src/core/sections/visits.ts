@@ -3,7 +3,7 @@ import type { Ctx, Json } from '../types';
 import { iso, safe, stem, titleOf } from '../util';
 
 // The visits list names the speciality (service_name) and the practitioner; the speciality says more.
-const VISIT_TITLE = ['service_name', 'service_provider_name', 'provider_name', 'practitioner_name', 'specialization', 'specialization_description', 'clinic_name', 'visit_type_name', 'department_name'];
+export const VISIT_TITLE = ['service_name', 'service_provider_name', 'provider_name', 'practitioner_name', 'specialization', 'specialization_description', 'clinic_name', 'visit_type_name', 'department_name'];
 
 export async function visits(c: Collector, _ctx: Ctx): Promise<void> {
   // Server returns the last 12 months only; older visit files stay on disk.
@@ -28,9 +28,14 @@ export async function visits(c: Collector, _ctx: Ctx): Promise<void> {
       if (!dd || !dd.visit_summary_pdf_link) {
         if (!(await c.exists(rel))) await c.problem(rel, 'visit details have no visit_summary_pdf_link');
       } else {
-        await c.pdfIfMissing(rel, c.apiUrl('AppointmentOrderAPI/v1/members/0/{mid}/pdf') + '?path=' + encodeURIComponent(dd.visit_summary_pdf_link) +
-          '&timestamp=' + dd.timestamp + '&hash=' + dd.hash, {});
+        await c.pdfIfMissing(rel, visitPdfUrl(c, dd), {});
       }
     }
   }
+}
+
+/** A visit's summary PDF, from its details: the link as the summary button opens it. Sent without the token. */
+export function visitPdfUrl(c: Collector, details: Json): string {
+  return c.apiUrl('AppointmentOrderAPI/v1/members/0/{mid}/pdf') + '?path=' + encodeURIComponent(details.visit_summary_pdf_link) +
+    '&timestamp=' + details.timestamp + '&hash=' + details.hash;
 }

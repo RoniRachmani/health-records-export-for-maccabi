@@ -1,5 +1,5 @@
-import type { Deps, HttpResponse, Json, SaveResult, Session } from './types';
-import { charset, isPdf, mimeType, retryAfterMs } from './util';
+import type { Deps, DocRef, HttpResponse, Json, SaveResult, Session } from './types';
+import { charset, isPdf, mimeType, retryAfterMs, sha256Hex } from './util';
 
 export const PACE_MS = 300;
 
@@ -178,19 +178,33 @@ export class Collector {
     body?: Json,
     extra?: Record<string, Json>,
   ): Promise<{ r: ApiResult; result: SaveResult | undefined | null }> {
+    const { r, ok } = await this.fetchRec(rel, method, path, body);
+    if (!ok) return { r, result: null };
+    return { r, result: await this.saveRec(rel, method, path, r, body, extra) };
+  }
+
+  /**
+   * getSave's request half, for a record whose file name or wrapper depends on what comes after the
+   * response. ok is false when a problem was filed under rel: the answer is not a record to save.
+   */
+  async fetchRec(rel: string, method: string, path: string, body?: Json): Promise<{ r: ApiResult; ok: boolean }> {
     const r = await this.api(method, path, body);
     if (r.status !== 200 && r.status !== 204) {
       await this.problem(rel, 'HTTP ' + r.status);
-      return { r, result: null };
+      return { r, ok: false };
     }
     if (r.data === undefined) {
       await this.problem(rel, 'response was not JSON');
-      return { r, result: null };
+      return { r, ok: false };
     }
+    return { r, ok: true };
+  }
+
+  /** getSave's saving half: the response wrapped as a record, with the request body it was sent with. */
+  saveRec(rel: string, method: string, path: string, r: ApiResult, body?: Json, extra?: Record<string, Json>): Promise<SaveResult | undefined> {
     const e = Object.assign({}, extra || {});
     if (body !== undefined && !e.request_body) e.request_body = body;
-    const result = await this.save(rel, this.rec(method, path, r, e));
-    return { r, result };
+    return this.save(rel, this.rec(method, path, r, e));
   }
 
   /**
@@ -249,6 +263,47 @@ export class Collector {
       return null;
     }
     return this.saveBin(rel, b.bytes);
+  }
+
+  /**
+   * What an earlier run already did with rel: saved it, or found its bytes in another file and
+   * recorded that instead. null when rel is still to be fetched.
+   */
+  async docAlready(rel: string): Promise<DocRef | null> {
+    if (await this.exists(rel)) return { file: rel };
+    const twin = await this.deps.sink.aliasOf(rel);
+    return twin ? { same_as: twin } : null;
+  }
+
+  /**
+   * Saves a document unless the export already holds the same bytes under another name: then
+   * nothing is written, the sink records rel as a copy of that file, and the caller's record points
+   * to it. The first file saved keeps its place.
+   */
+  async saveOnce(rel: string, bytes: Uint8Array): Promise<DocRef | null> {
+    const twin = await this.deps.sink.findBySha256(await sha256Hex(bytes));
+    if (twin && twin !== rel) {
+      await this.deps.sink.putAlias(rel, twin);
+      this.log.push([rel, 'same_as']);
+      return { same_as: twin };
+    }
+    const result = await this.saveBin(rel, bytes);
+    return result ? { file: rel } : null;
+  }
+
+  /**
+   * pdfIfMissing for a document that can also live elsewhere in the export (an inquiry's form, a
+   * linked visit's summary): saved once, and a re-run makes no request for it either way.
+   */
+  async pdfOnce(rel: string, url: string, headers?: Record<string, string>): Promise<DocRef | null> {
+    const had = await this.docAlready(rel);
+    if (had) return had;
+    const b = await this.fetchBin(url, headers);
+    if (b.status !== 200 || !isPdf(b.bytes)) {
+      await this.problem(rel, 'PDF download: HTTP ' + b.status + ' ' + b.type);
+      return null;
+    }
+    return this.saveOnce(rel, b.bytes);
   }
 
   /** A legacy /online/ request: session cookies only, no Bearer, redirects followed. */

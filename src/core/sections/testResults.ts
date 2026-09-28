@@ -18,8 +18,11 @@ export async function testResults(c: Collector, _ctx: Ctx): Promise<void> {
   for (let i = 0; i < tests.length; i++) {
     const t = tests[i];
     c.progress(i, tests.length * 2, 'test results');
-    // The API gives a test no single id: the pair (request_id, type) is what identifies it.
-    let name = stem(iso(t.execute_date), safe(t.request_id) + '-' + safe(t.type), titleOf(t, TEST_TITLE));
+    // The API gives a test no single id: the pair (request_id, type) is what identifies it. An
+    // imaging study's request_id is its DICOM id, 55 characters; one that long is named by a hash of
+    // it instead (the wrapper keeps the id itself).
+    const id = String(t.request_id).length > 40 ? await shortHash([t.request_id]) : safe(t.request_id);
+    let name = stem(iso(t.execute_date), id + '-' + safe(t.type), titleOf(t, TEST_TITLE));
     if (seen[name]) name += '-' + (await shortHash([t.doc_id, t.execute_date, t.request_id, t.type]));
     seen[name] = true;
     const d = await c.getSave('test-results/details/' + name + '.json', 'POST', 'TestResultsAPI/v1/members/0/{mid}/getresultsbyid',

@@ -100,12 +100,6 @@
   "communication_with_doctor": [
     {
       "method": "GET",
-      "url": "AppointmentOrderAPI/v1/members/0/{mid}/visits/<details.open_medical_record_number>/?isOpenMedicalRecordNumber=true",
-      "checked": "200 JSON with the same shape as a visit's details (visit_summary_pdf_link, timestamp, hash, visit_recommendations, service_provider_*, drugs/referrals/approvals/tutorials) for 8 of the 9 inquiries that carry an open_medical_record_number; 204 for the ninth",
-      "notes": "The visit a doctor's reply belongs to, when an inquiry was answered as a visit. Its summary PDF comes from the ordinary AppointmentOrderAPI/v1/.../pdf route in endpoints.json."
-    },
-    {
-      "method": "GET",
       "url": "AppointmentOrderAPI/v1/members/0/{mid}/pdf?path=<encodeURIComponent(details.medical_forms_details[n].link_pdf)>&timestamp&hash",
       "checked": "400 text/plain for all 16 forms in the account, body: פעולה זו אינה תקפה, אנא נסה/י מאוחר יותר ('this action is not valid, try again later'). MedicalFileAPI/v1/.../pdf with the same values answered the same.",
       "notes": "Where that repo fetches an inquiry's documents: from the details' medical_forms_details (fields document_id, doc_form_id, link_pdf, valid_from, valid_until, document_status_id, is_delivered, delivery_date, document_type, document_description, file_name_title, token, hash, timestamp, form_type), and only when request_status_code is 1 or 8, the details carry no open_medical_record_number, and form_type is 1 to 5. Every form in the account had is_delivered false, document_status_id 2 and a valid_until already past (latest 2026-08-24), which is the likely reason. endpoints.json downloads from the list's medical_forms_documents[n].result_file instead ({result_file, hash, timestamp})."

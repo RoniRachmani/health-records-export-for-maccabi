@@ -52,22 +52,32 @@ export function safe(s: Json): string {
   return t.length > ID_MAX ? t.slice(0, ID_MAX).replace(/[-.]+$/, '') + '-' + fnv8(raw) : t;
 }
 
-// Kept in a title: Latin, digits, the Hebrew block, and . -
-// Everything else (spaces, punctuation, '_', the RTL marks U+200E/U+200F) collapses to one '-'.
+// Kept in a title: Latin, digits, the Hebrew block (with its own ״ and ׳), and . -
+// Everything else (spaces, punctuation, '_', the RTL marks U+200E/U+200F) becomes '-'.
 const TITLE_DROP = /[^A-Za-z0-9.\u0590-\u05FF-]+/g;
 const TITLE_MAX = 40;
+// Hebrew abbreviations typed with ASCII quotes: ד"ר, שב"ן (gershayim), דר' (geresh).
+const GERSHAYIM = /(?<=[\u05D0-\u05EA])"(?=[\u05D0-\u05EA])/g;
+const GERESH = /(?<=[\u05D0-\u05EA])'/g;
 
 /**
  * The readable half of a file name: a display string as the API sends it, Hebrew kept and never
  * translated. Normalised to NFC so the same record yields the same bytes on every run and every
  * platform -- paths are compared exactly, and a name that arrived NFD would download the file
- * again. '' when nothing readable is left, and then the name is just <date>_<id>. Cutting a
- * long title short needs no digest: the id in front already makes the name unique, so the title
- * only has to be readable.
+ * again. An abbreviation's ASCII quote becomes the Hebrew mark it stands for, so ד"ר stays ד״ר
+ * rather than ד-ר, and a dash never repeats, however the original spaced it. '' when nothing
+ * readable is left, and then the name is just <date>_<id>. Cutting a long title short needs no
+ * digest: the id in front already makes the name unique, so the title only has to be readable.
  */
 export function title(s: Json): string {
   if (typeof s !== 'string') return '';
-  const t = s.normalize('NFC').replace(TITLE_DROP, '-').replace(/^[-.]+|[-.]+$/g, '');
+  const t = s
+    .normalize('NFC')
+    .replace(GERSHAYIM, '\u05F4')
+    .replace(GERESH, '\u05F3')
+    .replace(TITLE_DROP, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^[-.]+|[-.]+$/g, '');
   return t.length > TITLE_MAX ? t.slice(0, TITLE_MAX).replace(/[-.]+$/, '') : t;
 }
 

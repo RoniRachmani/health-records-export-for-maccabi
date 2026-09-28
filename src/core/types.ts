@@ -57,7 +57,16 @@ export interface Sink {
   /** replace=false keeps an existing file (kept_existing); replace=true rewrites it unless identical. */
   putBin(rel: string, bytes: Uint8Array, replace: boolean): Promise<SaveReply>;
   problem(p: Problem): Promise<void>;
+  /** The path putBin saved these bytes under (their SHA-256, hex), or null. JSON is not indexed. */
+  findBySha256(sha: string): Promise<string | null>;
+  /** Records that rel was not written because existing already holds its bytes. */
+  putAlias(rel: string, existing: string): Promise<void>;
+  /** The file rel was recorded as a copy of, or null. */
+  aliasOf(rel: string): Promise<string | null>;
 }
+
+/** Where a document went: its own file, or the file already in the export with the same bytes. */
+export type DocRef = { file: string } | { same_as: string };
 
 /** The two legacy responses that are HTML; parsed with DOMParser wherever one exists. */
 export interface HtmlParser {

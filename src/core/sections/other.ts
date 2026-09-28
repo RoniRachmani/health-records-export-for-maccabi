@@ -1,10 +1,13 @@
 import { errMessage, isControl, PACE_MS, type Collector } from '../collector';
-import type { Ctx, Json } from '../types';
-import { iso, safe, shortHash, stem, titleOf } from '../util';
+import type { Ctx, DocRef, Json } from '../types';
+import { iso, safe, shortHash, stem, title, titleOf } from '../util';
+import { VISIT_TITLE, visitPdfUrl } from './visits';
 
-const INQUIRY_TITLE = ['subject', 'inquiry_subject', 'title', 'service_provider_name', 'practitioner_name', 'description'];
+// The list names no subject, only the doctor: the last resort, after what the details say.
+const INQUIRY_TITLE = ['service_provider_name', 'practitioner_name'];
 // The PHR grid's DocumentSystemName is a storage name, not a title, so it is not a candidate.
-const UPLOAD_TITLE = ['DocumentName', 'DocumentTitle', 'DocumentDescription', 'CategoryName', 'Description'];
+// DocumentOriginName, the name of the file the member uploaded, comes after these (see uploadName).
+const UPLOAD_TITLE = ['DocumentTitle', 'DocumentDescription', 'Description'];
 
 export async function doctorCommunications(c: Collector, _ctx: Ctx): Promise<void> {
   const q = await c.getSave('communication-with-doctor/list.json', 'GET', 'CommunicationWithDoctorAPI/v1/members/0/{mid}/inquiries');
@@ -12,19 +15,93 @@ export async function doctorCommunications(c: Collector, _ctx: Ctx): Promise<voi
   for (let i = 0; i < list.length; i++) {
     const x = list[i];
     c.progress(i, list.length, 'doctor inquiries');
-    const name = stem(iso(x.creation_date), safe(x.request_id), titleOf(x, INQUIRY_TITLE));
-    await c.getSave('communication-with-doctor/details/' + name + '.json', 'GET',
-      'CommunicationWithDoctorAPI/v1/members/0/{mid}/inquiries/' + x.request_id + '/details');
+    const date = iso(x.creation_date);
+    const byDoctor = titleOf(x, INQUIRY_TITLE);
+    // The name comes from the details, so they are asked for first and saved last, once they can
+    // point to the forms and the visit that are saved beside them.
+    const path = 'CommunicationWithDoctorAPI/v1/members/0/{mid}/inquiries/' + x.request_id + '/details';
+    const d = await c.fetchRec('communication-with-doctor/details/' + stem(date, safe(x.request_id), byDoctor) + '.json', 'GET', path);
+    const details: Json = d.ok ? d.r.data : null;
+    const rel = 'communication-with-doctor/details/' + stem(date, safe(x.request_id), inquiryTitle(details) || byDoctor) + '.json';
+
     const docs: Json[] = x.medical_forms_documents || [];
+    const names = formNames(docs, details, byDoctor);
+    const files: Json[] = [];
     for (let j = 0; j < docs.length; j++) {
       const f = docs[j];
       if (!f.result_file) continue;
       // One inquiry can carry several forms; the ordinal binds to the id, keeping three segments.
-      await c.pdfIfMissing('communication-with-doctor/files/' +
-        stem(iso(x.creation_date), safe(x.request_id) + '-' + (j + 1), titleOf(x, INQUIRY_TITLE)) + '.pdf',
+      // A form is often the very file of a referral or a prescription saved earlier: it is then kept once, there.
+      const ref = await c.pdfOnce('communication-with-doctor/files/' + stem(date, safe(x.request_id) + '-' + (j + 1), names[j].title) + '.pdf',
         c.apiUrl('AppointmentOrderAPI/v1/members/0/{mid}/pdf') + '?path=' + encodeURIComponent(f.result_file) + '&timestamp=' + f.timestamp + '&hash=' + f.hash);
+      if (ref) files.push(names[j].description ? { ...ref, description: names[j].description } : ref);
+    }
+
+    const visit = details && details.open_medical_record_number ? await linkedVisit(c, details.open_medical_record_number, rel) : null;
+    if (!d.ok) continue;
+    const extra: Record<string, Json> = {};
+    if (files.length) extra.files = files;
+    if (visit) extra.visit = visit;
+    await c.saveRec(rel, 'GET', path, d.r, undefined, extra);
+  }
+}
+
+/**
+ * What an inquiry is about: the subjects the member picked, the question's own subject, or the kinds
+ * of form the doctor sent back. '' when the details name none of them, and the doctor names it.
+ */
+function inquiryTitle(details: Json): string {
+  if (!details) return '';
+  const subjects: Json[] = (details.request_subjects || []).map((s: Json) => s && s.name).filter((n: Json) => typeof n === 'string' && n.trim());
+  const kinds: string[] = [];
+  for (const f of details.medical_forms_details || []) {
+    const k = typeof f.document_description === 'string' ? f.document_description.trim() : '';
+    if (k && !kinds.includes(k)) kinds.push(k);
+  }
+  return title(subjects.join('-')) || title(details.general_question_subject) || title(kinds.join('-'));
+}
+
+/**
+ * Each listed form's title: the kind of document it is (הפניה, אישור, ...). That is in the details'
+ * medical_forms_details, but the file is the list's medical_forms_documents, and the two share no key.
+ * The details' forms with a PDF have always matched the list's documents in number (14 inquiries,
+ * 2026-09-27), so they are paired by position; when the counts differ, the forms keep the doctor's name.
+ */
+function formNames(docs: Json[], details: Json, fallback: string): { title: string; description?: string }[] {
+  const forms: Json[] = ((details && details.medical_forms_details) || []).filter((f: Json) => f && f.link_pdf);
+  return docs.map((_, j) => {
+    const description = forms.length === docs.length ? forms[j].document_description : undefined;
+    const t = title(description);
+    return t ? { title: t, description } : { title: fallback };
+  });
+}
+
+/**
+ * The visit a doctor's reply belongs to, when the inquiry was answered as one: readable by its
+ * open_medical_record_number even after it has left the 12-month visit list. Its summary is compared
+ * with the files already saved, so a visit the visits step has is not saved twice. The path of the
+ * visit's record, or null when there is none to point to.
+ */
+async function linkedVisit(c: Collector, number: Json, from: string): Promise<string | null> {
+  const path = 'AppointmentOrderAPI/v1/members/0/{mid}/visits/' + encodeURIComponent(number) + '/?isOpenMedicalRecordNumber=true';
+  const r = await c.api('GET', path);
+  const v: Json = r.data;
+  if (r.status !== 200 || !v || typeof v !== 'object') {
+    await c.problem(from, 'linked visit: HTTP ' + r.status + (r.status === 200 ? ', no visit in it' : ''));
+    return null;
+  }
+  const name = stem(iso(v.visit_summary_date), safe(number), titleOf(v, VISIT_TITLE));
+  let ref: DocRef | null = null;
+  if (v.visit_summary_pdf_link) {
+    ref = await c.pdfOnce('visit-summaries/files/' + name + '.pdf', visitPdfUrl(c, v), {});
+    // Its summary is one the visits step saved: the visit is listed, and its record is already there.
+    if (ref && 'same_as' in ref && /^visit-summaries\/files\/[^/]+\.pdf$/.test(ref.same_as)) {
+      return ref.same_as.replace('/files/', '/details/').replace(/\.pdf$/, '.json');
     }
   }
+  const rel = 'visit-summaries/details/' + name + '.json';
+  await c.saveRec(rel, 'GET', path, r, undefined, ref ? { linked_from: from, files: [ref] } : { linked_from: from });
+  return rel;
 }
 
 export async function savedDocuments(c: Collector, _ctx: Ctx): Promise<void> {
@@ -45,20 +122,25 @@ export async function savedDocuments(c: Collector, _ctx: Ctx): Promise<void> {
       const d = await post('GetFileDetails', JSON.stringify({ fileId: ids[i] }));
       const info: Json = (d.data.d || [])[0] || {};
       const arg = info.DocumentSystemName && openArgs.find((a) => a.indexOf(info.DocumentSystemName) === 0);
+      const files: DocRef[] = [];
       if (arg) {
         const ext = (arg.match(/\.([A-Za-z0-9]+)$/) || [undefined, 'bin'])[1].toLowerCase();
         const rel = 'uploads/files/' + uploadName(info, ids[i]) + '.' + ext;
-        if (!(await c.exists(rel))) {
+        // An upload can be the same file as one uploaded before, or as one saved from elsewhere: it is kept once.
+        let ref = await c.docAlready(rel);
+        if (!ref) {
           const f = await c.fetchBin('/online/Pages/Popups/PHR/PHRDownloadDocument.aspx?fileid=' + encodeURIComponent(arg), {});
-          if (f.status === 200 && !/text\/html/.test(f.type) && f.bytes.length) await c.saveBin(rel, f.bytes);
+          if (f.status === 200 && !/text\/html/.test(f.type) && f.bytes.length) ref = await c.saveOnce(rel, f.bytes);
           else await c.problem(rel, 'attachment download: HTTP ' + f.status + ' ' + f.type);
         }
+        if (ref) files.push(ref);
       } else {
         await c.problem('uploads/details/' + uploadName(info, ids[i]) + '.json', 'no attachment link found in the documents grid');
       }
       await c.save('uploads/details/' + uploadName(info, ids[i]) + '.json', {
         endpoint: 'POST /online/Ajax/PHR/WsPHRManager.asmx/GetFileDetails',
         request_body: { fileId: ids[i] },
+        ...(files.length ? { files } : {}),
         fetched_at: new Date(c.now()).toISOString(),
         status: d.status,
         content_type: 'application/json',
@@ -73,7 +155,9 @@ export async function savedDocuments(c: Collector, _ctx: Ctx): Promise<void> {
 }
 
 function uploadName(info: Json, id: Json): string {
-  return stem(iso(info.DocumentDate), safe(id), titleOf(info, UPLOAD_TITLE));
+  // The uploaded file's own name, without its extension, which would otherwise end every such title.
+  const origin = typeof info.DocumentOriginName === 'string' ? info.DocumentOriginName.replace(/\.[A-Za-z0-9]+$/, '') : undefined;
+  return stem(iso(info.DocumentDate), safe(id), titleOf(info, UPLOAD_TITLE) || title(origin));
 }
 
 const HOSPITAL_URL = '/online/webapi/MailingsFromHospitals/GetMailingsFromHospitals/';

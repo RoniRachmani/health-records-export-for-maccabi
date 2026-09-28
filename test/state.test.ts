@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { STEP_ORDER } from '../src/core';
-import { alignToPlan, PLAN, resumeIndex } from '../src/extension/shared/state';
+import { alignToPlan, FILE_LAYOUT, PLAN, resumeIndex, sameLayout } from '../src/extension/shared/state';
 
 describe('PLAN', () => {
   it('runs every collection step once, in the order core lists them', () => {
@@ -69,5 +69,22 @@ describe('alignToPlan', () => {
     const run = { next: PLAN.length, nextStep: 'save' as const };
     expect(alignToPlan(run)).toBe(true);
     expect(run.next).toBe(PLAN.length);
+  });
+});
+
+describe('sameLayout', () => {
+  it('continues a run this version started', () => {
+    expect(sameLayout({ next: PLAN.indexOf('visits'), layout: FILE_LAYOUT })).toBe(true);
+  });
+
+  it('refuses a run from a version that named files differently, while it still has files to collect', () => {
+    // Its re-run steps would stage the new names beside the old ones.
+    expect(sameLayout({ next: PLAN.indexOf('doctorCommunications') })).toBe(false);
+    expect(sameLayout({ next: 0, layout: FILE_LAYOUT - 1 })).toBe(false);
+  });
+
+  it('lets such a run finish when only the medical file and the ZIP are left', () => {
+    expect(sameLayout({ next: PLAN.indexOf('waitMedicalFile') })).toBe(true);
+    expect(sameLayout({ next: PLAN.length })).toBe(true);
   });
 });

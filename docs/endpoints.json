@@ -16,8 +16,8 @@
     "record_wrapper": "{endpoint: '<METHOD> <path with {mid}, no query>', [request_body], [extra ids], [omitted: fields left out of data, e.g. a report's base64], fetched_at, status, data: <raw response>}",
     "unchanged_detection": "A JSON file is rewritten only if its content changed, ignoring list order and the fields fetched_at, hash, timestamp, time_stamp, t, corona_hash, corona_t, url, searchQueryId, token, file_name_title and any key ending in 'link'. A few more fields changed between runs minutes apart with nothing else changed (2026-09-17), but the same key names are real data elsewhere, so they are not ignored: my-doctor/eligibilities.json data.next_possible_assign_date, profile/member.json data.last_visit, profile/providers.json provider[].provider_id and provider[].order_visit_details.doc_id, visit-summaries/list.json results[].provider_id, and letters/list.json from_date of the letter_type 2 entry (the ordered range's start, not a time -- see the order entry; it changes when a new order uses a different range, which is what was seen on 2026-09-17, not on every run).",
     "pacing": "300 ms between requests; 500/503 and requests without a response retried up to 3 times after 2.5 s.",
-    "binary_files": "Existing PDFs/images are kept; regenerated reports (purchase report, vaccination booklet) are replaced only when their source data changed.",
-    "file_names": "<date>_<id>_<title> for record files and their JSON, so a record's JSON in details/ and its document in files/ share one stem. <date> is YYYY-MM-DD; <id> is the API's own record id (a hash of stable fields where the API has none, and the member id is never used); <title> is a display string from the record, kept as the API sends it (Hebrew included, NFC-normalised, cut at 40 characters) and left out when the record has none. '_' separates the three parts and nothing else produces one, so a name always reads as date_id_title. Section lists are always list.json.",
+    "binary_files": "Existing PDFs/images are kept; regenerated reports (purchase report, vaccination booklet) are replaced only when their source data changed. A document that can also be saved elsewhere (an inquiry's form, an upload, a linked visit's summary) is written only if no file already in the export has its bytes (SHA-256); otherwise its record's files[] says {same_as: <that file>} and nothing is written.",
+    "file_names": "<date>_<id>_<title> for record files and their JSON, so a record's JSON in details/ and its document in files/ share one stem. <date> is YYYY-MM-DD; <id> is the API's own record id (a hash of stable fields where the API has none, and the member id is never used); <title> is a display string from the record, kept as the API sends it (Hebrew included, NFC-normalised, an abbreviation's ASCII quote turned into the Hebrew ״ or ׳, every other run of punctuation into one '-', cut at 40 characters) and left out when the record has none. '_' separates the three parts and nothing else produces one, so a name always reads as date_id_title. Section lists are always list.json.",
     "end_date": "Date ranges end at 2099-12-31, not today: the collector's today() is the UTC date (a day behind in Israel until 03:00), and a far end date returns the same records (checked 2026-09-17). The medical-file order is the exception and uses the Israel date (Asia/Jerusalem).",
     "signed_links": "PDF links carry per-session timestamp/hash from the list or details response that describes the file. The site's view buttons build the same links from those fields, so no UI click is needed (verified 2026-09-17: test reports and visit summaries matched the saved PDFs byte for byte in size).",
     "legacy_charsets": "Legacy responses are decoded in the charset their Content-Type declares, strictly: bytes that are not valid in it are reported as a problem, never saved as U+FFFD. Measured 2026-09-27, every one declares it: the .asmx services (PHR, purchases) and the pages send windows-1255, /online/webapi/MailingsFromHospitals utf-8. Without a declaration each call falls back to what its service sends (windows-1255 for PHR, utf-8 for hospital stays), and uploads/details/*.json records the charset used in decoded_from."
@@ -105,7 +105,7 @@
           "logged_user_gender": "<JWT gender claim>",
           "current_user_gender": "<JWT gender claim>"
         },
-        "notes": "doc_id contains the member's ID number, so it is not used in file names."
+        "notes": "doc_id contains the member's ID number, so it is not used in file names. A request_id longer than 40 characters (an imaging study's 55-character DICOM id) is named by its shortHash instead, 8 hex digits; the wrapper keeps request_id."
       },
       {
         "method": "GET",
@@ -297,12 +297,25 @@
         "method": "GET",
         "url": "CommunicationWithDoctorAPI/v1/members/0/{mid}/inquiries/<request_id>/details",
         "output": "communication-with-doctor/details/<creation_date>_<request_id>_<title>.json",
-        "notes": "GET .../inquiries/<request_id> (without /details) returns 405."
+        "notes": "GET .../inquiries/<request_id> (without /details) returns 405. <title> is, from these details, request_subjects[].name, else general_question_subject, else the distinct medical_forms_details[].document_description; else the list's service_provider_name. Saved after the forms and the linked visit, with files[] (one {file} or {same_as}, plus description, per form saved) and visit (the linked visit's record)."
       },
       {
         "method": "GET",
         "url": "AppointmentOrderAPI/v1/members/0/{mid}/pdf?path=<encodeURIComponent(medical_forms_documents[n].result_file)>&timestamp&hash",
-        "output": "communication-with-doctor/files/<creation_date>_<request_id>-<n+1>_<title>.pdf"
+        "output": "communication-with-doctor/files/<creation_date>_<request_id>-<n+1>_<title>.pdf, or nothing when the export already has its bytes (the details' files[] names that file)",
+        "notes": "<title> is the paired form's medical_forms_details[].document_description: the details' forms with a link_pdf, paired with the list's documents by position when the counts match; otherwise the list's service_provider_name."
+      },
+      {
+        "method": "GET",
+        "url": "AppointmentOrderAPI/v1/members/0/{mid}/visits/<details.open_medical_record_number>/?isOpenMedicalRecordNumber=true",
+        "output": "visit-summaries/details/<visit_summary_date>_<open_medical_record_number>_<title>.json, with linked_from naming the inquiry's details",
+        "notes": "Once per inquiry whose details carry open_medical_record_number: the visit a doctor answered it as, readable after it has left the 12-month visit list. Same shape as a visit's details, no appointment_id. 204 is filed as a problem. Not saved when its summary PDF is a file the visits step already saved: the inquiry's visit then names that visit's details."
+      },
+      {
+        "method": "GET",
+        "url": "AppointmentOrderAPI/v1/members/0/{mid}/pdf?path=<encodeURIComponent(linked visit.visit_summary_pdf_link)>&timestamp=<linked visit.timestamp>&hash=<linked visit.hash>",
+        "output": "visit-summaries/files/<visit_summary_date>_<open_medical_record_number>_<title>.pdf, or nothing when the export already has its bytes",
+        "notes": "The visit summary route, as in visit-summaries. Sent without the Bearer header."
       }
     ],
     "uploads": [
@@ -320,12 +333,12 @@
         "request_body": {
           "fileId": "<FileId>"
         },
-        "notes": "windows-1255, stored as UTF-8."
+        "notes": "windows-1255, stored as UTF-8. <title> is DocumentTitle, DocumentDescription or Description, else DocumentOriginName without its extension. Saved with files[]: {file} or {same_as}."
       },
       {
         "method": "GET",
         "url": "/online/Pages/Popups/PHR/PHRDownloadDocument.aspx?fileid=<DocumentSystemName + extension, exactly as passed to PHR.OpenFile>",
-        "output": "uploads/files/<DocumentDate>_<FileId>_<title>.<ext>",
+        "output": "uploads/files/<DocumentDate>_<FileId>_<title>.<ext>, or nothing when the export already has its bytes (the details' files[] names that file)",
         "notes": "Without the extension the server returns an empty ASP.NET page (200, text/html)."
       }
     ],

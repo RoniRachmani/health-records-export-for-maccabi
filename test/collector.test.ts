@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { canon, newCtx, type HttpResponse } from '../src/core';
-import { bytesResp, fakeMaccabi, fakeTransport, jsonResp, makeCollector, MemorySink, MID, PDF, PURCHASE_TABLE, runAll, win1255, type Route } from './fakes';
+import { canon, newCtx, sha256Hex, type HttpResponse } from '../src/core';
+import { bytesResp, DICOM_ID, fakeMaccabi, fakeTransport, jsonResp, makeCollector, MemorySink, MID, PDF, pdfOf, PURCHASE_TABLE, runAll, win1255, type Route } from './fakes';
 
 describe('api()', () => {
   it('stops with SESSION ENDED on a redirect or 401', async () => {
@@ -146,13 +146,17 @@ describe('full run against the fake site', () => {
     const mem = sink as MemorySink;
     expect(mem.problems).toEqual([]);
     // <section>/list.json, then details/ and files/ sharing one <date>_<id>_<title> stem.
-    expect([...mem.files.keys()].map((k) => k.replace(/_[0-9a-f]{8}(?=[_.])/, '_<hash8>')).sort()).toEqual([
+    expect([...mem.files.keys()].map((k) => k.replace(/_[0-9a-f]{8}(?=[_.-])/, '_<hash8>')).sort()).toEqual([
       // Kept though the fake has no sensitivities: an empty list is the site saying none are on record.
       'allergies-sensitivity/list.json',
       'approvals/files/2026-03-02_<hash8>_אישור-פיזותרפיה.pdf',
       'approvals/list.json',
-      'communication-with-doctor/details/2026-04-02_Q1_ד-ר-ישראלי.json',
-      'communication-with-doctor/files/2026-04-02_Q1-1_ד-ר-ישראלי.pdf',
+      // Named by the kind of form it carries; that form is the referral's own file, saved there only.
+      'communication-with-doctor/details/2026-04-02_Q1_הפניה.json',
+      // Named by its question; its forms do not pair with the details' ones, so they keep the doctor's name.
+      'communication-with-doctor/details/2026-04-05_Q2_שאלה-לרופא.json',
+      'communication-with-doctor/files/2026-04-05_Q2-1_ד״ר-ישראלי.pdf',
+      'communication-with-doctor/files/2026-04-05_Q2-2_ד״ר-ישראלי.pdf',
       'communication-with-doctor/list.json',
       'my-doctor/assigned-practitioners.json',
       'my-doctor/eligibilities.json',
@@ -174,19 +178,24 @@ describe('full run against the fake site', () => {
       'referrals/files/2026-03-01_R1_הפניה-לרופא-עור.pdf',
       'referrals/list.json',
       'test-results/details/2026-01-05_555-lab-result_ספירת-דם.json',
-      'test-results/details/2026-01-06_9-imaging-study.json',
+      'test-results/details/2026-01-06_<hash8>-imaging-study.json',
       'test-results/files/2026-01-05_555-lab-result_ספירת-דם.pdf',
       'test-results/followed-counter.json',
       'test-results/history/HGB_המוגלובין.json',
       'test-results/latest-lab-results.json',
       'test-results/list.json',
       'uploads/details/2026-05-01_F1_סיכום-אשפוז.json',
+      // The same document uploaded again, untitled: named by its file's name, and not saved twice.
+      'uploads/details/2026-05-02_F2_סיכום.json',
       'uploads/files/2026-05-01_F1_סיכום-אשפוז.pdf',
       'vaccinations/details/7_שעלת-צפדת.json',
       'vaccinations/files/vaccination-booklet-report.pdf',
       'vaccinations/flu-eligibility.json',
       'vaccinations/list.json',
       'vaccinations/vaccination-booklet-report.json',
+      // Older than the visit list reaches: found through the inquiry it answered.
+      'visit-summaries/details/2024-06-01_7001_אורתופדיה.json',
+      'visit-summaries/files/2024-06-01_7001_אורתופדיה.pdf',
       'visit-summaries/details/2026-02-01_A1_קרדיולוגיה.json',
       'visit-summaries/files/2026-02-01_A1_קרדיולוגיה.pdf',
       'visit-summaries/list.json',
@@ -218,7 +227,7 @@ describe('full run against the fake site', () => {
     expect(mem.json('medications-and-prescriptions/purchased-report.json').data).toEqual({ type: 'pdf' });
     expect(mem.json('medications-and-prescriptions/purchased-report.json').omitted).toEqual(['data.base64']);
     expect(new TextDecoder().decode(mem.files.get('medications-and-prescriptions/files/purchased-report.pdf'))).toBe('%PDF-1.4 report');
-    expect(mem.files.get('uploads/files/2026-05-01_F1_סיכום-אשפוז.pdf')).toEqual(PDF);
+    expect(mem.files.get('uploads/files/2026-05-01_F1_סיכום-אשפוז.pdf')).toEqual(pdfOf('upload'));
     // Hospital stays: every year asked for, not the page's three; saved exactly as sent, padding,
     // blank entries, the repeated stay and ResultMessage included.
     expect(site.calls).toContain('POST /online/webapi/MailingsFromHospitals/GetMailingsFromHospitals/');
@@ -234,7 +243,29 @@ describe('full run against the fake site', () => {
     expect(stays.omitted).toBeUndefined();
     // The discharge letter is asked for as the page's Summary button opens it.
     expect(site.calls).toContain('GET /online/Pages/Popups/MailingsFromHospitals/MailingsFromHospitals.aspx?path=reports/L9.pdf&typeCommitment=2');
-    expect(s.results).toEqual({ written: 42 });
+    expect(s.results).toEqual({ written: 47, same_as: 3 });
+
+    // No two files hold the same bytes; each record points to where its documents went.
+    const digests = await Promise.all([...mem.files].filter(([k]) => !k.endsWith('.json')).map(([, v]) => sha256Hex(v)));
+    expect(new Set(digests).size).toBe(digests.length);
+    const q1 = mem.json('communication-with-doctor/details/2026-04-02_Q1_הפניה.json');
+    expect(q1.files).toEqual([{ same_as: 'referrals/files/2026-03-01_R1_הפניה-לרופא-עור.pdf', description: 'הפניה' }]);
+    expect(mem.aliases.get('communication-with-doctor/files/2026-04-02_Q1-1_הפניה.pdf')).toBe('referrals/files/2026-03-01_R1_הפניה-לרופא-עור.pdf');
+    expect(mem.json('uploads/details/2026-05-02_F2_סיכום.json').files).toEqual([{ same_as: 'uploads/files/2026-05-01_F1_סיכום-אשפוז.pdf' }]);
+    expect(mem.json('uploads/details/2026-05-01_F1_סיכום-אשפוז.json').files).toEqual([{ file: 'uploads/files/2026-05-01_F1_סיכום-אשפוז.pdf' }]);
+
+    // A linked visit the list no longer has is saved and linked both ways; one it has is pointed to, not saved again.
+    expect(q1.visit).toBe('visit-summaries/details/2024-06-01_7001_אורתופדיה.json');
+    const old = mem.json('visit-summaries/details/2024-06-01_7001_אורתופדיה.json');
+    expect(old).toMatchObject({ endpoint: 'GET AppointmentOrderAPI/v1/members/0/{mid}/visits/7001/', linked_from: 'communication-with-doctor/details/2026-04-02_Q1_הפניה.json' });
+    expect(old.files).toEqual([{ file: 'visit-summaries/files/2024-06-01_7001_אורתופדיה.pdf' }]);
+    expect(site.calls).toContain('GET /sonline/AppointmentOrderAPI/webapi/mac/v1/members/0/' + MID + '/visits/7001/?isOpenMedicalRecordNumber=true');
+    expect(mem.json('communication-with-doctor/details/2026-04-05_Q2_שאלה-לרופא.json').visit).toBe('visit-summaries/details/2026-02-01_A1_קרדיולוגיה.json');
+
+    // An imaging study is named by a hash of its DICOM id, which its record keeps.
+    const study = [...mem.files.keys()].find((k) => k.endsWith('-imaging-study.json'))!;
+    expect(study.split('/').pop()).toHaveLength(38);
+    expect(mem.json(study).request_id).toBe(DICOM_ID);
   });
 
   it('a second run into the same files changes nothing and skips unchanged work', async () => {
@@ -250,6 +281,46 @@ describe('full run against the fake site', () => {
     for (const [k, v] of sink.files) expect(canon(k.endsWith('.json') ? JSON.parse(new TextDecoder().decode(v)) : Array.from(v))).toBe(before.get(k));
     // Existing PDFs and unchanged histories/reports are not fetched again.
     expect(site2.calls.filter((u) => /pdf|compare\?|report/.test(u))).toEqual([]);
+  });
+
+  it('asks again for no document it found elsewhere in the export', async () => {
+    const sink = new MemorySink();
+    await runAll(makeCollector(fakeTransport(fakeMaccabi().routes), sink).c, newCtx());
+    const site = fakeMaccabi();
+    await runAll(makeCollector(fakeTransport(site.routes), sink).c, newCtx(), ['doctorCommunications', 'savedDocuments']);
+    // The form that is the referral, and the linked visit that is a listed one, are not downloaded again.
+    expect(site.calls.filter((u) => /\/pdf\?|PHRDownload/.test(u))).toEqual([]);
+    expect(site.calls.filter((u) => u.includes('isOpenMedicalRecordNumber'))).toHaveLength(2);
+  });
+
+  it('keeps an inquiry whose linked visit has no summary, and says so', async () => {
+    const site = fakeMaccabi();
+    const t = fakeTransport([(_req, url) => (url.pathname.endsWith('/visits/7001/') ? jsonResp(undefined, 204) : undefined), ...site.routes]);
+    const { c, sink } = makeCollector(t);
+    const s = await runAll(c, newCtx(), ['doctorCommunications']);
+    expect(s.problems).toEqual(['communication-with-doctor/details/2026-04-02_Q1_הפניה.json PROBLEM: linked visit: HTTP 204']);
+    const mem = sink as MemorySink;
+    expect(mem.json('communication-with-doctor/details/2026-04-02_Q1_הפניה.json').visit).toBeUndefined();
+    expect([...mem.files.keys()].some((k) => k.includes('_7001_'))).toBe(false);
+  });
+
+  it('names an inquiry by what it is about, and its forms by their kind', async () => {
+    const site = fakeMaccabi();
+    const details: Route = (_req, url) => (url.pathname.endsWith('/inquiries/Q2/details')
+      ? jsonResp({ request_subjects: [{ name: 'חידוש מרשם' }, { name: 'שאלה' }], general_question_subject: 'לא זה',
+        medical_forms_details: [{ document_description: 'הוראות לתרופות', link_pdf: 'l' }, { document_description: 'אישור', link_pdf: 'l' }] })
+      : undefined);
+    const { c, sink } = makeCollector(fakeTransport([details, ...site.routes]));
+    await runAll(c, newCtx(), ['doctorCommunications']);
+    const mem = sink as MemorySink;
+    expect([...mem.files.keys()].filter((k) => k.includes('_Q2')).sort()).toEqual([
+      'communication-with-doctor/details/2026-04-05_Q2_חידוש-מרשם-שאלה.json',
+      'communication-with-doctor/files/2026-04-05_Q2-1_הוראות-לתרופות.pdf',
+      'communication-with-doctor/files/2026-04-05_Q2-2_אישור.pdf',
+    ]);
+    expect(mem.json('communication-with-doctor/details/2026-04-05_Q2_חידוש-מרשם-שאלה.json').files[1]).toEqual({
+      file: 'communication-with-doctor/files/2026-04-05_Q2-2_אישור.pdf', description: 'אישור',
+    });
   });
 
   it('reports hospital stays answered with a web page as a problem, and writes nothing', async () => {
@@ -268,7 +339,7 @@ describe('full run against the fake site', () => {
     expect(s.problems).toEqual([]);
     const details = (sink as MemorySink).json('uploads/details/2026-05-01_F1_סיכום-אשפוז.json');
     expect(details.decoded_from).toBe('windows-1255');
-    expect(details.data.d[0].DocumentName).toBe('סיכום אשפוז');
+    expect(details.data.d[0].DocumentTitle).toBe('סיכום אשפוז');
   });
 
   it('falls back to windows-1255 for the saved-documents service when the header names no charset', async () => {
@@ -281,7 +352,7 @@ describe('full run against the fake site', () => {
     const { c, sink } = makeCollector(fakeTransport([bare, ...site.routes]));
     const s = await runAll(c, newCtx(), ['savedDocuments']);
     expect(s.problems).toEqual([]);
-    expect((sink as MemorySink).json('uploads/details/2026-05-01_F1_סיכום-אשפוז.json').data.d[0].DocumentName).toBe('סיכום אשפוז');
+    expect((sink as MemorySink).json('uploads/details/2026-05-01_F1_סיכום-אשפוז.json').data.d[0].DocumentTitle).toBe('סיכום אשפוז');
   });
 
   it('reports hospital stays in a charset other than the one declared, instead of saving replacement characters', async () => {

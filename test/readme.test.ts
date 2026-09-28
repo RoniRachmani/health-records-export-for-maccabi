@@ -96,6 +96,16 @@ describe('exportReadme', () => {
     expect(md).toContain('File names never carry it.');
   });
 
+  // Each document is saved once, so a reader follows a record's pointer instead of counting a copy twice.
+  it('says how a record points to a document saved elsewhere', () => {
+    const all = { ...PRESENT, 'communication-with-doctor': 3, uploads: 2, 'visit-summaries': 2 };
+    const md = exportReadme('2026-09-18', all, FILE).replace(/\s+/g, ' ');
+    expect(md).toContain('`files[]` lists a record\'s documents: `file`, its own, or `same_as`');
+    expect(md).toContain('saved once, in its own folder, and the inquiry\'s `files[]` names it');
+    expect(md).toContain('A document uploaded twice is saved once');
+    expect(md).toContain('older visits that answered a doctor inquiry');
+  });
+
   it('is dated', () => {
     expect(exportReadme('2026-09-18', PRESENT, FILE)).toContain('Exported 2026-09-18 from online.maccabi4u.co.il');
   });

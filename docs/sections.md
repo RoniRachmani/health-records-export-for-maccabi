@@ -27,7 +27,7 @@ line to the run steps behind it, the parts of a step it stands for, and what tho
 | 11 | Approvals | `approvals` | `approvals` | `approvals/list.json`, `files/` |
 | 12 | Vaccinations | `vaccinations` | `vaccinations` | `vaccinations/list.json`, `details/`, `flu-eligibility.json`, `vaccination-booklet-report.json`, `files/vaccination-booklet-report.pdf` |
 | 13 | Letters | `letters` | `letters` | `letters/list.json`, `files/` |
-| 14 | Messages with your doctor | `doctorCommunications` | `doctor inquiries` | `communication-with-doctor/list.json`, `details/`, `files/` |
+| 14 | Messages with your doctor | `doctorCommunications` | `doctor inquiries` | `communication-with-doctor/list.json`, `details/`, `files/` (a form whose bytes are already in the export is not written again); `visit-summaries/details/`, `files/` for a visit an inquiry links to that the visit list no longer has |
 | 15 | Information pages | `infoPages` | `information pages` | `info-pages/list.json`, `files/` |
 | 16 | Collecting your medical file | `waitMedicalFile` | `waiting for the medical file to appear`, `medical file status …`, `letters` | `<date>_medical-file.pdf`, at the root |
 | 17 | Saving the ZIP | `save` | – | `README.md`, `CLAUDE.md`, `AGENTS.md` at the root, then the ZIP |
@@ -45,6 +45,7 @@ Three shapes:
   description under the line.
 - **One step, several lines** (7–8): a step split by the parts it reports. `LABELS` names the whole step, as errors
   and the problems list show it: "Test results".
-- **Several lines, one folder** (3–4): prescriptions and purchases both write to `medications-and-prescriptions/`.
+- **Several lines, one folder** (3–4, 9 and 14): prescriptions and purchases both write to
+  `medications-and-prescriptions/`; the visits and the doctor messages both write to `visit-summaries/`.
 
 Twenty lines is what fits under Chrome's 600px popup cap; there are seventeen. Keep this table in step with `STAGES` and the collectors.

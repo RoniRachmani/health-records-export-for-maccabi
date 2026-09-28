@@ -97,8 +97,14 @@ collects everything that needs it there; `returnToSonline` re-takes a fresh toke
 
 `core/sinkRules.ts` decides `written | updated | unchanged | kept_existing`: JSON is rewritten only when
 its canonical content differs (`core/canon.ts`), binaries are kept unless `replace` is asked for.
-Steps use `c.exists()` / `c.pdfIfMissing()` to skip what they already have. **Every step must be safe to
-re-run from the start** — a resume, a reconnect or a rewind through `OPENED_BY` will do exactly that.
+Steps use `c.exists()` / `c.pdfIfMissing()` to skip what they already have. A document that can also live
+elsewhere in the export (an inquiry's form, an upload, a linked visit's summary) goes through `c.pdfOnce()` /
+`c.saveOnce()` instead: the sink indexes every binary by SHA-256 (`findBySha256`), and a copy is not written but
+recorded as an alias (`putAlias` / `aliasOf`), which the record's `files[]` names as `same_as` and a re-run skips
+without a request. **Every step must be safe to
+re-run from the start** — a resume, a reconnect or a rewind through `OPENED_BY` will do exactly that. A change that
+renames files already staged bumps `FILE_LAYOUT` in `state.ts`, so a run paused across the update is discarded
+instead of staging both names.
 `orderMedicalFile` guards itself (`run.order`) because re-running it would order and SMS again.
 
 ### Errors

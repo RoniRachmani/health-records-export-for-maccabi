@@ -136,8 +136,10 @@ export interface RunState {
   next: number;
   /** PLAN[next] by name, so an extension update that moves indices is caught (see alignToPlan). */
   nextStep?: PlanStep;
-  /** The stored run names a step this version no longer has: it can only be discarded. */
+  /** The stored run names a step this version no longer has, or names files differently: it can only be discarded. */
   planMismatch?: boolean;
+  /** FILE_LAYOUT of the version that started the run. */
+  layout?: number;
   ctx: Ctx;
   order?: OrderResult;
   /** Within the current step. */
@@ -214,6 +216,24 @@ export function alignToPlan(run: { next: number; nextStep?: PlanStep }): boolean
   if (i < 0) return false;
   run.next = i;
   return true;
+}
+
+/**
+ * How this version names the files it collects. Bump it when a change renames files a run has
+ * already staged (a title rule, a new name for a record): a run paused before the update would
+ * otherwise re-run its steps and stage the new names beside the old, the same record twice.
+ * 2: titles keep ״ and ׳, inquiries and their forms are named by what they are, uploads by their
+ * file when untitled, imaging studies by a hash of their id.
+ */
+export const FILE_LAYOUT = 2;
+
+/**
+ * False when a stored run was started by a version that named files differently and still has
+ * collection steps to run. A run left with only the medical file and the ZIP to go can finish.
+ */
+export function sameLayout(run: { next: number; layout?: number }): boolean {
+  if (run.layout === FILE_LAYOUT) return true;
+  return run.next >= PLAN.indexOf('waitMedicalFile');
 }
 
 /** Where a resumed run continues: Resume reloads the tab, so a step that needs a page opens it again. */

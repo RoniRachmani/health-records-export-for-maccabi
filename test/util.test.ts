@@ -54,9 +54,19 @@ describe('title', () => {
     expect(title('   ')).toBe('');
   });
 
+  it('keeps Hebrew abbreviations and never repeats a dash', () => {
+    expect(title('שינויים בפרק התרופות - שב"ן')).toBe('שינויים-בפרק-התרופות-שב״ן');
+    expect(title('התייעצות מומחה- נוירולוגיה')).toBe('התייעצות-מומחה-נוירולוגיה');
+    expect(title('ד"ר גבריאלה סמסון')).toBe('ד״ר-גבריאלה-סמסון');
+    expect(title("דר' גבריאלה")).toBe('דר׳-גבריאלה');
+    // A quote that is not part of a Hebrew word is punctuation, as before.
+    expect(title('Dr. "A"')).toBe('Dr.-A');
+  });
+
   it('cuts a long title short without a trailing dash', () => {
     expect(title('\u05d0 '.repeat(40)).length).toBeLessThanOrEqual(40);
     expect(title('\u05d0 '.repeat(40)).endsWith('-')).toBe(false);
+    expect(title('\u05d0'.repeat(39) + ' - \u05d1').endsWith('-')).toBe(false);
   });
 });
 

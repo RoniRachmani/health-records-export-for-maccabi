@@ -133,14 +133,14 @@ One folder, `maccabi-export-YYYY-MM-DD/`:
 | `profile/` | Member details, entitlements, insurance seniority, your doctors' provider details |
 | `my-doctor/` | Assigned doctors and eligibilities |
 | `test-results/` | Test list, each result, a history per lab measurement, latest lab results, result PDFs |
-| `visit-summaries/` | Visits of the last 12 months and their summary PDFs |
+| `visit-summaries/` | Visits of the last 12 months, and older ones that answered an inquiry to your doctor, with their summary PDFs |
 | `medications-and-prescriptions/` | Prescriptions and their PDFs, full purchase history, purchase report PDF |
 | `referrals/` | Referrals and their PDFs |
 | `approvals/` | Approvals and their PDFs |
 | `info-pages/` | Information pages from your visits, and their PDFs |
 | `vaccinations/` | Vaccinations by group, flu vaccine eligibility, vaccination booklet PDF |
 | `letters/` | Letters and their PDFs |
-| `communication-with-doctor/` | Inquiries to doctors and attached forms |
+| `communication-with-doctor/` | Inquiries to doctors and attached forms, each pointing to the visit it was answered in |
 | `uploads/` | Documents you uploaded and their files |
 | `hospital-stays/` | Hospital visits: date, kind of visit, hospital and department, and discharge letters when the site has them. Only when the site lists any |
 | `allergies-sensitivity/` | Your recorded sensitivities. Kept even when there are none, so an empty list says none are on record |
@@ -161,6 +161,10 @@ visit-summaries/files/2026-02-01_A1_קרדיולוגיה.pdf
 
 The date and id come from the record; the title is a display string the site returned, used as it sent it and left
 out when a record has none.
+
+Each document is saved once. A form attached to an inquiry is often the very file of a referral or a prescription,
+and a document can be uploaded twice: the copy isn't written again, and the record it belongs to says where the
+file is instead (`files[]`, with `same_as`).
 
 > Hebrew names are flagged UTF-8 in the ZIP, so Finder, Windows Explorer and 7-Zip read them correctly. macOS's
 > bundled `unzip` command is Info-ZIP 6.00, which predates that flag and garbles them — use `ditto -x -k <zip> <dir>`
@@ -195,7 +199,7 @@ in `files/` instead — those say so in their own `omitted` field.
 ### Not included
 
 - **Imaging studies (DICOM).** The site only opens them in its viewer. Export them by hand from there.
-- **Visits older than 12 months.** The site doesn't show them.
+- **Visits older than 12 months.** The site doesn't show them, except the ones a doctor answered an inquiry of yours in.
 - **Older purchase reports.** The purchase report PDF covers the last 2 years. The purchase history covers everything.
 
 ### Hand it to an AI assistant
@@ -318,6 +322,13 @@ The service worker walks a fixed plan (`PLAN` in `src/extension/shared/state.ts`
 order the medical file and collect purchases, hospital stays and uploads (with the member's details and prescriptions,
 which the REST API answers from any page), back to `/sonline/` for the other REST API sections, and the medical file collected last, by which time Maccabi Healthcare Services has had the whole run to build it. Each finished step is
 checkpointed in `chrome.storage.local`, so a paused run, or a restarted service worker, continues from there.
+
+A step that continues is run again from its start, so every step is safe to repeat: JSON is rewritten only when
+its content changed, and a document already staged is not asked for again. Staging also keeps a SHA-256 index of the
+documents it holds: `Collector.pdfOnce` saves a form, an upload or a linked visit's summary only when no staged file
+has its bytes, and otherwise records it as a copy of that file, so a repeat makes no request for it either. A run
+paused before an update that renames files (`FILE_LAYOUT`) can't be continued, only discarded, or it would stage the
+same records twice under two names.
 
 The tab visits a single legacy page, `/online/medicalfile/summary/`. The legacy services answer only after some
 `/online/` page has been loaded in the session, and the medical file order has to be sent from that one, so the four

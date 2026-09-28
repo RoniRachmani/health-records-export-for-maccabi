@@ -34,8 +34,8 @@ const FOLDERS: Folder[] = [
     name: 'test-results',
     summary: 'lab, imaging, cardiology and external results',
     detail: `\`list.json\` is \`tests[]\`, each with a \`type\`: \`lab_result\`, \`imaging_result\` (a
-radiologist's report), \`imaging_study\` (the images — never exported; details, no PDF),
-\`cardiology_result\`, \`external_test_result\`. A lab test keeps its values in \`details/\`
+radiologist's report), \`imaging_study\` (the images — never exported; details, no PDF, named by a
+hash of the study id in its \`request_id\`), \`cardiology_result\`, \`external_test_result\`. A lab test keeps its values in \`details/\`
 (\`results[]\`, one per group, each with \`group_values[]\`; see *Lab values*) and has no PDF; **every
 other type has \`results\` empty** and its finding only in the PDF in \`files/\`.
 \`history/<test_id>_<name>.json\` is one measurement over time and reaches years further back than
@@ -43,11 +43,12 @@ other type has \`results\` empty** and its finding only in the PDF in \`files/\`
   },
   {
     name: 'visit-summaries',
-    summary: 'the last 12 months of visits, with their summary PDFs',
+    summary: 'the last 12 months of visits, and older visits that answered a doctor inquiry, with their summary PDFs',
     detail: `\`details/\` holds the doctor's own words (\`visit_recommendations\`, \`online_requests\`)
 and what the visit produced (\`referrals[]\`, \`drugs[]\`, \`approvals\`, \`tutorials\`).
 **\`diagnosis[]\` may hold only null fields** — the diagnosis is then in the PDF and the medical file only.
-A visit with no summary is \`status\` 204 with \`data\` null; \`has_summery_file\` (sic) says which.`,
+A visit with no summary is \`status\` 204 with \`data\` null; \`has_summery_file\` (sic) says which.
+An older visit is named by its \`open_medical_record_number\`, and its \`linked_from\` is the inquiry it answered.`,
   },
   {
     name: 'medications-and-prescriptions',
@@ -91,14 +92,16 @@ one beside this README. Use \`original_item_date\`: \`item_date\` is a display s
     summary: 'exchanges with doctors, both ways, and the forms attached',
     detail: `\`details/\` holds what the member wrote (\`general_question_subject\`, \`patient_remark\`)
 and the reply (\`doctor_remark\`, \`personal_doctor_remark\`); \`files/\` holds the forms, numbered in
-list order. **Most forms are also in their own folder** — a referral in \`referrals/files/\`, drug
-instructions in \`medications-and-prescriptions/files/\`, sometimes the very same file. Count each
-document once.`,
+list order and named by their kind (\`הפניה\`, \`אישור\`). A form that is the same file as a referral,
+prescription or approval is saved once, in its own folder, and the inquiry's \`files[]\` names it;
+another form can still be one of those in a different file. \`visit\` is the visit the reply was, in
+\`visit-summaries/\`.`,
   },
   {
     name: 'uploads',
     summary: 'documents the member uploaded to the site',
     detail: `\`files/\` holds each document in the format it was uploaded in, often a photo or a scan.
+A document uploaded twice is saved once, and the second's \`files[]\` names the first.
 There is no \`list.json\`: the site's list is a web page, not data.`,
   },
   {
@@ -208,7 +211,8 @@ ${medicalFileSection(medicalFile)}
 **Something missing here is not evidence that it never happened.** The export holds what the member
 site returns, which is less than Maccabi Healthcare Services holds, which is less than the member's medical history.
 
-- Visits over 12 months old, and tests older than the site's list — as data. \`history/\` goes
+- Visits over 12 months old, except those that answered an inquiry to a doctor, and tests older
+  than the site's list — as data. \`history/\` goes
   further back, but only for measurements taken in at least one listed test.
 - Prescriptions beyond the recent ones the site lists, and purchases over 2 years old in
   \`purchased-report.pdf\`. \`purchased-history.html\` still covers every purchase.
@@ -289,13 +293,15 @@ Every JSON file is one response from the site, kept as it was sent, wrapped as
 \`{endpoint, fetched_at, status, data}\`. \`{mid}\` stands for the member id, never written into
 \`endpoint\`. \`status\` is 200, or 204 when the site had nothing — \`data\` is then null. \`omitted\`
 names what was left out of \`data\` (a report's PDF, kept in \`files/\` instead of as base64). A
-details file repeats the list fields it was fetched with, so it stands on its own.
+details file repeats the list fields it was fetched with, so it stands on its own. \`files[]\` lists a
+record's documents: \`file\`, its own, or \`same_as\`, a file elsewhere in the export with the same
+bytes, which is kept instead of a second copy.
 
 File names are \`<date>_<id>_<title>.<ext>\`. \`<date>\` is the record's own date or \`undated\`;
 \`<id>\` is the site's id (with the test type, in \`test-results/\`), or a hash where the site gives
 none, plus \`-1\`, \`-2\` when a record has several documents; \`<title>\` is a display string,
-Hebrew kept and punctuation turned into \`-\`, left out when there is none. \`_\` appears nowhere
-else, and \`test-results/history/\` and \`vaccinations/details/\` name files by what they hold, with no date.
+Hebrew kept (with its abbreviation marks, ״ and ׳) and other punctuation turned into \`-\`, left out
+when there is none. \`_\` appears nowhere else, and \`test-results/history/\` and \`vaccinations/details/\` name files by what they hold, with no date.
 
 ## Before sharing this export
 

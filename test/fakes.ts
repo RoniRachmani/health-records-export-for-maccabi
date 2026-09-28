@@ -3,12 +3,23 @@
    clock, and a run of every collection step. */
 import { Window } from 'happy-dom';
 import {
-  badPath, binResult, domHtmlParser, errMessage, jsonBytes, jsonResult, runStep, Collector, STEP_ORDER,
+  badPath, binResult, domHtmlParser, errMessage, jsonBytes, jsonResult, runStep, sha256Hex, Collector, STEP_ORDER,
   type Clock, type Ctx, type Deps, type HttpRequest, type HttpResponse, type Json, type Problem, type Sink, type StepName, type Transport,
 } from '../src/core';
 
 export const MID = '123456';
 export const PDF = new TextEncoder().encode('%PDF-1.4 synthetic');
+/** A PDF of its own: the export keeps one file per distinct content, so documents that differ must differ in bytes. */
+export function pdfOf(key: string): Uint8Array {
+  return new TextEncoder().encode('%PDF-1.4 ' + key);
+}
+/** Documents the fake serves under one path that are the very file served under another. */
+const SAME_FILE: Record<string, string> = {
+  'f/1.pdf': 'r/1.pdf', // an inquiry's form that is the referral itself
+  'v/again.pdf': 'dir/a b.pdf', // a linked visit that is a listed one
+};
+/** An imaging study's request_id: its DICOM id, 55 characters. */
+export const DICOM_ID = '1.2.840.113619.2.182.10808615331248.1619.98765432109870';
 
 export function jsonResp(obj: Json, status = 200): HttpResponse {
   return { status, redirected: false, contentType: 'application/json; charset=utf-8', bytes: obj === undefined ? new Uint8Array() : new TextEncoder().encode(JSON.stringify(obj)) };
@@ -64,25 +75,28 @@ export function fakeMaccabi(letterState: LetterState = { medicalFile: null }): {
     ['POST', api('TestResultsAPI/v1/members/0/{mid}/tests'), () => jsonResp({
       tests: [
         { type: 'lab_result', request_id: 555, test_name: 'ספירת דם', doc_id: 'D/1 x', time_stamp: 'T1', hash: 'h%2B1', result_files: true, execute_date: '2026-01-05T00:00:00' },
-        { type: 'imaging_study', request_id: 9, doc_id: 'D9', result_files: true, execute_date: '2026-01-06T00:00:00' },
+        { type: 'imaging_study', request_id: DICOM_ID, doc_id: 'D9', result_files: true, execute_date: '2026-01-06T00:00:00' },
       ],
     })],
     ['GET', api('TestResultsAPI/v1/members/0/{mid}/getlatestlabresults'), () => jsonResp({})],
     ['GET', api('TestResultsAPI/v1/members/0/{mid}/followed/counter'), () => jsonResp({ count: 0 })],
     ['POST', api('TestResultsAPI/v1/members/0/{mid}/getresultsbyid'), () => jsonResp({ results: [{ group_values: [{ test_id: 'HGB', lab_date: '2026-01-05', test_desc: 'המוגלובין' }] }], hash: Math.random() })],
     ['GET', api('TestResultsAPI/v1/compare/0/{mid}/compare'), () => jsonResp({ series: [13.1, 13.4] })],
-    ['GET', api('TestResultsAPI/pdf/openfile'), () => bytesResp(PDF)],
+    ['GET', api('TestResultsAPI/pdf/openfile'), (_r, url) => bytesResp(pdfOf(url.search))],
     ['POST', api('AppointmentOrderAPI/v1/members/0/{mid}/visits/history'), () => jsonResp({ results: [{ appointment_id: 'A1', appointment_date: '2026-02-01T10:00:00', has_summery_file: true, service_name: 'קרדיולוגיה', service_provider_name: 'ד"ר ישראלי' }] })],
     ['GET', api('AppointmentOrderAPI/v1/members/0/{mid}/visits/A1'), () => jsonResp({ visit_summary_pdf_link: 'dir/a b.pdf', timestamp: 'TS', hash: 'HH', text: 'synthetic' })],
-    ['GET', api('AppointmentOrderAPI/v1/members/0/{mid}/pdf'), () => bytesResp(PDF)],
+    ['GET', api('AppointmentOrderAPI/v1/members/0/{mid}/pdf'), (_r, url) => bytesResp(pdfOf(SAME_FILE[url.searchParams.get('path')!] ?? url.searchParams.get('path')!))],
+    // Visits a doctor's reply links to: one older than the visit list reaches, one the list has.
+    ['GET', api('AppointmentOrderAPI/v1/members/0/{mid}/visits/7001/'), () => jsonResp({ visit_summary_date: '2024-06-01T08:00:00', service_name: 'אורתופדיה', visit_summary_pdf_link: 'old/v.pdf', timestamp: 'TS', hash: 'HH' })],
+    ['GET', api('AppointmentOrderAPI/v1/members/0/{mid}/visits/7002/'), () => jsonResp({ visit_summary_date: '2026-02-01T10:00:00', service_name: 'קרדיולוגיה', visit_summary_pdf_link: 'v/again.pdf', timestamp: 'TS', hash: 'HH' })],
     ['POST', api('MedicalFileAPI/v1/members/0/{mid}/prescriptions'), () => jsonResp({ results: [{ file_link: 'rx/1.pdf', from_date: '01/03/26', prescription_number: 'P 1', drug_name: 'אקמול 500', doc_id: 'd', timestamp: 1, hash: 2 },
       { file_link: 'rx/2.pdf', from_date: '02/03/26', drug_name: 'נורופן', doc_id: '2::medication::' + MID + '::0::9', timestamp: 1, hash: 2 }] })],
-    ['GET', api('MedicalFileAPI/v1/members/0/{mid}/getprescriptionpdf'), () => bytesResp(PDF)],
+    ['GET', api('MedicalFileAPI/v1/members/0/{mid}/getprescriptionpdf'), (_r, url) => bytesResp(pdfOf(url.search))],
     ['GET', api('MedicalFileAPI/v1/members/0/{mid}/prescriptions/purchased/report'), () => jsonResp({ type: 'pdf', base64: btoa('%PDF-1.4 report') })],
     ['GET', api('MedicalFileAPI/v1/members/0/{mid}/referrals'), () => jsonResp({ referrals: [{ pdf_link: 'r%2F1.pdf', referral_date: '2026-03-01', referral_id: 'R1', referral_type_name: 'הפניה לרופא עור', timestamp: 't', hash: 'h' }] })],
     ['GET', api('MedicalFileAPI/v1/members/0/{mid}/approvals'), () => jsonResp({ approval: [{ pdf_link: 'ap.pdf', approval_date: '2026-03-02', title_name: 'אישור פיזותרפיה', timestamp: 't', hash: 'h' }] })],
     ['GET', api('MedicalFileAPI/v1/members/0/{mid}/tutorials'), () => jsonResp({ tutorials: [] })],
-    ['GET', api('MedicalFileAPI/v1/members/0/{mid}/pdf'), () => bytesResp(PDF)],
+    ['GET', api('MedicalFileAPI/v1/members/0/{mid}/pdf'), (_r, url) => bytesResp(pdfOf(url.searchParams.get('path')!))],
     ['GET', api('MedicalFileAPI/v1/members/0/{mid}/vaccinations_grouped'), () => jsonResp({ timeline: [{ vaccine_group_code: 7, vaccine_group_name: 'שעלת צפדת' }] })],
     ['GET', api('MedicalFileAPI/v1/members/0/{mid}/vaccinations'), (_r, url) => jsonResp({ asked: url.search })],
     ['GET', api('AppointmentOrderAPI/v1/members/0/{mid}/eligibility/vaccines/flu'), () => jsonResp({ eligible: false })],
@@ -96,9 +110,21 @@ export function fakeMaccabi(letterState: LetterState = { medicalFile: null }): {
     ['GET', '/sonline/DirectorshipAPI/webapi/mac/v1/members/0/' + MID + '/letters_for_member/L1/m80188' + MID + '01/pdf', () => bytesResp(PDF)],
     ['GET', api('MainAppAPI/v2/members/0/{mid}/pdf'), () => bytesResp(PDF)],
     ['GET', api('CommunicationWithDoctorAPI/v1/members/0/{mid}/inquiries'), () => jsonResp({
-      inquiries: [{ request_id: 'Q1', creation_date: '2026-04-02T09:00:00', service_provider_name: 'ד"ר ישראלי', medical_forms_documents: [{ result_file: 'f/1.pdf', timestamp: 't', hash: 'h' }] }],
+      inquiries: [
+        { request_id: 'Q1', creation_date: '2026-04-02T09:00:00', service_provider_name: 'ד"ר ישראלי', medical_forms_documents: [{ result_file: 'f/1.pdf', timestamp: 't', hash: 'h' }] },
+        { request_id: 'Q2', creation_date: '2026-04-05T09:00:00', service_provider_name: 'ד"ר ישראלי',
+          medical_forms_documents: [{ result_file: 'f/2.pdf', timestamp: 't', hash: 'h' }, { result_file: 'f/3.pdf', timestamp: 't', hash: 'h' }] },
+      ],
     })],
-    ['GET', api('CommunicationWithDoctorAPI/v1/members/0/{mid}/inquiries/Q1/details'), () => jsonResp({ doctor_remark: 'synthetic' })],
+    // Q1 names no subject, so its forms name it; Q2 asks a question, and its forms do not pair with the list's.
+    ['GET', api('CommunicationWithDoctorAPI/v1/members/0/{mid}/inquiries/Q1/details'), () => jsonResp({
+      doctor_remark: 'synthetic', request_subjects: [], open_medical_record_number: 7001,
+      medical_forms_details: [{ document_description: 'הפניה', link_pdf: 'l/1.pdf' }],
+    })],
+    ['GET', api('CommunicationWithDoctorAPI/v1/members/0/{mid}/inquiries/Q2/details'), () => jsonResp({
+      doctor_remark: 'synthetic', general_question_subject: 'שאלה לרופא', open_medical_record_number: 7002,
+      medical_forms_details: [{ document_description: 'אישור', link_pdf: 'l/2.pdf' }, { document_description: 'אישור' }],
+    })],
     ['GET', api('MedicalFileAPI/v1/members/0/{mid}/sensitivity'), () => jsonResp({ intolerance: [] })],
     ['POST', api('AppointmentOrderAPI/v2/members/0/{mid}/appointments/future'), () => jsonResp([])],
     ['POST', api('RequestsAndApprovalsAPI/v1/members/0/{mid}/requests_and_cases'), () => jsonResp([])],
@@ -106,9 +132,16 @@ export function fakeMaccabi(letterState: LetterState = { medicalFile: null }): {
     ['POST', '/online/Ajax/DrugsManager/WsPurchasedDrugsManager.asmx/GetAllPurchasedPrescription', () =>
       bytesResp(latin1('{"d":' + JSON.stringify(Array.from(PURCHASE_TABLE, (b) => String.fromCharCode(b)).join('')) + '}'), 'application/json; charset=windows-1255')],
     // The .asmx services answer windows-1255 and say so; the /online/webapi/ one below answers utf-8.
-    ['POST', '/online/Ajax/PHR/WsPHRManager.asmx/SearchByDate', () => win1255JsonResp({ d: '<div fileid="F1"><a onclick="PHR.OpenFile(\'SYS1.pdf\')">x</a></div>' })],
-    ['POST', '/online/Ajax/PHR/WsPHRManager.asmx/GetFileDetails', () => win1255JsonResp({ d: [{ DocumentSystemName: 'SYS1', DocumentName: 'סיכום אשפוז', DocumentDate: '2026-05-01T00:00:00' }] })],
-    ['GET', '/online/Pages/Popups/PHR/PHRDownloadDocument.aspx', () => bytesResp(PDF)],
+    ['POST', '/online/Ajax/PHR/WsPHRManager.asmx/SearchByDate', () => win1255JsonResp({
+      d: '<div fileid="F1"><a onclick="PHR.OpenFile(\'SYS1.pdf\')">x</a></div><div fileid="F2"><a onclick="PHR.OpenFile(\'SYS2.pdf\')">x</a></div>',
+    })],
+    // F2 is the same document uploaded again, with no title of its own.
+    ['POST', '/online/Ajax/PHR/WsPHRManager.asmx/GetFileDetails', (req) => win1255JsonResp({
+      d: [req.body!.includes('F1')
+        ? { DocumentSystemName: 'SYS1', DocumentTitle: 'סיכום אשפוז', DocumentOriginName: 'scan.pdf', DocumentDate: '2026-05-01T00:00:00' }
+        : { DocumentSystemName: 'SYS2', DocumentTitle: '', DocumentDescription: '', DocumentOriginName: 'סיכום.pdf', DocumentDate: '2026-05-02T00:00:00' }],
+    })],
+    ['GET', '/online/Pages/Popups/PHR/PHRDownloadDocument.aspx', () => bytesResp(pdfOf('upload'))],
     // Padded strings, blank Description entries and one stay listed twice, as the service sends them.
     ['POST', '/online/webapi/MailingsFromHospitals/GetMailingsFromHospitals/', () => {
       const stay = {
@@ -121,7 +154,7 @@ export function fakeMaccabi(letterState: LetterState = { medicalFile: null }): {
       const letter = { ...stay, NameHospital: 'מרכז רפואי לדוגמה', Date: '2025-05-10T00:00:00', DateHospitalization: '10052025', HasLink: true, LinkPDF: 'reports/L9.pdf', TypeCommitmentEgenKey: '2' };
       return jsonResp({ ReportHospitalizations: [stay, stay, letter], ResultMessage: { Code: 0, Description: '' } });
     }],
-    ['GET', '/online/Pages/Popups/MailingsFromHospitals/MailingsFromHospitals.aspx', () => bytesResp(PDF)],
+    ['GET', '/online/Pages/Popups/MailingsFromHospitals/MailingsFromHospitals.aspx', (_r, url) => bytesResp(pdfOf(url.search))],
   ];
   const route: Route = (req, url) => {
     calls.push(req.method + ' ' + url.pathname + url.search);
@@ -153,6 +186,9 @@ export function fakeTransport(routes: Route[], opts: { pagePath?: string; xhr?: 
 export class MemorySink implements Sink {
   files = new Map<string, Uint8Array>();
   problems: Problem[] = [];
+  /** putBin's content index: sha256 -> path. */
+  shas = new Map<string, string>();
+  aliases = new Map<string, string>();
   async exists(rel: string) {
     return this.files.has(rel);
   }
@@ -167,8 +203,21 @@ export class MemorySink implements Sink {
     const bad = badPath(rel);
     if (bad) return { error: bad };
     const result = binResult(this.files.get(rel), bytes, replace);
-    if (result === 'written' || result === 'updated') this.files.set(rel, bytes);
+    if (result === 'written' || result === 'updated') {
+      for (const [sha, at] of this.shas) if (at === rel) this.shas.delete(sha);
+      this.files.set(rel, bytes);
+      this.shas.set(await sha256Hex(bytes), rel);
+    }
     return { result };
+  }
+  async findBySha256(sha: string) {
+    return this.shas.get(sha) ?? null;
+  }
+  async putAlias(rel: string, existing: string) {
+    this.aliases.set(rel, existing);
+  }
+  async aliasOf(rel: string) {
+    return this.aliases.get(rel) ?? null;
   }
   async problem(p: Problem) {
     this.problems.push(p);

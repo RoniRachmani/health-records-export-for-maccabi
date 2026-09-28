@@ -4,7 +4,8 @@
 import { badPath, binResult, jsonBytes, jsonResult, sha256Hex, type Problem, type SaveReply, type Sink } from '../../core';
 
 const DB_NAME = 'hrem-staging';
-const DB_VERSION = 1;
+// 2 added the content index and the aliases (Sink.findBySha256, putAlias).
+const DB_VERSION = 2;
 
 export interface FileMeta {
   rel: string;
@@ -20,9 +21,15 @@ function db(): Promise<IDBDatabase> {
       const req = indexedDB.open(DB_NAME, DB_VERSION);
       req.onupgradeneeded = () => {
         const d = req.result;
-        d.createObjectStore('files'); // rel -> Uint8Array
-        d.createObjectStore('meta', { keyPath: 'rel' }); // FileMeta
-        d.createObjectStore('problems', { autoIncrement: true }); // Problem
+        const add = (name: string, opts?: IDBObjectStoreParameters) => {
+          if (!d.objectStoreNames.contains(name)) d.createObjectStore(name, opts);
+        };
+        add('files'); // rel -> Uint8Array
+        add('meta', { keyPath: 'rel' }); // FileMeta
+        add('problems', { autoIncrement: true }); // Problem
+        // Only what stagingSink.putBin writes, not meta's every file: _raw/ holds a copy of each download.
+        add('shas'); // sha256 -> rel
+        add('aliases'); // rel -> the rel holding its bytes
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
@@ -108,8 +115,9 @@ export async function clearProblemsOfStep(step: string): Promise<void> {
 }
 
 export async function clearStaging(): Promise<void> {
-  const tx = (await db()).transaction(['files', 'meta', 'problems'], 'readwrite');
-  for (const s of ['files', 'meta', 'problems']) tx.objectStore(s).clear();
+  const stores = ['files', 'meta', 'problems', 'shas', 'aliases'];
+  const tx = (await db()).transaction(stores, 'readwrite');
+  for (const s of stores) tx.objectStore(s).clear();
   await done(tx);
   totals = { files: 0, bytes: 0 };
 }
@@ -140,8 +148,29 @@ export const stagingSink: Sink = {
     const bad = badPath(rel);
     if (bad) return { error: bad };
     const result = binResult(await getFile(rel), bytes, replace);
-    if (result === 'written' || result === 'updated') await putFile(rel, bytes);
+    if (result === 'written' || result === 'updated') {
+      await putFile(rel, bytes);
+      const tx = (await db()).transaction('shas', 'readwrite');
+      tx.objectStore('shas').put(rel, await sha256Hex(bytes));
+      await done(tx);
+    }
     return { result };
+  },
+  async findBySha256(sha) {
+    const rel = await request((await db()).transaction('shas').objectStore('shas').get(sha) as IDBRequest<string | undefined>);
+    if (!rel) return null;
+    // A regenerated report replaces its file's bytes: the old digest no longer names it.
+    const meta = await request((await db()).transaction('meta').objectStore('meta').get(rel) as IDBRequest<FileMeta | undefined>);
+    return meta && meta.sha256 === sha ? rel : null;
+  },
+  async putAlias(rel, existing) {
+    const tx = (await db()).transaction('aliases', 'readwrite');
+    tx.objectStore('aliases').put(existing, rel);
+    await done(tx);
+  },
+  async aliasOf(rel) {
+    const tx = (await db()).transaction('aliases');
+    return (await request(tx.objectStore('aliases').get(rel) as IDBRequest<string | undefined>)) ?? null;
   },
   async problem(p) {
     const tx = (await db()).transaction('problems', 'readwrite');

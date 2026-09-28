@@ -7,7 +7,7 @@ import {
   SessionEndedError, sha256Hex, waitMedicalFile, type Session, type StepName,
 } from '../../core';
 import {
-  alignToPlan, exportName, LABELS, MACCABI_ORIGIN, percentOf, PLAN, resumeIndex, SONLINE_PAGE, SUMMARY_PAGE, type PlanStep, type RunState,
+  alignToPlan, exportName, FILE_LAYOUT, LABELS, MACCABI_ORIGIN, percentOf, PLAN, resumeIndex, sameLayout, SONLINE_PAGE, SUMMARY_PAGE, type PlanStep, type RunState,
 } from '../shared/state';
 import {
   clearProblemsOfStep, clearStaging, listMeta, listProblems, putTextDirect, setCurrentStep, stagedTotals, stagingSink,
@@ -28,7 +28,7 @@ let cancelRequested = false;
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
 
 const OLD_VERSION_MESSAGE =
-  'This export was started by an earlier version of the extension, which ran a different list of steps, so it cannot be continued. ' +
+  'This export was started by an earlier version of the extension, which ran a different list of steps or named files differently, so it cannot be continued. ' +
   'Discard the files it collected and start a new export.';
 
 // ---- state ------------------------------------------------------------
@@ -36,7 +36,7 @@ export async function loadRun(): Promise<RunState | null> {
   if (!state) {
     state = ((await chrome.storage.local.get('run')).run as RunState | undefined) ?? null;
     // A run stored before this field existed has no name to check against, and keeps its index.
-    if (state && !alignToPlan(state)) {
+    if (state && (!alignToPlan(state) || !sameLayout(state))) {
       state.planMismatch = true;
       state.status = 'error';
       state.message = OLD_VERSION_MESSAGE;
@@ -113,6 +113,7 @@ export async function start(tabId: number): Promise<void> {
     stepTotal: 0,
     percent: 0,
     memberHash: await midHash(s.mid),
+    layout: FILE_LAYOUT,
   };
   await save();
   void loop();
