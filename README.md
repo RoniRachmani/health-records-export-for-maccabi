@@ -452,8 +452,10 @@ npm run icons          # public/icons/ and store/assets/icon-128.png
 ```
 
 `package` builds `dist/` first, and refuses a development build. The store images and the video show the real
-popup with made-up states. [docs/store-listing.md](docs/store-listing.md) has everything to fill in on the store
-dashboard.
+popup with made-up states, and they need Roboto on the machine that draws them. Without it, run the *Store images*
+workflow from the Actions tab (or `gh workflow run store-assets.yml`, with `-f shots="start done"` for only some): it
+renders them on Linux with Roboto and commits the ones that changed. [docs/store-listing.md](docs/store-listing.md)
+has everything to fill in on the store dashboard.
 
 The video is drawn frame by frame in the same headless browser (`store/src/video.ts`), so nothing depends on the
 speed of the machine rendering it: the export it plays is the real popup, driven through a whole run by states

@@ -1,0 +1,58 @@
+# Renders the store images (npm run store-assets) on Linux with Roboto installed, which the renders need and a
+# maintainer's machine may not have, and commits the ones that changed to main. Run it by hand from the Actions tab
+# after the popup's appearance changes; name shots to render only those (e.g. "start done"), or leave it empty for
+# all. The link previews (og, social) are drawn too but are gitignored: the Pages workflow publishes those.
+# The video is not rendered here: it takes 20 minutes and goes to YouTube, not the repo.
+name: Store images
+
+on:
+  workflow_dispatch:
+    inputs:
+      shots:
+        description: Shots to render, space-separated (empty for all)
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: store-images
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install Roboto
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y --no-install-recommends fonts-roboto
+          fc-cache -f
+          fc-list | grep -qi roboto
+          # Ubuntu's AppArmor keeps Chrome's sandbox from starting without this.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - name: Render
+        env:
+          SHOTS: ${{ inputs.shots }}
+        # $SHOTS is split into shot names on purpose.
+        run: npm run store-assets -- $SHOTS
+      - name: Commit what changed
+        run: |
+          git add store/assets
+          if git diff --cached --quiet; then
+            echo "No image changed."
+            exit 0
+          fi
+          git diff --cached --stat
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898799+github-actions[bot]@users.noreply.github.com'
+          git commit -q -m "Re-render the store images" -m "Rendered by the Store images workflow, with Roboto."
+          git pull -q --rebase origin main
+          git push origin HEAD:main
