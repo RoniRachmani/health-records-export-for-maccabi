@@ -376,6 +376,15 @@ async function ask(page, msg) {
   return undefined;
 }
 
+/** What orderMedicalFile did, from the run's OrderResult (core/sections/letters.ts); none when it did not run. */
+function orderOutcome(order) {
+  if (!order) return 'not ordered (dev:skipOrder)';
+  if (order.error) return 'not ordered: ' + order.error;
+  if (order.skipped_ready_today) return "no order: today's file over the same range was already ready, and the run used it";
+  if (order.ordered) return 'ordered (Maccabi sent an SMS)' + (order.same_day_before ? ", replacing a file from earlier today" : '');
+  return 'order not confirmed' + (order.success_code ? ' (Success ' + order.success_code + ')' : '') + '; see the problems';
+}
+
 async function main() {
   const page = await openBrowser();
   await sleep(2000);
@@ -470,6 +479,7 @@ async function main() {
     const end = run.finishedAt ? Date.parse(run.finishedAt) : Date.now();
     console.log(`  all steps: ${secs(ms)}, ${requests} requests; since the start: ${secs(end - Date.parse(run.startedAt))}`);
   }
+  console.log('  medical file: ' + orderOutcome(run.order));
   if (run.medicalFileMs) console.log(`  medical file: ready ${secs(run.medicalFileMs)} after the order`);
   if (run.zipBytes) console.log(`  ZIP: ${run.fileCount} files, ${(run.zipBytes / 1e6).toFixed(1)} MB, in the browser's downloads folder`);
   if (stopped && ROOT_FILES) {
