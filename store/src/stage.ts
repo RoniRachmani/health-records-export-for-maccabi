@@ -152,11 +152,28 @@ function marquee(): HTMLElement {
   );
 }
 
+// The link preview of the published AI assistant page (1200x630, not a store field): the marquee's artwork and line,
+// centred, because WhatsApp and others crop previews to a narrower box, or a square, around the middle. The page's
+// own title is printed under it by the app showing the preview, so the picture says the rest.
+function og(): HTMLElement {
+  return h('div', 'og',
+    svg(`<svg viewBox="0 0 540 440" width="290" height="236">
+      <g transform="translate(270 220)">
+        <g transform="rotate(-14) translate(-186 -134) scale(1.6)">${paper(0.3)}</g>
+        <g transform="rotate(12) translate(28 -134) scale(1.6)">${paper(0.5)}</g>
+        <g transform="translate(-138 -144) scale(11.5)">${MARK}</g>
+      </g>
+    </svg>`, 'og-art'),
+    h('h1', '', 'Ask an AI assistant about your Maccabi health records'),
+    h('div', 'eyebrow', img('/icons/icon-128.png'), 'Health Records Export for Maccabi · Unofficial'),
+  );
+}
+
 async function main(): Promise<void> {
   const name = new URLSearchParams(location.search).get('shot') || 'start';
-  if (name === 'promo' || name === 'marquee') {
-    document.body.className = name === 'promo' ? 'tile' : 'marquee';
-    document.body.append(name === 'promo' ? promo() : marquee());
+  if (name === 'promo' || name === 'marquee' || name === 'og') {
+    document.body.className = name === 'promo' ? 'tile' : name;
+    document.body.append(name === 'promo' ? promo() : name === 'og' ? og() : marquee());
   } else {
     const shot = SHOTS[name];
     if (!shot) throw new Error('unknown shot ' + name);

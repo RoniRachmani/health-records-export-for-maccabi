@@ -1,7 +1,8 @@
 // Renders the Chrome Web Store images into store/assets/: screenshots of the real popup fed made-up
-// states (store/src/mock-chrome.ts, no real data), the two promo tiles, and the poster the README
-// shows for the promo video, which is a frame of the film itself (store/src/video.ts). Name shots
-// on the command line to render only those, e.g. `npm run store-assets -- marquee`.
+// states (store/src/mock-chrome.ts, no real data), the two promo tiles, the poster the README
+// shows for the promo video, which is a frame of the film itself (store/src/video.ts), and the
+// AI assistant page's link preview. Name shots on the command line to render only those, e.g.
+// `npm run store-assets -- marquee`.
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { openStage, root } from './stage.mjs';
@@ -17,6 +18,9 @@ const IMAGES = [
   { file: 'promo-marquee-1400x560.png', shot: 'marquee', width: 1400, height: 560 },
   // Not a store field: the README's poster, drawn by the video's own page at the size it plays.
   { file: 'video-poster.png', shot: 'poster', page: '/store/src/video.html?poster', width: 1920, height: 1080 },
+  // Not a store field either, and not committed: the published AI assistant page's link preview, which
+  // .github/workflows/pages.yml renders on each deploy (with Roboto installed) and publishes as og.png.
+  { file: 'og-1200x630.png', shot: 'og', width: 1200, height: 630 },
 ];
 
 const only = process.argv.slice(2);

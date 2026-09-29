@@ -153,3 +153,43 @@ body.marquee {
 .mq-art svg {
   display: block;
 }
+
+/* ---- the AI assistant page's link preview (1200x630) ---- */
+body.og {
+  width: 1200px;
+  height: 630px;
+  overflow: hidden;
+  color: #ffffff;
+  background:
+    radial-gradient(520px 520px at 600px 170px, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 70%),
+    linear-gradient(135deg, #052658 0%, #083f92 55%, #296bed 100%);
+}
+.og {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.og-art svg {
+  display: block;
+}
+/* Narrow enough that a square thumbnail, cut from the middle, keeps the whole line. */
+.og h1 {
+  max-width: 590px;
+  margin: 14px 0 24px;
+  font-size: 52px;
+  text-wrap: balance;
+}
+.og .eyebrow {
+  align-self: center;
+  gap: 11px;
+  padding: 6px 18px 6px 6px;
+  font-size: 17px;
+}
+.og .eyebrow img {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+}

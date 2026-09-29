@@ -3,7 +3,7 @@ import { MACCABI_ORIGIN, TERMS_EFFECTIVE, type Request, type StateReply } from '
 import { handleDev } from './dev';
 import { cancel, dismiss, focusRunTab, loadRun, onDownloadChanged, recover, resume, retrySave, showFile, start, UserError } from './runner';
 import { tabInfo } from './tab';
-import { noticeKind } from './ui';
+import { noticeKind, READY_BUTTONS } from './ui';
 
 /**
  * The effective date of the terms the user accepted, kept in chrome.storage.local until the extension is removed.
@@ -84,6 +84,12 @@ chrome.notifications.onClicked.addListener((id) => {
   const kind = noticeKind(id);
   if (!kind) return;
   void (kind === 'ready' ? showFile() : focusRunTab()).catch(() => undefined);
+  void chrome.notifications.clear(id);
+});
+chrome.notifications.onButtonClicked.addListener((id, index) => {
+  const page = noticeKind(id) === 'ready' && READY_BUTTONS[index]?.page;
+  if (!page) return;
+  void chrome.tabs.create({ url: chrome.runtime.getURL(page) });
   void chrome.notifications.clear(id);
 });
 chrome.alarms.onAlarm.addListener((a) => {

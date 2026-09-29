@@ -153,7 +153,8 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   around the **real popup** in an iframe, fed made-up states by `mock-chrome.ts`; the video drives a whole run
   through it with `demoRun`, which fires the popup's own `storage.onChanged` listener with states built from
   `PLAN` and `WEIGHTS`. The README's poster is that page again, asked for one frame with a play badge over it
-  (`?poster=`, taken by `store-assets` as the `poster` shot). What all of them draw lives in
+  (`?poster=`, taken by `store-assets` as the `poster` shot). The published AI assistant page's link preview is
+  the `og` shot, which the Pages workflow renders on each deploy, with Roboto installed, and which is not committed. What all of them draw lives in
   `store/src/parts.ts` and `parts.css`; `scripts/stage.mjs` builds, serves and photographs them in headless
   Chrome. The video is 4K at 60 fps (the stage at `deviceScaleFactor` 2), each frame piped as it is taken to
   `ffmpeg` if it is on `PATH`, else to `scripts/encode-mp4.swift` (macOS); the popup's own CSS animations are
@@ -197,9 +198,9 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   `public/terms.html`, and change their effective date. For a material change also bump `TERMS_EFFECTIVE`
   in `shared/state.ts`, which makes the popup ask everyone to accept again. Likewise `public/ai-assistant.html`
   must agree with the README's short *Hand it to an AI assistant* on the facts it keeps (the apps, the first
-  message, the safeguards); the page carries the rest. The page is the popup's "See how", and its reminder while
-  the medical file is prepared, which opens it in a window of its own: a tab would hide the Maccabi one and pause
-  the run.
+  message, the safeguards); the page carries the rest. The page is the popup's "See how", the "Export ready"
+  notification's button, and the popup's reminder while the medical file is prepared, which opens it in a window of
+  its own: a tab would hide the Maccabi one and pause the run.
   `.github/workflows/pages.yml` publishes `public/` on GitHub Pages, so these pages are also public web pages.
 - **Keep `public/third-party-notices.txt` current** when a runtime dependency changes (only `fflate`
   today, plus Vite's module preload polyfill). The README's `docs/images/chrome-web-store-badge.png` isn't one of

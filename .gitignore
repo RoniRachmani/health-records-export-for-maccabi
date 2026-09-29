@@ -25,6 +25,8 @@ coverage/
 store/assets/*.mp4
 store/assets/*.wav
 /.cache/
+# The AI assistant page's link preview: rendered by the Pages workflow on each deploy.
+store/assets/og-*.png
 
 # Never commit real exports or anything taken from a real account.
 maccabi-export-*/
