@@ -4,13 +4,13 @@
    chrome.storage.session; exported files live in IndexedDB staging. */
 import {
   CancelledError, Collector, errMessage, LEGACY_STEPS, letters, MEDICAL_FILE, newCtx, placeOrder, RateLimitedError, runStep,
-  SessionEndedError, sha256Hex, waitMedicalFile, type Session, type StepName,
+  SessionEndedError, sha256Hex, waitMedicalFile, type Session, type StepName, type Transport,
 } from '../../core';
 import {
   alignToPlan, exportName, FILE_LAYOUT, LABELS, MACCABI_ORIGIN, percentOf, PLAN, resumeIndex, sameLayout, SONLINE_PAGE, SUMMARY_PAGE, type PlanStep, type RunState,
 } from '../shared/state';
 import {
-  clearProblemsOfStep, clearStaging, listMeta, listProblems, putTextDirect, setCurrentPart, setCurrentStep, stagedTotals, stagingSink,
+  clearProblemsOfStep, clearStaging, listMeta, listProblems, putTextDirect, setCurrentPart, setCurrentStep, stagedTotals, stagingKey, stagingSink,
 } from '../shared/staging';
 import { EXPORT_ERRORS, exportErrors, exportReadme, INSTRUCTION_POINTERS, type ExportError } from '../shared/readme';
 import { callOffscreen, closeOffscreen, offscreenHtml } from './offscreenClient';
@@ -214,11 +214,14 @@ function loop(): Promise<void> {
         }
         setCurrentStep(step);
         await clearProblemsOfStep(step);
+        timeUnder(stagingKey(step, ''));
         try {
           await runPlanStep(step);
+          timeUnder(null);
           // Only once past the step that failed: after a rewind, the page-opening step passing proves nothing.
           if (state && state.next >= reconnectedAt) reconnects = 0;
         } catch (e) {
+          timeUnder(null); // before anything below saves the state, so a pause or an error keeps the time too
           if (cancelRequested || (e as CancelledError).cancelled) break;
           if ((e as SessionEndedError).sessionEnded) {
             // The member is often still logged in: a token is good for about 10 h (measured 2026-09-18), so a
@@ -326,7 +329,7 @@ async function collector(): Promise<Collector> {
   const transport = routedTransport(run.tabId, await currentRoutes(), waitVisible);
   return new Collector(
     {
-      transport: __DEV_BRIDGE__ && (await rawDumpOn()) ? capturingTransport(transport, session.mid) : transport,
+      transport: counted(__DEV_BRIDGE__ && (await rawDumpOn()) ? capturingTransport(transport, session.mid) : transport),
       sink: stagingSink,
       html: offscreenHtml,
       clock: { now: () => Date.now(), sleep: (ms) => new Promise((r) => setTimeout(r, ms)) },
@@ -336,6 +339,8 @@ async function collector(): Promise<Collector> {
         state.stepTotal = ev.total;
         state.items = ev.items;
         setCurrentPart(ev.detail ?? '');
+        const key = stagingKey(PLAN[state.next], ev.detail ?? '');
+        if (key !== timing?.key) timeUnder(key);
         state.detail = ev.detail ? LABELS[PLAN[state.next]] + ': ' + ev.detail : LABELS[PLAN[state.next]];
         state.percent = percentOf(state.next, ev.done, ev.total);
         saveSoon();
@@ -344,6 +349,32 @@ async function collector(): Promise<Collector> {
     },
     session,
   );
+}
+
+// The clock runs for one stagingKey at a time: the step's, then each part it reports, until the step ends.
+let timing: { key: string; since: number } | null = null;
+
+/** Adds the time since the last switch to the key the clock was on, and starts it on `key` (null stops it). */
+function timeUnder(key: string | null): void {
+  if (state && timing) {
+    const t = state.timings?.[timing.key] ?? { ms: 0, requests: 0 };
+    state.timings = { ...state.timings, [timing.key]: { ...t, ms: t.ms + Date.now() - timing.since } };
+  }
+  timing = key === null ? null : { key, since: Date.now() };
+}
+
+function countRequest(): void {
+  if (!state || !timing) return;
+  const t = state.timings?.[timing.key] ?? { ms: 0, requests: 0 };
+  state.timings = { ...state.timings, [timing.key]: { ...t, requests: t.requests + 1 } };
+}
+
+function counted(t: Transport): Transport {
+  return {
+    fetch: (req) => (countRequest(), t.fetch(req)),
+    xhr: (req) => (countRequest(), t.xhr(req)),
+    pagePath: () => t.pagePath(),
+  };
 }
 
 const SUMMARY_PATH = /^\/online\/medicalfile\/summary\/?$/i;

@@ -397,7 +397,8 @@ Replies carry statuses, sizes and counts, never record contents. None of this is
 and drives the run through the commands above, printing the step, file count and problems as it goes. It always
 turns on `dev:skipOrder` first, and will not start unless the extension confirms it, so a test never orders the
 medical file or makes Maccabi send an SMS; there is no option that would. It stops before `save`, prints the
-files collected per folder, and discards the run, so nothing is downloaded. `npm run live -- --keep` leaves the
+files collected per folder and the time and requests of each step and part (the run's `timings`, which
+`docs/sections.md` tabulates), and discards the run, so nothing is downloaded. `npm run live -- --keep` leaves the
 browser and the paused run in place, to look at them. `npm run live -- --root-files` also writes the ZIP's root
 files before discarding the run (`dev:rootFiles`), and prints the README's version line, what it says failed, and
 `export-errors.json` beside the popup's problem count. `npm run live -- --screenshots` photographs the popup

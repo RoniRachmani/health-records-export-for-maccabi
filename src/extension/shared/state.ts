@@ -126,6 +126,11 @@ export const LABELS: Record<PlanStep, string> = {
   save: 'Saving the ZIP',
 };
 
+export interface Timing {
+  ms: number;
+  requests: number;
+}
+
 export interface RunState {
   id: string;
   status: RunStatus;
@@ -159,6 +164,11 @@ export interface RunState {
   byteCount?: number;
   /** Files staged so far by the step, or `step:part`, that first wrote them (stagingKey), for the popup's list. */
   filesByKey?: Record<string, number>;
+  /**
+   * Time and requests by the step, or `step:part`, they went to (stagingKey), summed over every time it ran: a resume
+   * or a rewind runs a step again. The time is wall-clock, pacing and waits included; `alive` pings don't count.
+   */
+  timings?: Record<string, Timing>;
   zipName?: string;
   /** Size of the saved ZIP. */
   zipBytes?: number;

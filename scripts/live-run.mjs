@@ -5,7 +5,8 @@
 // orders the medical file or makes Maccabi send an SMS, and there is deliberately no option that would.
 // It stops before save, so no ZIP is downloaded; what it reports is what was collected.
 //
-//   npm run live                  collects everything except the medical-file order, then stops before the ZIP
+//   npm run live                  collects everything except the medical-file order, then stops before the ZIP,
+//                                 and prints the files per folder, and the time and requests of each step and part
 //   npm run live -- --keep        leaves the browser open at the end
 //   npm run live -- --root-files  then writes the ZIP's root files as the save step does (still no ZIP), and
 //                                 prints the README's version line, what it says failed, and export-errors.json
@@ -439,6 +440,17 @@ async function main() {
   for (const p of problems) console.log('  problem: ' + p);
   const stopped = run.status === 'paused_session' && /dev:stopBefore/.test(run.message || '');
   if (stopped) for (const [folder, n] of Object.entries(state.staged.perFolder)) console.log(`  ${folder}: ${n} files`);
+  // Time and requests per step, or step:part, as the runner summed them: a step a resume or a rewind ran again counts
+  // twice. The time is wall-clock, so it includes the PACE_MS between requests and any wait.
+  const secs = (ms) => (ms < 60_000 ? (ms / 1000).toFixed(1) + ' s' : Math.floor(ms / 60_000) + ' min ' + Math.round((ms % 60_000) / 1000) + ' s');
+  const timed = Object.entries(run.timings || {});
+  if (timed.length) {
+    const width = Math.max(...timed.map(([key]) => key.length));
+    for (const [key, t] of timed) console.log(`  ${key.padEnd(width)}  ${secs(t.ms).padStart(12)}  ${String(t.requests).padStart(5)} requests`);
+    const ms = timed.reduce((a, [, t]) => a + t.ms, 0);
+    const requests = timed.reduce((a, [, t]) => a + t.requests, 0);
+    console.log(`  all steps: ${secs(ms)}, ${requests} requests; since the start: ${secs(Date.now() - Date.parse(run.startedAt))}`);
+  }
   if (stopped && ROOT_FILES) {
     const root = await page.dev({ type: 'dev:rootFiles' }, 30_000);
     if (!root || root.error) {

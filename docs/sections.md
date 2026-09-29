@@ -48,4 +48,41 @@ Three shapes:
 - **Several lines, one folder** (3–4, 9 and 14): prescriptions and purchases both write to
   `medications-and-prescriptions/`; the visits and the doctor messages both write to `visit-summaries/`.
 
+## How long each line takes
+
+The run keeps `timings`: the time and the requests of each step, or `step:part` (the keys the popup counts files
+by), summed over every time a step ran. `npm run live` prints them. The time is wall-clock, so it includes the
+`PACE_MS` (300 ms) between requests and any wait. `alive` pings are not counted.
+
+Measured on 2026-09-29 by `npm run live` on one account (228 files), with the Maccabi tab in front throughout:
+
+| # | Line | Keys | Time | Requests |
+|---|---|---|---|---|
+| 1 | Ordering your medical file | `openLegacyPage` | 4.2 s | 0 |
+| 2 | Your details and doctor | `profileAndDoctors`, `emptySections:*` | 6.6 s | 10 |
+| 3 | Prescriptions | `medications`, `medications:prescriptions` | 2.0 s | 3 |
+| 4 | Medication purchases | `purchases:purchase history`, `purchases:purchase report` | 2.2 s | 3 |
+| 5 | Hospital stays | `hospitalStays:hospital stays` | 0.6 s | 1 |
+| 6 | Your uploads | `savedDocuments`, `savedDocuments:saved documents` | 5.1 s | 9 |
+| 7 | Test results | `returnToSonline` (5.7 s), `testResults`, `testResults:test results` | 36.2 s | 31 |
+| 8 | Lab histories | `testResults:lab histories` | 44.4 s | 73 |
+| 9 | Visit summaries | `visits`, `visits:visits` | 8.6 s | 17 |
+| 10 | Referrals | `referrals`, `referrals:referrals` | 19.9 s | 32 |
+| 11 | Approvals | `approvals`, `approvals:approvals` | 3.1 s | 6 |
+| 12 | Vaccinations | `vaccinations`, `vaccinations:vaccinations` | 5.0 s | 9 |
+| 13 | Letters | `letters`, `letters:letters` | 2.6 s | 4 |
+| 14 | Messages with your doctor | `doctorCommunications`, `doctorCommunications:doctor inquiries` | 23.3 s | 48 |
+| 15 | Information pages | `infoPages`, `infoPages:information pages` | 1.1 s | 2 |
+| 16 | Collecting your medical file | `waitMedicalFile`, `waitMedicalFile:letters` | 8.4 s | 3 |
+| 17 | Saving the ZIP | `save` | not measured | – |
+| | All | | 2 min 53 s | 251 |
+
+About 0.69 s a request: the 300 ms of pacing and about 0.4 s of the site's answer. Lab histories, test results,
+the doctor messages and referrals are about 70% of the time; each grows with the member's history.
+
+Two lines are shorter here than in a real export. A live test never orders (`dev:skipOrder`), so line 1 is only the
+page change, and line 16 found a medical file ordered the day before instead of waiting while Maccabi builds a new
+one: that wait is up to 15 minutes (`waitMedicalFile`'s `timeoutMs`), and the run orders first so that the rest of the collection overlaps it.
+`save` is not measured because a live test stops before it.
+
 Twenty lines is what fits under Chrome's 600px popup cap; there are seventeen. Keep this table in step with `STAGES` and the collectors.
