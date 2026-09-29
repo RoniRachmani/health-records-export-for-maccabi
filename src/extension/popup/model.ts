@@ -156,13 +156,21 @@ export function statsText(run: RunState, now: number): string {
 }
 
 /**
- * The reminder under the list. While the medical file is still being prepared it says how long that can take; once
- * it is downloading (the collector's `letters` part) that would contradict the panel, which says so.
- * One line, in any font: the running view has no room to spare under Chrome's 600px cap.
+ * While Maccabi prepares the medical file: the export's longest stretch, when there is nothing to do but wait. Not once
+ * it is downloading (the collector's `letters` part), which the panel says.
+ */
+export function waitingForFile(run: RunState): boolean {
+  return run.status === 'running' && PLAN[run.next] === 'waitMedicalFile' && partOf(run) !== 'letters';
+}
+
+/**
+ * The reminder under the list. While the medical file is being prepared it leads into the link to the AI assistant
+ * page (the panel says how long that can take). One line, in any font: the running view has no room to spare under
+ * Chrome's 600px cap.
  */
 export function hintText(run: RunState): string {
   if (run.status === 'saving') return 'It will be in your Downloads folder in a moment.';
-  if (PLAN[run.next] === 'waitMedicalFile' && partOf(run) !== 'letters') return 'Usually ready within minutes, 15 at most.';
+  if (waitingForFile(run)) return 'While you wait:';
   return 'Keep the Maccabi Online tab open and in front.';
 }
 
@@ -204,7 +212,7 @@ export const DESCRIPTIONS: Record<PlanStep, Record<string, string>> = {
   waitMedicalFile: {
     '': 'Checking whether your file is ready',
     'waiting for the medical file to appear': 'Waiting for the new file to be listed',
-    'medical file status': 'Your medical file is being prepared',
+    'medical file status': 'Being prepared: usually minutes, 15 at most',
     letters: 'Downloading your medical file',
   },
   save: { '': 'Packing all files into one ZIP' },

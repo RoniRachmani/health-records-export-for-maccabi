@@ -8,6 +8,7 @@ type Listener = (changes: Record<string, { newValue?: unknown }>, area: string) 
 let reply: StateReply;
 let sent: { type: string }[];
 let listeners: Listener[];
+let windows: chrome.windows.CreateData[];
 
 function running(over: Partial<RunState> = {}): RunState {
   return {
@@ -44,9 +45,11 @@ function buttonNamed(name: string): HTMLButtonElement {
 beforeEach(() => {
   sent = [];
   listeners = [];
+  windows = [];
   vi.stubGlobal('chrome', {
     runtime: {
       getManifest: () => ({ version: '9.9.9' }),
+      getURL: (path: string) => 'chrome-extension://id' + path,
       sendMessage: async (msg: { type: string }) => {
         sent.push(msg);
         return msg.type === 'getState' ? structuredClone(reply) : { ok: true };
@@ -54,6 +57,7 @@ beforeEach(() => {
     },
     storage: { onChanged: { addListener: (l: Listener) => listeners.push(l) } },
     tabs: { query: async () => [{ id: 1 }] },
+    windows: { create: async (data: chrome.windows.CreateData) => void windows.push(data) },
   });
 });
 
@@ -150,9 +154,14 @@ describe('popup', () => {
 
   it('keeps the reminder strip saying what to do', async () => {
     await openPopup({ run: running({ next: PLAN.indexOf('waitMedicalFile'), detail: 'Collecting your medical file: medical file status 2' }), tab });
-    expect(document.querySelector('.reminder')?.textContent).toBe('Usually ready within minutes, 15 at most.');
+    expect(document.querySelector('.reminder')?.textContent).toBe('While you wait: what to ask your AI assistant');
+    expect(document.querySelector('.reminder')?.classList.contains('waiting')).toBe(true);
+    // In a window of its own, so the Maccabi Online tab stays in front of its own.
+    (document.querySelector('.reminder a') as HTMLAnchorElement).click();
+    expect(windows).toEqual([{ url: 'chrome-extension://id/ai-assistant.html', width: 1100, height: 860, focused: true }]);
     storageChange(running({ status: 'saving', next: PLAN.indexOf('save'), detail: 'Saving the ZIP' }));
     expect(document.querySelector('.reminder')?.textContent).toBe('It will be in your Downloads folder in a moment.');
+    expect(document.querySelector('.reminder')?.classList.contains('waiting')).toBe(false);
     expect(document.querySelector('.status')?.textContent).toBe('Saving');
     expect([...document.querySelectorAll('button')].map((b) => b.textContent)).not.toContain('Cancel export');
   });

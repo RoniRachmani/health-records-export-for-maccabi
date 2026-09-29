@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   countText, currentStage, DESCRIPTIONS, formatBytes, formatDuration, groupProblems, hintText, STAGES, stageFileCounts, stageSpan, stageStates, statsText,
-  stepText, viewKey, type UiFlags,
+  stepText, viewKey, waitingForFile, type UiFlags,
 } from '../src/extension/popup/model';
 import { LABELS, PLAN, percentOf, WEIGHTS, type RunState, type StateReply } from '../src/extension/shared/state';
 
@@ -184,8 +184,12 @@ describe('statsText and stepText', () => {
     const wait = { ...base, next: PLAN.indexOf('waitMedicalFile') };
     const front = 'Keep the Maccabi Online tab open and in front.';
     expect(hintText(base)).toBe(front);
-    expect(hintText(wait)).toBe('Usually ready within minutes, 15 at most.');
-    expect(hintText({ ...wait, detail: LABELS.waitMedicalFile + ': medical file status 2' })).toBe('Usually ready within minutes, 15 at most.');
+    expect(hintText(wait)).toBe('While you wait:');
+    expect(hintText({ ...wait, detail: LABELS.waitMedicalFile + ': medical file status 2' })).toBe('While you wait:');
+    expect(waitingForFile({ ...wait, detail: LABELS.waitMedicalFile + ': medical file status 2' })).toBe(true);
+    expect(waitingForFile({ ...wait, detail: LABELS.waitMedicalFile + ': letters' })).toBe(false);
+    expect(waitingForFile({ ...wait, status: 'paused_hidden' })).toBe(false);
+    expect(waitingForFile(base)).toBe(false);
     expect(hintText({ ...wait, detail: LABELS.waitMedicalFile + ': letters' })).toBe(front);
     expect(hintText({ ...base, status: 'saving', next: PLAN.indexOf('save') })).toBe('It will be in your Downloads folder in a moment.');
   });
@@ -199,7 +203,7 @@ describe('statsText and stepText', () => {
     expect(stepText({ ...base, next: PLAN.indexOf('approvals'), detail: 'Approvals: approvals' }).detail).toBe('Downloading each approval as a PDF');
     expect(stepText({ ...base, next: PLAN.indexOf('infoPages'), detail: 'Information pages: information pages' }).detail).toBe('Downloading each page as a PDF');
     const waiting = { ...base, next: PLAN.indexOf('waitMedicalFile') };
-    expect(stepText({ ...waiting, detail: 'Collecting your medical file: medical file status 2' }).detail).toBe('Your medical file is being prepared');
+    expect(stepText({ ...waiting, detail: 'Collecting your medical file: medical file status 2' }).detail).toBe('Being prepared: usually minutes, 15 at most');
     expect(stepText({ ...base, next: PLAN.length })).toEqual({ title: '', detail: '' });
   });
 

@@ -1,6 +1,7 @@
 import { PLAN, type Request, type RunState, type StateReply } from '../shared/state';
 import {
   countOf, countText, currentStage, formatBytes, formatDuration, groupProblems, hintText, STAGES, stageFileCounts, stageSpan, stageStates, statsText,
+  waitingForFile,
   stepText, viewKey, type Confirm, type UiFlags,
 } from './model';
 
@@ -27,6 +28,8 @@ let live: {
   stats?: HTMLElement;
   stages?: HTMLElement[];
   hint?: HTMLElement;
+  reminder?: HTMLElement;
+  ask?: HTMLElement;
 } = {};
 
 type Child = Node | string | null | undefined | false;
@@ -156,7 +159,9 @@ function progressBar(percent: number, active: boolean, withBand = false): { bar:
   return { bar, fill, band };
 }
 
-const TAB_ICON = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="1.5" y="2.5" width="13" height="11" rx="1.8" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M1.5 6h13" stroke="currentColor" stroke-width="1.4"/><circle cx="4" cy="4.3" r=".7" fill="currentColor"/><circle cx="6" cy="4.3" r=".7" fill="currentColor"/></svg>';
+/** A speech bubble, for the reminder while the medical file is prepared. */
+const ASK_ICON = '<svg class="ask-icon" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2.5 3h11v7.6H8l-3.2 2.6v-2.6H2.5z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+const TAB_ICON = '<svg class="tab-icon" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="1.5" y="2.5" width="13" height="11" rx="1.8" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M1.5 6h13" stroke="currentColor" stroke-width="1.4"/><circle cx="4" cy="4.3" r=".7" fill="currentColor"/><circle cx="6" cy="4.3" r=".7" fill="currentColor"/></svg>';
 
 // ---- views -------------------------------------------------------------
 /**
@@ -250,10 +255,11 @@ function progressView(run: RunState): Child[] {
   const count = h('span', { class: 'count' });
   const stats = h('p', { class: 'stats' });
   const hint = h('span');
+  const ask = h('span');
   const stages = STAGES.map((s) => h('li', {}, h('span', { class: 'name' }, s.label), h('span', { class: 'count' })));
-  const reminder = h('p', { class: 'reminder' }, hint);
-  reminder.insertAdjacentHTML('afterbegin', TAB_ICON);
-  live = { status: pill, bar, fill, band, activity, count, stats, stages, hint };
+  const reminder = h('p', { class: 'reminder' }, h('span', {}, hint, ask));
+  reminder.insertAdjacentHTML('afterbegin', TAB_ICON + ASK_ICON);
+  live = { status: pill, bar, fill, band, activity, count, stats, stages, hint, reminder, ask };
   return [
     h('h2', { class: 'visually-hidden' }, 'Export in progress'),
     h('div', { class: 'panel' },
@@ -305,6 +311,19 @@ const ZIP_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" st
 
 /** The shipped page on opening the export in an AI assistant (the README's section of the same name). */
 const AI_HELP = '/ai-assistant.html';
+
+/**
+ * The same page while the export runs, in a window of its own: a tab beside Maccabi Online's would put that one in
+ * the background, and the run waits for it to come back to the front.
+ */
+function askLink(): HTMLElement {
+  const a = h('a', { href: AI_HELP, target: '_blank', title: 'Opens in a new window' }, 'what to ask your AI assistant');
+  a.addEventListener('click', (e) => {
+    e.preventDefault();
+    void chrome.windows.create({ url: chrome.runtime.getURL(AI_HELP), width: 1100, height: 860, focused: true });
+  });
+  return a;
+}
 
 function doneView(run: RunState): Child[] {
   const shown = run.problems || [];
@@ -416,6 +435,12 @@ function updateLive(run: RunState): void {
     });
   }
   setText(live.hint, hintText(run));
+  // The wait for the medical file is the one stretch with nothing to watch: the reminder offers what to ask meanwhile.
+  const waiting = waitingForFile(run);
+  if (live.reminder && live.ask && live.reminder.classList.contains('waiting') !== waiting) {
+    live.reminder.classList.toggle('waiting', waiting);
+    live.ask.replaceChildren(...(waiting ? [' ', askLink()] : []));
+  }
   updateStats();
 }
 

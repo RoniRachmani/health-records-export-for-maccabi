@@ -245,7 +245,10 @@ Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare 
 
 **Official URL:** None. This field needs a domain verified in Google Search Console.
 
-**Homepage URL:** https://github.com/RoniRachmani/health-records-export-for-maccabi
+**Homepage URL:** https://ronirachmani.github.io/health-records-export-for-maccabi/ai-assistant.html
+
+The page the popup's "See how" opens, published from `public/` by `.github/workflows/pages.yml`: it shows what the
+export is for, and links to the source.
 
 **Support URL:** https://github.com/RoniRachmani/health-records-export-for-maccabi/issues
 

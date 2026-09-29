@@ -748,6 +748,21 @@ details.more summary:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* While the medical file is prepared, the strip offers the AI assistant page instead, under a speech bubble. */
+.reminder .ask-icon,
+.reminder.waiting .tab-icon {
+  display: none;
+}
+.reminder.waiting .ask-icon {
+  display: block;
+}
+.reminder a {
+  color: var(--accent);
+  text-underline-offset: 2px;
+}
+.reminder a:hover {
+  color: var(--accent-hover);
+}
 
 /* ---- done ---- */
 .file-card {

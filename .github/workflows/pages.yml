@@ -1,0 +1,47 @@
+# Publishes the pages the extension ships (public/: the AI assistant page, the Privacy Policy and the Terms of Use) at
+# https://ronirachmani.github.io/health-records-export-for-maccabi/, so they can be read before installing. The files
+# go up as they ship, plus two that only the web copy needs: og.png, the link preview's picture, and an index.html
+# that sends the site's root to the AI assistant page.
+name: Pages
+
+on:
+  push:
+    branches: [main]
+    paths: [public/**, store/assets/promo-marquee-1400x560.png, .github/workflows/pages.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}ai-assistant.html
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/configure-pages@v6
+      - name: Assemble the site
+        run: |
+          cp -R public _site
+          cp store/assets/promo-marquee-1400x560.png _site/og.png
+          cat > _site/index.html <<'EOF'
+          <!doctype html>
+          <meta charset="utf-8" />
+          <title>Health Records Export for Maccabi</title>
+          <meta http-equiv="refresh" content="0; url=ai-assistant.html" />
+          <link rel="canonical" href="ai-assistant.html" />
+          <a href="ai-assistant.html">Hand it to an AI assistant</a>
+          EOF
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v5

@@ -661,6 +661,19 @@ code {
   font-weight: 500;
 }
 
+/* ---- footer ---- */
+.foot {
+  max-width: var(--wide);
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 14px;
+}
+.foot p {
+  margin: 0 0 6px;
+}
+
 /* ---- narrow screens ---- */
 @media (max-width: 860px) {
   .hero,

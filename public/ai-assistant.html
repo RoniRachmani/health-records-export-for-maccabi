@@ -1,6 +1,6 @@
 <!doctype html>
-<!-- Shipped at chrome-extension://<id>/ai-assistant.html, the popup's "See how". Keep in sync with the README's
-     "Hand it to an AI assistant". Every record, name and value in the pictures is made up. No script: the tabs are
+<!-- Shipped at chrome-extension://<id>/ai-assistant.html, the popup's "See how", and published on the web by
+     .github/workflows/pages.yml. Keep in sync with the README's "Hand it to an AI assistant". Every record, name and value in the pictures is made up. No script: the tabs are
      radio buttons, so the page works under the extension's CSP and with nothing loaded. -->
 <html lang="en">
   <head>
@@ -8,6 +8,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light" />
     <title>Hand it to an AI assistant - Health Records Export for Maccabi</title>
+    <meta name="description" content="Ask an AI assistant about your Maccabi Online medical records, in plain language and in the language you speak. Free, open source and unofficial." />
+    <!-- For link previews of the web copy; og.png is added there by the Pages workflow. -->
+    <meta property="og:title" content="Your whole medical history, explained in your language" />
+    <meta property="og:description" content="Ask an AI assistant about your Maccabi Online medical records. Free, open source and unofficial." />
+    <meta property="og:image" content="https://ronirachmani.github.io/health-records-export-for-maccabi/og.png" />
+    <meta property="og:url" content="https://ronirachmani.github.io/health-records-export-for-maccabi/ai-assistant.html" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="stylesheet" href="pages.css" />
     <link rel="stylesheet" href="ai-assistant.css" />
   </head>
@@ -370,5 +377,15 @@
         </p>
       </section>
     </main>
+
+    <!-- For the web copy's visitors, who may not have the extension yet. -->
+    <footer class="foot">
+      <p>
+        <a href="https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp">Get it from the Chrome Web Store</a>
+        · <a href="https://github.com/RoniRachmani/health-records-export-for-maccabi">Source on GitHub</a>
+        · <a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Use</a>
+      </p>
+      <p>Free and open source. Unofficial: not affiliated with, endorsed by or sponsored by Maccabi Healthcare Services.</p>
+    </footer>
   </body>
 </html>

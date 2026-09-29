@@ -28,7 +28,8 @@ earliest visit. It helps you understand your records and prepare for your doctor
 </p>
 
 <p align="center">
-  ▶︎ <a href="https://youtu.be/zY5TxwlsGjs">Watch an export, start to finish</a> · 1 minute, narrated
+  ▶︎ <a href="https://youtu.be/zY5TxwlsGjs">Watch an export, start to finish</a> · 1 minute, narrated ·
+  <a href="https://ronirachmani.github.io/health-records-export-for-maccabi/ai-assistant.html">What to ask your AI assistant</a>
 </p>
 
 - **Ready for your AI assistant.** Open the folder in the Claude desktop app, Claude Code, ChatGPT Work or Codex, and the
@@ -209,8 +210,9 @@ in `files/` instead — those say so in their own `omitted` field.
 ### Hand it to an AI assistant
 
 Open your export in an AI assistant and ask about years of results, visits and letters. It reads the Hebrew, answers
-in English or whatever you speak, and shows you the record behind every answer. The extension's own page on this, which
-the popup's **See how** opens, shows it with pictures.
+in English or whatever you speak, and shows you the record behind every answer. [The extension's own page on
+this](https://ronirachmani.github.io/health-records-export-for-maccabi/ai-assistant.html) shows it with pictures. The popup opens it too: from **See how** when the export is done, and while
+Maccabi prepares your medical file, in a window of its own so the Maccabi Online tab stays in front.
 
 **What to ask.** Ask what you'd ask a doctor who had read everything. Five things it does well:
 
@@ -399,7 +401,8 @@ ships no fonts and downloads none.
 The tokens live at the top of `src/extension/popup/popup.css`, with `public/pages.css` repeating the ones the privacy,
 terms and AI assistant pages need (`public/` is copied verbatim, so it cannot import them). The AI assistant page adds
 `public/ai-assistant.css` for its wider, picture-led layout: its pictures are HTML and inline SVG with made-up records,
-and its tabs are radio buttons, so it runs no script. `popup.css` and `pages.css` both pin `color-scheme: light` —
+and its tabs are radio buttons, so it runs no script. `.github/workflows/pages.yml` publishes `public/` on GitHub
+Pages whenever it changes on `main`, so the AI assistant page and the policies can be read before installing. `popup.css` and `pages.css` both pin `color-scheme: light` —
 there is no dark theme, and pinning it keeps Chrome's auto-dark-mode from repainting controls and scrollbars
 against a light page. Every text colour meets WCAG AA on the surface it sits on. Chrome caps a popup at 600px
 tall, so keep the states that are not disclosures under it; `npm run store-assets` re-renders the store images.
@@ -508,7 +511,8 @@ film, drawn by the same page: `npm run store-assets -- poster`.
 - **Keep the policies in sync.** `docs/privacy.md` goes with `public/privacy.html`, and `docs/terms.md` with
   `public/terms.html`. Change the effective date when you change either. For a material change, also set
   `TERMS_EFFECTIVE` in `src/extension/shared/state.ts` to the new date, so the popup asks users to accept again.
-  Likewise *Hand it to an AI assistant* above goes with `public/ai-assistant.html`, the page the popup's "See how" opens.
+  Likewise *Hand it to an AI assistant* above goes with `public/ai-assistant.html`, the page the popup's "See how" opens
+  and GitHub Pages publishes.
 - **Keep [public/third-party-notices.txt](public/third-party-notices.txt) current.** It carries the licenses of
   third-party code bundled into the package (fflate, and Vite's module preload polyfill). Update it when a runtime
   dependency is added or upgraded.
