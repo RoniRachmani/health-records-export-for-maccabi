@@ -365,6 +365,7 @@ code {
 #uc-summary:checked ~ .tab-list [for='uc-summary'],
 #uc-labs:checked ~ .tab-list [for='uc-labs'],
 #uc-trend:checked ~ .tab-list [for='uc-trend'],
+#uc-changed:checked ~ .tab-list [for='uc-changed'],
 #uc-visit:checked ~ .tab-list [for='uc-visit'],
 #uc-find:checked ~ .tab-list [for='uc-find'] {
   background: var(--heading);
@@ -374,6 +375,7 @@ code {
 #uc-summary:focus-visible ~ .tab-list [for='uc-summary'],
 #uc-labs:focus-visible ~ .tab-list [for='uc-labs'],
 #uc-trend:focus-visible ~ .tab-list [for='uc-trend'],
+#uc-changed:focus-visible ~ .tab-list [for='uc-changed'],
 #uc-visit:focus-visible ~ .tab-list [for='uc-visit'],
 #uc-find:focus-visible ~ .tab-list [for='uc-find'] {
   outline: 2px solid var(--focus);
@@ -391,6 +393,7 @@ code {
 #uc-summary:checked ~ #p-summary,
 #uc-labs:checked ~ #p-labs,
 #uc-trend:checked ~ #p-trend,
+#uc-changed:checked ~ #p-changed,
 #uc-visit:checked ~ #p-visit,
 #uc-find:checked ~ #p-find {
   display: grid;

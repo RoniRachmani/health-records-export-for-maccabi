@@ -64,18 +64,20 @@
       <!-- Use cases, as tabs: radio buttons and labels, one panel each. -->
       <section id="ask" class="band">
         <h2>Ask what you'd ask a doctor who had read everything</h2>
-        <p class="sub">Five of the things it does well. Pick one to see an answer.</p>
+        <p class="sub">Six of the things it does well. Pick one to see an answer.</p>
 
         <div class="tabs">
           <input type="radio" name="uc" id="uc-summary" checked />
           <input type="radio" name="uc" id="uc-labs" />
           <input type="radio" name="uc" id="uc-trend" />
+          <input type="radio" name="uc" id="uc-changed" />
           <input type="radio" name="uc" id="uc-visit" />
           <input type="radio" name="uc" id="uc-find" />
           <div class="tab-list" role="presentation">
             <label for="uc-summary">Health summary</label>
             <label for="uc-labs">Understand a result</label>
             <label for="uc-trend">See a trend</label>
+            <label for="uc-changed">What changed</label>
             <label for="uc-visit">Prepare for a visit</label>
             <label for="uc-find">Find anything</label>
           </div>
@@ -179,6 +181,36 @@
                 <p class="src">
                   <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5l3 3v10H4z M9 1.5v3h3" /></svg>
                   test-results/history/…_HbA1c.json · 9 results
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" id="p-changed">
+            <div class="panel-copy">
+              <h3>See what changed</h3>
+              <p>
+                Every result against the years before it: what is new, what got better, what is creeping up while still
+                in range, and what was never checked again.
+              </p>
+            </div>
+            <div class="chat">
+              <p class="msg you">What changed in my latest blood tests?</p>
+              <div class="msg bot">
+                <dl class="facts">
+                  <dt>New</dt>
+                  <dd>LDL cholesterol, 138 mg/dL: above the range for the first time</dd>
+                  <dt>Better</dt>
+                  <dd>Ferritin, 45 ng/mL: back in range, low in 2024</dd>
+                  <dt>Creeping up</dt>
+                  <dd>Creatinine, 0.9 to 1.1 mg/dL over three years, still in range</dd>
+                  <dt>Not rechecked</dt>
+                  <dd>TSH, high in 2023 and not tested since</dd>
+                </dl>
+                <p>Worth asking at your next visit whether to test TSH again.</p>
+                <p class="src">
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5l3 3v10H4z M9 1.5v3h3" /></svg>
+                  test-results/history/ · 34 measurements
                 </p>
               </div>
             </div>
