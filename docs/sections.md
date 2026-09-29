@@ -78,6 +78,9 @@ Measured on 2026-09-29 by `npm run live -- --export` on one account: a real expo
 | 17 | Saving the ZIP | `save:root files`, `save:zip` (0.2 s), `save:download` (0.3 s) | 0.5 s | 0 |
 | | All | | 2 min 59 s | 254 |
 
+`WEIGHTS` in `state.ts` are these times at about half a point a second, so the progress bar stays within about 2
+points of the elapsed time while the medical file is ready when line 16 comes; re-measure before changing them.
+
 About 0.70 s a request: the 300 ms of pacing and about 0.4 s of the site's answer. Test results, lab histories, the
 doctor messages and referrals are about two thirds of the time; each grows with the member's history. Building and
 downloading the ZIP is under a second.
