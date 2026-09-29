@@ -172,7 +172,13 @@ export async function openStage() {
       browser.kill('SIGKILL');
       await Promise.race([gone, sleep(2000)]);
     }
-    rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+    // On Linux its helper processes can outlive it and keep writing there. A temporary folder left
+    // behind is no reason to fail a render that has already been written.
+    try {
+      rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+    } catch (e) {
+      console.warn('could not remove the browser profile ' + profile + ': ' + e.message);
+    }
   }
 
   await launch();
