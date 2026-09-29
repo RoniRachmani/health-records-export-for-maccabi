@@ -169,6 +169,11 @@ export interface RunState {
    * or a rewind runs a step again. The time is wall-clock, pacing and waits included; `alive` pings don't count.
    */
   timings?: Record<string, Timing>;
+  /** When the medical file was ordered (ISO), and the time from then until the run had its PDF. */
+  orderedAt?: string;
+  medicalFileMs?: number;
+  /** When the ZIP's download began (epoch ms), for the `save:download` timing. */
+  downloadStartedAt?: number;
   zipName?: string;
   /** Size of the saved ZIP. */
   zipBytes?: number;

@@ -405,9 +405,12 @@ Replies carry statuses, sizes and counts, never record contents. None of this is
 (Chrome, Chromium or Edge; `CHROME_PATH` picks one) with `dist-dev/` loaded, signs in if the session has ended,
 and drives the run through the commands above, printing the step, file count and problems as it goes. It always
 turns on `dev:skipOrder` first, and will not start unless the extension confirms it, so a test never orders the
-medical file or makes Maccabi send an SMS; there is no option that would. It stops before `save`, prints the
+medical file or makes Maccabi send an SMS; the script itself never orders, with or without `--export` below. It stops before `save`, prints the
 files collected per folder and the time and requests of each step and part (the run's `timings`, which
-`docs/sections.md` tabulates), and discards the run, so nothing is downloaded. `npm run live -- --keep` leaves the
+`docs/sections.md` tabulates), and discards the run, so nothing is downloaded. `npm run live -- --export` starts
+nothing: it turns both test switches off and waits for you to press Start in the popup, then follows that export,
+which is a real one (it orders the medical file, so Maccabi sends an SMS, and downloads the ZIP), and prints its
+timings with the time from the order to the file being ready and the ZIP's size. `npm run live -- --keep` leaves the
 browser and the paused run in place, to look at them. `npm run live -- --root-files` also writes the ZIP's root
 files before discarding the run (`dev:rootFiles`), and prints the README's version line, what it says failed, and
 `export-errors.json` beside the popup's problem count. `npm run live -- --screenshots` photographs the popup

@@ -1,12 +1,15 @@
 // A live test run against your own Maccabi Online account: opens a browser with the development
 // build loaded, signs in with the username and password from 1Password if the session has ended,
 // and drives an export through the dev bridge (see *Driving a run from the console* in the README).
-// It always skips orderMedicalFile (dev:skipOrder), the one request that changes anything: a test never
-// orders the medical file or makes Maccabi send an SMS, and there is deliberately no option that would.
-// It stops before save, so no ZIP is downloaded; what it reports is what was collected.
+// It skips orderMedicalFile (dev:skipOrder), the one request that changes anything, so a test never orders the
+// medical file or makes Maccabi send an SMS, and it stops before save, so no ZIP is downloaded; what it reports is
+// what was collected. With --export it starts nothing: the member presses Start in the popup, and that export is a
+// real one, which orders (SMS) and downloads the ZIP; the script only watches it. The script itself never orders.
 //
 //   npm run live                  collects everything except the medical-file order, then stops before the ZIP,
 //                                 and prints the files per folder, and the time and requests of each step and part
+//   npm run live -- --export      turns the two switches off, waits for you to press Start in the popup, and
+//                                 times the whole export, the medical file and the ZIP included
 //   npm run live -- --keep        leaves the browser open at the end
 //   npm run live -- --root-files  then writes the ZIP's root files as the save step does (still no ZIP), and
 //                                 prints the README's version line, what it says failed, and export-errors.json
@@ -40,6 +43,7 @@ const PROFILE = process.env.LIVE_PROFILE || join(homedir(), '.hrem-live-profile'
 const ITEM = process.env.MACCABI_OP_ITEM || 'Maccabi';
 const KEEP = process.argv.includes('--keep');
 const ROOT_FILES = process.argv.includes('--root-files');
+const EXPORT = process.argv.includes('--export');
 const SHOTS = process.argv.includes('--screenshots')
   ? join(root, '.cache', 'live-screenshots', new Date().toISOString().slice(0, 19).replace(/:/g, '-'))
   : null;
@@ -394,18 +398,32 @@ async function main() {
   } else if (before.run) {
     await ask(page, { type: 'dev:dismiss' });
   }
-  const skip = await ask(page, { type: 'dev:skipOrder', on: true });
-  if (skip?.on !== true) {
-    throw new Error('The extension did not confirm dev:skipOrder (it answered ' + JSON.stringify(skip ?? null)
-      + '); not starting a run that could order.');
-  }
-  const stop = await ask(page, { type: 'dev:stopBefore', step: 'save' });
-  if (stop?.ok !== true) throw new Error('The extension did not confirm dev:stopBefore save; not starting.');
+  if (EXPORT) {
+    // The member's own Start in the popup is what orders: this script still never does.
+    const skip = await ask(page, { type: 'dev:skipOrder', on: false });
+    const stop = await ask(page, { type: 'dev:stopBefore', step: null });
+    if (skip?.on !== false || stop?.ok !== true) throw new Error('The extension did not confirm turning the test switches off.');
+    console.log('Press Start in the extension\'s popup on the Maccabi tab. This is a real export: it orders the medical '
+      + 'file (Maccabi sends an SMS) and downloads the ZIP. Waiting up to 10 minutes for it to start.');
+    const until = Date.now() + 10 * 60_000;
+    while (!(await page.dev({ type: 'dev:state' }))?.run) {
+      if (Date.now() > until) throw new Error('No export was started.');
+      await sleep(POLL_MS);
+    }
+  } else {
+    const skip = await ask(page, { type: 'dev:skipOrder', on: true });
+    if (skip?.on !== true) {
+      throw new Error('The extension did not confirm dev:skipOrder (it answered ' + JSON.stringify(skip ?? null)
+        + '); not starting a run that could order.');
+    }
+    const stop = await ask(page, { type: 'dev:stopBefore', step: 'save' });
+    if (stop?.ok !== true) throw new Error('The extension did not confirm dev:stopBefore save; not starting.');
 
-  await shoot(page, 'ready');
-  const started = await page.dev({ type: 'dev:start' });
-  if (started?.error) throw new Error('dev:start: ' + started.error);
-  console.log('Export started: no medical-file order, and it stops before saving the ZIP.');
+    await shoot(page, 'ready');
+    const started = await page.dev({ type: 'dev:start' });
+    if (started?.error) throw new Error('dev:start: ' + started.error);
+    console.log('Export started: no medical-file order, and it stops before saving the ZIP.');
+  }
 
   let last = '';
   let run;
@@ -426,7 +444,7 @@ async function main() {
     state = s;
     run = s.run;
     if (!run) throw new Error('The run disappeared.');
-    const line = `${run.status} ${run.nextStep} ${run.percent}% | ${s.staged.files} files, ${s.problems} problems`;
+    const line = `${run.status} ${run.nextStep ?? 'finished'} ${run.percent}% | ${s.staged.files} files, ${s.problems} problems`;
     if (line !== last) console.log(line);
     if (line.split(' ', 2).join(' ') !== last.split(' ', 2).join(' ')) await shoot(page, run.status + '-' + run.nextStep);
     last = line;
@@ -449,8 +467,11 @@ async function main() {
     for (const [key, t] of timed) console.log(`  ${key.padEnd(width)}  ${secs(t.ms).padStart(12)}  ${String(t.requests).padStart(5)} requests`);
     const ms = timed.reduce((a, [, t]) => a + t.ms, 0);
     const requests = timed.reduce((a, [, t]) => a + t.requests, 0);
-    console.log(`  all steps: ${secs(ms)}, ${requests} requests; since the start: ${secs(Date.now() - Date.parse(run.startedAt))}`);
+    const end = run.finishedAt ? Date.parse(run.finishedAt) : Date.now();
+    console.log(`  all steps: ${secs(ms)}, ${requests} requests; since the start: ${secs(end - Date.parse(run.startedAt))}`);
   }
+  if (run.medicalFileMs) console.log(`  medical file: ready ${secs(run.medicalFileMs)} after the order`);
+  if (run.zipBytes) console.log(`  ZIP: ${run.fileCount} files, ${(run.zipBytes / 1e6).toFixed(1)} MB, in the browser's downloads folder`);
   if (stopped && ROOT_FILES) {
     const root = await page.dev({ type: 'dev:rootFiles' }, 30_000);
     if (!root || root.error) {
@@ -468,6 +489,8 @@ async function main() {
   if (run.status === 'paused_session' && !KEEP) await page.dev({ type: 'dev:cancel' });
   if (stopped) {
     console.log('Collected everything; stopped before saving the ZIP.');
+  } else if (EXPORT && run.status === 'done') {
+    console.log('Exported: the ZIP is saved.');
   } else {
     console.log(run.status + ': ' + (run.message || ''));
     process.exitCode = 1;

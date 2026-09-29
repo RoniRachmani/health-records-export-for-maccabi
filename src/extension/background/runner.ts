@@ -397,6 +397,7 @@ async function runPlanStep(step: PlanStep): Promise<void> {
       if (!SUMMARY_PATH.test((await snapshot(run.tabId)).path)) await navigate(run.tabId, SUMMARY_PAGE, SUMMARY_PATH);
       const c = await collector();
       run.order = await placeOrder(c);
+      if (run.order.ordered) run.orderedAt = new Date().toISOString();
       if (run.order.error) await c.problem(MEDICAL_FILE, 'medical file not ordered: ' + run.order.error);
       return;
     }
@@ -413,7 +414,8 @@ async function runPlanStep(step: PlanStep): Promise<void> {
     case 'waitMedicalFile': {
       const c = await collector();
       if (run.order && run.order.ordered) {
-        await waitMedicalFile(c, { toDate: run.order.to_date, mustSeePending: run.order.same_day_before });
+        const waited = await waitMedicalFile(c, { toDate: run.order.to_date, mustSeePending: run.order.same_day_before });
+        if (waited.ready && run.orderedAt) run.medicalFileMs = Date.now() - Date.parse(run.orderedAt);
       } else {
         // No new file was ordered: keep the one Maccabi already has, if any.
         await letters(c, newCtx());
@@ -476,11 +478,16 @@ async function saveZip(): Promise<void> {
   run.detail = LABELS.save;
   await save();
   const root = exportName(Date.now());
+  timeUnder(stagingKey('save', 'root files'));
   await writeReadme(root, run);
+  timeUnder(stagingKey('save', 'zip'));
   const zip = await callOffscreen<{ url: string; bytes: number; files: number }>({ type: 'zip', root });
   run.zipName = root + '.zip';
   run.fileCount = zip.files;
   run.zipBytes = zip.bytes;
+  // The download finishes after this step returns: onDownloadChanged times it.
+  timeUnder(null);
+  run.downloadStartedAt = Date.now();
   run.downloadId = await chrome.downloads.download({ url: zip.url, filename: run.zipName, conflictAction: 'uniquify', saveAs: false });
   run.blobUrl = zip.url;
   await save();
@@ -497,6 +504,7 @@ export async function onDownloadChanged(delta: chrome.downloads.DownloadDelta): 
     run.problemCount = problems.length;
     run.status = 'done';
     run.finishedAt = new Date().toISOString();
+    if (run.downloadStartedAt) run.timings = { ...run.timings, 'save:download': { ms: Date.now() - run.downloadStartedAt, requests: 0 } };
     run.percent = 100;
     run.next = PLAN.length;
     run.message = undefined;
