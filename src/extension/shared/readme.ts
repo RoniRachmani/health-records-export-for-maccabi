@@ -273,7 +273,7 @@ export function exportReadme(
   const started = israelDay(Date.parse(made.startedAt));
   const version = 'version ' + made.version + ', file layout ' + made.layout + (made.dev ? ' (development build)' : '');
   const folders = here
-    .map((f) => '**`' + f.name + '/`** · ' + present[f.name] + ' files — ' + f.summary + '.' +
+    .map((f) => '**`' + f.name + '/`** · ' + present[f.name] + (present[f.name] === 1 ? ' file — ' : ' files — ') + f.summary + '.' +
       (f.detail ? '\n' + f.detail : ''))
     .join('\n\n');
   return `# Maccabi health records export

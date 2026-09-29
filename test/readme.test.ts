@@ -49,6 +49,7 @@ describe('exportReadme', () => {
     const md = readme();
     expect(md).toContain('**`test-results/`** · 6 files');
     expect(md).toContain('**`letters/`** · 2 files');
+    expect(readme({ ...PRESENT, 'allergies-sensitivity': 1 })).toContain('**`allergies-sensitivity/`** · 1 file —');
     // A section the site had nothing for is not described as if it were there.
     expect(md).not.toContain('**`appointments/`** ·');
   });

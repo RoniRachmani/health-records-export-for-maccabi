@@ -20,8 +20,10 @@ export async function testResults(c: Collector, _ctx: Ctx): Promise<void> {
     c.progress(i, tests.length * 2, 'test results', { done: i, total: tests.length });
     // The API gives a test no single id: the pair (request_id, type) is what identifies it. An
     // imaging study's request_id is its DICOM id, 55 characters; one that long is named by a hash of
-    // it instead (the wrapper keeps the id itself).
-    const id = String(t.request_id).length > 40 ? await shortHash([t.request_id]) : safe(t.request_id);
+    // it instead (the wrapper keeps the id itself). Some request_ids are negative: safe() would drop
+    // the sign, and the name would no longer be the id the list gives.
+    const rid = String(t.request_id);
+    const id = rid.length > 40 ? await shortHash([t.request_id]) : (/^-\d/.test(rid) ? '-' : '') + safe(rid);
     let name = stem(iso(t.execute_date), id + '-' + safe(t.type), titleOf(t, TEST_TITLE));
     if (seen[name]) name += '-' + (await shortHash([t.doc_id, t.execute_date, t.request_id, t.type]));
     seen[name] = true;

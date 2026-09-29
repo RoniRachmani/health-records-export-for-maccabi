@@ -350,6 +350,23 @@ describe('full run against the fake site', () => {
     });
   });
 
+  // The site gives some tests a negative request_id; the file name keeps the id as the list has it.
+  it('names a test with a negative request_id by that id, sign and all', async () => {
+    const site = fakeMaccabi();
+    const tests: Route = (req, url) => (req.method === 'POST' && url.pathname.endsWith('/tests')
+      ? jsonResp({ tests: [
+        { type: 'lab_result', request_id: -68002810, test_name: 'שתן', doc_id: 'D2', execute_date: '2022-04-06T00:00:00' },
+        { type: 'lab_result', request_id: 68002810, test_name: 'שתן', doc_id: 'D3', execute_date: '2022-04-06T00:00:00' },
+      ] })
+      : undefined);
+    const { c, sink } = makeCollector(fakeTransport([tests, ...site.routes]));
+    await runAll(c, newCtx(), ['testResults']);
+    expect([...(sink as MemorySink).files.keys()].filter((k) => k.startsWith('test-results/details/')).sort()).toEqual([
+      'test-results/details/2022-04-06_-68002810-lab-result_שתן.json',
+      'test-results/details/2022-04-06_68002810-lab-result_שתן.json',
+    ]);
+  });
+
   // general_question_subject can be the opening of the member's own message, so the forms say it better.
   it('names an inquiry by its forms before its question', async () => {
     const site = fakeMaccabi();
