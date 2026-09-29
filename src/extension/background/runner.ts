@@ -415,7 +415,12 @@ async function runPlanStep(step: PlanStep): Promise<void> {
     case 'waitMedicalFile': {
       const c = await collector();
       if (run.order && run.order.ordered) {
-        const waited = await waitMedicalFile(c, { toDate: run.order.to_date, mustSeePending: run.order.same_day_before });
+        // A run stored before same_range_before existed goes by same_day_before, as it did then.
+        const waited = await waitMedicalFile(c, {
+          toDate: run.order.to_date,
+          fromDate: run.order.from_date,
+          mustSeePending: run.order.same_range_before ?? run.order.same_day_before,
+        });
         if (waited.ready && run.orderedAt) run.medicalFileMs = Date.now() - Date.parse(run.orderedAt);
       } else {
         // No new file was ordered: keep the one Maccabi already has, if any.

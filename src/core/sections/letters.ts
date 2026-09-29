@@ -57,6 +57,8 @@ export interface OrderResult {
   to_date?: string;
   /** A ready medical file with the same to_date existed before this order. */
   same_day_before?: boolean;
+  /** ...and over the same range, so the list cannot tell it from the new one (dev:reorder orders anyway). */
+  same_range_before?: boolean;
   /** Nothing was ordered: a file from today over the same range was already waiting, and is used instead. */
   skipped_ready_today?: boolean;
 }
@@ -82,10 +84,11 @@ export async function placeOrder(c: Collector, opts: { reorder?: boolean } = {})
   }
   const before = pre.letter;
   const sameDayBefore = !!(before && before.to_date === toDate && before.status === 1);
+  const sameRangeBefore = sameDayBefore && coversFrom(before, fromDate);
   // A ready file from today over the same range is what this order would produce: take that one
   // instead of making Maccabi build it again (and text you again).
-  if (sameDayBefore && !opts.reorder && (!before.from_date || iso(before.from_date) === fromDate)) {
-    return { ordered: false, skipped_ready_today: true, from_date: fromDate, to_date: toDate, same_day_before: true };
+  if (sameRangeBefore && !opts.reorder) {
+    return { ordered: false, skipped_ready_today: true, from_date: fromDate, to_date: toDate, same_day_before: true, same_range_before: true };
   }
   // XMLHttpRequest, not fetch: Radware adds the uzlc header only to XHRs.
   let res: { status: number; text: string };
@@ -112,15 +115,29 @@ export async function placeOrder(c: Collector, opts: { reorder?: boolean } = {})
       (data && data.Success === '2' ? ' (ordered without SMS)' : ''));
     return { ordered: false, success_code: data ? data.Success : undefined };
   }
-  return { ordered: true, success_code: data.Success, from_date: fromDate, to_date: toDate, same_day_before: sameDayBefore };
+  return { ordered: true, success_code: data.Success, from_date: fromDate, to_date: toDate, same_day_before: sameDayBefore, same_range_before: sameRangeBefore };
+}
+
+/**
+ * Whether a listed medical file starts at fromDate. Its entry changes nothing else when Maccabi swaps in a new file
+ * (timestamp, hash and link change on every read), so the range is all that tells an order's file from an earlier
+ * one; an entry without a from_date is taken to match, as before the field was checked.
+ */
+function coversFrom(letter: Json, fromDate: string): boolean {
+  return !letter.from_date || iso(letter.from_date) === fromDate;
 }
 
 export interface WaitOptions {
   toDate?: string;
+  /** The order's startDate: a same-day file over another range is an earlier one, and is waited past. */
+  fromDate?: string;
   everyMs?: number;
   appearMs?: number;
   timeoutMs?: number;
-  /** A ready same-day file existed before the order: wait until the list shows the new one pending (or appearMs passes). */
+  /**
+   * A ready file over this same day and range existed before the order (only dev:reorder orders then), so the list
+   * cannot tell the two apart: wait until it shows the new one pending, or appearMs passes.
+   */
   mustSeePending?: boolean;
 }
 
@@ -131,6 +148,7 @@ export async function waitMedicalFile(c: Collector, opts: WaitOptions = {}): Pro
   const everyMs = opts.everyMs || 15000;
   const appearMs = opts.appearMs || 2 * 60000;
   const timeoutMs = opts.timeoutMs || 15 * 60000;
+  const fromDate = opts.fromDate || '1900-01-01';
   const started = c.now();
   let polls = 0;
   let sawPending = false;
@@ -138,17 +156,22 @@ export async function waitMedicalFile(c: Collector, opts: WaitOptions = {}): Pro
   while (true) {
     polls++;
     const m = await medicalFileLetter(c);
-    x = m.letter && m.letter.to_date === toDate ? m.letter : null;
+    const sameDay: Json = m.letter && m.letter.to_date === toDate ? m.letter : null;
+    // Today's file over another range was ordered before this one (on the site, say): it is still listed because
+    // Maccabi has not swapped in this order's file yet, so it is being prepared.
+    x = sameDay && coversFrom(sameDay, fromDate) ? sameDay : null;
     const waited = c.now() - started;
-    c.progress(Math.min(waited, timeoutMs), timeoutMs, x ? 'medical file status ' + x.status : 'waiting for the medical file to appear');
+    c.progress(Math.min(waited, timeoutMs), timeoutMs,
+      x ? 'medical file status ' + x.status : sameDay ? 'medical file status pending' : 'waiting for the medical file to appear');
     if (x && x.status !== 1) sawPending = true;
     if (x && x.status === 1 && x.link && (sawPending || !opts.mustSeePending || waited > appearMs)) break;
-    if (!x && waited > appearMs) {
+    if (!sameDay && waited > appearMs) {
       await c.problem(MEDICAL_FILE, 'no medical file with to_date ' + toDate + ' after ' + Math.round(waited / 1000) + ' s');
       return { polls, ready: false };
     }
     if (waited > timeoutMs) {
-      await c.problem(MEDICAL_FILE, 'medical file to ' + toDate + ' still status ' + (x && x.status) + ' after ' + Math.round(waited / 60000) + ' min; export again later');
+      const what = x ? 'still status ' + x.status : 'still not swapped for an earlier file over another range';
+      await c.problem(MEDICAL_FILE, 'medical file to ' + toDate + ' ' + what + ' after ' + Math.round(waited / 60000) + ' min; export again later');
       return { polls, ready: false };
     }
     await c.sleep(everyMs);

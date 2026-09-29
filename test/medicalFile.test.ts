@@ -37,18 +37,18 @@ describe('placeOrder', () => {
     const site = fakeMaccabi({ medicalFile: ready });
     let xhrs = 0;
     const { c } = makeCollector(fakeTransport(site.routes, { pagePath: SUMMARY, xhr: () => { xhrs++; return ok('1'); } }));
-    expect(await placeOrder(c)).toMatchObject({ ordered: false, skipped_ready_today: true, same_day_before: true, to_date: '2026-09-17' });
+    expect(await placeOrder(c)).toMatchObject({ ordered: false, skipped_ready_today: true, same_day_before: true, same_range_before: true, to_date: '2026-09-17' });
     expect(xhrs).toBe(0);
 
     // A same-day file over a narrower range isn't what this export asks for, so it does order.
     const narrower = fakeMaccabi({ medicalFile: { ...ready, from_date: '2023-09-17T00:00:00' } });
     const { c: c2 } = makeCollector(fakeTransport(narrower.routes, { pagePath: SUMMARY, xhr: () => { xhrs++; return ok('1'); } }));
-    expect(await placeOrder(c2)).toMatchObject({ ordered: true, same_day_before: true });
+    expect(await placeOrder(c2)).toMatchObject({ ordered: true, same_day_before: true, same_range_before: false });
     expect(xhrs).toBe(1);
 
     // reorder (dev:reorder) orders anyway, and the wait then looks for the new file, not the ready one.
     const { c: c3 } = makeCollector(fakeTransport(site.routes, { pagePath: SUMMARY, xhr: () => { xhrs++; return ok('1'); } }));
-    expect(await placeOrder(c3, { reorder: true })).toMatchObject({ ordered: true, same_day_before: true });
+    expect(await placeOrder(c3, { reorder: true })).toMatchObject({ ordered: true, same_day_before: true, same_range_before: true });
     expect(xhrs).toBe(2);
   });
 });
@@ -72,6 +72,27 @@ describe('waitMedicalFile', () => {
     expect(sink.files.get('2026-09-17_medical-file.pdf')).toEqual(PDF);
     expect(sink.files.has('letters/list.json')).toBe(true);
     expect(sink.problems).toEqual([]);
+  });
+
+  it('waits past today\'s file over a narrower range, however long the new one takes', async () => {
+    // Maccabi swaps the file in place and never lists it pending: only the range tells the new one from the old.
+    const narrower = { letter_type: 2, status: 1, to_date: '2026-09-17', from_date: '2023-09-17T00:00:00', item_date: '2026', link: 'old.pdf', timestamp: 'a' };
+    const state = { medicalFile: narrower as Record<string, unknown> };
+    const site = fakeMaccabi(state);
+    const clock = new FakeClock();
+    const t0 = clock.t;
+    clock.onSleep = () => {
+      // 3 minutes in: past the 2 after which a same-range file is taken without seeing it pending.
+      if (clock.t - t0 >= 180_000) state.medicalFile = { ...narrower, from_date: '1900-01-01T00:00:00', link: 'mf.pdf', timestamp: 'b' };
+    };
+    const details: string[] = [];
+    const { c, sink } = makeCollector(fakeTransport(site.routes), new MemorySink(), clock, { progress: (ev) => details.push(ev.detail ?? '') });
+    const w = await waitMedicalFile(c, { toDate: '2026-09-17', fromDate: '1900-01-01', mustSeePending: false });
+    // Taking the narrower file would have been immediate: nothing about it is pending.
+    expect(w.ready).toBe(true);
+    expect(w.ready_after_s).toBeGreaterThanOrEqual(180);
+    expect(details[0]).toBe('medical file status pending');
+    expect((sink as MemorySink).problems).toEqual([]);
   });
 
   it('gives up when no letter appears within 2 minutes', async () => {

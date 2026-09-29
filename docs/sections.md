@@ -90,11 +90,15 @@ check already found the file ready, so Maccabi took at most that, and the line w
 The same day, with `--export --reorder` (`dev:reorder`: order even though today's file is ready), the run took
 5 min 2 s and 262 requests. Line 1 was 13.0 s, of which the order request took 8.9 s, against 1.5 s in the run
 above. Line 16 was 2 min 15 s, and the run had the new PDF 4 min 49 s after the order. That wait is the run's own
-rule, not Maccabi's pace. With a ready file from earlier that day in the list, the wait takes a ready file as the
-new one only after it has seen the new order pending (`mustSeePending`), or after 2 minutes (`appearMs`). Here every
-check showed a ready file, so the run waited out the 2 minutes. The new file may have been ready when the wait
-began, 2 min 35 s after the order. The ZIP's PDF did differ from the earlier one. A first export of the day has no
-such file in the list, so it takes the first ready check.
+rule, not Maccabi's pace. Maccabi swaps the new file into the list's one medical-file entry in place, without listing
+it pending first, and nothing in the entry but its range tells a new file from an earlier one (`timestamp`, `hash`
+and `link` change on every read). So with a ready file from earlier that day over the same range, which only
+`--reorder` orders past, the wait takes a ready file as the new one only after it has seen the new order pending
+(`mustSeePending`), or after 2 minutes (`appearMs`). Here every check showed a ready file, so the run waited out the
+2 minutes. The new file may have been ready when the wait began, 2 min 35 s after the order. The ZIP's PDF did differ
+from the earlier one. A same-day file over another range (the site's own order form asks for a narrower one) is waited
+past for as long as the new one takes, up to 15 minutes, since its range shows it is not the new one. A first export
+of the day has no same-day file at all, so it takes the first ready check, and its time is Maccabi's.
 
 A live test without `--export` never orders (`dev:skipOrder`) and stops before `save`: its line 1 is only the page
 change, and its line 16 collects whatever medical file Maccabi already has.
