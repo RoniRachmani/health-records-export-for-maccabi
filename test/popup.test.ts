@@ -82,6 +82,10 @@ describe('popup', () => {
     await flush();
     expect(sent.map((m) => m.type)).toContain('acceptNotice');
     expect(buttonNamed('Start export')).toBeTruthy();
+    // What the ZIP is for, before the first export as after it.
+    const then = [...document.querySelectorAll('.note')].find((n) => n.textContent?.startsWith('Then:'));
+    expect(then?.textContent).toBe('Then: ask an AI assistant about your records. See how');
+    expect([then?.querySelector('a')?.getAttribute('href'), then?.querySelector('a')?.getAttribute('target')]).toEqual(['/ai-assistant.html', '_blank']);
   });
 
   it('has a one-line header with the Unofficial chip, and a footer grouped by purpose', () => {

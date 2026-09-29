@@ -136,6 +136,10 @@ footer a,
   color: var(--accent);
   text-underline-offset: 2px;
 }
+/* A note's link is a short phrase ("See how"): it moves to the next line whole rather than split. */
+.note a {
+  white-space: nowrap;
+}
 /* The footer's links are quiet until pointed at. */
 footer a {
   text-decoration: none;

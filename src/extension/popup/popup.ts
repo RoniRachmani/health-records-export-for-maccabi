@@ -240,6 +240,9 @@ function idleView(st: StateReply): Child[] {
     actions(actionButton('Start export', { type: 'start' }, 'primary block', 'Checking your login…')),
     // The notice said it in full before the first export; this is the reminder.
     note('', h('strong', {}, 'Maccabi will text you:'), ' this orders a fresh copy of your medical file.'),
+    // What the ZIP is for, as the finished view's "Next:" says it. Nothing runs yet, so the page may take a tab.
+    note('', h('strong', {}, 'Then:'), ' ask an AI assistant about your records. ',
+      h('a', { href: AI_HELP, target: '_blank' }, 'See how')),
     includedDetails(),
   ];
 }
