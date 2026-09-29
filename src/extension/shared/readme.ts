@@ -243,6 +243,12 @@ as images.`;
 }
 
 /**
+ * The published AI assistant page, for the one line addressed to the member: whoever opens the export months later
+ * has no popup to ask, only this file.
+ */
+const AI_PAGE = 'https://ronirachmani.github.io/health-records-export-for-maccabi/ai-assistant.html';
+
+/**
  * The README for one export. present is the folders this export actually has, with how many files
  * each holds, so nothing is described that is not there; medicalFile is the name of the full
  * medical file PDF at the root, or null when the export has none; errors is what the run failed to
@@ -271,6 +277,9 @@ export function exportReadme(
       (f.detail ? '\n' + f.detail : ''))
     .join('\n\n');
   return `# Maccabi health records export
+
+> **Member:** to ask an AI assistant about these records, open this whole folder in one. How, and what
+> to ask: ${AI_PAGE}
 
 Exported ${exportedOn}${started !== exportedOn ? ' (collected from ' + started + ')' : ''} from online.maccabi4u.co.il with the
 Health Records Export for Maccabi browser extension, ${version}; everything here belongs to one member. If you are an AI assistant working with

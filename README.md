@@ -174,7 +174,8 @@ file is instead (`files[]`, with `same_as`).
 > there instead.
 
 `README.md` is written for whoever reads the export next, most often an AI assistant (see
-[Hand it to an AI assistant](#hand-it-to-an-ai-assistant)). It opens with how to work with the records, then points
+[Hand it to an AI assistant](#hand-it-to-an-ai-assistant)). A single line addressed to you comes first, linking the
+page on opening the folder in an assistant. Then it says how to work with the records, points
 at your full medical file PDF as the one document to start from, then says what the export doesn't contain — no DICOM images, no visit
 data over 12 months — so a reader doesn't take an omission for an absence in your history. It then goes folder by
 folder, and through the values that mislead: a lab `result` of 0 that is really a text answer, placeholder dates,

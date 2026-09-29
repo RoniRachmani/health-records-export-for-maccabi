@@ -128,7 +128,8 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   `offscreenClient.ts`.
 - **The export's `README.md`** (`shared/readme.ts`) is written for an AI assistant: the ZIP is made to be
   opened in the Claude desktop app (formerly Claude Cowork), Claude Code, ChatGPT Work or Codex, with the README as the assistant's saved
-  instructions and the records as its project files. It opens with how to work with the records, then is
+  instructions and the records as its project files. After one line for the member (the published AI assistant
+  page, for whoever opens the export with no popup at hand), it opens with how to work with the records, then is
   their data dictionary, and it is kept short because it shares the assistant's context with them.
   `INSTRUCTION_POINTERS` writes a `CLAUDE.md` (which imports it) and an `AGENTS.md` (which points to it) beside
   it, because those tools load those names and never a README.
