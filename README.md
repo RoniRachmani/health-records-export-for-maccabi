@@ -28,14 +28,23 @@ earliest visit. It helps you understand your records and prepare for your doctor
 </p>
 
 <p align="center">
-  ▶︎ <a href="https://youtu.be/zY5TxwlsGjs">Watch an export, start to finish</a> · 1 minute, narrated ·
-  <a href="https://ronirachmani.github.io/health-records-export-for-maccabi/ai-assistant.html">What to ask your AI assistant</a>
+  ▶︎ <a href="https://youtu.be/zY5TxwlsGjs">Watch an export, start to finish</a> · 1 minute, narrated
+</p>
+
+<p align="center">
+  <a href="https://ronirachmani.github.io/health-records-export-for-maccabi/ai-assistant.html">
+    <img src="store/assets/screenshot-1-ask.png" alt="An AI assistant opened on an export, answering how a made-up HbA1c result changed since 2019 and naming the file behind the answer" width="720">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://ronirachmani.github.io/health-records-export-for-maccabi/ai-assistant.html">What to ask your AI assistant, and where to open your export</a> · every record in the picture is made up
 </p>
 
 - **Ready for your AI assistant.** Open the folder in the Claude desktop app, Claude Code, ChatGPT Work or Codex, and the
   ZIP's `README.md` becomes the assistant's instructions for your records. Assistants that connect to medical records
   reach U.S. providers, not Maccabi Healthcare Services; this is how yours get to one. See
-  [Hand it to an AI assistant](#hand-it-to-an-ai-assistant).
+  [what to ask, with pictures](https://ronirachmani.github.io/health-records-export-for-maccabi/ai-assistant.html).
 - **In your language.** The records are mostly in Hebrew. Ask about them, and get answers, in English or whatever you
   speak.
 - **Thorough.** Test results, visit summaries, prescriptions and purchases, referrals, vaccinations, letters, doctor

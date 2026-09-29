@@ -164,6 +164,14 @@ body.og {
     radial-gradient(520px 520px at 600px 170px, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 70%),
     linear-gradient(135deg, #052658 0%, #083f92 55%, #296bed 100%);
 }
+/* The repository's social preview: GitHub's size, the same picture. */
+body.og.social {
+  width: 1280px;
+  height: 640px;
+  background:
+    radial-gradient(520px 520px at 640px 175px, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 70%),
+    linear-gradient(135deg, #052658 0%, #083f92 55%, #296bed 100%);
+}
 .og {
   height: 100%;
   display: flex;

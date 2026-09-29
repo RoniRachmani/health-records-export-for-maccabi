@@ -21,6 +21,8 @@ const IMAGES = [
   // Not a store field either, and not committed: the published AI assistant page's link preview, which
   // .github/workflows/pages.yml renders on each deploy (with Roboto installed) and publishes as og.png.
   { file: 'og-1200x630.png', shot: 'og', width: 1200, height: 630 },
+  // The same at GitHub's size, published as social.png to be uploaded as the repository's social preview.
+  { file: 'social-1280x640.png', shot: 'social', width: 1280, height: 640 },
 ];
 
 const only = process.argv.slice(2);

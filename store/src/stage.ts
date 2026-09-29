@@ -154,7 +154,8 @@ function marquee(): HTMLElement {
 
 // The link preview of the published AI assistant page (1200x630, not a store field): the marquee's artwork and line,
 // centred, because WhatsApp and others crop previews to a narrower box, or a square, around the middle. The page's
-// own title is printed under it by the app showing the preview, so the picture says the rest.
+// own title is printed under it by the app showing the preview, so the picture says the rest. The `social` shot is
+// the same picture at GitHub's 1280x640, for the repository's social preview (uploaded by hand in its settings).
 function og(): HTMLElement {
   return h('div', 'og',
     svg(`<svg viewBox="0 0 540 440" width="290" height="236">
@@ -171,9 +172,9 @@ function og(): HTMLElement {
 
 async function main(): Promise<void> {
   const name = new URLSearchParams(location.search).get('shot') || 'start';
-  if (name === 'promo' || name === 'marquee' || name === 'og') {
-    document.body.className = name === 'promo' ? 'tile' : name;
-    document.body.append(name === 'promo' ? promo() : name === 'og' ? og() : marquee());
+  if (name === 'promo' || name === 'marquee' || name === 'og' || name === 'social') {
+    document.body.className = name === 'promo' ? 'tile' : name === 'social' ? 'og social' : name;
+    document.body.append(name === 'promo' ? promo() : name === 'marquee' ? marquee() : og());
   } else {
     const shot = SHOTS[name];
     if (!shot) throw new Error('unknown shot ' + name);

@@ -1,7 +1,9 @@
 # Publishes the pages the extension ships (public/: the AI assistant page, the Privacy Policy and the Terms of Use) at
 # https://ronirachmani.github.io/health-records-export-for-maccabi/, so they can be read before installing. The files
-# go up as they ship, plus two that only the web copy needs: og.png, the link preview's picture, rendered here by
-# `store-assets -- og` with Roboto installed, and an index.html that sends the site's root to the AI assistant page.
+# go up as they ship, plus what only the web copy needs: og.png, the link preview's picture, rendered here by
+# `store-assets -- og` with Roboto installed; social.png, the same at 1280x640 for the repository's social preview,
+# which GitHub takes only as an upload in its settings; and an index.html that sends the site's root to the AI
+# assistant page.
 name: Pages
 
 on:
@@ -39,12 +41,13 @@ jobs:
           fc-cache -f
           # Ubuntu's AppArmor keeps Chrome's sandbox from starting without this.
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-          npm run store-assets -- og
+          npm run store-assets -- og social
       - uses: actions/configure-pages@v6
       - name: Assemble the site
         run: |
           cp -R public _site
           cp store/assets/og-1200x630.png _site/og.png
+          cp store/assets/social-1280x640.png _site/social.png
           cat > _site/index.html <<'EOF'
           <!doctype html>
           <meta charset="utf-8" />
