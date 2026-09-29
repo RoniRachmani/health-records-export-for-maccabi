@@ -217,7 +217,8 @@ export async function openStage() {
         },
       };
       for (let i = 0; ; i++) {
-        const ready = await page.evaluate('document.documentElement.dataset.ready || ""');
+        // Until the navigation commits, the page can briefly have no document element at all.
+        const ready = await page.evaluate('document.documentElement?.dataset.ready || ""');
         if (ready === '1') break;
         if (ready) throw new Error(path + ': ' + ready);
         if (i > 150) throw new Error(path + ': timed out');
