@@ -210,72 +210,19 @@ in `files/` instead — those say so in their own `omitted` field.
 ### Hand it to an AI assistant
 
 Open your export in an AI assistant and ask about years of results, visits and letters. It reads the Hebrew, answers
-in English or whatever you speak, and shows you the record behind every answer. [The extension's own page on
-this](https://ronirachmani.github.io/health-records-export-for-maccabi/ai-assistant.html) shows it with pictures. The popup opens it too: from **See how** when the export is done, and while
-Maccabi prepares your medical file, in a window of its own so the Maccabi Online tab stays in front.
+in English or whatever you speak, and names the record behind every answer. Assistants that connect to medical records
+reach U.S. providers only, so this is how your Maccabi records get to one. **[See what to ask, with
+pictures](https://ronirachmani.github.io/health-records-export-for-maccabi/ai-assistant.html)**; the popup opens the
+same page.
 
-**What to ask.** Ask what you'd ask a doctor who had read everything. Five things it does well:
-
-- **See your whole history.** *Summarize my health history from my full medical file.* The full medical file reaches
-  back to the earliest visit on record, far beyond the few years the site itself shows. Start here.
-- **Understand a result.** *Help me understand my latest blood test.* Every value next to its reference range, in plain
-  words, with what is worth asking about and what isn't.
-- **See a trend.** *How has my HbA1c changed over the years?* Each lab measurement has its own history, often years of
-  it, ready to chart.
-- **Prepare for a visit.** *What should I raise at my next appointment?* Known problems, the latest results, recent
-  visits and open referrals, turned into a short list to take with you.
-- **Find anything.** *When was my last tetanus shot?* A shot, a letter, a prescription from years ago: one question
-  instead of an afternoon in the portal.
-
-More to try: *What did the cardiologist write at my last visit?* · *Translate my latest letter from the clinic into
-English.* · *Which referrals and approvals are still open?* · *Which medications have I bought this year, and how
-often?* · *Make a one-page summary to bring to a new doctor.*
-
-**Three steps to your first answer.**
-
-1. **Export.** Run the export. You get one ZIP, `maccabi-export-….zip`, in your Downloads.
-2. **Unzip.** Double-click it. Keep the folder together: the assistant needs every file in it.
-3. **Open the folder** in an assistant's desktop app, so it can read the whole folder. Then ask your first question.
-
-Where to open it:
-
-| | Best | Or |
-| --- | --- | --- |
-| **Claude** | **Claude**, in the Claude desktop app: give Claude access to the unzipped folder, then ask. If your message box still offers Chat and Cowork, choose Cowork first. Needs a paid plan for now. | **Claude Code**: run `claude` in the folder. It reads `CLAUDE.md` on its own. |
-| **ChatGPT** | **ChatGPT Work**, in the ChatGPT desktop app: open the unzipped folder as a local project, and choose Work. | **Codex**: run it in the folder. It reads `AGENTS.md` on its own. |
-
-Start with:
+Unzip the export and open the whole folder in a desktop app that reads folders: **Claude** (the desktop app, or Claude
+Code) or **ChatGPT Work** (or Codex). A chat window takes a few dozen files; an export has hundreds. Then start with:
 
 > *Read README.md first. Then summarize my health history from my full medical file.*
 
-`README.md` is the assistant's instructions: where to start, what the export lacks, and which values mislead.
-
-**Why not drop it into a chat?** A chat or a web project takes a few dozen files at most. Your export has hundreds,
-and the assistant finds its way through them with the folder's own layout and `README.md`. The desktop apps read the
-folder as it is.
-
-**Built so you can check every answer.** The export comes with instructions the assistant reads first. They ask it to:
-
-- **Show its source:** the file, the page of a PDF and the date behind each fact, so you can open it and look.
-- **Leave your export alone:** its own notes and tables go in a new folder. It never edits, renames or deletes your
-  files.
-- **Keep you out of searches:** your name, ID number and contact details stay out of web searches and other tools
-  unless you ask.
-- **Say when it matters:** it explains rather than diagnoses, and says plainly when a record suggests seeing a doctor
-  soon.
-
-It supports your doctor and doesn't replace them. For urgent symptoms, call your doctor or Magen David Adom on
-**101**, not an assistant.
-
-> [!WARNING]
-> **Your records go only where you take them.** The extension sends your records nowhere. The AI service you open them
-> in can read them, so before you do, check what it keeps and for how long, and where it lets you:
-> **turn off training** on your chats, **give each person a project** of their own, with memory kept to that project,
-> and **delete the project** when you're done with it.
-
-**Why not ChatGPT Health or Claude's health connectors?** As of September 2026, both connect medical records from U.S.
-providers only, and Health in ChatGPT is open to U.S. users only. Neither can reach Maccabi Healthcare Services. This
-export is how your records get to an assistant.
+The export's `README.md` is the assistant's instructions: it asks it to show the file and page behind each fact, leave
+your files alone, keep your name and ID out of searches, and say plainly when something needs a doctor. It supports
+your doctor and doesn't replace them. For urgent symptoms, call your doctor or Magen David Adom on **101**.
 
 ## Privacy and safety
 
@@ -296,6 +243,12 @@ export is how your records get to an assistant.
 > [!WARNING]
 > The ZIP isn't encrypted. Anyone who can open it can read your health information. Keep it somewhere safe, and take
 > care when you share it.
+
+> [!WARNING]
+> **Your records go only where you take them.** The extension sends your records nowhere. The AI service you open them
+> in can read them, so before you do, check what it keeps and for how long, and where it lets you:
+> **turn off training** on your chats, **give each person a project** of their own, with memory kept to that project,
+> and **delete the project** when you're done with it.
 
 Read the full [Privacy Policy](docs/privacy.md) and [Terms of Use](docs/terms.md).
 
@@ -511,8 +464,8 @@ film, drawn by the same page: `npm run store-assets -- poster`.
 - **Keep the policies in sync.** `docs/privacy.md` goes with `public/privacy.html`, and `docs/terms.md` with
   `public/terms.html`. Change the effective date when you change either. For a material change, also set
   `TERMS_EFFECTIVE` in `src/extension/shared/state.ts` to the new date, so the popup asks users to accept again.
-  Likewise *Hand it to an AI assistant* above goes with `public/ai-assistant.html`, the page the popup's "See how" opens
-  and GitHub Pages publishes.
+  `public/ai-assistant.html`, the page the popup's "See how" opens and GitHub Pages publishes, must agree with
+  *Hand it to an AI assistant* above on the facts that section keeps: the apps, the first message and the safeguards.
 - **Keep [public/third-party-notices.txt](public/third-party-notices.txt) current.** It carries the licenses of
   third-party code bundled into the package (fflate, and Vite's module preload polyfill). Update it when a runtime
   dependency is added or upgraded.

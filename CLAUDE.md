@@ -195,9 +195,11 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   as a placeholder.
 - **Keep the policies in sync**: `docs/privacy.md` ↔ `public/privacy.html`, `docs/terms.md` ↔
   `public/terms.html`, and change their effective date. For a material change also bump `TERMS_EFFECTIVE`
-  in `shared/state.ts`, which makes the popup ask everyone to accept again. Likewise the README's *Hand it to an
-  AI assistant* ↔ `public/ai-assistant.html` (the popup's "See how", and its reminder while the medical file is prepared,
-  which opens it in a window of its own: a tab would hide the Maccabi one and pause the run).
+  in `shared/state.ts`, which makes the popup ask everyone to accept again. Likewise `public/ai-assistant.html`
+  must agree with the README's short *Hand it to an AI assistant* on the facts it keeps (the apps, the first
+  message, the safeguards); the page carries the rest. The page is the popup's "See how", and its reminder while
+  the medical file is prepared, which opens it in a window of its own: a tab would hide the Maccabi one and pause
+  the run.
   `.github/workflows/pages.yml` publishes `public/` on GitHub Pages, so these pages are also public web pages.
 - **Keep `public/third-party-notices.txt` current** when a runtime dependency changes (only `fflate`
   today, plus Vite's module preload polyfill). The README's `docs/images/chrome-web-store-badge.png` isn't one of
