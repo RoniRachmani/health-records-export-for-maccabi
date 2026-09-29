@@ -87,6 +87,15 @@ The medical file overlaps the whole run: it is ordered on line 1 and collected o
 check already found the file ready, so Maccabi took at most that, and the line waited only for the PDF. A file Maccabi is slower with makes line 16 poll every 15 s, up to 15 minutes (`waitMedicalFile`'s
 `timeoutMs`), and the parts then name each status it waited in.
 
+The same day, with `--export --reorder` (`dev:reorder`: order even though today's file is ready), the run took
+5 min 2 s and 262 requests. Line 1 was 13.0 s, of which the order request took 8.9 s, against 1.5 s in the run
+above. Line 16 was 2 min 15 s, and the run had the new PDF 4 min 49 s after the order. That wait is the run's own
+rule, not Maccabi's pace. With a ready file from earlier that day in the list, the wait takes a ready file as the
+new one only after it has seen the new order pending (`mustSeePending`), or after 2 minutes (`appearMs`). Here every
+check showed a ready file, so the run waited out the 2 minutes. The new file may have been ready when the wait
+began, 2 min 35 s after the order. The ZIP's PDF did differ from the earlier one. A first export of the day has no
+such file in the list, so it takes the first ready check.
+
 A live test without `--export` never orders (`dev:skipOrder`) and stops before `save`: its line 1 is only the page
 change, and its line 16 collects whatever medical file Maccabi already has.
 

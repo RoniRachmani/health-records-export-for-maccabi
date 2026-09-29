@@ -10,6 +10,8 @@
 //                                 and prints the files per folder, and the time and requests of each step and part
 //   npm run live -- --export      turns the two switches off, waits for you to press Start in the popup, and
 //                                 times the whole export, the medical file and the ZIP included
+//   npm run live -- --export --reorder
+//                                 the same, but the export orders even when today's file is already ready
 //   npm run live -- --keep        leaves the browser open at the end
 //   npm run live -- --root-files  then writes the ZIP's root files as the save step does (still no ZIP), and
 //                                 prints the README's version line, what it says failed, and export-errors.json
@@ -44,6 +46,7 @@ const ITEM = process.env.MACCABI_OP_ITEM || 'Maccabi';
 const KEEP = process.argv.includes('--keep');
 const ROOT_FILES = process.argv.includes('--root-files');
 const EXPORT = process.argv.includes('--export');
+const REORDER = process.argv.includes('--reorder');
 const SHOTS = process.argv.includes('--screenshots')
   ? join(root, '.cache', 'live-screenshots', new Date().toISOString().slice(0, 19).replace(/:/g, '-'))
   : null;
@@ -412,6 +415,9 @@ async function main() {
     const skip = await ask(page, { type: 'dev:skipOrder', on: false });
     const stop = await ask(page, { type: 'dev:stopBefore', step: null });
     if (skip?.on !== false || stop?.ok !== true) throw new Error('The extension did not confirm turning the test switches off.');
+    const reorder = await ask(page, { type: 'dev:reorder', on: REORDER });
+    if (reorder?.on !== REORDER) throw new Error('The extension did not confirm dev:reorder.');
+    if (REORDER) console.log("dev:reorder is on: the export orders even if today's medical file is already ready.");
     console.log('Press Start in the extension\'s popup on the Maccabi tab. This is a real export: it orders the medical '
       + 'file (Maccabi sends an SMS) and downloads the ZIP. Waiting up to 10 minutes for it to start.');
     const until = Date.now() + 10 * 60_000;
@@ -420,6 +426,7 @@ async function main() {
       await sleep(POLL_MS);
     }
   } else {
+    if (REORDER) throw new Error('--reorder only goes with --export: a test without it never orders.');
     const skip = await ask(page, { type: 'dev:skipOrder', on: true });
     if (skip?.on !== true) {
       throw new Error('The extension did not confirm dev:skipOrder (it answered ' + JSON.stringify(skip ?? null)
@@ -495,6 +502,8 @@ async function main() {
       for (const e of root.errors) console.log('  ' + e);
     }
   }
+  // Only for this export: the next one uses today's file again.
+  if (REORDER) await page.dev({ type: 'dev:reorder', on: false });
   // The staged files are the member's records: they go with the run unless --keep asked to look at them.
   if (run.status === 'paused_session' && !KEEP) await page.dev({ type: 'dev:cancel' });
   if (stopped) {

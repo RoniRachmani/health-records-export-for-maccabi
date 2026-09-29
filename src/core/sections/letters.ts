@@ -65,10 +65,11 @@ export interface OrderResult {
 // on its list). Same endpoint and headers as the site's own order button, but
 // startDate 1900-01-01: the whole history, where the site's form offers a
 // narrower range. Skipped when a file ordered today over the same range is
-// already waiting, so the same file is not built twice. Run from
+// already waiting, so the same file is not built twice, unless `reorder` asks (a development build's
+// dev:reorder, to time a real order on a day that already has one). Run from
 // /online/medicalfile/summary/ in a tab that has been on /sonline/ (the wait
 // needs the SPA token).
-export async function placeOrder(c: Collector): Promise<OrderResult> {
+export async function placeOrder(c: Collector, opts: { reorder?: boolean } = {}): Promise<OrderResult> {
   if (!/^\/online\/medicalfile\/summary\/?$/i.test(await c.deps.transport.pagePath())) return { error: 'open /online/medicalfile/summary/ first' };
   if (!c.session.jwt) return { error: 'no SPA token in this tab -- open any /sonline/ page, then /online/medicalfile/summary/, and rerun' };
   const fromDate = '1900-01-01';
@@ -83,7 +84,7 @@ export async function placeOrder(c: Collector): Promise<OrderResult> {
   const sameDayBefore = !!(before && before.to_date === toDate && before.status === 1);
   // A ready file from today over the same range is what this order would produce: take that one
   // instead of making Maccabi build it again (and text you again).
-  if (sameDayBefore && (!before.from_date || iso(before.from_date) === fromDate)) {
+  if (sameDayBefore && !opts.reorder && (!before.from_date || iso(before.from_date) === fromDate)) {
     return { ordered: false, skipped_ready_today: true, from_date: fromDate, to_date: toDate, same_day_before: true };
   }
   // XMLHttpRequest, not fetch: Radware adds the uzlc header only to XHRs.

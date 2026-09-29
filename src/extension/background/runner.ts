@@ -396,7 +396,8 @@ async function runPlanStep(step: PlanStep): Promise<void> {
       // is back on /sonline/, and the order needs this page again.
       if (!SUMMARY_PATH.test((await snapshot(run.tabId)).path)) await navigate(run.tabId, SUMMARY_PAGE, SUMMARY_PATH);
       const c = await collector();
-      run.order = await placeOrder(c);
+      const reorder = __DEV_BRIDGE__ && !!(await chrome.storage.local.get('devReorder')).devReorder;
+      run.order = await placeOrder(c, { reorder });
       if (run.order.ordered) run.orderedAt = new Date().toISOString();
       if (run.order.error) await c.problem(MEDICAL_FILE, 'medical file not ordered: ' + run.order.error);
       return;

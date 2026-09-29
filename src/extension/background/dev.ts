@@ -117,6 +117,12 @@ async function handleDevImpl(msg: DevMsg, sender: chrome.runtime.MessageSender):
       if (msg.on) await chrome.storage.local.set({ devSkipOrder: true });
       else await chrome.storage.local.remove('devSkipOrder');
       return { on: !!msg.on };
+    case 'dev:reorder':
+      // orderMedicalFile orders even when a file from today over the same range is ready, so a real order
+      // can be timed on a day that already has one. It still orders only in a run the member started.
+      if (msg.on) await chrome.storage.local.set({ devReorder: true });
+      else await chrome.storage.local.remove('devReorder');
+      return { on: !!msg.on };
     case 'dev:rawDump':
       // Every response of the next run is staged under _raw/ in the ZIP, byte for byte, beside
       // the export itself. Set it before dev:start: it is read once per step.

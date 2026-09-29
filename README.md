@@ -391,6 +391,7 @@ await dev({ type: 'dev:skipOrder', on: true });                  // test a full 
 | `dev:titleFields` | Which response fields hold a display string, and in which language. Field names only. |
 | `dev:stopBefore` `{step}` | Pause before a plan step. Without `step`, clears it. |
 | `dev:skipOrder` `{on}` | `orderMedicalFile` does nothing while on, and `waitMedicalFile` keeps the file Maccabi already has. Stays set until turned off. |
+| `dev:reorder` `{on}` | `orderMedicalFile` orders even when a file from today over the same range is already ready (normally it uses that one), so a real order can be timed again the same day. Stays set until turned off. |
 | `dev:breakSession` | Invalidate the stored token, to test reconnecting |
 | `dev:rawDump` `{on}` | Stage every response of the next run under `_raw/` in the ZIP, byte for byte, beside the export. Set it before `dev:start`. |
 | `dev:routes` `{routes}` | Choose whether `/sonline/` and `/online/` requests go from the extension or the tab |
@@ -411,7 +412,9 @@ files collected per folder and the time and requests of each step and part (the 
 nothing: it turns both test switches off and waits for you to press Start in the popup, then follows that export,
 which is a real one (it orders the medical file, so Maccabi sends an SMS, and downloads the ZIP), and prints its
 timings with what the order did (placed, or skipped because today's file was already ready), the time from the
-order to the file being ready, and the ZIP's size. `npm run live -- --keep` leaves the
+order to the file being ready, and the ZIP's size. With `--reorder` beside it, that
+export orders even when today's file is already ready, to time a real order again the same day (`dev:reorder`, turned
+off again at the end). `npm run live -- --keep` leaves the
 browser and the paused run in place, to look at them. `npm run live -- --root-files` also writes the ZIP's root
 files before discarding the run (`dev:rootFiles`), and prints the README's version line, what it says failed, and
 `export-errors.json` beside the popup's problem count. `npm run live -- --screenshots` photographs the popup

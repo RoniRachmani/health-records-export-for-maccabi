@@ -45,6 +45,11 @@ describe('placeOrder', () => {
     const { c: c2 } = makeCollector(fakeTransport(narrower.routes, { pagePath: SUMMARY, xhr: () => { xhrs++; return ok('1'); } }));
     expect(await placeOrder(c2)).toMatchObject({ ordered: true, same_day_before: true });
     expect(xhrs).toBe(1);
+
+    // reorder (dev:reorder) orders anyway, and the wait then looks for the new file, not the ready one.
+    const { c: c3 } = makeCollector(fakeTransport(site.routes, { pagePath: SUMMARY, xhr: () => { xhrs++; return ok('1'); } }));
+    expect(await placeOrder(c3, { reorder: true })).toMatchObject({ ordered: true, same_day_before: true });
+    expect(xhrs).toBe(2);
   });
 });
 
