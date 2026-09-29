@@ -287,6 +287,9 @@ before them. It says where to start, what the export lacks and which values misl
 - **Keep what the member tells you.** The export cannot say what they take now, what care they had
   elsewhere or what they are allergic to that was never recorded: when they tell you, note it in
   your folder, dated and marked as their word rather than a record's, and read it before asking again.
+  Where their word and a record disagree, show both, each with its date; don't choose between them.
+  This export starts with no notes: if the member points you to an earlier export's, read them first
+  and copy them into this export's folder.
 - **Keep the member's name, ID number and contact details out of anything that leaves this
   computer** — web searches, other services, messages — unless the member asks for it.
 - **If a record suggests something needs a doctor soon, say so plainly** and point to it. Explain
@@ -303,7 +306,9 @@ prescriptions, referrals, letters; for an appointment, the medical file's known 
 results, recent \`visit-summaries/\` and open \`referrals/\`; for allergies, \`allergies-sensitivity/\`
 and the medical file's sensitivities; for hospital stays, \`hospital-stays/\` for when and where,
 its discharge letters and the medical file for what happened; for preventive care due, age and sex in
-\`profile/member.json\`, \`vaccinations/\` and the screenings in \`test-results/\`. What the member
+\`profile/member.json\`, \`vaccinations/\` and the screenings in \`test-results/\`, judged by Israel's
+current guidance (the Ministry of Health's and Maccabi Healthcare Services's), which differs from
+other countries' and changes: look it up, don't recall it. What the member
 actually bought is in \`purchased-history.html\`, not the prescriptions; neither shows what they take
 now, so ask.
 

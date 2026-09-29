@@ -15,7 +15,7 @@ describe('exportReadme', () => {
   it('tells an assistant how to work with the records before it describes them', () => {
     const md = readme();
     expect(md).toContain('this file is your instructions and the records are your project files');
-    for (const rule of ['Say where each fact comes from', 'Leave the export as it is.', 'Keep what the member tells you.', 'out of anything that leaves this', 'needs a doctor soon']) {
+    for (const rule of ['Say where each fact comes from', 'Leave the export as it is.', 'Keep what the member tells you.', 'Where their word and a record disagree, show both', "earlier export's", 'out of anything that leaves this', 'needs a doctor soon']) {
       expect(md).toContain(rule);
     }
     expect(md.indexOf('How to work with these records')).toBeLessThan(md.indexOf('Start with the full medical file'));
@@ -31,6 +31,7 @@ describe('exportReadme', () => {
       'for an appointment, the medical file',
       "for allergies, `allergies-sensitivity/` and the medical file's sensitivities",
       'for preventive care due, age and sex in `profile/member.json`, `vaccinations/`',
+      "judged by Israel's current guidance",
       'open `referrals/`',
     ]) {
       expect(md).toContain(pointer);
