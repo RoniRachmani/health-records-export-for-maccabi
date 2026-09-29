@@ -25,6 +25,7 @@ describe('exportReadme', () => {
     const md = readme().replace(/\s+/g, ' ');
     for (const pointer of [
       'for a health history, the medical file',
+      "for one condition, its line in the medical file's known problems",
       'for a measurement over time, `test-results/history/`',
       'for what changed since the last visit, whatever is dated after the newest file in `visit-summaries/`',
       'for an appointment, the medical file',

@@ -294,7 +294,9 @@ before them. It says where to start, what the export lacks and which values misl
   should ask for something — a test, a referral — give the Hebrew name to ask for it by. Don't
   diagnose, and don't advise changing a treatment.
 
-Where to look: for a health history, the medical file; for a measurement over time,
+Where to look: for a health history, the medical file; for one condition, its line in the medical
+file's known problems, then every visit, referral and result about it, whichever doctor it was
+with — keep a condition's notes together, not a doctor's; for a measurement over time,
 \`test-results/history/\`, and the latest of each in \`latest-lab-results.json\`; for what changed
 since the last visit, whatever is dated after the newest file in \`visit-summaries/\` — results,
 prescriptions, referrals, letters; for an appointment, the medical file's known problems, the latest
