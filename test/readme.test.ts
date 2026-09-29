@@ -15,7 +15,7 @@ describe('exportReadme', () => {
   it('tells an assistant how to work with the records before it describes them', () => {
     const md = readme();
     expect(md).toContain('this file is your instructions and the records are your project files');
-    for (const rule of ['Say where each fact comes from', 'Leave the export as it is.', 'out of anything that leaves this', 'needs a doctor soon']) {
+    for (const rule of ['Say where each fact comes from', 'Leave the export as it is.', 'Keep what the member tells you.', 'out of anything that leaves this', 'needs a doctor soon']) {
       expect(md).toContain(rule);
     }
     expect(md.indexOf('How to work with these records')).toBeLessThan(md.indexOf('Start with the full medical file'));

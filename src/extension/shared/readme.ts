@@ -284,11 +284,15 @@ before them. It says where to start, what the export lacks and which values misl
   a medication in an old one may no longer hold.
 - **Leave the export as it is.** Write what you make — notes, tables, summaries — into a new folder
   of your own, such as \`notes/\`; never edit, rename or delete the export's files.
+- **Keep what the member tells you.** The export cannot say what they take now, what care they had
+  elsewhere or what they are allergic to that was never recorded: when they tell you, note it in
+  your folder, dated and marked as their word rather than a record's, and read it before asking again.
 - **Keep the member's name, ID number and contact details out of anything that leaves this
-  folder** — web searches, other services, messages — unless the member asks for it.
+  computer** — web searches, other services, messages — unless the member asks for it.
 - **If a record suggests something needs a doctor soon, say so plainly** and point to it. Explain
-  the records in plain language, not the clinical shorthand they are written in; don't diagnose,
-  and don't advise changing a treatment.
+  the records in plain language, not the clinical shorthand they are written in, and when the member
+  should ask for something — a test, a referral — give the Hebrew name to ask for it by. Don't
+  diagnose, and don't advise changing a treatment.
 
 Where to look: for a health history, the medical file; for a measurement over time,
 \`test-results/history/\`, and the latest of each in \`latest-lab-results.json\`; for what changed
