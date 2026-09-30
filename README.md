@@ -148,7 +148,7 @@ One folder, `maccabi-export-YYYY-MM-DD/`:
 | `medications-and-prescriptions/` | Prescriptions and their PDFs, full purchase history, purchase report PDF |
 | `referrals/` | Referrals and their PDFs |
 | `approvals/` | Medical certificates, approvals and specialists' answers to your doctors, and their PDFs |
-| `info-pages/` | Information pages from your visits, and their PDFs |
+| `info-pages/` | Information pages from your visits, and their PDFs. Only when the site lists any |
 | `vaccinations/` | Vaccinations by group, flu vaccine eligibility, vaccination booklet PDF |
 | `letters/` | Letters and their PDFs |
 | `communication-with-doctor/` | Inquiries to doctors and attached forms, each pointing to the visit it was answered in |

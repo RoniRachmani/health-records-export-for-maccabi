@@ -189,7 +189,6 @@ describe('full run against the fake site', () => {
       'my-doctor/eligibilities.json',
       'hospital-stays/files/2025-05-10_<hash8>_מרכז-רפואי-לדוגמה.pdf',
       'hospital-stays/list.json',
-      'info-pages/list.json',
       'letters/files/2026-04-01_L1_מכתב-שיחרור.pdf',
       'letters/list.json',
       'medications-and-prescriptions/files/2026-03-01_P-1_אקמול-500.pdf',
@@ -278,7 +277,7 @@ describe('full run against the fake site', () => {
     expect(stays.omitted).toBeUndefined();
     // The discharge letter is asked for as the page's Summary button opens it.
     expect(site.calls).toContain('GET /online/Pages/Popups/MailingsFromHospitals/MailingsFromHospitals.aspx?path=reports/L9.pdf&typeCommitment=2');
-    expect(s.results).toEqual({ written: 54, same_as: 3 });
+    expect(s.results).toEqual({ written: 53, same_as: 3 });
     // A visit's prescriptions are one PDF, asked for once: two lone entries and one visit.
     expect(site.calls.filter((x) => x.includes('getprescriptionpdf'))).toHaveLength(3);
 
@@ -399,6 +398,25 @@ describe('full run against the fake site', () => {
     const { c, sink } = makeCollector(fakeTransport([details, ...site.routes]));
     await runAll(c, newCtx(), ['doctorCommunications']);
     expect((sink as MemorySink).files.has('communication-with-doctor/details/2026-04-05_Q2_הפניה.json')).toBe(true);
+  });
+
+  // Most members have no information pages: an empty list writes no folder, so the export's README
+  // says there are none instead of describing pages that are not there.
+  it('writes information pages only when there are some', async () => {
+    const site = fakeMaccabi();
+    const empty = makeCollector(fakeTransport(site.routes));
+    expect((await runAll(empty.c, newCtx(), ['infoPages'])).problems).toEqual([]);
+    expect([...(empty.sink as MemorySink).files.keys()]).toEqual([]);
+    const page = { session_datetime: '2026-03-06T10:00:00', practitioner_name: 'ד"ר ישראלי', display_text: 'דף מידע', url: 'T1', timestamp: '1', hash: 'h' };
+    const t = fakeTransport([
+      (_req, url) => (url.pathname.endsWith('/tutorials') ? jsonResp({ tutorials: [page] }) : undefined),
+      (_req, url) => (url.pathname.includes('/MedicalFileAPI/webapi/mac/v2/') && url.pathname.endsWith('/pdf') ? bytesResp(PDF) : undefined),
+      ...site.routes,
+    ]);
+    const { c, sink } = makeCollector(t);
+    expect((await runAll(c, newCtx(), ['infoPages'])).problems).toEqual([]);
+    expect([...(sink as MemorySink).files.keys()].map((k) => k.replace(/_[0-9a-f]{8}_/, '_<hash8>_')).sort())
+      .toEqual(['info-pages/files/2026-03-06_<hash8>_דף-מידע.pdf', 'info-pages/list.json']);
   });
 
   it('reports hospital stays answered with a web page as a problem, and writes nothing', async () => {

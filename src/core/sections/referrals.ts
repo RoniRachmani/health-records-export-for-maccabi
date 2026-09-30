@@ -55,8 +55,13 @@ export async function approvals(c: Collector, _ctx: Ctx): Promise<void> {
 }
 
 export async function infoPages(c: Collector, _ctx: Ctx): Promise<void> {
-  const tu = await c.getSave('info-pages/list.json', 'GET', 'MedicalFileAPI/v1/members/0/{mid}/tutorials' + RANGE);
-  const list: Json[] = (tu.r.data && tu.r.data.tutorials) || [];
+  // Most members have none; like hospital stays, the folder appears only with pages in it, so the
+  // export's README says there are none instead of describing an empty list (measured 2026-09-30).
+  const path = 'MedicalFileAPI/v1/members/0/{mid}/tutorials' + RANGE;
+  const tu = await c.fetchRec('info-pages/list.json', 'GET', path);
+  const list: Json[] = (tu.ok && tu.r.data && tu.r.data.tutorials) || [];
+  if (!list.length) return;
+  await c.saveRec('info-pages/list.json', 'GET', path, tu.r);
   for (let i = 0; i < list.length; i++) {
     const t = list[i];
     c.progress(i, list.length, 'information pages', { done: i, total: list.length });
