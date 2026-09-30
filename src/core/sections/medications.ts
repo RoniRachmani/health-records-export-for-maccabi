@@ -12,7 +12,7 @@ export async function medications(c: Collector, _ctx: Ctx): Promise<void> {
   const items: Json[] = (r.data && r.data.results) || [];
   // A prescription's PDF is its visit's page: every drug prescribed at that visit, with each monthly
   // part's dates ("דף זה אינו מרשם", this page is not a prescription). Every entry of one visit
-  // (clicks_visit_number) returned the same bytes: 31 entries, 8 visits (measured 2026-09-30). So a
+  // (clicks_visit_number) returned the same bytes: 30 entries, 9 visits (measured 2026-09-30). So a
   // visit's PDF is fetched once, from its first entry, and named by the visit and its drugs. An
   // entry with no visit number keeps a file of its own, named by the prescription.
   const visits: Json[][] = [];
