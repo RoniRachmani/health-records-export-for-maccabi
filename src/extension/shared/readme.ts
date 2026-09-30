@@ -37,9 +37,10 @@ and false says nothing either: \`is_chronical_prescriptions\` can be false for a
     summary: 'lab, imaging, cardiology and external results',
     detail: `\`list.json\` is \`tests[]\`, each with a \`type\`: \`lab_result\`, \`imaging_result\` (a
 radiologist's report), \`imaging_study\` (the images — never exported; details, no PDF, named by a
-hash of the study id in its \`request_id\`), \`cardiology_result\`, \`external_test_result\`. A lab test keeps its values in \`details/\`
+hash of the study id in its \`request_id\`), \`usg_result\` (ultrasound), \`pat_lab_result\`
+(pathology, such as PAP, also listed as a \`lab_result\`: both hold only a note), \`cardiology_result\`, \`external_test_result\`. A lab test keeps its values in \`details/\`
 (\`results[]\`, one per group, each with \`group_values[]\`; see *Lab values*) and has no PDF; **every
-other type has \`results\` empty** and its finding only in the PDF in \`files/\`.
+other type has its finding only in the PDF** in \`files/\`.
 \`history/<test_id>_<name>.json\` is one measurement over time and reaches years further back than
 \`details/\`; \`latest-lab-results.json\` is the latest of each.`,
   },
@@ -48,7 +49,7 @@ other type has \`results\` empty** and its finding only in the PDF in \`files/\`
     summary: 'the last 12 months of visits, and older visits that answered a doctor inquiry, with their summary PDFs',
     detail: `\`details/\` holds the doctor's own words (\`visit_recommendations\`, \`online_requests\`)
 and what the visit produced (\`referrals[]\`, \`drugs[]\`, \`approvals\`, \`tutorials\`).
-**\`diagnosis[]\` may hold only null fields** — the diagnosis is then in the PDF and the medical file only.
+**\`diagnosis[]\` often holds only null fields** — the diagnosis is then in the PDF and the medical file only.
 A visit with no summary is \`status\` 204 with \`data\` null; \`has_summery_file\` (sic) says which.
 An older visit is named by its \`open_medical_record_number\`, and its \`linked_from\` is the inquiry it answered.`,
   },
@@ -71,7 +72,7 @@ JSON names a diagnosis; what was ordered is \`lab_tests[]\`, or \`actions[]\`, o
   },
   {
     name: 'approvals',
-    summary: 'medical certificates and approvals, and their PDFs',
+    summary: "medical certificates, approvals and specialists' answers (\`תשובת יועץ\`), and their PDFs",
     detail: `\`approval_date_from\` and \`approval_date_to\` of \`1900-01-01\` mean no validity period.
 Approvals have no id, so their file names carry a hash of the record's fields.`,
   },
@@ -102,7 +103,7 @@ one beside this README. Use \`original_item_date\`: \`item_date\` is a display s
 and the reply (\`doctor_remark\`, \`personal_doctor_remark\`). Not every one is the member's: the doctor
 starts some (\`request_status_desc\` \`יזומה ע"י הרופא\`), and a structured request, such as a prescription
 renewal, has no text of the member's, only what was asked for (\`prescription_largo_code_list\`). \`files/\` holds the forms, numbered in
-list order and named by their kind (\`הפניה\`, \`אישור\`). A form that is the same file as a referral,
+list order and named by the kind the site gives them (\`הפניה\`, \`אישור\`), which can be wrong. A form that is the same file as a referral,
 prescription or approval is saved once, in its own folder, and the inquiry's \`files[]\` names it;
 another form can still be one of those in a different file. \`visit\` is the visit the reply was, in
 \`visit-summaries/\`.`,
@@ -317,7 +318,7 @@ before them. It says where to start, what the export lacks and which values misl
 
 Where to look: for a health history, the medical file; for one condition, its line in the medical
 file's known problems, then every visit, referral and result about it, whichever doctor it was
-with — keep a condition's notes together, not a doctor's; for a measurement over time,
+with, and the specialists' answers in \`approvals/\` — keep a condition's notes together, not a doctor's; for a measurement over time,
 \`test-results/history/\`, and the latest of each in \`latest-lab-results.json\`; for what changed
 since the last visit, whatever is dated after the newest file in \`visit-summaries/\` — results,
 prescriptions, referrals, letters; for an appointment, the medical file's known problems, the latest
