@@ -25,7 +25,7 @@ const API = 'https://api.elevenlabs.io/v1';
 // Emma (Professional Commercial Voice), from ElevenLabs' Voice Library: a clear, confident American narrator. Library voices like this one
 // need its Creator plan or above; Brian (nPczCjzI2devNBz1zQrb), one of its own voices, works on any.
 const VOICE = process.env.ELEVENLABS_VOICE || '9HBoEQ8LqyvVZFYDodnr';
-const MODEL = process.env.ELEVENLABS_MODEL || 'eleven_multilingual_v2';
+const MODEL = process.env.ELEVENLABS_MODEL || 'eleven_v4';
 // v3 and v4 take their direction from the text (audio tags, punctuation) and have only stability and
 // similarity to set; they take no SSML, so a pause is an audio tag. Their docs don't list the neighbouring
 // lines or a seed either, so a line asked for over the API goes on its own.

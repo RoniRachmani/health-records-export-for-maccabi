@@ -431,7 +431,7 @@ const NARRATION: { at: number; text: string }[] = [
   { at: T.saved + 0.3, text: 'When it’s done, one dated ZIP lands in your Downloads folder.' },
   { at: T.open + 0.85, text: 'Inside: your full medical file, and a folder for each kind of record.' },
   { at: T.drill + 0.3, text: 'Every PDF has its data beside it, ready for an assistant to read.' },
-  { at: T.privacy + 0.4, text: 'Private by design: your records go straight to your computer, and nowhere else.' },
+  { at: T.privacy + 0.4, text: 'Private by design: your records go only to your computer.' },
   { at: T.ask + 0.4, text: 'Then open it in the AI assistant you choose, and ask in plain language.' },
   { at: T.close + 0.4, text: 'Health Records Export for Maccabi. Free, on the Chrome Web Store.' },
 ];
