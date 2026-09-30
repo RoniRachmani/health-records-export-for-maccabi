@@ -148,6 +148,19 @@ describe('exportReadme', () => {
     expect(md).toContain('A `result` of 0 is often not a measurement.');
     expect(md).toContain('The same values appear up to three times');
     expect(md).toContain('`0001-01-01T00:00:00` means never set');
+    expect(md).toContain('or of method, which a `message_list` note dates');
+  });
+
+  // Each is easy to misread without its note: a renewal as a visit, one visit's PDF as many prescriptions.
+  it('says which records are not what they look like', () => {
+    const all = { ...PRESENT, 'visit-summaries': 2, 'medications-and-prescriptions': 3, referrals: 2, 'communication-with-doctor': 2 };
+    const md = readme(all).replace(/\s+/g, ' ');
+    expect(md).toContain('A visit is not always a meeting');
+    expect(md).toContain('entries sharing a `clicks_visit_number` have the same one');
+    expect(md).toContain('identical ones included: count every row');
+    expect(md).toContain('some are a purpose, not a condition');
+    expect(md).toContain('take sex and age from `profile/member.json`');
+    expect(md).toContain('blood pressure, weight and BMI only in the medical file');
   });
 
   it('lists the fields that carry no information, so a reader skips them', () => {

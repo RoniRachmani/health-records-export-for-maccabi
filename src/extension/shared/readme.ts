@@ -50,15 +50,20 @@ other type has its finding only in the PDF** in \`files/\`.
     detail: `\`details/\` holds the doctor's own words (\`visit_recommendations\`, \`online_requests\`)
 and what the visit produced (\`referrals[]\`, \`drugs[]\`, \`approvals\`, \`tutorials\`).
 **\`diagnosis[]\` often holds only null fields** — the diagnosis is then in the PDF and the medical file only.
-A visit with no summary is \`status\` 204 with \`data\` null; \`has_summery_file\` (sic) says which.
+A visit with no summary is \`status\` 204 with \`data\` null; \`has_summery_file\` (sic) says which, and what it
+held (a vaccination, blood pressure, weight) is in the medical file under its date. A visit is not always a
+meeting: a doctor answering an online request opens one (\`online_requests\` \`הטפסים הופקו לבקשתך\`, the
+forms issued at the member's request), often only a prescription renewal, with the member not seen.
 An older visit is named by its \`open_medical_record_number\`, and its \`linked_from\` is the inquiry it answered.`,
   },
   {
     name: 'medications-and-prescriptions',
     summary: 'prescriptions, the full purchase history, a 2-year purchase report',
-    detail: `\`list.json\` lists recent prescriptions only, one PDF each. \`is_active\` stays true
-long after \`to_date\` has passed: go by the dates. A long course is a chain of monthly prescriptions, often all
-dispensed on one day, the last starting after the export. \`drug_*\` is what was prescribed and
+    detail: `\`list.json\` lists recent prescriptions only. Each has a PDF, but it is the page of every drug
+prescribed at that visit, not the prescription's own: entries sharing a \`clicks_visit_number\` have the same
+one. \`is_active\` stays true long after \`to_date\` has passed: go by the dates. A long course is a chain
+of monthly prescriptions, often all dispensed on one day, the last starting after the export;
+\`purchased-history.html\` then has one row per pack, identical ones included: count every row. \`drug_*\` is what was prescribed and
 \`dispensed_drug_*\` what the pharmacy gave, often another product (a generic). \`purchased-history.html\` is every purchase, as the site's own Hebrew table, encoded
 **windows-1255**, with no JSON equivalent; \`purchased-report.json\` and its PDF cover 2 years.`,
   },
@@ -66,7 +71,8 @@ dispensed on one day, the last starting after the export. \`drug_*\` is what was
     name: 'referrals',
     summary: 'referrals, with their diagnoses and ordered tests, and their PDFs',
     detail: `The reason is \`diagnoses[]\` (\`diagnosis_name\`, in English) — one of the few places the
-JSON names a diagnosis; what was ordered is \`lab_tests[]\`, or \`actions[]\`, or when both are empty only
+JSON names a diagnosis, though some are a purpose, not a condition (\`CHRONIC MEDICATION REFILL\`,
+\`TEST LABORATORY\`, \`PERIODIC COMPREHENSIVE HEALTH ASSESSMENT\`), or a risk (\`FAMILY HISTORY OF COLON CANCER\`); what was ordered is \`lab_tests[]\`, or \`actions[]\`, or when both are empty only
 \`displaying_name\` (\`title_name\` is just the kind, such as a specialist consultation).
 \`chronic_medications[]\` is the member's chronic drug list on the referral's day.`,
   },
@@ -106,7 +112,8 @@ renewal, has no text of the member's, only what was asked for (\`prescription_la
 list order and named by the kind the site gives them (\`הפניה\`, \`אישור\`), which can be wrong. A form that is the same file as a referral,
 prescription or approval is saved once, in its own folder, and the inquiry's \`files[]\` names it;
 another form can still be one of those in a different file. \`visit\` is the visit the reply was, in
-\`visit-summaries/\`.`,
+\`visit-summaries/\`. \`patient_gender\` and \`patient_age\` can be wrong (\`נ\`, female, for a man): take
+sex and age from \`profile/member.json\`.`,
   },
   {
     name: 'uploads',
@@ -244,7 +251,7 @@ function medicalFileSection(file: string | null): string {
 as of ${file.slice(0, 10)}: personal details, known problems (diagnoses, with the date each began),
 sensitivities and lifestyle, then visits back to the earliest on record — reason, findings, diagnosis,
 medications, referrals, vaccinations — then copies of the documents filed in the record. **Start
-there**: it reaches far further back than the JSON, which holds a few years. Maccabi Healthcare Services's own heading
+there**: it reaches far further back than the JSON, which holds a few years. The file's own heading
 still calls it partial (חלקי), and if the fresh order this run makes failed, this is an older
 file covering less. Its range is the \`from_date\`–\`to_date\` of the \`letter_type\` 2 entry in
 \`letters/list.json\`. It runs to hundreds of pages, and extractors often get its Hebrew out
@@ -346,8 +353,9 @@ site returns, which is less than Maccabi Healthcare Services holds, which is les
 - Prescriptions beyond the recent ones the site lists, and purchases over 2 years old in
   \`purchased-report.pdf\`. \`purchased-history.html\` still covers every purchase.
 - Images: no DICOM, ever — the site opens studies only in its own viewer.
-- Values for anything but lab tests: imaging, cardiology and external findings are only in a PDF.
-- Care outside Maccabi Healthcare Services, except what was filed with Maccabi Healthcare Services: external results, documents copied into
+- Values for anything but lab tests: imaging, cardiology and external findings are only in a PDF,
+  and blood pressure, weight and BMI only in the medical file.
+- Care outside Maccabi Healthcare Services, except what was filed with it: external results, documents copied into
   the medical file, the member's own uploads.
 - Sections the site had nothing for. A folder exists only when the site returned something, so a
   missing folder that did not fail means "nothing on record", not "this was not checked".${absent}
@@ -366,23 +374,24 @@ ${failedSection(errors)}
 ## Lab values
 
 Every value in \`group_values[]\`, \`current_result\`, \`other_results[]\` and
-\`latest-lab-results.json\` has the same fields: \`test_id\` and \`test_desc\` (the measurement),
-\`result\`, \`units\`, the reference range \`min_lim\`–\`max_lim\` (all numbers) and \`lab_date\`.
+\`latest-lab-results.json\` has the same fields: \`test_id\` names the measurement, and
+\`min_lim\`–\`max_lim\` is its reference range.
 
 - **\`min_lim\` and \`max_lim\` both 0 means no range in those fields**, not a range of 0 to 0, and
   \`numeric_percentage\` (where \`result\` sits in the range) is then 0 and means nothing. The range is
   then often a line of \`message_list\` (\`200 mg/dL -מומלץ: קטן מ\`, recommended below 200).
 - \`is_messages\` is \`"0"\` for a bare value, \`"1"\` for a value with a note in \`message_list\`, \`"2"\`
-  for an answer that is only text.
+  for an answer only in text.
 - **A \`result\` of 0 is often not a measurement.** When the answer is text, \`result\` is 0 and the
-  text is in \`message\` (\`NEGATIVE\`) or, when \`is_messages\` is \`"2"\`, only in \`message_list\`
-  (\`Undetectable\`, or a note that the test was not done). Read both before trusting a 0.
+  text is in \`message\` (\`NEGATIVE\`, or a bound: \`0.5 mg/dl :קטן מ\` is below 0.5) or
+  \`message_list\` (\`Undetectable\`, or that the test was not done). Read both before trusting a 0.
 - \`message_list\` is one note split into display lines (a reference range, a method change, an
   interpretation); join them. Its Hebrew is sometimes in visual order, numbers and punctuation at the
   wrong end: \`.60 ערך רצוי מעל\` reads "a value above 60 is desirable".
-- **Ranges and units change over time**: within one \`history/\` file, \`min_lim\`–\`max_lim\` and
+- **Ranges, units and methods change over time**: within one \`history/\` file, \`min_lim\`–\`max_lim\` and
   \`units\` can differ by date, and older \`units\` may be blank. Judge each result against its own
-  range; don't trend across a change of units.
+  range; don't trend across a change of units or of method, which a \`message_list\` note dates on
+  only rows near it (\`שונתה שיטת הבדיקה\`).
 - Two measurements can share a name and differ only by a symbol — \`Eosinophils #\` is a count,
   \`Eosinophils %\` a share. \`history/\` file names drop the symbol; \`test_desc\` and \`units\` keep it.
 - **The same values appear up to three times:** in \`details/\` by test, in \`history/\` by measurement,
@@ -396,13 +405,12 @@ Every value in \`group_values[]\`, \`current_result\`, \`other_results[]\` and
   (\`item_date\`, \`next_month_date\`), \`DD/MM/YYYY\` (\`DocumentDate\`), \`YYYYMMDD\` and \`YYYYMM\`
   (insurance dates), \`DD-MM-YYYY\` (\`purchased-history.html\`).
 - **Some dates are placeholders:** \`0001-01-01T00:00:00\` means never set, \`1900-01-01T00:00:00\` in
-  a validity range means there is none. The one real \`1900-01-01\` is the medical file's
-  \`from_date\` in \`letters/list.json\`: it means the file was asked for from the start, not that it
-  is complete.
+  a validity range means there is none. The one real \`1900-01-01\`, the medical file's
+  \`from_date\` in \`letters/list.json\`, means it was asked for from the start, not that it is complete.
 - Field names are English and keep the site's misspellings (\`has_summery_file\`) — search for
   them as spelled. Values are mostly
   Hebrew, often padded with spaces; \`""\`, \`"0"\` and \`null\` usually mean none. Codes (status,
-  type, insurance, speciality) are Maccabi Healthcare Services's own and documented nowhere: trust the description beside them.
+  type, insurance, speciality) are the site's own and documented nowhere: trust the description beside them.
 - Match people by id, never by name: names run either way round and titles are spelled several ways
   (\`ד"ר\`, \`דר'\`, \`ד'ר\`). An id can be a number in one file and a zero-padded string in another
   (\`12345678\`, \`"012345678"\`) — compare ids as numbers.
