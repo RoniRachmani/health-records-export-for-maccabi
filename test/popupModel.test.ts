@@ -73,10 +73,10 @@ describe('stageSpan', () => {
       // percentOf rounds to a whole percent.
       expect(Math.abs(stageSpan(i).start - percentOf(step, half ? 1 : 0, half ? 2 : 1)), STAGES[i].label).toBeLessThanOrEqual(0.5);
     }
-    // The spec's numbers: a total weight of 95, lab histories from 36.8% to 57.9%, and 38 of 61 lab histories at 50%.
-    expect(PLAN.reduce((a, s) => a + WEIGHTS[s], 0)).toBe(95);
-    expect(stageSpan(line('Lab histories')).start).toBeCloseTo(36.84, 2);
-    expect(stageSpan(line('Lab histories')).end).toBeCloseTo(57.89, 2);
+    // The spec's numbers: a total weight of 109, lab histories from 36.7% to 57.8%, and 38 of 61 lab histories at 50%.
+    expect(PLAN.reduce((a, s) => a + WEIGHTS[s], 0)).toBe(109);
+    expect(stageSpan(line('Lab histories')).start).toBeCloseTo(36.70, 2);
+    expect(stageSpan(line('Lab histories')).end).toBeCloseTo(57.80, 2);
     const tests = 61;
     const at = percentOf(PLAN.indexOf('testResults'), tests + Math.round((38 * tests) / 61), tests * 2);
     expect(at).toBe(50);

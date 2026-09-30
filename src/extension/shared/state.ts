@@ -71,28 +71,29 @@ export type PlanStep = (typeof PLAN)[number];
  * PACE_MS, so the steps whose list has no date cap — referrals, approvals and the doctor messages,
  * which are asked for from 1900 and so grow with how long someone has been a member — weigh more
  * than the ones the server caps (visits: 12 months) or that hold only what is current
- * (medications: prescriptions in force). Set from measured runs (docs/sections.md, *How long each
- * line takes*: 2026-09-29, 232 files), about half a point a second, so the bar stays within about
- * 2 points of the time when the medical file is ready by the time it is collected.
+ * (medications: prescriptions in force, though that was 30 requests on one account and 2 on another).
+ * Fitted to measured runs on three accounts (docs/sections.md, *How long each line takes*): the
+ * whole numbers that keep the bar closest to the elapsed time on the worst of them, within about
+ * 5 points, when the medical file is ready by the time it is collected.
  */
 export const WEIGHTS: Record<PlanStep, number> = {
-  profileAndDoctors: 3,
-  testResults: 40,
-  visits: 5,
-  medications: 1,
-  referrals: 9,
-  approvals: 2,
+  profileAndDoctors: 2,
+  testResults: 46,
+  visits: 6,
+  medications: 6,
+  referrals: 13,
+  approvals: 1,
   infoPages: 1,
-  vaccinations: 3,
-  letters: 1,
-  doctorCommunications: 13,
+  vaccinations: 2,
+  letters: 2,
+  doctorCommunications: 15,
   emptySections: 1,
   openLegacyPage: 2,
   purchases: 1,
-  savedDocuments: 3,
+  savedDocuments: 2,
   hospitalStays: 1,
-  // The order request itself took 1.5 s in one run and 8.9 s in another.
-  orderMedicalFile: 2,
+  // The order request itself took 1.5 s in most runs and 8.9 s in one.
+  orderMedicalFile: 1,
   returnToSonline: 1,
   // Small because it runs last: the file has had the whole collection to be built, so this is
   // usually one poll plus the download (8.6 s). A file Maccabi is slower with holds the bar here,

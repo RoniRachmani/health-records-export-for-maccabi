@@ -78,8 +78,24 @@ Measured on 2026-09-29 by `npm run live -- --export` on one account: a real expo
 | 17 | Saving the ZIP | `save:root files`, `save:zip` (0.2 s), `save:download` (0.3 s) | 0.5 s | 0 |
 | | All | | 2 min 59 s | 254 |
 
-`WEIGHTS` in `state.ts` are these times at about half a point a second, so the progress bar stays within about 2
-points of the elapsed time while the medical file is ready when line 16 comes; re-measure before changing them.
+On 2026-09-30, `npm run live` on two more accounts, both with a longer history (these tests skip the order and the
+ZIP), took 3 min 24 s (263 files, 282 requests) and 4 min 8 s (288 files, 330 requests). Where they differ most from
+the table:
+
+| # | Line | Above | Second account | Third account |
+|---|---|---|---|---|
+| 3 | Prescriptions | 1.9 s, 3 requests | 19.5 s, 31 requests | 13.3 s, 20 requests |
+| 7–8 | Test results and lab histories | 77 s | 87 s | 101 s |
+| 9 | Visit summaries | 9.2 s | 6.1 s | 18.5 s |
+| 10 | Referrals | 16.9 s | 29.8 s | 32.2 s |
+| 14 | Messages with your doctor | 25.3 s | 23.6 s | 38.9 s |
+| 6 | Your uploads | 9.3 s | 0.6 s | 0.4 s |
+
+`WEIGHTS` in `state.ts` are fitted to the three accounts: the whole numbers that keep the progress bar closest to
+the elapsed time on the worst of them, at each line's end and halfway through test results. That is within about
+5 points, where the weights set from the table alone were 6.7 points behind on the second account and held the bar on
+one percent through its 20 s of prescriptions. It assumes the medical file is ready when line 16 comes. Re-measure
+before changing them.
 
 About 0.70 s a request: the 300 ms of pacing and about 0.4 s of the site's answer. Test results, lab histories, the
 doctor messages and referrals are about two thirds of the time; each grows with the member's history. Building and
