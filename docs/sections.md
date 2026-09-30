@@ -100,8 +100,14 @@ and `link` change on every read). So with a ready file from earlier that day ove
 (`mustSeePending`), or after 2 minutes (`appearMs`). Here every check showed a ready file, so the run waited out the
 2 minutes. The new file may have been ready when the wait began, 2 min 35 s after the order. The ZIP's PDF did differ
 from the earlier one. A same-day file over another range (the site's own order form asks for a narrower one) is waited
-past for as long as the new one takes, up to 15 minutes, since its range shows it is not the new one. A first export
-of the day has no same-day file at all, so it takes the first ready check, and its time is Maccabi's.
+past for as long as the new one takes, up to 15 minutes, since its range shows it is not the new one.
+
+The next day's first export (2026-09-30, `--export`, no same-day file) ordered in 1.5 s, and line 16's first check,
+2 min 43 s after the order, found the file ready: the run had the PDF 2 min 51 s after the order, in 2 min 58 s and
+254 requests all told. So Maccabi builds this member's file in less time than the rest of the run takes, and the
+line waits only for the download. The run does not check earlier, so how much less is not measured. With the
+weights above, the bar was within about 2 points of the elapsed time throughout: 16% where test results began at
+18% of the time, 94% where line 16 began at 94%.
 
 A live test without `--export` never orders (`dev:skipOrder`) and stops before `save`: its line 1 is only the page
 change, and its line 16 collects whatever medical file Maccabi already has.
