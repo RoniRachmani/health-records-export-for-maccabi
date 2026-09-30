@@ -24,7 +24,8 @@ const FOLDERS: Folder[] = [
   {
     name: 'profile',
     summary: "the member, entitlements, insurance seniority, their doctors' directory entries",
-    detail: 'Flags in `member.json` such as `is_diabetes` and `is_cardio` are undocumented — not diagnoses.',
+    detail: `Flags in \`member.json\` such as \`is_diabetes\` and \`is_cardio\` are undocumented — not diagnoses,
+and false says nothing either: \`is_chronical_prescriptions\` can be false for a member on permanent drugs.`,
   },
   {
     name: 'my-doctor',
@@ -54,15 +55,19 @@ An older visit is named by its \`open_medical_record_number\`, and its \`linked_
   {
     name: 'medications-and-prescriptions',
     summary: 'prescriptions, the full purchase history, a 2-year purchase report',
-    detail: `\`list.json\` lists recent prescriptions only, one PDF each. \`is_active\` can stay true
-after \`to_date\` has passed. \`purchased-history.html\` is every purchase, as the site's own Hebrew table, encoded
+    detail: `\`list.json\` lists recent prescriptions only, one PDF each. \`is_active\` stays true
+long after \`to_date\` has passed: go by the dates. A long course is a chain of monthly prescriptions, often all
+dispensed on one day, the last starting after the export. \`drug_*\` is what was prescribed and
+\`dispensed_drug_*\` what the pharmacy gave, often another product (a generic). \`purchased-history.html\` is every purchase, as the site's own Hebrew table, encoded
 **windows-1255**, with no JSON equivalent; \`purchased-report.json\` and its PDF cover 2 years.`,
   },
   {
     name: 'referrals',
     summary: 'referrals, with their diagnoses and ordered tests, and their PDFs',
     detail: `The reason is \`diagnoses[]\` (\`diagnosis_name\`, in English) — one of the few places the
-JSON names a diagnosis; what was ordered is \`lab_tests[]\`, or \`actions[]\` for other referrals.`,
+JSON names a diagnosis; what was ordered is \`lab_tests[]\`, or \`actions[]\`, or when both are empty only
+\`displaying_name\` (\`title_name\` is just the kind, such as a specialist consultation).
+\`chronic_medications[]\` is the member's chronic drug list on the referral's day.`,
   },
   {
     name: 'approvals',
@@ -79,7 +84,9 @@ Approvals have no id, so their file names carry a hash of the record's fields.`,
     name: 'vaccinations',
     summary: 'vaccinations by vaccine, flu eligibility, the vaccination booklet PDF',
     detail: `\`list.json\` is one entry per vaccine, and \`details/<vaccine_group_code>_<name>.json\` lists
-its doses. Older doses may be missing here and appear only in the medical file or the uploads.`,
+its doses. Older doses may be missing here and appear only in the medical file or the uploads.
+\`age_on_vaccination\` is years.months with a trailing zero dropped (\`68.1\` can be 68 years 10 months):
+work age out from \`vaccination_date\` and the birth date instead.`,
   },
   {
     name: 'letters',
@@ -92,7 +99,9 @@ one beside this README. Use \`original_item_date\`: \`item_date\` is a display s
     name: 'communication-with-doctor',
     summary: 'exchanges with doctors, both ways, and the forms attached',
     detail: `\`details/\` holds what the member wrote (\`general_question_subject\`, \`patient_remark\`)
-and the reply (\`doctor_remark\`, \`personal_doctor_remark\`); \`files/\` holds the forms, numbered in
+and the reply (\`doctor_remark\`, \`personal_doctor_remark\`). Not every one is the member's: the doctor
+starts some (\`request_status_desc\` \`יזומה ע"י הרופא\`), and a structured request, such as a prescription
+renewal, has no text of the member's, only what was asked for (\`prescription_largo_code_list\`). \`files/\` holds the forms, numbered in
 list order and named by their kind (\`הפניה\`, \`אישור\`). A form that is the same file as a referral,
 prescription or approval is saved once, in its own folder, and the inquiry's \`files[]\` names it;
 another form can still be one of those in a different file. \`visit\` is the visit the reply was, in
@@ -359,8 +368,11 @@ Every value in \`group_values[]\`, \`current_result\`, \`other_results[]\` and
 \`latest-lab-results.json\` has the same fields: \`test_id\` and \`test_desc\` (the measurement),
 \`result\`, \`units\`, the reference range \`min_lim\`–\`max_lim\` (all numbers) and \`lab_date\`.
 
-- **\`min_lim\` and \`max_lim\` both 0 means no range was given**, not a range of 0 to 0, and
-  \`numeric_percentage\` (where \`result\` sits in the range) is then 0 and means nothing.
+- **\`min_lim\` and \`max_lim\` both 0 means no range in those fields**, not a range of 0 to 0, and
+  \`numeric_percentage\` (where \`result\` sits in the range) is then 0 and means nothing. The range is
+  then often a line of \`message_list\` (\`200 mg/dL -מומלץ: קטן מ\`, recommended below 200).
+- \`is_messages\` is \`"0"\` for a bare value, \`"1"\` for a value with a note in \`message_list\`, \`"2"\`
+  for an answer that is only text.
 - **A \`result\` of 0 is often not a measurement.** When the answer is text, \`result\` is 0 and the
   text is in \`message\` (\`NEGATIVE\`) or, when \`is_messages\` is \`"2"\`, only in \`message_list\`
   (\`Undetectable\`, or a note that the test was not done). Read both before trusting a 0.
@@ -407,6 +419,7 @@ Every value in \`group_values[]\`, \`current_result\`, \`other_results[]\` and
 | A list item, its details and its PDF | The file name: the id in it is the list item's id |
 | A lab measurement over time | \`test_id\`, in \`test-results/history/<test_id>_*.json\` |
 | A visit to what it produced | \`referrals[].referral_id\` is \`referral_id\` in \`referrals/list.json\`; \`drugs[].largo_code\` is \`drug_largo_code\` in \`medications-and-prescriptions/list.json\` |
+| A purchase to its prescription | The drug code in \`purchased-history.html\` is mostly \`dispensed_drug_largo_code\`, not \`drug_largo_code\` |
 | A referral's lab tests to their results | \`lab_tests[].lab_test_number\` is often a \`test_id\` padded with zeros (\`06291\` is \`6291\`) |
 | A doctor across files | Employee number: \`employee_id\`, \`emp_number\`, \`employee_number\`, \`pernr\`. Position: \`position_id\`, \`position_number\`, \`object_id\`. Practitioner id: \`practitioner_id\`, \`service_provider_id\`, \`doctor_id\` |
 

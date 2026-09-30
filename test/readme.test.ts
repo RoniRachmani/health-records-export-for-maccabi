@@ -143,7 +143,8 @@ describe('exportReadme', () => {
 
   it('warns about the values that do not mean what they appear to', () => {
     const md = readme();
-    expect(md).toContain('both 0 means no range was given');
+    expect(md).toContain('both 0 means no range in those fields');
+    expect(md).toContain('The range is\n  then often a line of `message_list`');
     expect(md).toContain('A `result` of 0 is often not a measurement.');
     expect(md).toContain('The same values appear up to three times');
     expect(md).toContain('`0001-01-01T00:00:00` means never set');
