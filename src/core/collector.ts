@@ -56,6 +56,17 @@ export function errMessage(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
+/**
+ * The problem a PDF that could not be saved files, as the popup lists it. A 404 is Maccabi saying it has no file
+ * there: the site itself says "לא נמצא המידע הנדרש" for such a document (an information page, 2026-09-30), so the
+ * member is told that, and the status stays for whoever reads export-errors.json. Anything else is the extension's
+ * to explain, so it keeps the details.
+ */
+export function pdfFailure(b: { status: number; type: string }): string {
+  if (b.status === 404) return 'Maccabi has no PDF for this, and the site cannot open it either (HTTP 404)';
+  return 'PDF download: HTTP ' + b.status + ' ' + b.type;
+}
+
 export interface ApiResult {
   status: number;
   /** undefined when the body was not JSON; null when empty. */
@@ -267,7 +278,7 @@ export class Collector {
     if (await this.exists(rel)) return 'kept_existing';
     const b = await this.fetchBin(url, headers);
     if (b.status !== 200 || !isPdf(b.bytes)) {
-      await this.problem(rel, 'PDF download: HTTP ' + b.status + ' ' + b.type);
+      await this.problem(rel, pdfFailure(b));
       return null;
     }
     return this.saveBin(rel, b.bytes);
@@ -308,7 +319,7 @@ export class Collector {
     if (had) return had;
     const b = await this.fetchBin(url, headers);
     if (b.status !== 200 || !isPdf(b.bytes)) {
-      await this.problem(rel, 'PDF download: HTTP ' + b.status + ' ' + b.type);
+      await this.problem(rel, pdfFailure(b));
       return null;
     }
     return this.saveOnce(rel, b.bytes);

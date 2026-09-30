@@ -531,7 +531,7 @@ describe('references between files', () => {
     expect(danglingRefs(mem)).toEqual([]);
     expect(s.problems).toEqual([
       'communication-with-doctor/details/2026-04-02_Q1_ד״ר-ישראלי.json PROBLEM: HTTP 500',
-      'communication-with-doctor/files/2026-04-05_Q2-1_ד״ר-ישראלי.pdf PROBLEM: PDF download: HTTP 404 application/json',
+      'communication-with-doctor/files/2026-04-05_Q2-1_ד״ר-ישראלי.pdf PROBLEM: Maccabi has no PDF for this, and the site cannot open it either (HTTP 404)',
       'communication-with-doctor/details/2026-04-05_Q2_שאלה-לרופא.json PROBLEM: linked visit: HTTP 500',
     ]);
     // The inquiry without details is not saved, and neither is the visit only it would have linked.
