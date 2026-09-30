@@ -1,10 +1,21 @@
 import { changed, type Collector } from '../collector';
 import type { Ctx, Json } from '../types';
-import { iso, safe, shortHash, stem, title, titleOf } from '../util';
+import { iso, safe, shortHash, stem, title } from '../util';
 
-// A test's readable name. The list item's own type (lab_result, imaging_study, ...) is part of
-// the id, not the title, so it is not repeated here.
-const TEST_TITLE = ['test_name', 'test_desc', 'test_description', 'title', 'description', 'name'];
+/**
+ * A test's readable name: its procedures (test_category, such as "ממוגרפיה סקר"), else its kind
+ * (test_name, such as "PAP"). The site sends both as lists (measured 2026-09-30). A lab test's only
+ * name is "מעבדה", lab, which its type already says, so it goes untitled. The type itself
+ * (lab_result, imaging_study, ...) is part of the id, not the title.
+ */
+function testTitle(t: Json): string {
+  for (const f of ['test_category', 'test_name']) {
+    const v = t[f];
+    const s = title(Array.isArray(v) ? v.filter((x) => typeof x === 'string').join(' ') : v);
+    if (s && s !== 'מעבדה') return s;
+  }
+  return '';
+}
 
 export async function testResults(c: Collector, _ctx: Ctx): Promise<void> {
   const list = await c.getSave('test-results/list.json', 'POST', 'TestResultsAPI/v1/members/0/{mid}/tests', { members: [], categories: [] });
@@ -24,7 +35,7 @@ export async function testResults(c: Collector, _ctx: Ctx): Promise<void> {
     // the sign, and the name would no longer be the id the list gives.
     const rid = String(t.request_id);
     const id = rid.length > 40 ? await shortHash([t.request_id]) : (/^-\d/.test(rid) ? '-' : '') + safe(rid);
-    let name = stem(iso(t.execute_date), id + '-' + safe(t.type), titleOf(t, TEST_TITLE));
+    let name = stem(iso(t.execute_date), id + '-' + safe(t.type), testTitle(t));
     if (seen[name]) name += '-' + (await shortHash([t.doc_id, t.execute_date, t.request_id, t.type]));
     seen[name] = true;
     const d = await c.getSave('test-results/details/' + name + '.json', 'POST', 'TestResultsAPI/v1/members/0/{mid}/getresultsbyid',

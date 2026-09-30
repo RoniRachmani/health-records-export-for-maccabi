@@ -74,8 +74,9 @@ export function fakeMaccabi(letterState: LetterState = { medicalFile: null }): {
     ['GET', api('AppointmentOrderAPI/v1/members/0/{mid}/providers/ascribed'), () => jsonResp(undefined, 204)],
     ['POST', api('TestResultsAPI/v1/members/0/{mid}/tests'), () => jsonResp({
       tests: [
-        { type: 'lab_result', request_id: 555, test_name: 'ספירת דם', doc_id: 'D/1 x', time_stamp: 'T1', hash: 'h%2B1', result_files: true, execute_date: '2026-01-05T00:00:00' },
+        { type: 'lab_result', request_id: 555, test_name: ['מעבדה'], test_category: [], doc_id: 'D/1 x', time_stamp: 'T1', hash: 'h%2B1', result_files: true, execute_date: '2026-01-05T00:00:00' },
         { type: 'imaging_study', request_id: DICOM_ID, doc_id: 'D9', result_files: true, execute_date: '2026-01-06T00:00:00' },
+        { type: 'external_test_result', request_id: 'AS1', test_name: ['ממוגרפיה'], test_category: ['ממוגרפיה סקר'], doc_id: 'D7', time_stamp: 'T7', hash: 'h7', result_files: true, execute_date: '2026-01-07T00:00:00' },
       ],
     })],
     ['GET', api('TestResultsAPI/v1/members/0/{mid}/getlatestlabresults'), () => jsonResp({})],

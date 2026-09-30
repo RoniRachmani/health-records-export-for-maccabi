@@ -249,8 +249,9 @@ export function alignToPlan(run: { next: number; nextStep?: PlanStep }): boolean
  * 2: titles keep ״ and ׳, inquiries and their forms are named by what they are, uploads by their
  * file when untitled, imaging studies by a hash of their id.
  * 3: a test with a negative request_id keeps its minus sign.
+ * 4: a test is titled by its procedures or kind, which the site sends as lists; no test had a title.
  */
-export const FILE_LAYOUT = 3;
+export const FILE_LAYOUT = 4;
 
 /**
  * False when a stored run was started by a version that named files differently and still has

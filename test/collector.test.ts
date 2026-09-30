@@ -204,9 +204,11 @@ describe('full run against the fake site', () => {
       'profile/providers.json',
       'referrals/files/2026-03-01_R1_הפניה-לרופא-עור.pdf',
       'referrals/list.json',
-      'test-results/details/2026-01-05_555-lab-result_ספירת-דם.json',
+      'test-results/details/2026-01-05_555-lab-result.json',
       'test-results/details/2026-01-06_<hash8>-imaging-study.json',
-      'test-results/files/2026-01-05_555-lab-result_ספירת-דם.pdf',
+      'test-results/details/2026-01-07_AS1-external-test-result_ממוגרפיה-סקר.json',
+      'test-results/files/2026-01-05_555-lab-result.pdf',
+      'test-results/files/2026-01-07_AS1-external-test-result_ממוגרפיה-סקר.pdf',
       'test-results/followed-counter.json',
       'test-results/history/HGB_המוגלובין.json',
       'test-results/latest-lab-results.json',
@@ -270,7 +272,7 @@ describe('full run against the fake site', () => {
     expect(stays.omitted).toBeUndefined();
     // The discharge letter is asked for as the page's Summary button opens it.
     expect(site.calls).toContain('GET /online/Pages/Popups/MailingsFromHospitals/MailingsFromHospitals.aspx?path=reports/L9.pdf&typeCommitment=2');
-    expect(s.results).toEqual({ written: 47, same_as: 3 });
+    expect(s.results).toEqual({ written: 49, same_as: 3 });
 
     // No two files hold the same bytes; each record points to where its documents went.
     const digests = await Promise.all([...mem.files].filter(([k]) => !k.endsWith('.json')).map(([, v]) => sha256Hex(v)));
