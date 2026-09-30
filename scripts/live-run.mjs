@@ -15,6 +15,8 @@
 //   npm run live -- --keep        leaves the browser open at the end
 //   npm run live -- --root-files  then writes the ZIP's root files as the save step does (still no ZIP), and
 //                                 prints the README's version line, what it says failed, and export-errors.json
+//   npm run live -- --names       also prints every staged file's path, to check how files are named (names carry
+//                                 titles, such as a drug or a specialist, so this is the one output with more than counts)
 //   npm run live -- --screenshots opens the toolbar popup and photographs it before the start and at every
 //                                 step, bringing the browser window to the front for each, into .cache/live-screenshots/<time>/ (gitignored:
 //                                 the problem lines it can show come from the member's records)
@@ -45,6 +47,7 @@ const PROFILE = process.env.LIVE_PROFILE || join(homedir(), '.hrem-live-profile'
 const ITEM = process.env.MACCABI_OP_ITEM || 'Maccabi';
 const KEEP = process.argv.includes('--keep');
 const ROOT_FILES = process.argv.includes('--root-files');
+const NAMES = process.argv.includes('--names');
 const EXPORT = process.argv.includes('--export');
 const REORDER = process.argv.includes('--reorder');
 const SHOTS = process.argv.includes('--screenshots')
@@ -474,6 +477,11 @@ async function main() {
   for (const p of problems) console.log('  problem: ' + p);
   const stopped = run.status === 'paused_session' && /dev:stopBefore/.test(run.message || '');
   if (stopped) for (const [folder, n] of Object.entries(state.staged.perFolder)) console.log(`  ${folder}: ${n} files`);
+  if (stopped && NAMES) {
+    const names = await page.dev({ type: 'dev:names' }, 30_000);
+    if (Array.isArray(names)) for (const rel of names) console.log('    ' + rel);
+    else console.log('dev:names: no answer');
+  }
   // Time and requests per step, or step:part, as the runner summed them: a step a resume or a rewind ran again counts
   // twice. The time is wall-clock, so it includes the PACE_MS between requests and any wait.
   const secs = (ms) => (ms < 60_000 ? (ms / 1000).toFixed(1) + ' s' : Math.floor(ms / 60_000) + ' min ' + Math.round((ms % 60_000) / 1000) + ' s');

@@ -80,6 +80,11 @@ async function handleDevImpl(msg: DevMsg, sender: chrome.runtime.MessageSender):
         errors: errors.map((e) => e.folders.join(',') + ' | ' + e.step + ' | ' + e.where + ' | ' + e.what),
       };
     }
+    /* The staged files' paths, sorted: to check how files are named. A name carries its record's title (a
+       drug, a specialist, a procedure), so this is the one reply with more than counts; it goes only to the
+       terminal of the member whose records they are. */
+    case 'dev:names':
+      return (await listMeta()).map((m) => m.rel).sort();
     case 'dev:problems':
       return (await listProblems()).map((p) => p.step + ' | ' + p.where + ' | ' + p.what);
     case 'dev:start':

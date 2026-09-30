@@ -389,6 +389,7 @@ await dev({ type: 'dev:skipOrder', on: true });                  // test a full 
 | `dev:problems` | Items that failed so far |
 | `dev:rootFiles` | Write the ZIP's root files as `save` does, without the ZIP, and reply with the README's version line, its failed-to-collect section and `export-errors.json` |
 | `dev:titleFields` | Which response fields hold a display string, and in which language. Field names only. |
+| `dev:names` | Every staged file's path, sorted, to check how files are named |
 | `dev:stopBefore` `{step}` | Pause before a plan step. Without `step`, clears it. |
 | `dev:skipOrder` `{on}` | `orderMedicalFile` does nothing while on, and `waitMedicalFile` keeps the file Maccabi already has. Stays set until turned off. |
 | `dev:reorder` `{on}` | `orderMedicalFile` orders even when a file from today over the same range is already ready (normally it uses that one), so a real order can be timed again the same day. Stays set until turned off. |
@@ -398,7 +399,8 @@ await dev({ type: 'dev:skipOrder', on: true });                  // test a full 
 | `dev:spike` `{url, method, route, auth}` | Send one request and report its status and shape |
 | `dev:reload` | Reload the extension |
 
-Replies carry statuses, sizes and counts, never record contents. None of this is in the store build.
+Replies carry statuses, sizes and counts, never record contents; file paths (`dev:names`, and the problems' places)
+carry records' titles. None of this is in the store build.
 
 ### A live run from the terminal
 
@@ -417,7 +419,8 @@ export orders even when today's file is already ready, to time a real order agai
 off again at the end). `npm run live -- --keep` leaves the
 browser and the paused run in place, to look at them. `npm run live -- --root-files` also writes the ZIP's root
 files before discarding the run (`dev:rootFiles`), and prints the README's version line, what it says failed, and
-`export-errors.json` beside the popup's problem count. `npm run live -- --screenshots` photographs the popup
+`export-errors.json` beside the popup's problem count. `npm run live -- --names` prints every staged file's path
+(`dev:names`), to check how files are named. `npm run live -- --screenshots` photographs the popup
 before the start and at every step, into `.cache/live-screenshots/` (gitignored, since the problems it lists come
 from your records): it opens the toolbar popup itself, photographs it and closes it, so leave the browser window
 in front while it runs.
