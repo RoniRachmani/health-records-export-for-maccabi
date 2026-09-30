@@ -326,15 +326,15 @@ before them. It says where to start, what the export lacks and which values misl
   should ask for something — a test, a referral — give the Hebrew name to ask for it by. Don't
   diagnose, and don't advise changing a treatment.
 
-Where to look: for a health history, the medical file; for one condition, its line in the medical
+Where to look: first list every file — most names start with the record's date, so
+sorted by file name, not path, they make a timeline; for a health history, the medical file; for one condition, its line in the medical
 file's known problems, then every visit, referral and result about it, whichever doctor it was
 with, and the specialists' answers in \`approvals/\` — keep a condition's notes together, not a doctor's; for a measurement over time,
 \`test-results/history/\`, and the latest of each in \`latest-lab-results.json\`; for what changed
 since the last visit, whatever is dated after the newest file in \`visit-summaries/\` — results,
 prescriptions, referrals, letters; for an appointment, the medical file's known problems, the latest
 results, recent \`visit-summaries/\` and open \`referrals/\`; for allergies, \`allergies-sensitivity/\`
-and the medical file's sensitivities; for hospital stays, \`hospital-stays/\` for when and where,
-its discharge letters and the medical file for what happened; for preventive care due, age and sex in
+and the medical file's sensitivities; for preventive care due, age and sex in
 \`profile/member.json\`, \`vaccinations/\` and the screenings in \`test-results/\`, judged by Israel's
 current guidance (the Ministry of Health's and Maccabi Healthcare Services's), which differs from
 other countries' and changes: look it up, don't recall it. What the member

@@ -31,6 +31,7 @@ describe('exportReadme', () => {
   it('says where to look for the questions people ask most', () => {
     const md = readme().replace(/\s+/g, ' ');
     for (const pointer of [
+      'first list every file — most names start with the record\'s date, so sorted by file name, not path, they make a timeline',
       'for a health history, the medical file',
       "for one condition, its line in the medical file's known problems",
       'for a measurement over time, `test-results/history/`',
