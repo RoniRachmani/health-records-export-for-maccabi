@@ -1,6 +1,6 @@
 import { changed, errMessage, isControl, PACE_MS, type Collector } from '../collector';
 import type { Ctx, Json } from '../types';
-import { b64bytes, charset, END_DATE, iso, safe, shortHash, stem, titleOf } from '../util';
+import { b64bytes, charset, END_DATE, iso, safe, shortHash, stem, title, titleOf } from '../util';
 
 const DRUG_TITLE = ['drug_name', 'medicine_name', 'drug_description', 'description', 'trade_name', 'title'];
 
@@ -10,16 +10,49 @@ export async function medications(c: Collector, _ctx: Ctx): Promise<void> {
   if (r.status !== 200) await c.problem('medications-and-prescriptions/list.json', 'HTTP ' + r.status);
   else await c.save('medications-and-prescriptions/list.json', c.rec('POST', 'MedicalFileAPI/v1/members/0/{mid}/prescriptions', r, { request_body: { members: [{ member_id_code: '0', member_id: '{mid}' }] } }));
   const items: Json[] = (r.data && r.data.results) || [];
-  for (let i = 0; i < items.length; i++) {
-    const p = items[i];
-    c.progress(i, items.length, 'prescriptions', { done: i, total: items.length });
+  // A prescription's PDF is its visit's page: every drug prescribed at that visit, with each monthly
+  // part's dates ("דף זה אינו מרשם", this page is not a prescription). Every entry of one visit
+  // (clicks_visit_number) returned the same bytes: 31 entries, 8 visits (measured 2026-09-30). So a
+  // visit's PDF is fetched once, from its first entry, and named by the visit and its drugs. An
+  // entry with no visit number keeps a file of its own, named by the prescription.
+  const visits: Json[][] = [];
+  const byVisit: Record<string, Json[]> = {};
+  for (const p of items) {
     if (!p.file_link) continue;
+    const v = p.clicks_visit_number ? String(p.clicks_visit_number) : '';
+    if (v && byVisit[v]) byVisit[v].push(p);
+    else {
+      visits.push([p]);
+      if (v) byVisit[v] = visits[visits.length - 1];
+    }
+  }
+  for (let i = 0; i < visits.length; i++) {
+    const entries = visits[i];
+    const p = entries[0];
+    c.progress(i, visits.length, 'prescriptions', { done: i, total: visits.length });
     // doc_id carries the member's ID number, so it is used only hashed.
-    const id = p.prescription_number ? safe(p.prescription_number) : await shortHash([p.doc_id]);
-    await c.pdfIfMissing('medications-and-prescriptions/files/' + stem(iso(p.from_date), id, titleOf(p, DRUG_TITLE)) + '.pdf',
+    const id = p.clicks_visit_number ? safe(p.clicks_visit_number) : p.prescription_number ? safe(p.prescription_number) : await shortHash([p.doc_id]);
+    const date = entries.map((x) => iso(x.from_date)).sort()[0];
+    await c.pdfIfMissing('medications-and-prescriptions/files/' + stem(date, id, drugsTitle(entries)) + '.pdf',
       c.apiUrl('MedicalFileAPI/v1/members/0/{mid}/getprescriptionpdf') + '?timestamp=' + p.timestamp + '&hash=' + p.hash +
       '&data=' + encodeURIComponent(p.doc_id) + '&path=' + encodeURIComponent(p.file_link));
   }
+}
+
+/** A visit's drugs as a title: one drug by its whole name, several by the first word of each ("XATRAL-SIMVASTATIN"). */
+export function drugsTitle(entries: Json[]): string {
+  const names: string[] = [];
+  for (const x of entries) {
+    const t = titleOf(x, DRUG_TITLE);
+    if (t && !names.includes(t)) names.push(t);
+  }
+  if (names.length < 2) return names[0] || '';
+  const words: string[] = [];
+  for (const n of names) {
+    const w = n.split('-')[0];
+    if (!words.includes(w)) words.push(w);
+  }
+  return title(words.join(' '));
 }
 
 // Legacy /online/ services need a legacy page to have been opened in this

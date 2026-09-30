@@ -160,7 +160,7 @@ describe('exportReadme', () => {
     const all = { ...PRESENT, 'visit-summaries': 2, 'medications-and-prescriptions': 3, referrals: 2, 'communication-with-doctor': 2 };
     const md = readme(all).replace(/\s+/g, ' ');
     expect(md).toContain('A visit is not always a meeting');
-    expect(md).toContain('entries sharing a `clicks_visit_number` have the same one');
+    expect(md).toContain('one PDF per visit, named by its `clicks_visit_number`');
     expect(md).toContain('identical ones included: count every row');
     expect(md).toContain('some are a purpose, not a condition');
     expect(md).toContain('take sex and age from `profile/member.json`');

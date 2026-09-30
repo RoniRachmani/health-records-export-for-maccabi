@@ -1,11 +1,23 @@
 import type { Collector } from '../collector';
 import type { Ctx, Json } from '../types';
-import { END_DATE, iso, safe, shortHash, stem, titleOf } from '../util';
+import { END_DATE, iso, safe, shortHash, stem, title, titleOf } from '../util';
 
 // Three separate API resources (/referrals, /approvals, /tutorials), so three sibling folders and
 // three steps: each holds one kind of record, and no file needs a type prefix to say which kind it
 // is. Nothing is shared between them but the date range, so the popup can show three sections.
 const REFERRAL_TITLE = ['referral_type_name', 'specialization_description', 'title_name', 'practitioner_full_name', 'description'];
+
+/**
+ * A referral's title: its kind, made specific by displaying_name where that is the kind and more.
+ * title_name says only "התייעצות מומחה" (a specialist consultation) for every specialist, and
+ * displaying_name "התייעצות מומחה- אורולוגיה" (measured 2026-09-30); but displaying_name can also be
+ * vaguer ("בדיקות מעבדה" for a "בדיקה מיקולוגית"), and then the kind stays.
+ */
+export function referralTitle(x: Json): string {
+  const kind = titleOf(x, REFERRAL_TITLE);
+  const shown = title(x && x.displaying_name);
+  return kind && shown.length > kind.length && shown.startsWith(kind) ? shown : kind;
+}
 const APPROVAL_TITLE = ['title_name', 'specialization_description', 'practitioner_full_name'];
 const INFO_TITLE = ['display_text', 'specialization', 'practitioner_name'];
 const RANGE = '?from_date=1900-01-01&to_date=' + END_DATE;
@@ -18,7 +30,7 @@ export async function referrals(c: Collector, _ctx: Ctx): Promise<void> {
     const x = list[i];
     c.progress(i, list.length, 'referrals', { done: i, total: list.length });
     if (!x.pdf_link) continue;
-    await c.pdfIfMissing('referrals/files/' + stem(iso(x.referral_date), safe(x.referral_id), titleOf(x, REFERRAL_TITLE)) + '.pdf',
+    await c.pdfIfMissing('referrals/files/' + stem(iso(x.referral_date), safe(x.referral_id), referralTitle(x)) + '.pdf',
       pdfBase + '?path=' + x.pdf_link + '&timestamp=' + x.timestamp + '&hash=' + x.hash);
   }
 }

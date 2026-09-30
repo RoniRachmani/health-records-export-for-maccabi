@@ -59,9 +59,8 @@ An older visit is named by its \`open_medical_record_number\`, and its \`linked_
   {
     name: 'medications-and-prescriptions',
     summary: 'prescriptions, the full purchase history, a 2-year purchase report',
-    detail: `\`list.json\` lists recent prescriptions only. Each has a PDF, but it is the page of every drug
-prescribed at that visit, not the prescription's own: entries sharing a \`clicks_visit_number\` have the same
-one. \`is_active\` stays true long after \`to_date\` has passed: go by the dates. A long course is a chain
+    detail: `\`list.json\` lists recent prescriptions only. \`files/\` holds one PDF per visit, named by its
+\`clicks_visit_number\`: the page of every drug prescribed then, not a prescription of its own. \`is_active\` stays true long after \`to_date\` has passed: go by the dates. A long course is a chain
 of monthly prescriptions, often all dispensed on one day, the last starting after the export;
 \`purchased-history.html\` then has one row per pack, identical ones included: count every row. \`drug_*\` is what was prescribed and
 \`dispensed_drug_*\` what the pharmacy gave, often another product (a generic). \`purchased-history.html\` is every purchase, as the site's own Hebrew table, encoded

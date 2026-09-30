@@ -134,7 +134,7 @@ describe('fetchBin()', () => {
     const { c, sink } = makeCollector(t);
     const s = await runAll(c, newCtx(), ['medications']);
     expect(s.problems).toEqual([]);
-    expect([...(sink as MemorySink).files.keys()].filter((k) => k.endsWith('.pdf'))).toHaveLength(2);
+    expect([...(sink as MemorySink).files.keys()].filter((k) => k.endsWith('.pdf'))).toHaveLength(3);
   });
 });
 
@@ -194,6 +194,8 @@ describe('full run against the fake site', () => {
       'letters/list.json',
       'medications-and-prescriptions/files/2026-03-01_P-1_אקמול-500.pdf',
       'medications-and-prescriptions/files/2026-03-02_<hash8>_נורופן.pdf',
+      // Three entries of one visit, one PDF: the visit's page, named by the visit and its drugs.
+      'medications-and-prescriptions/files/2026-03-05_9001_XATRAL-SIMVASTATIN.pdf',
       'medications-and-prescriptions/files/purchased-report.pdf',
       'medications-and-prescriptions/list.json',
       'medications-and-prescriptions/purchased-history.html',
@@ -203,12 +205,16 @@ describe('full run against the fake site', () => {
       'profile/member.json',
       'profile/providers.json',
       'referrals/files/2026-03-01_R1_הפניה-לרופא-עור.pdf',
+      'referrals/files/2026-03-03_R2_התייעצות-מומחה-אורולוגיה.pdf',
+      'referrals/files/2026-03-04_R3_בדיקה-מיקולוגית.pdf',
       'referrals/list.json',
       'test-results/details/2026-01-05_555-lab-result.json',
       'test-results/details/2026-01-06_<hash8>-imaging-study.json',
       'test-results/details/2026-01-07_AS1-external-test-result_ממוגרפיה-סקר.json',
+      'test-results/details/2026-01-08_IM1-imaging-result_MRI-ערמונית.json',
       'test-results/files/2026-01-05_555-lab-result.pdf',
       'test-results/files/2026-01-07_AS1-external-test-result_ממוגרפיה-סקר.pdf',
+      'test-results/files/2026-01-08_IM1-imaging-result_MRI-ערמונית.pdf',
       'test-results/followed-counter.json',
       'test-results/history/HGB_המוגלובין.json',
       'test-results/latest-lab-results.json',
@@ -272,7 +278,9 @@ describe('full run against the fake site', () => {
     expect(stays.omitted).toBeUndefined();
     // The discharge letter is asked for as the page's Summary button opens it.
     expect(site.calls).toContain('GET /online/Pages/Popups/MailingsFromHospitals/MailingsFromHospitals.aspx?path=reports/L9.pdf&typeCommitment=2');
-    expect(s.results).toEqual({ written: 49, same_as: 3 });
+    expect(s.results).toEqual({ written: 54, same_as: 3 });
+    // A visit's prescriptions are one PDF, asked for once: two lone entries and one visit.
+    expect(site.calls.filter((x) => x.includes('getprescriptionpdf'))).toHaveLength(3);
 
     // No two files hold the same bytes; each record points to where its documents went.
     const digests = await Promise.all([...mem.files].filter(([k]) => !k.endsWith('.json')).map(([, v]) => sha256Hex(v)));

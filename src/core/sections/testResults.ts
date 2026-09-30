@@ -3,14 +3,16 @@ import type { Ctx, Json } from '../types';
 import { iso, safe, shortHash, stem, title } from '../util';
 
 /**
- * A test's readable name: its procedures (test_category, such as "ממוגרפיה סקר"), else its kind
- * (test_name, such as "PAP"). The site sends both as lists (measured 2026-09-30). A lab test's only
+ * A test's readable name: its procedures, else its kind (test_name, such as "PAP"). Where the
+ * procedures are named is not the same for every account: one sent test_category (["ממוגרפיה
+ * סקר"]), another left test_category empty and named each in procedures[].test_name ("MRI ערמונית",
+ * where test_name said only "(M.R.I) תהודה מגנטית"; both measured 2026-09-30). A lab test's only
  * name is "מעבדה", lab, which its type already says, so it goes untitled. The type itself
  * (lab_result, imaging_study, ...) is part of the id, not the title.
  */
 function testTitle(t: Json): string {
-  for (const f of ['test_category', 'test_name']) {
-    const v = t[f];
+  const procedures = Array.isArray(t.procedures) ? t.procedures.map((p: Json) => p && p.test_name) : [];
+  for (const v of [t.test_category, procedures, t.test_name]) {
     const s = title(Array.isArray(v) ? v.filter((x) => typeof x === 'string').join(' ') : v);
     if (s && s !== 'מעבדה') return s;
   }

@@ -2,8 +2,9 @@ import type { Collector } from '../collector';
 import type { Ctx, Json } from '../types';
 import { iso, safe, stem, titleOf } from '../util';
 
-// The visits list names the speciality (service_name) and the practitioner; the speciality says more.
-export const VISIT_TITLE = ['service_name', 'service_provider_name', 'provider_name', 'practitioner_name', 'specialization', 'specialization_description', 'clinic_name', 'visit_type_name', 'department_name'];
+// A visit is titled by its speciality, which says more than the practitioner: service_name in the visits
+// list, service_provider_specialization in the details a visit linked from an inquiry is named from.
+export const VISIT_TITLE = ['service_name', 'service_provider_specialization', 'service_provider_name', 'provider_name', 'practitioner_name', 'specialization', 'specialization_description', 'clinic_name', 'visit_type_name', 'department_name'];
 
 export async function visits(c: Collector, _ctx: Ctx): Promise<void> {
   // Server returns the last 12 months only; older visit files stay on disk.

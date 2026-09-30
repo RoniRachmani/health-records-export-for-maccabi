@@ -250,8 +250,10 @@ export function alignToPlan(run: { next: number; nextStep?: PlanStep }): boolean
  * file when untitled, imaging studies by a hash of their id.
  * 3: a test with a negative request_id keeps its minus sign.
  * 4: a test is titled by its procedures or kind, which the site sends as lists; no test had a title.
+ * 5: a test's procedures are also read from procedures[]; a referral is titled by its specialist; a
+ * visit linked from an inquiry by its speciality, as listed visits are; prescriptions are one PDF per visit.
  */
-export const FILE_LAYOUT = 4;
+export const FILE_LAYOUT = 5;
 
 /**
  * False when a stored run was started by a version that named files differently and still has

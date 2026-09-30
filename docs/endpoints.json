@@ -165,7 +165,8 @@
       {
         "method": "GET",
         "url": "MedicalFileAPI/v1/members/0/{mid}/getprescriptionpdf?timestamp=<item.timestamp>&hash=<item.hash>&data=<item.doc_id>&path=<encodeURIComponent(item.file_link)>",
-        "output": "medications-and-prescriptions/files/<from_date>_<prescription_number>_<title>.pdf"
+        "output": "medications-and-prescriptions/files/<from_date>_<clicks_visit_number>_<title>.pdf",
+        "notes": "One request per visit (clicks_visit_number), from its first entry: every entry of a visit returns the same PDF, the visit's page of all the drugs prescribed then. <from_date> is the visit's earliest, <title> its drugs. An entry with no clicks_visit_number gets a file of its own, named by its prescription_number."
       },
       {
         "method": "POST",
@@ -205,7 +206,7 @@
         "method": "GET",
         "url": "MedicalFileAPI/v1/members/0/{mid}/pdf?path=<item.pdf_link>&timestamp=<item.timestamp>&hash=<item.hash>",
         "output": "referrals/files/<referral_date>_<referral_id>_<title>.pdf",
-        "notes": "pdf_link inserted verbatim (already URL-encoded). Same endpoint for approvals."
+        "notes": "pdf_link inserted verbatim (already URL-encoded). Same endpoint for approvals. <title> is title_name, or displaying_name where that is title_name and more (the specialist of a consultation)."
       }
     ],
     "approvals": [

@@ -77,6 +77,8 @@ export function fakeMaccabi(letterState: LetterState = { medicalFile: null }): {
         { type: 'lab_result', request_id: 555, test_name: ['מעבדה'], test_category: [], doc_id: 'D/1 x', time_stamp: 'T1', hash: 'h%2B1', result_files: true, execute_date: '2026-01-05T00:00:00' },
         { type: 'imaging_study', request_id: DICOM_ID, doc_id: 'D9', result_files: true, execute_date: '2026-01-06T00:00:00' },
         { type: 'external_test_result', request_id: 'AS1', test_name: ['ממוגרפיה'], test_category: ['ממוגרפיה סקר'], doc_id: 'D7', time_stamp: 'T7', hash: 'h7', result_files: true, execute_date: '2026-01-07T00:00:00' },
+        // Another account's shape: no test_category, the procedure named only in procedures[].
+        { type: 'imaging_result', request_id: 'IM1', test_name: ['(M.R.I) תהודה מגנטית'], test_category: [], procedures: [{ test_name: 'MRI ערמונית', test_id: '9' }], doc_id: 'D8', time_stamp: 'T8', hash: 'h8', result_files: true, execute_date: '2026-01-08T00:00:00' },
       ],
     })],
     ['GET', api('TestResultsAPI/v1/members/0/{mid}/getlatestlabresults'), () => jsonResp({})],
@@ -88,13 +90,21 @@ export function fakeMaccabi(letterState: LetterState = { medicalFile: null }): {
     ['GET', api('AppointmentOrderAPI/v1/members/0/{mid}/visits/A1'), () => jsonResp({ visit_summary_pdf_link: 'dir/a b.pdf', timestamp: 'TS', hash: 'HH', text: 'synthetic' })],
     ['GET', api('AppointmentOrderAPI/v1/members/0/{mid}/pdf'), (_r, url) => bytesResp(pdfOf(SAME_FILE[url.searchParams.get('path')!] ?? url.searchParams.get('path')!))],
     // Visits a doctor's reply links to: one older than the visit list reaches, one the list has.
-    ['GET', api('AppointmentOrderAPI/v1/members/0/{mid}/visits/7001/'), () => jsonResp({ visit_summary_date: '2024-06-01T08:00:00', service_name: 'אורתופדיה', visit_summary_pdf_link: 'old/v.pdf', timestamp: 'TS', hash: 'HH' })],
-    ['GET', api('AppointmentOrderAPI/v1/members/0/{mid}/visits/7002/'), () => jsonResp({ visit_summary_date: '2026-02-01T10:00:00', service_name: 'קרדיולוגיה', visit_summary_pdf_link: 'v/again.pdf', timestamp: 'TS', hash: 'HH' })],
+    ['GET', api('AppointmentOrderAPI/v1/members/0/{mid}/visits/7001/'), () => jsonResp({ visit_summary_date: '2024-06-01T08:00:00', service_provider_name: 'ד"ר כהן', service_provider_specialization: 'אורתופדיה', visit_summary_pdf_link: 'old/v.pdf', timestamp: 'TS', hash: 'HH' })],
+    ['GET', api('AppointmentOrderAPI/v1/members/0/{mid}/visits/7002/'), () => jsonResp({ visit_summary_date: '2026-02-01T10:00:00', service_provider_name: 'ד"ר ישראלי', service_provider_specialization: 'קרדיולוגיה', visit_summary_pdf_link: 'v/again.pdf', timestamp: 'TS', hash: 'HH' })],
     ['POST', api('MedicalFileAPI/v1/members/0/{mid}/prescriptions'), () => jsonResp({ results: [{ file_link: 'rx/1.pdf', from_date: '01/03/26', prescription_number: 'P 1', drug_name: 'אקמול 500', doc_id: 'd', timestamp: 1, hash: 2 },
-      { file_link: 'rx/2.pdf', from_date: '02/03/26', drug_name: 'נורופן', doc_id: '2::medication::' + MID + '::0::9', timestamp: 1, hash: 2 }] })],
+      { file_link: 'rx/2.pdf', from_date: '02/03/26', drug_name: 'נורופן', doc_id: '2::medication::' + MID + '::0::9', timestamp: 1, hash: 2 },
+      // One visit's prescriptions, a monthly part among them: they share one PDF, the visit's page.
+      { file_link: 'rx/3.pdf', clicks_visit_number: '9001', from_date: '2026-03-05T00:00:00', prescription_number: '3', drug_name: 'XATRAL XL  10MG 30TAB', doc_id: 'd3', timestamp: 1, hash: 2 },
+      { file_link: 'rx/4.pdf', clicks_visit_number: '9001', from_date: '2026-03-05T00:00:00', prescription_number: '4', drug_name: 'SIMVASTATIN TEVA 10MG 30TAB', doc_id: 'd4', timestamp: 1, hash: 2 },
+      { file_link: 'rx/5.pdf', clicks_visit_number: '9001', from_date: '2026-04-05T00:00:00', prescription_number: '5', drug_name: 'XATRAL XL  10MG 30TAB', doc_id: 'd5', timestamp: 1, hash: 2 }] })],
     ['GET', api('MedicalFileAPI/v1/members/0/{mid}/getprescriptionpdf'), (_r, url) => bytesResp(pdfOf(url.search))],
     ['GET', api('MedicalFileAPI/v1/members/0/{mid}/prescriptions/purchased/report'), () => jsonResp({ type: 'pdf', base64: btoa('%PDF-1.4 report') })],
-    ['GET', api('MedicalFileAPI/v1/members/0/{mid}/referrals'), () => jsonResp({ referrals: [{ pdf_link: 'r%2F1.pdf', referral_date: '2026-03-01', referral_id: 'R1', referral_type_name: 'הפניה לרופא עור', timestamp: 't', hash: 'h' }] })],
+    ['GET', api('MedicalFileAPI/v1/members/0/{mid}/referrals'), () => jsonResp({ referrals: [{ pdf_link: 'r%2F1.pdf', referral_date: '2026-03-01', referral_id: 'R1', referral_type_name: 'הפניה לרופא עור', timestamp: 't', hash: 'h' },
+      // The kind says only "a specialist consultation"; displaying_name says which specialist.
+      { pdf_link: 'r%2F2.pdf', referral_date: '2026-03-03', referral_id: 'R2', title_name: 'התייעצות מומחה', displaying_name: 'התייעצות מומחה- אורולוגיה', timestamp: 't', hash: 'h' },
+      // displaying_name vaguer than the kind: the kind stays.
+      { pdf_link: 'r%2F3.pdf', referral_date: '2026-03-04', referral_id: 'R3', title_name: 'בדיקה מיקולוגית', displaying_name: 'בדיקות מעבדה', timestamp: 't', hash: 'h' }] })],
     ['GET', api('MedicalFileAPI/v1/members/0/{mid}/approvals'), () => jsonResp({ approval: [{ pdf_link: 'ap.pdf', approval_date: '2026-03-02', title_name: 'אישור פיזותרפיה', timestamp: 't', hash: 'h' }] })],
     ['GET', api('MedicalFileAPI/v1/members/0/{mid}/tutorials'), () => jsonResp({ tutorials: [] })],
     ['GET', api('MedicalFileAPI/v1/members/0/{mid}/pdf'), (_r, url) => bytesResp(pdfOf(url.searchParams.get('path')!))],
