@@ -10,7 +10,8 @@
 //     with `npm run store-video -- --import <take>`. One take keeps the delivery even from line to
 //     line; the script puts a second's pause between lines, which is where it is cut.
 //
-// ELEVENLABS_VOICE (a voice id) and ELEVENLABS_MODEL override the voice and the model below.
+// ELEVENLABS_VOICE (a voice id) and ELEVENLABS_MODEL override the voice and the model below. Set them
+// the same way for --script, --import and the render: a clip is kept under the voice and model that spoke it.
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -25,16 +26,22 @@ const API = 'https://api.elevenlabs.io/v1';
 // need its Creator plan or above; Brian (nPczCjzI2devNBz1zQrb), one of its own voices, works on any.
 const VOICE = process.env.ELEVENLABS_VOICE || '9HBoEQ8LqyvVZFYDodnr';
 const MODEL = process.env.ELEVENLABS_MODEL || 'eleven_multilingual_v2';
-const SETTINGS = { stability: 0.55, similarity_boost: 0.75, style: 0.1, use_speaker_boost: true };
+// v3 and v4 take their direction from the text (audio tags, punctuation) and have only stability and
+// similarity to set; they take no SSML, so a pause is an audio tag. Their docs don't list the neighbouring
+// lines or a seed either, so a line asked for over the API goes on its own.
+const TAGGED = /^eleven_v[34]/.test(MODEL);
+const SETTINGS = TAGGED
+  ? { stability: 0.5, similarity_boost: 0.75 }
+  : { stability: 0.55, similarity_boost: 0.75, style: 0.1, use_speaker_boost: true };
 // Asked for so the same line comes back the same way; ElevenLabs treats it as best effort.
 const SEED = 20260917;
 // Raw 16-bit PCM, at 44.1 kHz where the plan allows it and 24 kHz where it doesn't; soundtrack.mjs
 // resamples either to the film's rate.
 const FORMATS = [['pcm_44100', 44100], ['pcm_24000', 24000]];
 
-/** Where a line's clip is kept: by voice and words, whichever way it was made. */
+/** Where a line's clip is kept: by voice, model and words, whichever way it was made. */
 function cached(text) {
-  const id = createHash('sha256').update(JSON.stringify({ voice: VOICE, text })).digest('hex').slice(0, 24);
+  const id = createHash('sha256').update(JSON.stringify({ voice: VOICE, model: MODEL, text })).digest('hex').slice(0, 24);
   return { pcm: join(CACHE, id + '.pcm'), meta: join(CACHE, id + '.json') };
 }
 
@@ -92,9 +99,7 @@ export async function speak(lines) {
         text: lines[i].text,
         model_id: MODEL,
         voice_settings: SETTINGS,
-        seed: SEED,
-        previous_text: lines[i - 1]?.text,
-        next_text: lines[i + 1]?.text,
+        ...(TAGGED ? {} : { seed: SEED, previous_text: lines[i - 1]?.text, next_text: lines[i + 1]?.text }),
       };
       const { pcm, rate } = await ask(key, request);
       keep(lines[i].text, pcm, rate, 'api');
@@ -112,7 +117,7 @@ const PAUSE = 1.0;
 
 /** The script as one take: the lines with a pause between each, to paste into ElevenLabs. */
 export function script(lines) {
-  return lines.map((l) => l.text).join(' <break time="' + PAUSE.toFixed(1) + 's" /> ');
+  return lines.map((l) => l.text).join(TAGGED ? ' [long pause] ' : ' <break time="' + PAUSE.toFixed(1) + 's" /> ');
 }
 
 /**

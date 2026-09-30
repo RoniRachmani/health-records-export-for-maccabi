@@ -163,11 +163,13 @@ synthesized by that script, from oscillators and noise, so no music licence is i
 from the start to the closing card (`BARS`): two under the opening answer (`INTRO`, which is `OPEN` in
 `store/src/video.ts`), and two under the assistant's part at the end. Lengthen or shorten a part and the tempo follows,
 unless the bar count changes with it. The narration is
-`NARRATION` in `store/src/video.ts`, spoken by ElevenLabs in "Vino – Warm Leadership Narrator", a Voice Library
+`NARRATION` in `store/src/video.ts`, spoken by ElevenLabs in "Emma – Professional Commercial Voice", a Voice Library
 voice, which needs ElevenLabs' Creator plan or above to speak again. To re-record it, make one take of the text
 `npm run store-video -- --script` prints (ElevenLabs' web app, or its connector for Claude; model
 `eleven_multilingual_v2`), then `npm run store-video -- --import <take.mp3>`: the take is cut into lines at the
-second's pause the script leaves between them. With `ELEVENLABS_API_KEY` in
+second's pause the script leaves between them. For another model, set `ELEVENLABS_MODEL` (e.g. `eleven_v4`) for all
+three commands: the script then marks its pauses with `[long pause]`, since v3 and v4 take no SSML, and the clips are
+cached under the model that spoke them. With `ELEVENLABS_API_KEY` in
 `.env` the lines are asked for one by one instead. Either way they are cached in `.cache/narration/`. The render
 stops before the first frame if a line would run into the next one. ElevenLabs' free plan is for non-commercial
 use only and asks to be credited; a paid plan is what allows commercial use of what it speaks.

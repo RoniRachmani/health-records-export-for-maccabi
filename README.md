@@ -471,8 +471,9 @@ Its soundtrack is scored from the same timeline by `scripts/soundtrack.mjs`: mus
 from oscillators and noise, and narration spoken by ElevenLabs (`scripts/narration.mjs`). The voice comes from one
 take of the whole script, made in ElevenLabs with the text `--script` prints and brought in with
 `--import <take>`, which cuts it into lines at the pauses; or, with `ELEVENLABS_API_KEY` in the environment or a
-gitignored `.env`, line by line over the API. Spoken lines are cached in `.cache/narration/`, so only a changed
-line costs anything. `--audio-only` writes the soundtrack alone, to listen to; `--remux` puts a changed soundtrack
+gitignored `.env`, line by line over the API. `ELEVENLABS_MODEL` picks the model (`eleven_multilingual_v2` unless
+set; set it for `--script` and `--import` too). Spoken lines are cached in `.cache/narration/` by voice, model and
+words, so only a changed line costs anything. `--audio-only` writes the soundtrack alone, to listen to; `--remux` puts a changed soundtrack
 on the last render's picture in seconds, without drawing it again; `--no-narration` leaves the voice out, and
 `--silent` the sound. The MP4 is not committed — the store's video
 field takes a YouTube link, so upload it there and paste the link on the dashboard. The poster above it is one frame of the same
