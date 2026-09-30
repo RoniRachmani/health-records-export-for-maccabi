@@ -27,11 +27,16 @@ export async function approvals(c: Collector, _ctx: Ctx): Promise<void> {
   const ap = await c.getSave('approvals/list.json', 'GET', 'MedicalFileAPI/v1/members/0/{mid}/approvals' + RANGE);
   const pdfBase = c.apiUrl('MedicalFileAPI/v1/members/0/{mid}/pdf');
   const list: Json[] = (ap.r.data && ap.r.data.approval) || [];
+  // Two approvals can agree on every field but the signed pdf_link: a consultant's answers to two
+  // referring doctors on one day, two documents (measured 2026-09-30). The second of a kind is -2.
+  const seen: Record<string, number> = {};
   for (let i = 0; i < list.length; i++) {
     const a = list[i];
     c.progress(i, list.length, 'approvals', { done: i, total: list.length });
     if (!a.pdf_link) continue;
-    const ak = await shortHash([a.title_name, a.practitioner_full_name, a.specialization_description, a.approval_date, a.approval_date_from, a.approval_date_to, a.approval_type_code]);
+    let ak = await shortHash([a.title_name, a.practitioner_full_name, a.specialization_description, a.approval_date, a.approval_date_from, a.approval_date_to, a.approval_type_code]);
+    seen[ak] = (seen[ak] || 0) + 1;
+    if (seen[ak] > 1) ak += '-' + seen[ak];
     await c.pdfIfMissing('approvals/files/' + stem(iso(a.approval_date), ak, titleOf(a, APPROVAL_TITLE)) + '.pdf',
       pdfBase + '?path=' + a.pdf_link + '&timestamp=' + a.timestamp + '&hash=' + a.hash);
   }

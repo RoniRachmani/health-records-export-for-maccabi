@@ -367,6 +367,19 @@ describe('full run against the fake site', () => {
     ]);
   });
 
+  it('keeps both of two approvals that differ only in their PDF', async () => {
+    const site = fakeMaccabi();
+    const same = { approval_date: '2026-03-22T00:00:00', title_name: 'תשובת יועץ', practitioner_full_name: 'ד"ר כהן', timestamp: 't' };
+    const approvals: Route = (_r, url) => (url.pathname.endsWith('/approvals')
+      ? jsonResp({ approval: [{ ...same, pdf_link: 'ap1.pdf', hash: 'h1' }, { ...same, pdf_link: 'ap2.pdf', hash: 'h2' }] })
+      : undefined);
+    const { c, sink } = makeCollector(fakeTransport([approvals, ...site.routes]));
+    await runAll(c, newCtx(), ['approvals']);
+    const files = [...(sink as MemorySink).files.keys()].filter((k) => k.startsWith('approvals/files/'));
+    expect(files).toHaveLength(2);
+    expect(files[1]).toBe(files[0].replace('_תשובת-יועץ.pdf', '-2_תשובת-יועץ.pdf'));
+  });
+
   // general_question_subject can be the opening of the member's own message, so the forms say it better.
   it('names an inquiry by its forms before its question', async () => {
     const site = fakeMaccabi();
