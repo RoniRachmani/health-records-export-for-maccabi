@@ -123,6 +123,9 @@ describe('exportReadme', () => {
     const md = readme();
     expect(md).toContain('`2026-09-18_medical-file.pdf`, beside this file');
     expect(md).toContain('as of 2026-09-18');
+    // Its parts, in the order three members' files had them, so an assistant can go to the right pages.
+    expect(md).toContain('each page headed `דף N`, its page in the PDF');
+    expect(md).toContain('headed `העתק` and their copy date');
     expect(md.indexOf('full medical file')).toBeLessThan(md.indexOf('What this export does not contain'));
   });
 

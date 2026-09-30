@@ -248,15 +248,18 @@ function medicalFileSection(file: string | null): string {
 \`${EXPORT_ERRORS}\` says why. Without it, this export reaches back only as far as the data below.`;
   }
   return `\`${file}\`, beside this file, is Maccabi Healthcare Services's own printout of the member's record
-as of ${file.slice(0, 10)}: personal details, known problems (diagnoses, with the date each began),
-sensitivities and lifestyle, then visits back to the earliest on record — reason, findings, diagnosis,
-medications, referrals, vaccinations — then copies of the documents filed in the record. **Start
-there**: it reaches far further back than the JSON, which holds a few years. The file's own heading
-still calls it partial (חלקי), and if the fresh order this run makes failed, this is an older
-file covering less. Its range is the \`from_date\`–\`to_date\` of the \`letter_type\` 2 entry in
-\`letters/list.json\`. It runs to hundreds of pages, and extractors often get its Hebrew out
-scrambled — a letter per line, or words reversed. If that text reads as nonsense, read the pages
-as images.`;
+as of ${file.slice(0, 10)}. **Start there**: it reaches far further back than the JSON. In order:
+
+- The printout, each page headed \`דף N\`, its page in the PDF. Page 1 has known problems (diagnoses,
+  with the date each began) and sensitivities; then visits back to the earliest on record, in groups,
+  each in date order.
+- A few documents in no order, then copies of older ones headed \`העתק\` and their copy date
+  (mid-2021): the document's own date is inside it.
+- The documents filed since, in date order.
+
+Its heading still calls it partial (חלקי), and if the fresh order this run makes failed, this is an
+older file covering less (its range is in \`letters/\`). Extracted, its Hebrew often comes out
+scrambled — a letter per line, or words reversed: then read the pages as images.`;
 }
 
 /**
