@@ -59,14 +59,19 @@ export function fade(el: HTMLElement | SVGElement, o: number): void {
 
 /**
  * A line of words that can rise into place one after another, each from behind its own mask.
- * `accent` words (by index) take the accent colour.
+ * `accent` words (by index) take the accent colour. A newline in `text` breaks the line there.
  */
 export function kinetic(tag: string, cls: string, text: string, accent: number[] = []): { el: HTMLElement; words: HTMLElement[] } {
   const el = document.createElement(tag);
   if (cls) el.className = cls;
   const words: HTMLElement[] = [];
-  text.split(' ').forEach((word, i) => {
-    if (i) el.append(' ');
+  text.split(/ |(?=\n)/).forEach((word, i) => {
+    if (word.startsWith('\n')) {
+      el.append(document.createElement('br'));
+      word = word.slice(1);
+    } else if (i) {
+      el.append(' ');
+    }
     const mask = document.createElement('span');
     mask.className = 'w';
     const inner = document.createElement('span');

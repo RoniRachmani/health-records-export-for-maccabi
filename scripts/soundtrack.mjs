@@ -143,8 +143,8 @@ function partAt(t, s) {
   if (t < s.browser) return 'title';
   if (t < s.runFrom) return 'start';
   if (t < s.open) return 'run';
-  if (t < s.privacy) return 'zip';
-  if (t < s.ask) return 'privacy';
+  if (t < s.uses) return 'zip';
+  if (t < s.ask) return 'uses';
   if (t < s.close) return 'ask';
   return 'end';
 }
@@ -181,7 +181,7 @@ function pad(length, g, s) {
     }
   }
   // Soft in the opening, opening up while the export runs, closing again for the quiet parts.
-  const cutoff = { answer: 1200, hook: 1300, title: 1900, start: 2300, run: 3400, zip: 2700, privacy: 1700, ask: 2000, end: 2300 };
+  const cutoff = { answer: 1200, hook: 1300, title: 1900, start: 2300, run: 3400, zip: 2700, uses: 1700, ask: 2000, end: 2300 };
   const fl = new Biquad('lowpass', 1300, 0.65);
   const fr = new Biquad('lowpass', 1300, 0.65);
   let f = cutoff.answer;
@@ -220,7 +220,7 @@ function mallet(bus, at, midi, vel, pan, tau = 0.5) {
 function plucks(length, g, s) {
   const bus = new Stereo(length);
   // Per part: how many notes a bar (4 = quarters, 8 = eighths) and how hard.
-  const feel = { answer: [4, 0.45], hook: [4, 0.5], title: [8, 0.55], start: [8, 0.6], run: [8, 0.72], zip: [8, 0.6], privacy: [4, 0.5], ask: [8, 0.55] };
+  const feel = { answer: [4, 0.45], hook: [4, 0.5], title: [8, 0.55], start: [8, 0.6], run: [8, 0.72], zip: [8, 0.6], uses: [4, 0.5], ask: [8, 0.55] };
   for (let b = 0; b < BARS; b++) {
     const chord = g.chord(b);
     const tones = [...chord.pad.map((n) => n + 12), chord.bass + 36].sort((x, y) => x - y);
@@ -243,7 +243,7 @@ function bass(length, g, s) {
   for (let b = INTRO + 3; b <= BARS; b++) {
     const f = hz(g.chord(b).bass);
     const part = partAt(g.at(b) + 0.01, s);
-    const vel = part === 'privacy' || part === 'ask' || b === BARS ? 0.13 : 0.19;
+    const vel = part === 'uses' || part === 'ask' || b === BARS ? 0.13 : 0.19;
     // The root on the bar and again on the "and" of three.
     const notes = b === BARS ? [[0, 3.8]] : [[0, 1.6], [2.5, 1.2]];
     for (const [beat, beats] of notes) {
@@ -291,7 +291,7 @@ function drums(length, g, s) {
       bus.add(i0 + j, bp.run(rand()) * Math.min(1, t / 0.006) * Math.exp(-t / 0.018) * vel, -0.35);
     }
   };
-  // In while the export runs, lighter over the ZIP, out for the privacy part and the close.
+  // In while the export runs, lighter over the ZIP, out for the questions and the close.
   for (let b = INTRO + 5; b < INTRO + 14; b++) {
     const light = partAt(g.at(b) + 0.01, s) === 'zip';
     kick(g.at(b, 0), light ? 0.3 : 0.42);

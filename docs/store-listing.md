@@ -144,16 +144,17 @@ through a whole export by run states built from the real `PLAN` and `WEIGHTS`, s
 section list move as they do in an export. Nothing in it comes from a real account: the record cards, and the
 file names that stream past while the export runs, are made up, in the collector's own `<date>_<id>_<title>` form.
 
-What it shows, in order: what it is for, first: a generic assistant opened on the export, explaining a made-up
-letter that is in Hebrew in English and naming the file and page it came from (`chatWindow` with `LETTER`) · record cards from all over the site pulled into the extension's folder · the name and
-what the extension does · the clicks that start an export, on a placeholder page, then the camera closing in on the
+What it shows, in order, tells [positioning.md](positioning.md)'s story about its demo member: what it is for, first: a
+generic assistant opened on the export, saying what stands out in it and naming the file it came from (`chatWindow`
+with `STANDS_OUT`) · record cards from all over the site, "one page at a time", pulled into the extension's folder ·
+the name and the headline · the clicks that start an export, on a placeholder page, then the camera closing in on the
 popup · the export running, sped up, beside the files it writes and the progress badge on the toolbar icon · the
-finished ZIP, which opens into its folders, and `test-results/` opened to show a record's JSON and PDF sharing a
-name · "Private by design", with records travelling from the site to a computer and nothing in between · "Then ask
-your AI assistant": the assistant again, answering a made-up question from a made-up lab history and naming the file
-(the same `chatWindow` as screenshot 1) · the closing card with the repository's address. The
-disclaimer is on the title and closing cards, and the popup's own *Unofficial* chip (the whole disclaimer is its
-tooltip) is on screen whenever the popup is.
+finished ZIP, which opens into its folders ("your whole history, in one place"), then a file of the member's own
+dropped into it ("yours to keep, and to grow") · "Ask anything": the use cases as pill tabs over a pink panel, three of
+them opened in turn · the assistant again, with advice tied to the member's own numbers and its source (`ONE_THING`) ·
+the closing card, with the one line on privacy ("Stays on your computer") beside "Free on the Chrome Web Store", and
+the repository's address. The disclaimer is on the title and closing cards, and the popup's own *Unofficial* chip (the
+whole disclaimer is its tooltip) is on screen whenever the popup is.
 
 The README shows the video as a poster that links to it: `store/assets/video-poster.png`, one frame of the same film
 with a play badge over it, drawn by `npm run store-assets -- poster`. Re-render it whenever the video changes.
@@ -185,7 +186,7 @@ nothing is suggested over the last frame.
 Ask Claude or ChatGPT about your Maccabi Online medical records – free Chrome extension
 ```
 
-**Description** (plain text with no links; the chapter times are the film's parts, `runFrom`, `saved` and `privacy` in `T` in
+**Description** (plain text with no links; the chapter times are the film's parts, `runFrom`, `saved` and `uses` in `T` in
 `store/src/video.ts`, so retiming the film means changing them here and on YouTube; YouTube shows chapters only
 when each is at least 10 seconds long. The lists repeat the store description's, so change them together):
 
@@ -196,10 +197,10 @@ AI assistants that connect to medical records reach U.S. providers, not Maccabi 
 
 ▶ Find it on the Chrome Web Store: Health Records Export for Maccabi
 
-0:00 Ask about your records, then get them in one ZIP
+0:00 Your whole Maccabi history, and a friend who's read all of it
 0:19 The export, start to finish (sped up)
 0:30 What's in the ZIP
-0:43 Private by design, then ask your AI assistant
+0:43 Ask anything
 
 WHAT IT SAVES
 • Test results, lab histories and result PDFs
@@ -387,6 +388,6 @@ of this page:
 | A permission is added or removed | Permission justifications here, the manifest, `docs/privacy.md`, `public/privacy.html`, README |
 | A new kind of data or request | Data usage here, the privacy policy, `docs/endpoints.json` |
 | The manifest's `description` | Summary here (132 characters at most) |
-| What the export's README asks of the assistant (`shared/readme.ts`) | The description's "Guardrails for the assistant", "What it helps you do" and "Things to ask", the README's *Hand it to an AI assistant*, and the answers in `TREND` and `LETTER` (`store/src/parts.ts`), which screenshot 1 and the video draw |
+| What the export's README asks of the assistant (`shared/readme.ts`) | The description's "Guardrails for the assistant", "What it helps you do" and "Things to ask", the README's *Hand it to an AI assistant*, and the answers in `TREND`, `STANDS_OUT` and `ONE_THING` (`store/src/parts.ts`), which screenshot 1 and the video draw |
 | The questions to start with | The description's and YouTube's "Things to ask", the README's list, and `QUESTIONS` in `store/src/parts.ts` |
 | Health in ChatGPT, or another assistant's medical-record connection, reaches Maccabi or opens to Israel | The "U.S. providers, not Maccabi Healthcare Services" line in the description, on YouTube and in the README, and the README's *What about ChatGPT Health?* |

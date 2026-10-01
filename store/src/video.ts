@@ -3,10 +3,11 @@
    photographs it. Nothing animates by itself — every position is a function of time (motion.ts) —
    so the render is the same on every machine, however long a frame takes to capture.
 
-   The film, in nine parts: what it is for, first — an assistant answering from the export · years of
-   records pulled into one folder · the name and the promise · the clicks that start an export, on a
-   placeholder page · the export running, with the files it writes · the ZIP opened, and one folder in
-   it · private by design · the assistant again · where to get it.
+   The film tells docs/positioning.md's story, in nine parts: what it is for, first — an assistant saying
+   what stands out in the export · years of records, seen one page at a time, pulled into one folder ·
+   the name and the headline · the clicks that start an export, on a placeholder page · the export
+   running, with the files it writes · the ZIP opened, and a file of the member's own added to it ·
+   what to ask · the assistant again, naming its source · where to get it, and the one line on privacy.
 
    The export it shows is the real popup (mock-chrome.ts gives it a made-up state, never real data)
    driven through a whole run: the states pushed into it are built from the real PLAN and WEIGHTS,
@@ -19,7 +20,7 @@ import {
   between, clamp01, fade, inCubic, inOut, kinetic, lerp, linear, out, outBack, outQuint, place, pulse, ramp, rise, showing,
   type Point,
 } from './motion';
-import { CHECK, DOC, FOLDER, FOLDERS, LETTER, LOCK, MARK, chatWindow, dots, fileRow, h, img, pageSkeleton, paper, svg, type Chat } from './parts';
+import { DOC, FOLDER, FOLDERS, LOCK, MARK, ONE_THING, STANDS_OUT, chatWindow, dots, fileRow, h, img, pageSkeleton, paper, svg, type Chat } from './parts';
 
 const FPS = 60;
 
@@ -49,11 +50,11 @@ const T = {
   runFrom: OPEN + 13.8,
   runTo: OPEN + 24.4,
   saved: OPEN + 24.8,
-  // 5 · The ZIP, opened. Its two parts are as long as their narration needs.
+  // 5 · The ZIP, opened, and then added to. Its two parts are as long as their narration needs.
   open: OPEN + 28.3,
-  drill: OPEN + 33.8,
-  // 6 · Private by design.
-  privacy: OPEN + 38.5,
+  keep: OPEN + 33.8,
+  // 6 · What to ask.
+  uses: OPEN + 38.5,
   // 7 · Then, asked of the assistant the member chooses: two of the music's bars.
   ask: OPEN + 43.7,
   // 8 · Where to get it.
@@ -190,18 +191,19 @@ interface Card {
   leaves: number;
 }
 
-// Round the edge of the frame, clear of the line in the middle. Made up, like everything here.
+// Round the edge of the frame, clear of the line in the middle. Made up, like everything here, and the
+// same made-up member as the assistant's answers (parts.ts).
 const CARDS: Card[] = [
-  { kind: 'Test result', title: 'Complete blood count', meta: '14 Feb 2026', glyph: 'test', x: 250, y: 175, turn: -7, scale: 0.95, arrives: 1, leaves: 4 },
+  { kind: 'Test result', title: 'Blood sugar', meta: '14 Feb 2026', glyph: 'test', x: 250, y: 175, turn: -7, scale: 0.95, arrives: 1, leaves: 4 },
   { kind: 'Visit summary', title: 'Family medicine', meta: '2 Mar 2026', glyph: 'visit', pink: true, x: 705, y: 130, turn: 4, scale: 0.8, arrives: 4, leaves: 2 },
   { kind: 'Lab history', title: 'Cholesterol', meta: '2019 – 2026', glyph: 'chart', x: 1215, y: 128, turn: -3, scale: 0.85, arrives: 8, leaves: 3 },
   { kind: 'Prescription', title: 'Three medications', meta: 'Valid until Dec 2026', glyph: 'pill', pink: true, x: 1680, y: 200, turn: 6, scale: 1, arrives: 0, leaves: 6 },
   { kind: 'Referral', title: 'Orthopedics', meta: '28 Jan 2026', glyph: 'referral', x: 190, y: 565, turn: 5, scale: 0.85, arrives: 6, leaves: 8 },
-  { kind: 'Vaccination', title: 'Flu vaccine', meta: '19 Oct 2025', glyph: 'vaccine', x: 1732, y: 590, turn: -5, scale: 0.9, arrives: 3, leaves: 7 },
+  { kind: 'Vaccination', title: 'Tetanus booster', meta: '3 May 2017', glyph: 'vaccine', x: 1732, y: 590, turn: -5, scale: 0.9, arrives: 3, leaves: 7 },
   { kind: 'Medical file', title: 'Your whole history', meta: 'Full medical file · PDF', glyph: 'file', pink: true, x: 310, y: 930, turn: 3, scale: 1, arrives: 2, leaves: 10 },
   { kind: 'Letter', title: 'From your clinic', meta: '9 Mar 2026', glyph: 'letter', x: 760, y: 962, turn: -4, scale: 0.82, arrives: 9, leaves: 5 },
   { kind: 'Approval', title: 'Physiotherapy', meta: '2 Feb 2026', glyph: 'approval', pink: true, x: 1180, y: 950, turn: 5, scale: 0.9, arrives: 5, leaves: 1 },
-  { kind: 'Visit summary', title: 'Cardiology', meta: '11 Nov 2025', glyph: 'visit', x: 1628, y: 925, turn: -6, scale: 0.95, arrives: 7, leaves: 9 },
+  { kind: 'Visit summary', title: 'Pulmonology', meta: '11 Nov 2019', glyph: 'visit', x: 1628, y: 925, turn: -6, scale: 0.95, arrives: 7, leaves: 9 },
   { kind: 'Test result', title: 'Vitamin D', meta: '6 Jun 2025', glyph: 'test', x: 962, y: 318, turn: 2, scale: 0.72, arrives: 10, leaves: 0 },
 ];
 const CARD_W = 300;
@@ -282,17 +284,8 @@ const FEED: { at: number; path: string }[] = (() => {
   return out;
 })();
 
-/** test-results/, opened: a record's JSON and its PDF share a name. */
-const DRILL: { dir: string; stem: string; ext: string; pair?: boolean }[] = [
-  { dir: '', stem: 'list', ext: '.json' },
-  { dir: '', stem: 'latest-lab-results', ext: '.json' },
-  { dir: 'details/', stem: '2026-02-14_7730215-1_ספירת-דם', ext: '.json', pair: true },
-  { dir: 'files/', stem: '2026-02-14_7730215-1_ספירת-דם', ext: '.pdf', pair: true },
-  { dir: 'details/', stem: '2026-01-08_7726298-1_כולסטרול', ext: '.json' },
-  { dir: 'files/', stem: '2026-01-08_7726298-1_כולסטרול', ext: '.pdf' },
-  { dir: 'history/', stem: '1142_המוגלובין', ext: '.json' },
-];
-const DRILL_ROW = 44;
+/** What the member adds to the folder themselves, after the export: it is theirs to grow. */
+const ADDED = { name: 'private-clinic-letter.pdf', what: 'Added by you', kinds: 'PDF' };
 
 // ---- icons ----------------------------------------------------------------
 const ZIP_ICON = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#296bed" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M11 6h1M12 8.5h1M11 11h1M12 13.5h1"/><rect x="10.5" y="16" width="3" height="3" rx=".8"/></svg>';
@@ -300,23 +293,16 @@ const ZIP_ICON = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" st
 // box looks pushed left), which is the whole of its optical centring - the circle then just centres it.
 const PLAY = '<svg viewBox="0 0 48 48" width="74" height="74"><path d="M18.5 13.5l17 10.5-17 10.5z" fill="#ffffff" stroke="#ffffff" stroke-width="3.5" stroke-linejoin="round"/></svg>';
 const POINTER = '<svg viewBox="0 0 24 32" width="30" height="40"><path d="M3 2l17.5 13.2-7.7.7 4.4 9.1-3.6 1.7-4.4-9.2-5.4 5z" fill="#ffffff" stroke="#083f92" stroke-width="1.6" stroke-linejoin="round"/></svg>';
-/** A file's icon by its kind: braces for JSON, a page for everything else. Pale on navy, deep on white. */
-function fileIcon(path: string, onWhite = false): string {
+/** A file's icon by its kind, pale on the navy: braces for JSON, a page for everything else. */
+function fileIcon(path: string): string {
   const json = path.endsWith('.json');
-  const stroke = json ? (onWhite ? '#296bed' : '#c4e5f8') : (onWhite ? '#b83b7c' : '#f1c1cd');
+  const stroke = json ? '#c4e5f8' : '#f1c1cd';
   const d = json
     ? 'M9 4.5c-2.2 0-2.2 1.6-2.2 3v1.8c0 1.3-.8 2.2-2.3 2.2 1.5 0 2.3.9 2.3 2.2v1.8c0 1.4 0 3 2.2 3M15 4.5c2.2 0 2.2 1.6 2.2 3v1.8c0 1.3.8 2.2 2.3 2.2-1.5 0-2.3.9-2.3 2.2v1.8c0 1.4 0 3-2.2 3'
     : 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h4';
   return '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="' + stroke +
     '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="' + d + '"/></svg>';
 }
-const CROSS = '<svg viewBox="0 0 20 20" width="20" height="20"><circle cx="10" cy="10" r="10" fill="#f1c1cd"/><path d="M6.8 6.8l6.4 6.4M13.2 6.8l-6.4 6.4" stroke="#083f92" stroke-width="2.2" stroke-linecap="round"/></svg>';
-const LAPTOP = '<svg viewBox="0 0 300 200" width="300" height="200" fill="none" stroke-linejoin="round" stroke-linecap="round">' +
-  '<rect x="40" y="14" width="220" height="146" rx="12" fill="#ffffff" stroke="#083f92" stroke-width="5"/>' +
-  '<rect x="52" y="26" width="196" height="122" rx="5" fill="#e3effd"/>' +
-  '<path d="M12 170h276l-14 20H26z" fill="#ffffff" stroke="#083f92" stroke-width="5"/>' +
-  '<path d="M126 170h48" stroke="#083f92" stroke-width="5"/>' +
-  '<g transform="translate(115 51) scale(3)">' + MARK + '</g></svg>';
 
 // ---- building blocks ---------------------------------------------------------
 function recordCard(c: Card): HTMLElement {
@@ -352,7 +338,7 @@ function artwork(): Art {
 /** Puts the artwork's centre at x, y. */
 const placeArt = (art: Art, x: number, y: number, s: number): void => place(art.el, x - 270, y - 220, s);
 
-/** A path as the feed and the drill show it: its folders quiet, its own name bright. */
+/** A path as the feed shows it: its folders quiet, its own name bright. */
 function pathLine(path: string): HTMLElement {
   const cut = path.lastIndexOf('/') + 1;
   return h('span', 'path', h('span', 'dir', path.slice(0, cut)), h('span', 'name', path.slice(cut)));
@@ -387,26 +373,26 @@ interface Caption {
 
 const CAPTIONS: Caption[] = [
   {
-    from: T.answer + 0.3, to: T.cards - 0.1, top: 330, title: 'Ask about your Maccabi health records', accent: [3, 4, 5],
-    text: 'In plain language, in the language you speak, with the file behind each answer.',
+    from: T.answer + 0.3, to: T.cards - 0.1, top: 330, title: 'Ask anything about your health', accent: [1],
+    text: 'What changed, what stands out, what to do next: answered from your own Maccabi records.',
   },
   { from: T.zoom + 0.9, to: T.runFrom + 0.25, top: 400, step: '3', title: 'Press Start export' },
   { from: T.runFrom + 0.25, to: T.saved + 0.25, top: 118, title: 'It works through your records on its own', chip: 'Sped up · a real export takes 5 to 20 minutes' },
   {
     from: T.saved + 0.25, to: T.open, top: 360, title: 'One ZIP in your Downloads folder', accent: [1],
-    text: 'Everything it collected, in one dated file. The extension then deletes its own copy, and lists anything it could not export.',
+    text: 'Everything it collected, in one dated file.',
   },
   {
-    from: T.open + 0.3, to: T.drill, top: 360, title: 'Every record, every PDF',
-    text: 'One folder per part of Maccabi Online, your full medical file on top, and a README that explains what each folder holds.',
+    from: T.open + 0.3, to: T.keep, top: 360, title: 'Your whole history, in one place', accent: [1, 2],
+    text: 'Your full medical file, plus every result, visit, prescription, referral, vaccination and letter the site has.',
   },
   {
-    from: T.drill, to: T.privacy - 0.1, top: 360, title: 'Named by date, id and title',
-    text: 'A record’s data, exactly as the site sent it, sits beside its PDF under the same name.',
+    from: T.keep, to: T.uses - 0.1, top: 360, title: 'Yours to keep, and to grow', accent: [0],
+    text: 'Add to it as you go: a private clinic’s letter, a new result, notes from abroad.',
   },
   {
-    from: T.ask + 0.15, to: T.close, top: 330, title: 'Then ask your AI assistant', accent: [3, 4],
-    text: 'Open the folder in the assistant you choose. The README in the ZIP tells it how to read your records.',
+    from: T.ask + 0.15, to: T.close, top: 330, title: 'A friend who’s read it all', accent: [1],
+    text: 'Every answer names the record it came from, so you can check it. You and your doctor decide.',
   },
 ];
 
@@ -416,23 +402,40 @@ const STEPS: { from: number; to: number; step: string; text: string }[] = [
   { from: T.clickIcon - 0.05, to: T.zoom + 0.55, step: '2', text: 'Click the extension’s icon' },
 ];
 
+/** What a member can ask, as the pill tabs of part 6 name it (docs/positioning.md's Ask use cases), and the example of each. */
+const USES: { tab: string; q?: string; a?: string }[] = [
+  { tab: 'What stands out?' },
+  { tab: 'One thing today' },
+  { tab: 'Preventive care', q: 'What might I be due for?', a: 'A tetanus booster: your last one was in May 2017.' },
+  { tab: 'Explain a result', q: 'What changed in my latest blood test?', a: 'One value newly above the range, one back to normal, the rest steady since 2021.' },
+  { tab: 'Before an appointment', q: 'What should I raise with my doctor on Thursday?', a: 'Three questions, and a one-page summary of your history for a new specialist.' },
+  { tab: 'From years ago' },
+];
+/** The tabs part 6 opens in turn: the ones the opening and the end don't already answer. */
+const USE_TABS = USES.flatMap((u, i) => (u.q ? [i] : []));
+const USE_EVERY = 1.15;
+/** When tab `i` (of USES) comes up. */
+const useAt = (i: number): number => T.uses + 1.3 + USE_TABS.indexOf(i) * USE_EVERY;
+/** The follow-up questions under each answer: the use cases neither answer is about. */
+const FOLLOW_UPS = ['What might I be due for?', 'What changed in my latest blood test?', 'What should I raise with my doctor on Thursday?'];
+
 /**
  * What the narrator says, and when each line starts. scripts/soundtrack.mjs has each line spoken
  * (ElevenLabs), places it at its second and fails the render if one runs into the next, so a line
  * that grows has to be cut or given room here. Numbers are spelled out, as they are to be said.
  */
 const NARRATION: { at: number; text: string }[] = [
-  { at: T.answer + 0.6, text: 'Ask about your Maccabi health records, in the language you speak.' },
-  { at: T.hookLine, text: 'Years of test results, visits, prescriptions and letters.' },
-  { at: T.title + 0.5, text: 'All in one ZIP, saved to your own computer.' },
-  { at: T.browser + 0.7, text: 'Log in as usual, click the icon, and press Start export.' },
-  { at: T.runFrom + 0.5, text: 'It works through every section by itself, collecting each PDF and the data behind it.' },
+  { at: T.answer + 0.6, text: 'Ask anything about your health, and get answers from your own records.' },
+  { at: T.hookLine, text: 'Maccabi Online shows your records one page at a time.' },
+  { at: T.title + 0.3, text: 'Your whole history, and a genius friend who’s read all of it.' },
+  { at: T.browser + 0.9, text: 'Log in as usual, click the icon, and press Start export.' },
+  { at: T.runFrom + 0.5, text: 'It goes through every section on its own, and collects everything the site has.' },
   { at: T.runFrom + 6.9, text: 'Sped up here. The real thing takes five to twenty minutes.' },
   { at: T.saved + 0.3, text: 'When it’s done, one dated ZIP lands in your Downloads folder.' },
-  { at: T.open + 0.85, text: 'Inside: your full medical file, and a folder for each kind of record.' },
-  { at: T.drill + 0.3, text: 'Every PDF has its data beside it, ready for an assistant to read.' },
-  { at: T.privacy + 0.4, text: 'Private by design: your records go only to your computer.' },
-  { at: T.ask + 0.4, text: 'Then open it in the AI assistant you choose, and ask in plain language.' },
+  { at: T.open + 0.85, text: 'Everything in one place, your full medical file included.' },
+  { at: T.keep + 0.3, text: 'It’s yours to keep, and to add to as you go.' },
+  { at: T.uses + 0.4, text: 'Open it in the Claude or ChatGPT desktop app, and ask anything.' },
+  { at: T.ask + 0.4, text: 'Every answer names its source. You and your doctor decide.' },
   { at: T.close + 0.4, text: 'Health Records Export for Maccabi. Free, on the Chrome Web Store.' },
 ];
 
@@ -451,9 +454,9 @@ const SOUNDS: { at: number; kind: string; dur?: number }[] = [
   { at: T.clickStart, kind: 'click' },
   { at: T.saved, kind: 'chime' },
   { at: T.open, kind: 'whoosh', dur: 0.8 },
-  { at: T.drill + 0.35, kind: 'pop' },
-  { at: T.privacy - 0.3, kind: 'whoosh', dur: 0.9 },
-  ...[0, 1, 2, 3, 4].map((i) => ({ at: T.privacy + 2.2 + i * 0.2, kind: 'pop' })),
+  { at: T.keep + 0.75, kind: 'pop' },
+  { at: T.uses - 0.3, kind: 'whoosh', dur: 0.9 },
+  ...USE_TABS.map((u) => ({ at: useAt(u), kind: 'pop' })),
   { at: T.ask - 0.3, kind: 'whoosh', dur: 0.9 },
   { at: T.ask + 1.5, kind: 'pop' },
   { at: T.ask + 3.0, kind: 'pop' },
@@ -461,14 +464,6 @@ const SOUNDS: { at: number; kind: string; dur?: number }[] = [
   // A tick for each file that lands in the list, once the list is there to see it land.
   ...FEED.filter((f) => f.at >= T.runFrom + 0.5 && f.at < T.saved).map((f) => ({ at: f.at, kind: 'tick' })),
 ].sort((a, b) => a.at - b.at);
-
-const PRIVACY_PILLS: { no: boolean; text: string }[] = [
-  { no: true, text: 'No servers' },
-  { no: true, text: 'No analytics' },
-  { no: true, text: 'No tracking' },
-  { no: false, text: 'Never sees your password' },
-  { no: false, text: 'Open source' },
-];
 
 // ---- the film ----------------------------------------------------------------
 async function main(): Promise<void> {
@@ -479,19 +474,19 @@ async function main(): Promise<void> {
   const glows = [0, 1, 2].map(() => h('div', 'glow'));
   document.body.append(grid, ...glows);
 
-  // 0 · what it is for: the assistant, answering from the export
-  const openChat = chatWindow(LETTER);
+  // 0 · what it is for: the assistant, saying what stands out in the export
+  const openChat = chatWindow(STANDS_OUT, FOLLOW_UPS);
 
-  // 1 · years of records
+  // 1 · years of records, as the site shows them
   const cards = CARDS.map(recordCard);
-  const hookLine = kinetic('h1', 'hook-line', 'Years of medical records.');
+  const hookLine = kinetic('h1', 'hook-line', 'One page at a time.');
   const hook = h('div', 'layer', ...cards, hookLine.el);
 
-  // 2 · the name and the promise
+  // 2 · the name and the headline
   const art = artwork();
   const lockName = h('p', 'lock-name', 'Health Records Export for Maccabi');
-  const promise = kinetic('h1', 'lock-title', 'Your Maccabi health records, in one ZIP', [4, 5, 6]);
-  const lockSub = h('p', 'lock-sub', 'A free Chrome extension that saves every record and PDF to your own computer.');
+  const promise = kinetic('h1', 'lock-title', 'Your whole Maccabi history,\nand a genius friend who’s read all of it', [6, 7]);
+  const lockSub = h('p', 'lock-sub', 'Save everything from Maccabi Online to your computer, then ask anything: what changed, what stands out, what to do next.');
   const lockNote = h('p', 'disclaimer', DISCLAIMER);
   const lockup = h('div', 'layer', lockName, promise.el, lockSub, lockNote);
 
@@ -531,55 +526,44 @@ async function main(): Promise<void> {
     h('div', 'feed-list', ...feedRows),
   );
 
-  // 5 · the ZIP, opened: the popup's file card grows into its window.
+  // 5 · the ZIP, opened: the popup's file card grows into its window, and the member adds to it.
   const readme = fileRow(DOC, 'README.md', 'What every folder holds, and what isn’t there', 'Markdown');
   const medical = fileRow(DOC, '2026-09-17_medical-file.pdf', 'Your full medical file', 'PDF');
   const folderRows = FOLDERS.map(([name, what, kinds]) => fileRow(FOLDER, name, what, kinds));
-  const drillRow = folderRows[FOLDERS.findIndex(([name]) => name === 'test-results')];
-  const drillRows = DRILL.map((d) => h('div', 'drill-row' + (d.pair ? ' pair' : ''),
-    svg(fileIcon(d.ext, true), 'drill-icon'),
-    h('span', 'drill-path', h('span', 'dir', d.dir), h('span', 'stem', d.stem), h('span', 'dir', d.ext)),
-  ));
-  const drill = h('div', 'drill', ...drillRows);
+  const addedRow = fileRow(DOC, ADDED.name, ADDED.what, ADDED.kinds);
+  addedRow.classList.add('added');
+  const added = h('div', 'added-slot', addedRow);
   const filesInner = h('div', 'files-inner',
     h('div', 'toolbar', dots(), h('div', 'files-title', 'maccabi-export-2026-09-17')),
     h('div', 'files-list', readme, medical, ...folderRows),
   );
-  filesInner.querySelector('.files-list')?.insertBefore(drill, drillRow.nextSibling);
+  filesInner.querySelector('.files-list')?.insertBefore(added, medical.nextSibling);
   const ghost = h('div', 'ghost', svg(ZIP_ICON, 'zip'), h('div', '', h('strong', '', ZIP), h('span', '', '486 files · 38 MB')));
   const files = h('div', 'files-win', filesInner, ghost);
   const fileRowsAll = [readme, medical, ...folderRows];
 
-  // 6 · private by design
-  const privacyTitle = kinetic('h2', 'privacy-title', 'Private by design', [2]);
-  const privacySub = h('p', 'privacy-sub', 'Straight from Maccabi Online to a file on your computer. Nothing in between.');
-  const site = h('div', 'node site',
-    h('div', 'mini', h('div', 'mini-bar', dots(), h('div', 'mini-address', svg(LOCK), h('span', '', 'online.maccabi4u.co.il'))),
-      h('div', 'mini-body', h('i'), h('i'), h('i'), h('i'))),
-    h('p', 'node-label', 'Maccabi Online'),
-  );
-  const home = h('div', 'node home', svg(LAPTOP, 'laptop'), h('p', 'node-label', 'Your computer'));
-  const wire = h('div', 'wire');
-  const packets = [0, 1, 2, 3].map(() => h('span', 'packet', h('i'), h('i')));
-  const pills = PRIVACY_PILLS.map((p) => h('span', 'pill', svg(p.no ? CROSS : CHECK, 'pill-icon'), h('span', '', p.text)));
-  const privacy = h('div', 'layer',
-    privacyTitle.el, privacySub, wire, ...packets, site, home,
-    h('div', 'pills', ...pills.slice(0, 3)), h('div', 'pills second', ...pills.slice(3)),
-  );
+  // 6 · what to ask: the use cases as pill tabs over a soft panel, a few of them opened in turn
+  const usesTitle = kinetic('h2', 'uses-title', 'Ask anything', [1]);
+  const usesSub = h('p', 'uses-sub', 'Open the folder in the Claude or ChatGPT desktop app.');
+  const tabs = USES.map((u) => h('span', 'tab', u.tab));
+  const useCards = USE_TABS.map((i) => h('div', 'use', h('p', 'use-q', '“' + USES[i].q + '”'), h('p', 'use-a', USES[i].a)));
+  const usesPanel = h('div', 'uses-panel', ...useCards);
+  const uses = h('div', 'layer', usesTitle.el, usesSub, h('div', 'tabs', ...tabs), usesPanel);
 
-  // 7 · the assistant, asked: the store's screenshot of it, played out
-  const chat = chatWindow();
+  // 7 · the assistant, asked again, and naming its source
+  const chat = chatWindow(ONE_THING, FOLLOW_UPS);
 
   // 8 · where to get it
   const endArt = artwork();
   const endName = kinetic('h1', 'end-title', 'Health Records Export for Maccabi');
-  const endSub = h('p', 'end-sub', 'Free on the Chrome Web Store  ·  Open source');
+  // The one line on privacy, beside where to get it (docs/positioning.md: say it once, lightly).
+  const endSub = h('p', 'end-sub', 'Free on the Chrome Web Store  ·  Stays on your computer');
   const endLink = h('p', 'end-link', 'github.com/RoniRachmani/health-records-export-for-maccabi');
   const endNote = h('p', 'disclaimer', DISCLAIMER);
   const ending = h('div', 'layer', endName.el, endSub, endLink, endNote);
 
   const scrim = h('div', 'scrim');
-  document.body.append(openChat.el, hook, art.el, lockup, world, ...steps, ...captions.map((c) => c.el), feed, files, privacy, chat.el, endArt.el, ending, scrim);
+  document.body.append(openChat.el, hook, art.el, lockup, world, ...steps, ...captions.map((c) => c.el), feed, files, uses, chat.el, endArt.el, ending, scrim);
 
   // ---- the real popup, in the browser window ----
   const frame = await popupFrame(browser);
@@ -654,11 +638,8 @@ async function main(): Promise<void> {
     return { x: a.x, y: a.y, w: cardInWorld.width * cam.s, h: cardInWorld.height * cam.s, r: 20 * POPUP * cam.s };
   })();
 
-  /** Where the assistant's window sits in parts 0 and 7, and its scale: the store's screenshot, enlarged. */
+  /** Where the assistant's window sits in parts 0 and 7, and its scale. */
   const CHAT = { x: 910, y: 137, s: 1.3 };
-
-  /** The line the records travel along in part 6; the two ends sit under video.css's .site and .home. */
-  const WIRE = { from: 700, to: 1220, y: 540 };
 
   // ---- where everything is, at time t ----
   let pushed = '';
@@ -880,7 +861,7 @@ async function main(): Promise<void> {
 
     // ---- 5 · the ZIP, opened ----
     const grow = ramp(t, T.open, 0.8, inOut);
-    const filesOut = ramp(t, T.privacy - 0.5, 0.5, inCubic);
+    const filesOut = ramp(t, T.uses - 0.5, 0.5, inCubic);
     fade(files, t < T.open ? 0 : 1 - filesOut);
     ghost.style.width = cardOnScreen.w.toFixed(1) + 'px';
     const box = {
@@ -902,43 +883,40 @@ async function main(): Promise<void> {
       row.style.opacity = u.toFixed(3);
       row.style.transform = 'translate(0,' + ((1 - u) * 14).toFixed(1) + 'px)';
     });
-    // test-results/, opened.
-    const opening = ramp(t, T.drill + 0.35, 0.6, inOut);
-    drill.style.height = (opening * DRILL.length * DRILL_ROW).toFixed(1) + 'px';
-    drillRow.style.setProperty('--hl', ramp(t, T.drill, 0.35).toFixed(3));
-    drillRows.forEach((row, i) => {
-      const u = ramp(t, T.drill + 0.55 + i * 0.09, 0.5, outQuint);
-      row.style.opacity = u.toFixed(3);
-      row.style.transform = 'translate(' + ((1 - u) * -16).toFixed(1) + 'px,0)';
-    });
-    drill.style.setProperty('--pair', ramp(t, T.drill + 1.6, 0.5).toFixed(3));
+    // A file of the member's own, dropped in under the medical file: the list makes room, and it lands.
+    const room = ramp(t, T.keep + 0.3, 0.5, inOut);
+    added.style.height = (room * addedRow.offsetHeight).toFixed(1) + 'px';
+    const land = ramp(t, T.keep + 0.45, 0.6, outBack);
+    addedRow.style.opacity = clamp01(land * 2).toFixed(3);
+    addedRow.style.transform = 'translate(' + ((1 - land) * 120).toFixed(1) + 'px,0) rotate(' + ((1 - land) * 2.5).toFixed(2) + 'deg)';
+    addedRow.style.setProperty('--hl', ramp(t, T.keep + 0.6, 0.4).toFixed(3));
 
-    // ---- 6 · private by design ----
-    const privOut = ramp(t, T.ask - 0.45, 0.45, inOut);
-    fade(privacy, t >= T.privacy && t < T.ask ? 1 - privOut : 0);
-    place(privacy, 0, -40 * privOut);
-    rise(privacyTitle.words, t, T.privacy + 0.25, 0.08);
-    fade(privacySub, ramp(t, T.privacy + 0.7, 0.5));
-    place(privacySub, 0, 16 * (1 - ramp(t, T.privacy + 0.7, 0.7, outQuint)));
-    const nodeIn = (el: HTMLElement, from: number, dx: number): void => {
-      const u = ramp(t, from, 0.8, outQuint);
-      fade(el, ramp(t, from, 0.35));
-      el.style.transform = 'translate(' + ((1 - u) * dx).toFixed(1) + 'px,0) scale(' + lerp(0.92, 1, u).toFixed(4) + ')';
-    };
-    nodeIn(site, T.privacy + 0.9, -60);
-    nodeIn(home, T.privacy + 1.1, 60);
-    wire.style.transform = 'scaleX(' + ramp(t, T.privacy + 1.4, 0.6, inOut).toFixed(4) + ')';
-    packets.forEach((p, i) => {
-      const run0 = T.privacy + 1.8;
-      const u = t < run0 ? 0 : ((t - run0) / 1.5 + i / packets.length) % 1;
-      const x = lerp(WIRE.from, WIRE.to, u);
-      place(p, x - 18, WIRE.y - 23, 1, 0);
-      fade(p, t < run0 ? 0 : Math.min(u * 12, (1 - u) * 12, 1) * ramp(t, run0, 0.4));
+    // ---- 6 · what to ask ----
+    const usesOut = ramp(t, T.ask - 0.45, 0.45, inOut);
+    fade(uses, t >= T.uses && t < T.ask ? 1 - usesOut : 0);
+    place(uses, 0, -40 * usesOut);
+    rise(usesTitle.words, t, T.uses + 0.25, 0.08);
+    fade(usesSub, ramp(t, T.uses + 0.6, 0.5));
+    place(usesSub, 0, 16 * (1 - ramp(t, T.uses + 0.6, 0.7, outQuint)));
+    tabs.forEach((tab, i) => {
+      const u = ramp(t, T.uses + 0.7 + i * 0.06, 0.5, outBack);
+      tab.style.opacity = clamp01(u * 2).toFixed(3);
+      tab.style.transform = 'scale(' + lerp(0.7, 1, u).toFixed(4) + ')';
+      // The open tab fills with the panel's pink, and gives way when the next one opens.
+      const k = USE_TABS.indexOf(i);
+      const on = k < 0 ? 0 : ramp(t, useAt(i), 0.25) * (k === USE_TABS.length - 1 ? 1 : 1 - ramp(t, useAt(i) + USE_EVERY, 0.25));
+      tab.style.setProperty('--on', on.toFixed(3));
     });
-    pills.forEach((p, i) => {
-      const u = ramp(t, T.privacy + 2.2 + i * 0.2, 0.55, outBack);
-      p.style.opacity = clamp01(u * 2).toFixed(3);
-      p.style.transform = 'scale(' + lerp(0.6, 1, u).toFixed(4) + ')';
+    const panelIn = ramp(t, T.uses + 0.9, 0.7, outQuint);
+    fade(usesPanel, ramp(t, T.uses + 0.9, 0.35));
+    place(usesPanel, 0, 40 * (1 - panelIn));
+    // One question at a time: each is gone before the next comes up, never the two read over each other.
+    useCards.forEach((el, k) => {
+      const at = useAt(USE_TABS[k]);
+      const u = ramp(t, at + 0.05, 0.5, outQuint);
+      const gone = k === USE_TABS.length - 1 ? 0 : ramp(t, at + USE_EVERY - 0.2, 0.2, inOut);
+      fade(el, Math.min(ramp(t, at + 0.05, 0.25), 1 - gone));
+      place(el, 0, 24 * (1 - u) - 24 * gone);
     });
 
     // ---- 0 and 7 · the assistant, asked ----

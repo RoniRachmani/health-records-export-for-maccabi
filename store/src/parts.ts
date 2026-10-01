@@ -112,13 +112,27 @@ export const TREND: Exchange = {
   ],
 };
 
-/** A letter in Hebrew, explained in English: the film's opening. */
-export const LETTER: Exchange = {
-  question: 'What does my latest letter from the clinic say?',
+// The film's two answers, both about the same made-up member (docs/positioning.md's demo persona): in
+// their mid-40s, cholesterol creeping up, blood sugar at the top of normal, asthma quiet since 2019.
+
+/** The first "wow": years of records turned into the few things worth knowing. The film's opening. */
+export const STANDS_OUT: Exchange = {
+  question: 'What stands out in my records?',
   answer: () => [
-    h('p', '', 'It’s from your family doctor, dated 9 March 2026, and written in Hebrew. In English: your blood test results are in, and the doctor asks you to book a visit within a month to go over them.'),
-    h('p', '', h('strong', '', 'Nothing in it is marked urgent,'), ' but it does ask for that visit.'),
-    source('letters/files/', '2026-03-09_L20931_תוצאות-בדיקה', '.pdf', 'page 1'),
+    h('p', '', h('strong', '', 'Your cholesterol has crept up for three years,'), ' though each result is still inside the lab’s range.'),
+    h('p', '', h('strong', '', 'Your vitamin D has been low'), ' at every test since 2021.'),
+    h('p', '', h('strong', '', 'Your asthma has been quiet since 2019,'), ' with no inhaler bought since.'),
+    source('test-results/history/', '1121_כולסטרול', '.json'),
+  ],
+};
+
+/** Advice about this member rather than an average one, small and tied to their own numbers. The film's end. */
+export const ONE_THING: Exchange = {
+  question: 'What’s one thing I should do today to improve my health?',
+  answer: () => [
+    h('p', '', h('strong', '', 'A 20-minute walk after dinner.'), ' Your cholesterol has crept up since 2023 and your blood sugar is at the top of normal, and a daily walk is the easiest thing that helps both.'),
+    h('p', '', 'Check with your family doctor before any bigger change.'),
+    source('test-results/history/', '1121_כולסטרול', '.json'),
   ],
 };
 
@@ -134,12 +148,12 @@ export interface Chat {
 /**
  * An AI assistant with the export's folder open, drawn plain so that it is no real product: the
  * export's README taken as its instructions, a question, an answer in English from a record whose name is Hebrew, the file it came from, and
- * more questions to ask. The records are made up, as everywhere else in these images.
+ * more questions to ask (`questions`). The records are made up, as everywhere else in these images.
  */
-export function chatWindow(exchange: Exchange = TREND): Chat {
+export function chatWindow(exchange: Exchange = TREND, questions = QUESTIONS): Chat {
   const question = h('div', 'msg ask', exchange.question);
   const answer = exchange.answer();
-  const chips = QUESTIONS.map((q) => h('span', 'ask-chip', q));
+  const chips = questions.map((q) => h('span', 'ask-chip', q));
   const input = h('div', 'chat-input', 'Ask about your records…');
   const el = h('div', 'window chat',
     h('div', 'toolbar', dots(), h('div', 'chat-title', svg(FOLDER, 'folder'), h('span', '', 'maccabi-export-2026-09-17'))),

@@ -150,10 +150,10 @@ body.video {
   position: absolute;
   left: 0;
   right: 0;
-  top: 562px;
+  top: 560px;
   margin: 0;
   text-align: center;
-  font-size: 98px;
+  font-size: 80px;
   line-height: 1.1;
   font-weight: 650;
   letter-spacing: -0.03em;
@@ -162,7 +162,7 @@ body.video {
   position: absolute;
   left: 0;
   right: 0;
-  top: 708px;
+  top: 768px;
   max-width: 1240px;
   margin: 0 auto;
   text-align: center;
@@ -495,39 +495,20 @@ iframe.popup {
   padding: 4px 12px;
   font-size: 15px;
 }
-.drill {
+/* A file of the member's own, dropped into the list: video.ts opens its slot and sets --hl. */
+.added-slot {
   height: 0;
   overflow: hidden;
-  background: #fafdff;
-  border-bottom: 1px solid #e4eaf2;
 }
-.drill-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 44px;
-  padding: 0 28px 0 74px;
-  font-size: 17px;
-  white-space: nowrap;
+.file-row.added {
+  transform-origin: left center;
 }
-.drill-icon svg {
-  display: block;
-  width: 22px;
-  height: 22px;
+.file-row.added::before {
+  background: #fbe9ef;
 }
-.drill-path .dir {
-  color: #72758c;
-}
-.drill-path .stem {
-  color: #083f92;
+.file-row.added .file-what {
+  color: #b83b7c;
   font-weight: 500;
-}
-/* One record's JSON and its PDF: the name they share, marked once the folder is open. */
-.drill-row.pair .stem {
-  margin: 0 3px;
-  padding: 3px 7px;
-  border-radius: 7px;
-  background: rgb(241 193 205 / calc(var(--pair, 0) * 0.6));
 }
 /* The popup's file card, which the window grows out of. */
 .ghost {
@@ -566,8 +547,8 @@ iframe.popup {
   color: #5b6785;
 }
 
-/* ---- 6 · private by design ---- */
-.privacy-title {
+/* ---- 6 · what to ask: pill tabs over a soft panel ---- */
+.uses-title {
   position: absolute;
   left: 0;
   right: 0;
@@ -579,167 +560,85 @@ iframe.popup {
   font-weight: 650;
   letter-spacing: -0.03em;
 }
-.privacy-sub {
+.uses-sub {
   position: absolute;
   left: 0;
   right: 0;
   top: 250px;
-  max-width: 1300px;
-  margin: 0 auto;
+  margin: 0;
   text-align: center;
   font-size: 30px;
   line-height: 1.45;
   color: rgba(255, 255, 255, 0.9);
 }
-/* The two ends of the line: their middles sit on video.ts's WIRE. */
-.node {
-  position: absolute;
-  width: 340px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.site {
-  left: 330px;
-  top: 430px;
-}
-.home {
-  left: 1250px;
-  top: 440px;
-}
-.mini {
-  width: 340px;
-  height: 220px;
-  overflow: hidden;
-  border-radius: 14px;
-  background: #ffffff;
-  box-shadow: 0 24px 60px rgba(5, 38, 88, 0.45);
-}
-.mini-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 40px;
-  padding: 0 12px;
-  background: #f1f3f4;
-  border-bottom: 1px solid #e5e7eb;
-}
-.mini-bar .dots {
-  gap: 6px;
-}
-.mini-bar .dots i {
-  width: 10px;
-  height: 10px;
-}
-.mini-address {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: 24px;
-  padding: 0 10px;
-  border-radius: 12px;
-  background: #ffffff;
-  color: #374151;
-  font-size: 12.5px;
-}
-.mini-address svg {
-  display: block;
-}
-.mini-body {
-  padding: 22px 20px;
-}
-.mini-body i {
-  display: block;
-  height: 12px;
-  margin-bottom: 16px;
-  border-radius: 6px;
-  background: #eef0f2;
-}
-.mini-body i:nth-child(1) {
-  width: 55%;
-  height: 14px;
-  background: #e2e8f0;
-}
-.mini-body i:nth-child(2) {
-  width: 90%;
-}
-.mini-body i:nth-child(3) {
-  width: 75%;
-}
-.mini-body i:nth-child(4) {
-  width: 60%;
-}
-.laptop svg {
-  display: block;
-  filter: drop-shadow(0 24px 40px rgba(5, 38, 88, 0.45));
-}
-.node-label {
-  margin: 22px 0 0;
-  font-size: 28px;
-  font-weight: 600;
-}
-.home .node-label {
-  margin-top: 32px;
-}
-.wire {
-  position: absolute;
-  left: 700px;
-  top: 538px;
-  width: 520px;
-  height: 4px;
-  border-radius: 2px;
-  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.55) 0 14px, transparent 14px 26px);
-  transform-origin: left center;
-}
-.packet {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 36px;
-  height: 46px;
-  padding: 14px 8px 0;
-  border-radius: 7px;
-  background: #ffffff;
-  box-shadow: 0 6px 16px rgba(5, 38, 88, 0.4);
-}
-.packet i {
-  display: block;
-  height: 4px;
-  margin-bottom: 6px;
-  border-radius: 2px;
-  background: #c4e5f8;
-}
-.pills {
+.tabs {
   position: absolute;
   left: 0;
   right: 0;
-  top: 790px;
+  top: 372px;
   display: flex;
   justify-content: center;
-  gap: 18px;
+  gap: 14px;
 }
-.pills.second {
-  top: 872px;
-}
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 26px 12px 14px;
+/* video.ts sets --on, 0 to 1, as a tab opens and closes. */
+.tab {
+  position: relative;
+  padding: 12px 26px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  font-size: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 24px;
   font-weight: 500;
+  white-space: nowrap;
+  color: color-mix(in srgb, #083f92 calc(var(--on, 0) * 100%), #ffffff);
+  isolation: isolate;
 }
-.pill-icon svg {
-  display: block;
-  width: 30px;
-  height: 30px;
+.tab::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: #fbe9ef;
+  opacity: var(--on, 0);
+}
+.uses-panel {
+  position: absolute;
+  left: 260px;
+  top: 490px;
+  width: 1400px;
+  height: 330px;
+  border-radius: 32px;
+  background: #fbe9ef;
+  box-shadow: 0 30px 80px rgba(5, 38, 88, 0.4);
+}
+.use {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 110px;
+  text-align: center;
+}
+.use-q {
+  margin: 0;
+  text-wrap: balance;
+  font-size: 62px;
+  line-height: 1.15;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  color: #083f92;
+}
+.use-a {
+  margin: 30px 0 0;
+  text-wrap: pretty;
+  font-size: 30px;
+  line-height: 1.45;
+  color: #24283f;
 }
 
-/* ---- 7 · where to get it ---- */
+/* ---- 8 · where to get it ---- */
 .end-title {
   position: absolute;
   left: 0;
