@@ -5,7 +5,7 @@ export default defineManifest(({ mode }) => ({
   manifest_version: 3,
   name: mode === 'development' ? 'Health Records Export for Maccabi (dev)' : 'Health Records Export for Maccabi',
   version: pkg.version,
-  description: 'Ask an AI assistant about your Maccabi Online medical records: save them and every PDF as one ZIP on your computer. Unofficial.',
+  description: "Your whole Maccabi history, and a genius friend who's read all of it: save your records, then ask Claude or ChatGPT. Unofficial.",
   minimum_chrome_version: '116',
   icons: {
     16: 'icons/icon-16.png',

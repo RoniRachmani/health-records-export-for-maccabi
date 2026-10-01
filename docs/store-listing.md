@@ -19,48 +19,24 @@ the extension changes, update this file along with it (see [Keeping it true](#ke
 
 **Title** comes from the manifest's `name`: Health Records Export for Maccabi
 
-**Summary** comes from the manifest's `description` in `manifest.config.ts`. It has 127 characters, and the limit is 132:
+**Summary** comes from the manifest's `description` in `manifest.config.ts`. It has 128 characters, and the limit is 132:
 
-> Ask an AI assistant about your Maccabi Online medical records: save them and every PDF as one ZIP on your computer. Unofficial.
+> Your whole Maccabi history, and a genius friend who's read all of it: save your records, then ask Claude or ChatGPT. Unofficial.
 
-**Description** (plain text. The store shows line breaks but doesn't render Markdown):
+**Description** (plain text. The store shows line breaks but doesn't render Markdown). It follows
+[positioning.md](positioning.md): the headline and subline, then the three values in order (the whole history, a friend
+who has read it, yours to keep), then how to get there, with privacy and price said once near the top and the details
+near the end:
 
 ```
-Ask an AI assistant about your Maccabi Online medical records, in plain language and in the language you speak. This extension saves them to your computer as one ZIP file: every PDF the site offers, plus the site's own data as JSON. Open the folder in the assistant you choose, and ask. Free and open source, with no servers of its own.
+Your whole Maccabi history, and a genius friend who's read all of it.
 
-Maccabi Online shows your records one section and one PDF at a time, and its medical-file form covers less than your whole history. The export gathers everything in one go, with a freshly ordered medical file that reaches back to your earliest visit.
+Save everything from Maccabi Online to your computer, then ask anything: what changed, what stands out, what to do next. Open the export in the Claude or ChatGPT desktop app, and the assistant reads every record, written in Hebrew, and answers in plain English.
 
-AI assistants that connect to medical records reach U.S. providers, not Maccabi Healthcare Services. This export is how your Maccabi health records get to one.
+Maccabi Online shows your records one page at a time, within date limits, and the AI health tools that connect to medical records reach only U.S. providers. This extension puts every record in one place on your computer, where an assistant can read all of it. It's free, and your records stay on your computer.
 
-WHAT IT HELPS YOU DO
-• See your whole history: each export orders a fresh copy of your full medical file, which reaches back to the earliest visit on record.
-• Ask in your own language: the records are mostly in Hebrew, and you can ask, and get answers, in English or whatever you speak.
-• Track changes over time: each lab measurement has its own history, often years long.
-• Prepare for your next visit: known problems, the latest results, recent visits and open referrals, in one place.
-• Check every answer: the assistant is asked to name the file, and the page of a PDF, behind each fact.
-
-It supports your doctor and doesn't replace them. For urgent symptoms, call a doctor or emergency services, not an assistant.
-
-THINGS TO ASK
-• "Summarize my health history from my full medical file" (a good place to start)
-• "Help me understand my latest blood test"
-• "How has my HbA1c changed over the years?"
-• "What should I raise at my next appointment?"
-• "Translate my latest letter from the clinic into English"
-• "Which referrals and approvals are still open?"
-• "Make a one-page summary to bring to a new doctor"
-
-GUARDRAILS FOR THE ASSISTANT
-The ZIP's README is written for the assistant that reads your records: it becomes the assistant's saved instructions, and the records become its project files. Claude Code and Codex find it without being told to; elsewhere, add it as the project's instructions. It asks the assistant to:
-• start with the full medical file, which reaches furthest back
-• name the file, and the page of a PDF, behind each fact, and give each its date
-• say plainly when a record suggests something needs a doctor soon
-• explain in plain language, without diagnosing or advising a change of treatment
-• not mistake something missing from the export for something that never happened
-• read correctly the lab values that mislead: missing ranges, results given as text, units that change over time
-• keep your name, ID number and contact details out of web searches and other tools
-
-Health Records Export for Maccabi collects the records that Maccabi Online shows you and saves them to your Downloads folder:
+EVERYTHING, IN ONE PLACE
+Your full medical file, ordered for the widest range Maccabi allows, plus every result, visit, prescription, referral, vaccination and letter the site has:
 
 • Test results, lab histories and result PDFs
 • Visit summaries from the last 12 months, with their PDFs
@@ -72,34 +48,58 @@ Health Records Export for Maccabi collects the records that Maccabi Online shows
 • Documents you uploaded
 • Hospital stays, with discharge letters when the site has them
 • Your member details, entitlements and assigned doctors
-• Your full medical file, freshly ordered to cover your whole history
+
+A FRIEND WHO'S READ IT ALL
+Ask about you, not the internet's average person:
+• "What stands out in my records?" The big picture in a minute.
+• "What's one thing I should do today to improve my health?" Small, doable, and tied to your own numbers.
+• "What might I be due for?" Catch what's due before it's overdue.
+• "What changed in my latest blood test?" A new number next to all your old ones.
+• "What should I raise with my doctor on Thursday?" Walk in prepared.
+• "Anything in my history a new doctor should know?" Your past, remembered.
+
+Or ask it to make something:
+• A chart of your cholesterol, blood sugar or blood pressure over the years
+• A weekly meal plan or fitness plan, fitted to what's in your file
+• A one-page summary for a new doctor
+
+Every answer names the record it came from, so you can check it. It advises; you and your doctor decide. For urgent symptoms, call a doctor or emergency services, not an assistant.
+
+YOURS TO KEEP, AND TO GROW
+The export is yours: take it to a private doctor or one abroad, and keep it through a move or a switch of health fund. Add to it as you go, such as a private clinic's letter, a new result or notes from abroad, and tell the assistant what the records can't know, like what you take now. It keeps notes in a folder of its own, so the export becomes a health record you keep growing, not a one-time snapshot.
 
 HOW IT WORKS
 1. Log in to Maccabi Online as usual.
 2. On that tab, click the extension's icon and press Start export.
 3. Keep the tab open and in front. Usually after a few minutes (up to 20 if the medical file is slow to arrive), the ZIP is in your Downloads folder and Chrome lets you know.
-4. Unzip it and open the folder in the Claude desktop app, Claude Code, ChatGPT Work or Codex.
-5. Ask about your records, starting with "Summarize my health history from my full medical file".
+4. Unzip it and open the folder in an assistant's desktop app. In Claude, choose Project or folder under the message box. In ChatGPT, switch to Work, then choose the folder under Choose project. Claude Code and Codex work too.
+5. Start with "Read README.md first. Then summarize my health history from my full medical file."
+
+The desktop app is what reads the whole folder: a chat takes a few dozen files, and an export has hundreds. Claude's and ChatGPT's desktop apps usually need a paid plan.
 
 While the export runs, the tab moves to the site's medical-file page and back. The extension keeps your Maccabi Healthcare Services session from timing out until the export finishes. If the session ends anyway, the export pauses. Log in again and press Resume. Files collected so far are kept.
 
 BEFORE YOU START
-Each export orders a fresh copy of your full medical file. It covers your whole history, which is wider than the range the site's own form offers. Maccabi Healthcare Services texts you about the order, and the new file replaces the previous one on the site. If an export already ordered one earlier the same day, the extension uses that copy. Ordering this file is the only change the extension makes to your account.
+Each export orders a fresh copy of your full medical file. Maccabi Healthcare Services texts you about the order, and the new file replaces the previous one on the site. If an export already ordered one earlier the same day, the extension uses that copy. Ordering this file is the only change the extension makes to your account.
+
+WHAT THE ASSISTANT IS ASKED TO DO
+The ZIP's README is written for the assistant that reads your records, as its instructions. It asks the assistant to:
+• start with the full medical file
+• name the file, and the page of a PDF, behind each fact, and give each its date
+• say plainly when a record suggests something needs a doctor soon
+• explain in plain language, without diagnosing or advising a change of treatment
+• not mistake something missing from the export for something that never happened
+• keep your name, ID number and contact details out of web searches and other tools
 
 WHAT YOU GET
-The ZIP has one folder for each part of the site. Every record is saved as the site's own data (JSON), exactly as the site sent it. If a record has a PDF, the PDF has the same name: the record's date, ID and title. The full medical file is at the top level of the ZIP, and it's the best place to start. A README in the ZIP explains what each folder holds and what the export leaves out.
+One folder for each part of the site. Every record is saved as the site's own data (JSON), and a record's PDF sits beside it with the same name: its date, ID and title. The full medical file is at the top of the ZIP, and a README explains what each folder holds.
 
-Not included: imaging studies (DICOM), which the site only opens in its own viewer, and visits older than 12 months, which the site doesn't show. The purchase report PDF covers the last 2 years, though the purchase history itself covers everything. If an item fails to download, the export carries on, and the popup lists the failed items when the export finishes.
+Not included: imaging studies (DICOM), which the site only opens in its own viewer, and visits older than 12 months, which the site doesn't show. The purchase report PDF covers the last 2 years, though the purchase history itself covers everything. If an item fails to download, the export carries on, and the popup lists it when the export finishes.
 
-PRIVATE BY DESIGN
-Your records stop at your computer. You choose which AI assistant, if any, reads them.
-• Connects only to online.maccabi4u.co.il. No servers, analytics, tracking or remote code.
-• Reads nothing from the tab until you've read the notice and agreed.
-• Uses the session you're already logged in with. It never sees your password or one-time codes.
-• Deletes its own copy of your files as soon as the ZIP is saved.
-• Open source, and what ships isn't minified, so you can read exactly what runs: https://github.com/RoniRachmani/health-records-export-for-maccabi
+PRIVACY
+The extension connects only to online.maccabi4u.co.il, uses the session you're already logged in with, and has no servers, analytics or tracking. It deletes its own copy of your files once the ZIP is saved. You choose which AI assistant, if any, reads them. It's open source and not minified, so you can read exactly what runs: https://github.com/RoniRachmani/health-records-export-for-maccabi
 
-The ZIP isn't encrypted, and it contains your health information. Keep it somewhere safe. The extension sends your records nowhere, but an AI service you open them in can read them. Before you give it your health information, check what it keeps and for how long. Where the service lets you, turn off training on your chats, keep each person's records in a project of their own with memory kept to that project, and delete the project when you're done with it.
+The ZIP isn't encrypted, so keep it somewhere safe. An AI service you open it in can read it: check what it keeps and for how long, turn off training on your chats where you can, and keep your records in a project of their own.
 
 Use the extension only with your own account, or with an account whose records you're legally entitled to access. It copies what Maccabi Online provides. It isn't medical advice, and the export isn't an official copy of your records.
 
@@ -391,6 +391,6 @@ of this page:
 | A permission is added or removed | Permission justifications here, the manifest, `docs/privacy.md`, `public/privacy.html`, README |
 | A new kind of data or request | Data usage here, the privacy policy, `docs/endpoints.json` |
 | The manifest's `description` | Summary here (132 characters at most) |
-| What the export's README asks of the assistant (`shared/readme.ts`) | The description's "Guardrails for the assistant", "What it helps you do" and "Things to ask", the README's *Hand it to an AI assistant*, and the answers in `STANDS_OUT` and `ONE_THING` (`store/src/parts.ts`), which screenshots 1 and 3 and the video draw |
-| The questions to start with | The description's and YouTube's "Things to ask", the README's list, and `FOLLOW_UPS` and `BUILDS` in `store/src/parts.ts` |
-| Health in ChatGPT, or another assistant's medical-record connection, reaches Maccabi or opens to Israel | The "U.S. providers, not Maccabi Healthcare Services" line in the description, on YouTube and in the README, and the README's *What about ChatGPT Health?* |
+| What the export's README asks of the assistant (`shared/readme.ts`) | The description's "What the assistant is asked to do" and "Yours to keep, and to grow", the README's *Hand it to an AI assistant*, and the answers in `STANDS_OUT` and `ONE_THING` (`store/src/parts.ts`), which screenshots 1 and 3 and the video draw |
+| The questions to start with, or the Ask and Build use cases in [positioning.md](positioning.md) | The description's "A friend who's read it all", YouTube's "Things to ask", the README's list, and `FOLLOW_UPS` and `BUILDS` in `store/src/parts.ts` |
+| Health in ChatGPT, or another assistant's medical-record connection, reaches Maccabi or opens to Israel | The "reach only U.S. providers" line in the description, the "U.S. providers, not Maccabi Healthcare Services" one on YouTube and in the README, and the README's *What about ChatGPT Health?* |
