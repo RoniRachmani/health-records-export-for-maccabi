@@ -506,10 +506,6 @@ iframe.popup {
 .file-row.added::before {
   background: #fbe9ef;
 }
-.file-row.added .file-what {
-  color: #b83b7c;
-  font-weight: 500;
-}
 /* The popup's file card, which the window grows out of. */
 .ghost {
   position: absolute;

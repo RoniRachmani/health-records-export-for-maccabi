@@ -208,6 +208,11 @@ iframe.popup {
   font-size: 12px;
   white-space: nowrap;
 }
+/* A file of the member's own, added to the export after it was saved. */
+.file-row.added .file-what {
+  color: #b83b7c;
+  font-weight: 500;
+}
 
 /* ---- an AI assistant, opened on the export: generic, like no real product ---- */
 .chat {

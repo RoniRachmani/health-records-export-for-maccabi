@@ -1,6 +1,6 @@
 # Renders the store images (npm run store-assets) on Linux with Roboto installed, which the renders need and a
 # maintainer's machine may not have, and commits the ones that changed to main. Run it by hand from the Actions tab
-# after the popup's appearance changes; name shots to render only those (e.g. "start done"), or leave it empty for
+# after the popup's appearance changes; name shots to render only those (e.g. "start open"), or leave it empty for
 # all. The link previews (og, social) are drawn too but are gitignored: the Pages workflow publishes those.
 # The video is not rendered here: it takes 20 minutes and goes to YouTube, not the repo.
 name: Store images

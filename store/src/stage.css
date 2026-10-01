@@ -44,6 +44,13 @@ h1 {
   font-weight: 600;
   letter-spacing: -0.02em;
 }
+.copy h1 {
+  text-wrap: balance;
+}
+/* The headline itself, which is longer than the other shots' titles. */
+.shot.ask h1 {
+  font-size: 38px;
+}
 .lead {
   margin: 0 0 26px;
   font-size: 19px;
@@ -80,6 +87,28 @@ h1 {
   top: 90px;
   width: 700px;
   height: 620px;
+}
+/* The unzipped export: its name beside a folder, and the member's own file, just added, in pink. */
+.files .files-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+}
+.files .files-title .folder svg {
+  width: 20px;
+  height: 17px;
+}
+.files .file-row.added {
+  background: #fbe9ef;
+}
+/* Short enough rows that the README, the medical file, the added file and every folder fit. */
+.files .file-row {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+.files .file-kinds {
+  padding: 1px 9px;
 }
 iframe.popup {
   top: 52px;

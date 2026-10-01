@@ -8,12 +8,12 @@ import { join } from 'node:path';
 import { openStage, root } from './stage.mjs';
 
 const IMAGES = [
-  // What the member gets comes first; how they get there follows.
+  // What the member gets comes first, in docs/positioning.md's order; how they get there follows.
   { file: 'screenshot-1-ask.png', shot: 'ask', width: 1280, height: 800 },
-  { file: 'screenshot-2-start.png', shot: 'start', width: 1280, height: 800 },
-  { file: 'screenshot-3-progress.png', shot: 'progress', width: 1280, height: 800 },
-  { file: 'screenshot-4-done.png', shot: 'done', width: 1280, height: 800 },
-  { file: 'screenshot-5-privacy.png', shot: 'privacy', width: 1280, height: 800 },
+  { file: 'screenshot-2-whole.png', shot: 'whole', width: 1280, height: 800 },
+  { file: 'screenshot-3-advice.png', shot: 'advice', width: 1280, height: 800 },
+  { file: 'screenshot-4-start.png', shot: 'start', width: 1280, height: 800 },
+  { file: 'screenshot-5-open.png', shot: 'open', width: 1280, height: 800 },
   { file: 'promo-small-440x280.png', shot: 'promo', width: 440, height: 280 },
   { file: 'promo-marquee-1400x560.png', shot: 'marquee', width: 1400, height: 560 },
   // Not a store field: the README's poster, drawn by the video's own page at the size it plays.

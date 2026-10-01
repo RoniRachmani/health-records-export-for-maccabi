@@ -1,73 +1,86 @@
-/* Store images: one layout per image (?shot=...), built around the real popup,
-   which runs in an iframe with a made-up state (mock-chrome.ts). The page sets
+/* Store images: one layout per image (?shot=...), built around the real popup, which runs in an
+   iframe with a made-up state (mock-chrome.ts), an AI assistant opened on the export, or the export's folder. The page sets
    <html data-ready="1"> when it has finished rendering, for scripts/store-assets.mjs. */
 import '@fontsource-variable/heebo';
-import { CHECK, LOCK, MARK, chatWindow, dots, h, img, pageSkeleton, paper, svg } from './parts';
+import {
+  BUILDS, CHECK, FOLDER, LOCK, MARK, ONE_THING, STANDS_OUT, chatWindow, dots, exportRows, h, img, pageSkeleton, paper, svg,
+  type Exchange,
+} from './parts';
+
+/** What the window beside the copy shows. */
+type View =
+  /** The real popup in a browser window, in this state (mock-chrome.ts). */
+  | { popup: string; badge?: Badge }
+  /** An AI assistant opened on the export, answering, with these questions under the answer. */
+  | { chat: Exchange; chips?: string[] }
+  /** The unzipped export, with a file of the member's own added to it. */
+  | { folder: true };
+
+/** Toolbar badge, as the background sets it (src/extension/background/ui.ts). */
+interface Badge {
+  text: string;
+  color: string;
+  textColor?: string;
+}
 
 interface Shot {
   title: string;
   text: string;
   points: string[];
-  /** Popup state shown in the browser window; without one, an AI assistant opened on the export is shown. */
-  popup?: string;
-  /** A <details> in the popup to show open. */
-  open?: string;
-  /** Toolbar badge, as the background sets it (src/extension/background/ui.ts). */
-  badge?: { text: string; color: string; textColor?: string };
+  view: View;
 }
 
+// docs/positioning.md, in its order: what the member gets (the whole history, a friend who has read it, theirs to
+// keep), then how they get it. Privacy and price are conditions, said once and lightly, on the shot that starts it.
 const SHOTS: Record<string, Shot> = {
   ask: {
-    title: 'Ask an AI assistant about your Maccabi health records',
-    text: 'Save them as one ZIP, open it in the assistant you choose, and ask in plain language.',
+    title: 'Your whole Maccabi history, and a genius friend who’s read all of it',
+    text: 'Save everything from Maccabi Online to your computer, then ask anything: what changed, what stands out, what to do next.',
     points: [
-      'Records in Hebrew, answers in your language',
-      'See your whole history, and how each result has changed',
-      'It’s asked to name the file behind each answer, so you can check',
+      'Every answer names the record it came from, so you can check it',
+      'Answers in plain English, from records written in Hebrew',
     ],
+    view: { chat: STANDS_OUT },
+  },
+  whole: {
+    title: 'Everything, in one place',
+    text: 'Your full medical file, plus every result, visit, prescription, referral, vaccination and letter the site has.',
+    points: [
+      'The medical file for the widest range Maccabi allows',
+      'Every PDF the site offers, with its data beside it',
+      'Saved on your computer, to keep, share or add to',
+    ],
+    view: { folder: true },
+  },
+  advice: {
+    title: 'Advice about you, not an average person',
+    text: 'Small, doable steps tied to your own numbers, and plans built around what’s in your file.',
+    points: [
+      'Walk into appointments prepared',
+      'Catch what’s due before it’s overdue',
+      'It advises; you and your doctor decide',
+    ],
+    view: { chat: ONE_THING, chips: BUILDS },
   },
   start: {
-    title: 'Start it on Maccabi Online',
-    text: 'Log in to Maccabi Online as usual, click the extension icon and press Start export. You get one ZIP on your computer.',
+    title: 'Log in and press Start export',
+    text: 'On Maccabi Online, click the extension’s icon. It works through every section on its own.',
     points: [
-      'Test results, visits, prescriptions, referrals, vaccinations and letters',
-      'Every PDF the site offers, plus the site’s own data as JSON',
-      'A freshly ordered copy of your full medical file',
-    ],
-    popup: 'ready',
-  },
-  progress: {
-    title: 'It works through your records on its own',
-    text: 'Progress shows on the toolbar icon. You can close the popup; keep the Maccabi Online tab open and in front.',
-    points: [
-      'Usually done in a few minutes',
-      'Read-only, except for ordering your medical file',
+      'Keep the Maccabi Online tab open and in front',
       'Session timed out? Log in again and press Resume',
+      'Free, and your records stay on your computer',
     ],
-    popup: 'running',
-    badge: { text: '34%', color: '#296bed' },
+    view: { popup: 'ready' },
   },
-  done: {
-    title: 'One file in your Downloads folder',
-    text: 'Everything collected, in one dated ZIP file. The popup lists anything that could not be exported.',
+  open: {
+    title: 'Then open it in Claude or ChatGPT',
+    text: 'Use the desktop app, which reads the whole folder: a chat takes a few dozen files, and your export has hundreds.',
     points: [
-      'Its README tells your AI assistant how to read your records',
-      'Keep it for your records or share it with a doctor',
-      'The extension then deletes its own copy',
+      'Claude: choose Project or folder, under the message box',
+      'ChatGPT: switch to Work, then Choose project',
+      'Start with “Read README.md first. Then summarize my health history from my full medical file.”',
     ],
-    popup: 'done',
-    badge: { text: '✓', color: '#1a7a48' },
-  },
-  privacy: {
-    title: 'Private by design',
-    text: 'Your records stop at your computer. You choose which AI assistant, if any, reads them.',
-    points: [
-      'No servers, analytics or tracking',
-      'Talks only to online.maccabi4u.co.il and never sees your password',
-      'Open source, so anyone can check what it does',
-    ],
-    popup: 'ready',
-    open: 'details.more',
+    view: { popup: 'done', badge: { text: '✓', color: '#1a7a48' } },
   },
 };
 
@@ -81,7 +94,7 @@ function copy(shot: Shot): HTMLElement {
   );
 }
 
-async function popupFrame(state: string, parent: HTMLElement, open?: string): Promise<void> {
+async function popupFrame(state: string, parent: HTMLElement): Promise<void> {
   const frame = document.createElement('iframe');
   frame.className = 'popup';
   const loaded = new Promise((r) => (frame.onload = r));
@@ -90,7 +103,6 @@ async function popupFrame(state: string, parent: HTMLElement, open?: string): Pr
   await loaded;
   const doc = frame.contentDocument as Document;
   for (let i = 0; i < 200 && !doc.querySelector('#view > :not(.loading)'); i++) await new Promise((r) => setTimeout(r, 25));
-  if (open) (doc.querySelector(open) as HTMLDetailsElement).open = true;
   await doc.fonts.ready;
   // The popup sets its own width; scale it down if it would not fit in the window.
   frame.style.width = doc.body.offsetWidth + 'px';
@@ -100,21 +112,30 @@ async function popupFrame(state: string, parent: HTMLElement, open?: string): Pr
   frame.style.transform = 'scale(' + Math.min(1.3, room / height) + ')';
 }
 
-async function browserWindow(shot: Shot): Promise<HTMLElement> {
+async function browserWindow(state: string, badge?: Badge): Promise<HTMLElement> {
   const ext = h('span', 'ext', img('/icons/icon-32.png'));
-  if (shot.badge) {
-    const badge = h('span', 'badge', shot.badge.text);
-    badge.style.background = shot.badge.color;
-    if (shot.badge.textColor) badge.style.color = shot.badge.textColor;
-    ext.append(badge);
+  if (badge) {
+    const b = h('span', 'badge', badge.text);
+    b.style.background = badge.color;
+    if (badge.textColor) b.style.color = badge.textColor;
+    ext.append(b);
   }
   const win = h('div', 'window browser',
     h('div', 'toolbar', dots(), h('div', 'address', svg(LOCK), h('span', '', 'online.maccabi4u.co.il')), ext),
     pageSkeleton(),
   );
   document.body.append(win); // the popup frame loads only once attached
-  await popupFrame(shot.popup as string, win, shot.open);
+  await popupFrame(state, win);
   return win;
+}
+
+/** The unzipped export, as a file manager shows it, with the member's own file just added. */
+function folderWindow(): HTMLElement {
+  const { readme, medical, added, folders } = exportRows();
+  return h('div', 'window files',
+    h('div', 'toolbar', dots(), h('div', 'files-title', svg(FOLDER, 'folder'), h('span', '', 'maccabi-export-2026-09-17'))),
+    h('div', 'files-list', readme, medical, added, ...folders),
+  );
 }
 
 function promo(): HTMLElement {
@@ -178,10 +199,12 @@ async function main(): Promise<void> {
   } else {
     const shot = SHOTS[name];
     if (!shot) throw new Error('unknown shot ' + name);
-    document.body.className = 'shot';
+    document.body.className = 'shot ' + name;
     document.body.append(copy(shot));
-    if (shot.popup) await browserWindow(shot);
-    else document.body.append(chatWindow().el);
+    const view = shot.view;
+    if ('popup' in view) await browserWindow(view.popup, view.badge);
+    else if ('chat' in view) document.body.append(chatWindow(view.chat, view.chips).el);
+    else document.body.append(folderWindow());
   }
   await document.fonts.ready;
   await Promise.all(Array.from(document.images).map((img) => img.decode().catch(() => undefined)));

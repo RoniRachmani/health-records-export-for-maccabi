@@ -79,16 +79,29 @@ export function fileRow(icon: string, name: string, what: string, kinds: string)
   );
 }
 
+/** What the member adds to the folder themselves, after the export: it is theirs to grow. */
+export const ADDED = { name: 'private-clinic-letter.pdf', what: 'Added by you', kinds: 'PDF' };
+
+/** The unzipped export's rows: its README, the medical file, a file of the member's own (class `added`), and the folders. */
+export function exportRows(): { readme: HTMLElement; medical: HTMLElement; added: HTMLElement; folders: HTMLElement[] } {
+  const added = fileRow(DOC, ADDED.name, ADDED.what, ADDED.kinds);
+  added.classList.add('added');
+  return {
+    readme: fileRow(DOC, 'README.md', 'What every folder holds, and what isn’t there', 'Markdown'),
+    medical: fileRow(DOC, '2026-09-17_medical-file.pdf', 'Your full medical file', 'PDF'),
+    added,
+    folders: FOLDERS.map(([name, what, kinds]) => fileRow(FOLDER, name, what, kinds)),
+  };
+}
+
 /** A generic assistant's mark: a four-point spark, in the extension's blue. */
 const SPARK = '<svg viewBox="0 0 20 20" width="18" height="18"><path d="M10 1.5c.6 4.4 4.1 7.9 8.5 8.5-4.4.6-7.9 4.1-8.5 8.5-.6-4.4-4.1-7.9-8.5-8.5 4.4-.6 7.9-4.1 8.5-8.5z" fill="#296bed"/></svg>';
 
-/** More questions a member might ask of the export, offered under the answer. */
-export const QUESTIONS = [
-  'Summarize my medical file',
-  'Explain my latest blood test in plain English',
-  'Which referrals are still open?',
-  'What should I raise at my next appointment?',
-];
+/** More questions a member might ask, offered under the answer: docs/positioning.md's Ask use cases. */
+export const FOLLOW_UPS = ['What might I be due for?', 'What changed in my latest blood test?', 'What should I raise with my doctor on Thursday?'];
+
+/** Things the assistant can make, not only answer: docs/positioning.md's Build use cases. */
+export const BUILDS = ['Chart my cholesterol over the years', 'Make me a weekly meal plan', 'Write a one-pager for a new doctor'];
 
 /** A question put to the assistant, and its answer: paragraphs, then the file it names as its source. */
 export interface Exchange {
@@ -102,20 +115,10 @@ function source(dir: string, stem: string, ext: string, page?: string): HTMLElem
     h('span', 'dir', dir), h('span', 'stem', stem), h('span', 'dir', ext + (page ? ' · ' + page : '')));
 }
 
-/** A lab value's trend, and when to take it to the doctor: store screenshot 1 and the film's end. */
-export const TREND: Exchange = {
-  question: 'How has my HbA1c changed since 2019?',
-  answer: () => [
-    h('p', '', 'It rose from 5.4% in March 2019 to 5.9% in August 2026. Each result was inside the lab’s range of 4 to 6 at the time, but it has gone up at every test since 2022.'),
-    h('p', '', h('strong', '', 'That steady rise is worth raising with your family doctor'), ' at your next visit.'),
-    source('test-results/history/', '1486_המוגלובין-מסוכרר', '.json'),
-  ],
-};
-
-// The film's two answers, both about the same made-up member (docs/positioning.md's demo persona): in
+// The two answers the film and the store's screenshots show, both about the same made-up member (docs/positioning.md's demo persona): in
 // their mid-40s, cholesterol creeping up, blood sugar at the top of normal, asthma quiet since 2019.
 
-/** The first "wow": years of records turned into the few things worth knowing. The film's opening. */
+/** The first "wow": years of records turned into the few things worth knowing. The film's opening, and screenshot 1. */
 export const STANDS_OUT: Exchange = {
   question: 'What stands out in my records?',
   answer: () => [
@@ -126,7 +129,7 @@ export const STANDS_OUT: Exchange = {
   ],
 };
 
-/** Advice about this member rather than an average one, small and tied to their own numbers. The film's end. */
+/** Advice about this member rather than an average one, small and tied to their own numbers. The film's end, and screenshot 3. */
 export const ONE_THING: Exchange = {
   question: 'What’s one thing I should do today to improve my health?',
   answer: () => [
@@ -150,7 +153,7 @@ export interface Chat {
  * export's README taken as its instructions, a question, an answer in English from a record whose name is Hebrew, the file it came from, and
  * more questions to ask (`questions`). The records are made up, as everywhere else in these images.
  */
-export function chatWindow(exchange: Exchange = TREND, questions = QUESTIONS): Chat {
+export function chatWindow(exchange: Exchange, questions = FOLLOW_UPS): Chat {
   const question = h('div', 'msg ask', exchange.question);
   const answer = exchange.answer();
   const chips = questions.map((q) => h('span', 'ask-chip', q));

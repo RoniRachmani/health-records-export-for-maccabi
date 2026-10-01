@@ -41,7 +41,7 @@ Before `store-assets` or `store-video`, install Roboto on the machine (`fonts-ro
 then `fc-cache -f`) and check `fc-list | grep -i roboto`: the renders photograph the popup, and without
 it they draw the fallback face. That is a font for the machine taking the pictures; the extension itself
 still never ships or fetches one. Without Roboto here, run the *Store images* workflow instead
-(`gh workflow run store-assets.yml`, optionally `-f shots="start done"`): it renders on Linux with Roboto and
+(`gh workflow run store-assets.yml`, optionally `-f shots="start open"`): it renders on Linux with Roboto and
 commits the images that changed to `main`, so pull afterwards.
 
 ## Git

@@ -20,7 +20,7 @@ import {
   between, clamp01, fade, inCubic, inOut, kinetic, lerp, linear, out, outBack, outQuint, place, pulse, ramp, rise, showing,
   type Point,
 } from './motion';
-import { DOC, FOLDER, FOLDERS, LOCK, MARK, ONE_THING, STANDS_OUT, chatWindow, dots, fileRow, h, img, pageSkeleton, paper, svg, type Chat } from './parts';
+import { LOCK, MARK, ONE_THING, STANDS_OUT, chatWindow, dots, exportRows, h, img, pageSkeleton, paper, svg, type Chat } from './parts';
 
 const FPS = 60;
 
@@ -284,9 +284,6 @@ const FEED: { at: number; path: string }[] = (() => {
   return out;
 })();
 
-/** What the member adds to the folder themselves, after the export: it is theirs to grow. */
-const ADDED = { name: 'private-clinic-letter.pdf', what: 'Added by you', kinds: 'PDF' };
-
 // ---- icons ----------------------------------------------------------------
 const ZIP_ICON = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#296bed" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M11 6h1M12 8.5h1M11 11h1M12 13.5h1"/><rect x="10.5" y="16" width="3" height="3" rx=".8"/></svg>';
 // Drawn so the triangle's centre of gravity sits on the middle of its box (a triangle centred by its
@@ -416,8 +413,6 @@ const USE_TABS = USES.flatMap((u, i) => (u.q ? [i] : []));
 const USE_EVERY = 1.15;
 /** When tab `i` (of USES) comes up. */
 const useAt = (i: number): number => T.uses + 1.3 + USE_TABS.indexOf(i) * USE_EVERY;
-/** The follow-up questions under each answer: the use cases neither answer is about. */
-const FOLLOW_UPS = ['What might I be due for?', 'What changed in my latest blood test?', 'What should I raise with my doctor on Thursday?'];
 
 /**
  * What the narrator says, and when each line starts. scripts/soundtrack.mjs has each line spoken
@@ -475,7 +470,7 @@ async function main(): Promise<void> {
   document.body.append(grid, ...glows);
 
   // 0 · what it is for: the assistant, saying what stands out in the export
-  const openChat = chatWindow(STANDS_OUT, FOLLOW_UPS);
+  const openChat = chatWindow(STANDS_OUT);
 
   // 1 · years of records, as the site shows them
   const cards = CARDS.map(recordCard);
@@ -527,11 +522,7 @@ async function main(): Promise<void> {
   );
 
   // 5 · the ZIP, opened: the popup's file card grows into its window, and the member adds to it.
-  const readme = fileRow(DOC, 'README.md', 'What every folder holds, and what isn’t there', 'Markdown');
-  const medical = fileRow(DOC, '2026-09-17_medical-file.pdf', 'Your full medical file', 'PDF');
-  const folderRows = FOLDERS.map(([name, what, kinds]) => fileRow(FOLDER, name, what, kinds));
-  const addedRow = fileRow(DOC, ADDED.name, ADDED.what, ADDED.kinds);
-  addedRow.classList.add('added');
+  const { readme, medical, added: addedRow, folders: folderRows } = exportRows();
   const added = h('div', 'added-slot', addedRow);
   const filesInner = h('div', 'files-inner',
     h('div', 'toolbar', dots(), h('div', 'files-title', 'maccabi-export-2026-09-17')),
@@ -551,7 +542,7 @@ async function main(): Promise<void> {
   const uses = h('div', 'layer', usesTitle.el, usesSub, h('div', 'tabs', ...tabs), usesPanel);
 
   // 7 · the assistant, asked again, and naming its source
-  const chat = chatWindow(ONE_THING, FOLLOW_UPS);
+  const chat = chatWindow(ONE_THING);
 
   // 8 · where to get it
   const endArt = artwork();

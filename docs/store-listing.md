@@ -115,20 +115,23 @@ Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare 
 | Field | File | Shows |
 |---|---|---|
 | Store icon (128×128) | `store/assets/icon-128.png` | The toolbar icon: 96×96 artwork with 16 px of transparent padding |
-| Screenshot 1 | `store/assets/screenshot-1-ask.png` | "Ask an AI assistant about your Maccabi health records": a generic AI assistant opened on the export, answering from a made-up lab history and naming the file |
-| Screenshot 2 | `store/assets/screenshot-2-start.png` | The popup, ready to start: "Start it on Maccabi Online" |
-| Screenshot 3 | `store/assets/screenshot-3-progress.png` | An export in progress, with the badge on the toolbar icon |
-| Screenshot 4 | `store/assets/screenshot-4-done.png` | The finished export: "One file in your Downloads folder", with the popup's next step, opening it in an AI assistant |
-| Screenshot 5 | `store/assets/screenshot-5-privacy.png` | "Private by design": your records stop at your computer, with the popup's list of what's included |
+| Screenshot 1 | `store/assets/screenshot-1-ask.png` | The headline, "Your whole Maccabi history, and a genius friend who's read all of it": a generic AI assistant opened on the export, saying what stands out in it and naming the file (`STANDS_OUT`) |
+| Screenshot 2 | `store/assets/screenshot-2-whole.png` | "Everything, in one place": the unzipped export, its README, medical file and folders, with a file the member added themselves |
+| Screenshot 3 | `store/assets/screenshot-3-advice.png` | "Advice about you, not an average person": the assistant's one thing to do today, tied to the member's own numbers (`ONE_THING`), with things it can build offered under it |
+| Screenshot 4 | `store/assets/screenshot-4-start.png` | The popup, ready to start: "Log in and press Start export", with the one line on price and privacy |
+| Screenshot 5 | `store/assets/screenshot-5-open.png` | The finished export: "Then open it in Claude or ChatGPT", with where each desktop app opens a folder and the first message to send |
 | Small promo tile (440×280) | `store/assets/promo-small-440x280.png` | The icon's artwork on a blue background, with no text |
 | Marquee promo tile (1400×560) | `store/assets/promo-marquee-1400x560.png` | The same artwork beside the name and "Ask an AI assistant about your Maccabi health records". Optional: the store uses it only when it features the extension |
 | Global promo video | https://youtu.be/zY5TxwlsGjs | Optional. See [Promo video](#promo-video) below |
 
-The screenshots are 1280×800 PNG files with no transparency. What the member gets comes first, and how they get
-there follows: upload them in this order. They show the real popup in made-up states over a placeholder page, never a
-real account. Screenshot 1 draws an AI assistant instead, plain enough to be no real product (`chatWindow` in
-`store/src/parts.ts`), with a made-up question, answer and record. The text around the popup comes from `SHOTS` in
-`store/src/stage.ts`.
+The screenshots are 1280×800 PNG files with no transparency. They follow [positioning.md](positioning.md): what the
+member gets comes first, in its order of value (the whole history, a friend who has read it, theirs to keep), and how
+they get there follows, so upload them in this order. Privacy and price are conditions, said once and lightly, on the
+shot that starts an export. Screenshots 4 and 5 show the real popup in made-up states over a placeholder page, never
+a real account. Screenshots 1 and 3 draw an AI assistant instead, plain enough to be no real product (`chatWindow` in
+`store/src/parts.ts`), answering about positioning.md's made-up demo member, and screenshot 2 the export's folder
+(`exportRows`). The text beside each comes from `SHOTS` in `store/src/stage.ts`. Screenshot 5's steps repeat
+positioning.md's *Getting started*, so check them against the apps when that section changes.
 
 ### Promo video
 
@@ -388,6 +391,6 @@ of this page:
 | A permission is added or removed | Permission justifications here, the manifest, `docs/privacy.md`, `public/privacy.html`, README |
 | A new kind of data or request | Data usage here, the privacy policy, `docs/endpoints.json` |
 | The manifest's `description` | Summary here (132 characters at most) |
-| What the export's README asks of the assistant (`shared/readme.ts`) | The description's "Guardrails for the assistant", "What it helps you do" and "Things to ask", the README's *Hand it to an AI assistant*, and the answers in `TREND`, `STANDS_OUT` and `ONE_THING` (`store/src/parts.ts`), which screenshot 1 and the video draw |
-| The questions to start with | The description's and YouTube's "Things to ask", the README's list, and `QUESTIONS` in `store/src/parts.ts` |
+| What the export's README asks of the assistant (`shared/readme.ts`) | The description's "Guardrails for the assistant", "What it helps you do" and "Things to ask", the README's *Hand it to an AI assistant*, and the answers in `STANDS_OUT` and `ONE_THING` (`store/src/parts.ts`), which screenshots 1 and 3 and the video draw |
+| The questions to start with | The description's and YouTube's "Things to ask", the README's list, and `FOLLOW_UPS` and `BUILDS` in `store/src/parts.ts` |
 | Health in ChatGPT, or another assistant's medical-record connection, reaches Maccabi or opens to Israel | The "U.S. providers, not Maccabi Healthcare Services" line in the description, on YouTube and in the README, and the README's *What about ChatGPT Health?* |

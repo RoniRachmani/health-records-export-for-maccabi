@@ -33,7 +33,7 @@ earliest visit. It helps you understand your records and prepare for your doctor
 
 <p align="center">
   <a href="https://ronirachmani.github.io/health-records-export-for-maccabi/ai-assistant.html">
-    <img src="store/assets/screenshot-1-ask.png" alt="An AI assistant opened on an export, answering how a made-up HbA1c result changed since 2019 and naming the file behind the answer" width="720">
+    <img src="store/assets/screenshot-1-ask.png" alt="Your whole Maccabi history, and a genius friend who’s read all of it: an AI assistant opened on an export, saying what stands out in a made-up member’s records and naming the file behind the answer" width="720">
   </a>
 </p>
 
@@ -456,7 +456,7 @@ npm run icons          # public/icons/ and store/assets/icon-128.png
 
 `package` builds `dist/` first, and refuses a development build. The store images and the video show the real
 popup with made-up states, and they need Roboto on the machine that draws them. Without it, run the *Store images*
-workflow from the Actions tab (or `gh workflow run store-assets.yml`, with `-f shots="start done"` for only some): it
+workflow from the Actions tab (or `gh workflow run store-assets.yml`, with `-f shots="start open"` for only some): it
 renders them on Linux with Roboto and commits the ones that changed. [docs/store-listing.md](docs/store-listing.md)
 has everything to fill in on the store dashboard.
 
