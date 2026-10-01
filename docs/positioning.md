@@ -106,6 +106,22 @@ The second set is things the assistant makes, not only answers. This is what bri
 Plans start from what the records already hold. Doctors often note weight and activity in visit summaries, so the
 assistant only asks for what's missing.
 
+## Use cases: the shortlist
+
+These are the seven we lead with. Each one needs records from different screens of the site, or from years apart, read
+together:
+- *Did it work?*
+- *Loose ends*
+- *What I spent*
+- *Is there a pattern?*
+- *Is it the season?*
+- *Changes no test flags*
+- *Everything since 1981*, the Timeline view in *healthHQ*. healthHQ is the working name for the viewer an export could
+  include.
+
+For each one's place, picture, data, rules and copy, see [healthhq-use-cases.md](healthhq-use-cases.md), which is
+written for whoever builds them into the chart-gallery artifact.
+
 ## Alternatives the customer has
 
 | Alternative | Why it falls short |
@@ -140,10 +156,17 @@ Every example uses the same made-up member, so the story holds together across t
 "one thing today", and the plans match the trends. They are in their mid-40s, with:
 - cholesterol creeping up;
 - blood sugar at the top of normal;
-- asthma since childhood, quiet since 2019;
+- asthma since childhood, quiet since 2019: 41 inhaler purchases from 1990 to 2018, 27 of them in spring;
 - a penicillin rash in 2011;
-- a knee operation in 2016;
-- their last tetanus shot in 2017.
+- their tonsils out in 1989, and a knee operation in 2016, their only hospital stays;
+- their last tetanus shot in 2017;
+- vitamin D at 11 in November 2023, 24 in May 2024 while they took supplements, and 17 in January 2026 after they stopped
+  buying them in August 2024;
+- a liver enzyme rising at every test since 2016 (18 to 34) and good cholesterol falling (58 to 44), both still normal;
+- three loose ends: a blood sugar retest due in April, a mole check due in July, and an eye-doctor referral that lapsed
+  unused in June;
+- ₪4,120 spent on medicines since 2008, with Maccabi covering another ₪3,270;
+- 612 records from birth in 1981.
 
 Nothing shown comes from a real account.
 
