@@ -186,26 +186,30 @@ nothing is suggested over the last frame.
 **Title:**
 
 ```
-Ask Claude or ChatGPT about your Maccabi Online medical records – free Chrome extension
+Your whole Maccabi history, and a genius friend who's read all of it – free Chrome extension
 ```
 
 **Description** (plain text with no links; the chapter times are the film's parts, `runFrom`, `saved` and `uses` in `T` in
 `store/src/video.ts`, so retiming the film means changing them here and on YouTube; YouTube shows chapters only
-when each is at least 10 seconds long. The lists repeat the store description's, so change them together):
+when each is at least 10 seconds long. It is the store description cut down, in the same order and words, so change
+them together):
 
 ```
-Ask an AI assistant about your Maccabi Online medical records, in plain language and in the language you speak. This free Chrome extension saves them on your computer as one ZIP file, every PDF the site offers plus the site's own data as JSON, and you open it in the assistant you choose. Free and open source.
+Your whole Maccabi history, and a genius friend who's read all of it.
 
-AI assistants that connect to medical records reach U.S. providers, not Maccabi Healthcare Services. This export is how your Maccabi health records get to one.
+Save everything from Maccabi Online to your computer, then ask anything: what changed, what stands out, what to do next. This free Chrome extension saves every record the site has, and every PDF, as one ZIP, and you open the folder in the Claude or ChatGPT desktop app. The assistant reads every record, written in Hebrew, and answers in plain English.
+
+Maccabi Online shows your records one page at a time, within date limits, and the AI health tools that connect to medical records reach only U.S. providers. This puts every record in one place on your computer, where an assistant can read all of it.
 
 ▶ Find it on the Chrome Web Store: Health Records Export for Maccabi
 
-0:00 Your whole Maccabi history, and a friend who's read all of it
+0:00 Your whole Maccabi history, and a genius friend who's read all of it
 0:19 The export, start to finish (sped up)
-0:30 What's in the ZIP
+0:30 Everything, in one place, and yours to keep
 0:43 Ask anything
 
-WHAT IT SAVES
+EVERYTHING, IN ONE PLACE
+• Your full medical file, ordered for the widest range Maccabi allows
 • Test results, lab histories and result PDFs
 • Visit summaries from the last 12 months, with their PDFs
 • Prescriptions, your full pharmacy purchase history and the purchase report
@@ -214,31 +218,33 @@ WHAT IT SAVES
 • Letters, messages with your doctor, and documents you uploaded
 • Hospital stays, with discharge letters when the site has them
 • Your member details, entitlements and assigned doctors
-• Your full medical file, freshly ordered to cover your whole history
+
+THINGS TO ASK
+• "What stands out in my records?"
+• "What's one thing I should do today to improve my health?"
+• "What might I be due for?"
+• "What changed in my latest blood test?"
+• "What should I raise with my doctor on Thursday?"
+• "Anything in my history a new doctor should know?"
+
+Every answer names the record it came from, so you can check it. It advises; you and your doctor decide.
+
+YOURS TO KEEP, AND TO GROW
+Take it to a private doctor or one abroad, keep it through a move or a switch of health fund, and add to it as you go: a private clinic's letter, a new result, notes from abroad.
 
 HOW IT WORKS
 1. Log in to Maccabi Online as usual.
 2. On that tab, click the extension's icon and press Start export.
 3. Keep the tab open and in front. Usually after a few minutes (up to 20 if the medical file is slow to arrive), the ZIP is in your Downloads folder.
-4. Unzip it and open the folder in the Claude desktop app, Claude Code, ChatGPT Work or Codex, which read the whole folder.
-5. Ask about your records, starting with "Summarize my health history from my full medical file".
+4. Unzip it and open the folder in an assistant's desktop app. In Claude, choose Project or folder under the message box. In ChatGPT, switch to Work, then choose the folder under Choose project.
+5. Start with "Read README.md first. Then summarize my health history from my full medical file."
 
-THINGS TO ASK
-• "Summarize my health history from my full medical file"
-• "How has my HbA1c changed over the years?"
-• "Translate my latest letter from the clinic into English"
-• "What should I raise at my next appointment?"
-
-It supports your doctor and doesn't replace them.
+The desktop app is what reads the whole folder: a chat takes a few dozen files, and an export has hundreds. Claude's and ChatGPT's desktop apps usually need a paid plan.
 
 Each export orders a fresh copy of your full medical file, so Maccabi Healthcare Services will text you about the order. That is the only change the extension makes to your account.
 
-PRIVATE BY DESIGN
-Your records stop at your computer. You choose which AI assistant, if any, reads them.
-• Connects only to online.maccabi4u.co.il. No servers, analytics, tracking or remote code.
-• Uses the session you're already logged in with. It never sees your password or one-time codes.
-• Deletes its own copy of your files as soon as the ZIP is saved.
-• Open source, and what ships isn't minified, so you can read exactly what runs.
+PRIVACY
+Your records stay on your computer, and you choose which AI assistant, if any, reads them. The extension connects only to online.maccabi4u.co.il, has no servers, analytics or tracking, and is open source.
 
 תוסף לא רשמי לכרום ששומר במחשב שלכם עותק של הרשומות הרפואיות ממכבי אונליין – בדיקות, ביקורים, מרשמים, מכתבים והתיק הרפואי המלא – בקובץ ZIP אחד. ממשק התוסף באנגלית.
 
@@ -393,4 +399,4 @@ of this page:
 | The manifest's `description` | Summary here (132 characters at most) |
 | What the export's README asks of the assistant (`shared/readme.ts`) | The description's "What the assistant is asked to do" and "Yours to keep, and to grow", the README's *Hand it to an AI assistant*, and the answers in `STANDS_OUT` and `ONE_THING` (`store/src/parts.ts`), which screenshots 1 and 3 and the video draw |
 | The questions to start with, or the Ask and Build use cases in [positioning.md](positioning.md) | The description's "A friend who's read it all", YouTube's "Things to ask", the README's list, and `FOLLOW_UPS` and `BUILDS` in `store/src/parts.ts` |
-| Health in ChatGPT, or another assistant's medical-record connection, reaches Maccabi or opens to Israel | The "reach only U.S. providers" line in the description, the "U.S. providers, not Maccabi Healthcare Services" one on YouTube and in the README, and the README's *What about ChatGPT Health?* |
+| Health in ChatGPT, or another assistant's medical-record connection, reaches Maccabi or opens to Israel | The "reach only U.S. providers" line in the description, on YouTube and in the README, and the README's *What about ChatGPT Health?* |
