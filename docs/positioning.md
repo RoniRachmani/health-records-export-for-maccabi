@@ -30,7 +30,8 @@ read your whole file**.
 1. **Curiosity starts it; stakes come later.** Stressful moments (a result out of range, a new diagnosis, a
    specialist visit) bring them back, but they rarely bring them in.
 2. **They can already see their records; they can't use them.** Maccabi Online shows each section and each PDF on its
-   own, and only within limits. The medical file can be ordered from July 2020, and hospital summaries go back 3 years.
+   own, and only within limits. The site's form orders the medical file from July 2020 at the earliest, and hospital
+   summaries go back 3 years. The export's medical file goes back much further: a real one began in infancy.
 3. **The Maccabi app already covers simple admin**, such as open referrals, approvals and renewals. Our edge is
    connecting years, not listing what's open.
 4. **The past can bite back.** An old diagnosis, an allergy or an operation matters again years later, when the site no
@@ -50,8 +51,9 @@ read your whole file**.
 3. **Yours to keep, and to grow.** After the first export, you can keep adding files (a private clinic's letter, a new
    result, notes from abroad), and it becomes a health dashboard you maintain rather than a one-time snapshot.
 
-**Conditions, not benefits:** it stays on your computer, and it's free. Say each once, lightly, next to the install
-button. Too much about privacy reads as suspicious.
+**Conditions, not benefits:** it stays on your computer, and it's free. The landing page's hero leaves both out and
+ends on the install button and the film. The privacy section further down says where the records go, and the store
+listing says it's free. Too much about privacy reads as suspicious.
 
 ## Messaging
 
@@ -102,6 +104,9 @@ The second set is things the assistant makes, not only answers. This is what bri
 - **A weekly fitness plan:** realistic, and aware of the asthma in your file.
 - **A one-pager for a new doctor:** problems, medications, allergies, operations and recent results.
 - **Your health dashboard, growing:** the first export's picture, with what you've added since.
+
+The requests are phrased as the member would type them. The gallery ends on the hero's dashboard again, small and
+marked "Added", to show it growing; that repeat is on purpose.
 
 Plans start from what the records already hold. Doctors often note weight and activity in visit summaries, so the
 assistant only asks for what's missing.
@@ -189,17 +194,22 @@ Nothing shown comes from a real account.
 
 - **Model:** OpenAI's Health launch pages. The benefit is in the headline, followed by a demo, then use cases as pill
   tabs over a soft panel, how it works with real footage, and privacy near the end.
+- **The Ask use cases live on the landing page only.** The AI assistant page is the step-by-step guide to opening an
+  export, and links to them rather than repeating them.
 - **Hero picture:** a "your health at a glance" dashboard the assistant built for the demo persona. It shows the years
   covered, what stands out, one trend, and a source under each item.
 - **Footage:** real clips of the extension and an assistant at work, cropped to the app window, looping silently.
 - **Look:** navy headings, one blue for actions, magenta for links, and the mark's pale pink in the soft panels. Never
   Maccabi's logo or brand assets, and the *Unofficial* label is always visible.
 
-## Claims to confirm before we make them
+## Claims
 
+**Confirmed:**
 - **"Back before 2020":** the export orders the medical file for your whole history, wider than the site's form allows.
-  A real export must confirm that the file does go back before July 2020 before the page says so. Until then, say "the
-  widest range Maccabi allows".
+  A real export confirmed it: its medical file began in infancy, decades before July 2020. The page can say the file
+  goes back to the start of your records.
+
+**Not yet:**
 - **"HealthOS" or a "living dashboard":** promise a dashboard you grow by adding files, not more, until the product
   does more.
 
