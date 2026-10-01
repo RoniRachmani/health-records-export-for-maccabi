@@ -153,49 +153,38 @@ function promo(): HTMLElement {
   </svg>`, 'promo');
 }
 
-// The marquee tile (1400x560): the same artwork, larger, beside the extension's name and its
-// one line. The store crops the right of this image on narrow screens, so the text stays left.
+// The marquee tile (1400x560): docs/positioning.md's headline and subline beside the assistant saying what stands out,
+// the picture of its headline, as on screenshot 1. The store crops the right of this image on narrow screens, so the
+// text stays left. The `social` shot is the same at GitHub's 1280x640, for the repository's social preview (uploaded
+// by hand in its settings), which shows the repository's own name and description under it and not the headline.
 function marquee(): HTMLElement {
   return h('div', 'mq',
     h('section', 'mq-copy',
       h('div', 'eyebrow', img('/icons/icon-128.png'), 'Health Records Export for Maccabi'),
-      h('h1', '', 'Ask an AI assistant about your Maccabi health records'),
-      h('p', 'lead', 'Save your tests, visits, prescriptions, letters and full medical file as one ZIP on your computer. Open it in the assistant you choose, and ask in your own language.'),
+      h('h1', '', SHOTS.ask.title),
+      h('p', 'lead', SHOTS.ask.text),
       h('p', 'disclaimer', 'Unofficial. Not affiliated with Maccabi Healthcare Services.'),
     ),
-    svg(`<svg viewBox="0 0 540 440" width="540" height="440">
-      <g transform="translate(270 220)">
-        <g transform="rotate(-14) translate(-186 -134) scale(1.6)">${paper(0.3)}</g>
-        <g transform="rotate(12) translate(28 -134) scale(1.6)">${paper(0.5)}</g>
-        <g transform="translate(-138 -144) scale(11.5)">${MARK}</g>
-      </g>
-    </svg>`, 'mq-art'),
+    chatWindow(STANDS_OUT).el,
   );
 }
 
-// The link preview of the published AI assistant page (1200x630, not a store field): the marquee's artwork and line,
-// centred, because WhatsApp and others crop previews to a narrower box, or a square, around the middle. The page's
-// own title is printed under it by the app showing the preview, so the picture says the rest. The `social` shot is
-// the same picture at GitHub's 1280x640, for the repository's social preview (uploaded by hand in its settings).
+// The link preview of the published AI assistant page (1200x630, not a store field): the assistant saying what stands
+// out, under the name, centred, because WhatsApp and others crop previews to a narrower box, or a square, around the
+// middle. The app showing the preview prints the page's og:title, the headline, under it, so the picture is the
+// product and does not say it again.
 function og(): HTMLElement {
   return h('div', 'og',
-    svg(`<svg viewBox="0 0 540 440" width="290" height="236">
-      <g transform="translate(270 220)">
-        <g transform="rotate(-14) translate(-186 -134) scale(1.6)">${paper(0.3)}</g>
-        <g transform="rotate(12) translate(28 -134) scale(1.6)">${paper(0.5)}</g>
-        <g transform="translate(-138 -144) scale(11.5)">${MARK}</g>
-      </g>
-    </svg>`, 'og-art'),
-    h('h1', '', 'Ask an AI assistant about your Maccabi health records'),
     h('div', 'eyebrow', img('/icons/icon-128.png'), 'Health Records Export for Maccabi · Unofficial'),
+    chatWindow(STANDS_OUT).el,
   );
 }
 
 async function main(): Promise<void> {
   const name = new URLSearchParams(location.search).get('shot') || 'start';
   if (name === 'promo' || name === 'marquee' || name === 'og' || name === 'social') {
-    document.body.className = name === 'promo' ? 'tile' : name === 'social' ? 'og social' : name;
-    document.body.append(name === 'promo' ? promo() : name === 'marquee' ? marquee() : og());
+    document.body.className = name === 'promo' ? 'tile' : name === 'social' ? 'marquee social' : name;
+    document.body.append(name === 'promo' ? promo() : name === 'og' ? og() : marquee());
   } else {
     const shot = SHOTS[name];
     if (!shot) throw new Error('unknown shot ' + name);

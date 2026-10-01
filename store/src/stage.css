@@ -127,18 +127,23 @@ body.tile {
   display: block;
 }
 
-/* ---- marquee promo tile (1400x560) ---- */
+/* ---- marquee promo tile (1400x560), and the repository's social preview (1280x640) ---- */
 body.marquee {
   position: relative;
   width: 1400px;
   height: 560px;
   overflow: hidden;
   color: #ffffff;
-  /* The small tile's soft circles, as glows behind the artwork: at this width a hard
-     edge would read as a seam, and the text stays on flat colour. */
+  /* A glow behind the assistant; at this width a hard edge would read as a seam. */
   background:
-    radial-gradient(460px 460px at 1180px 130px, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 70%),
-    radial-gradient(620px 620px at 1070px 620px, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(620px 620px at 1060px 300px, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 70%),
+    linear-gradient(135deg, #052658 0%, #083f92 55%, #296bed 100%);
+}
+body.marquee.social {
+  width: 1280px;
+  height: 640px;
+  background:
+    radial-gradient(620px 620px at 960px 340px, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 70%),
     linear-gradient(135deg, #052658 0%, #083f92 55%, #296bed 100%);
 }
 .mq-copy {
@@ -146,10 +151,14 @@ body.marquee {
   left: 88px;
   top: 0;
   bottom: 0;
-  width: 700px;
+  width: 600px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+}
+.social .mq-copy {
+  left: 72px;
+  width: 590px;
 }
 .mq-copy .eyebrow {
   gap: 11px;
@@ -163,24 +172,36 @@ body.marquee {
 }
 .mq-copy h1 {
   margin: 26px 0 18px;
-  font-size: 58px;
+  font-size: 50px;
+  text-wrap: balance;
 }
 .mq-copy .lead {
   margin: 0;
-  max-width: 660px;
-  font-size: 22px;
+  font-size: 21px;
 }
 .mq-copy .disclaimer {
-  bottom: 46px;
+  bottom: 40px;
   font-size: 15px;
 }
-.mq-art {
-  position: absolute;
+/* Only the question and its answer: no box to ask in, so the window ends under the source. */
+.mq .window {
+  top: 50%;
   right: 72px;
-  top: 62px;
+  width: 600px;
+  height: auto;
+  transform: translateY(-50%);
 }
-.mq-art svg {
-  display: block;
+.social .mq .window {
+  right: 60px;
+  width: 540px;
+}
+.mq .chat-foot,
+.og .chat-foot {
+  display: none;
+}
+.mq .chat-body,
+.og .chat-body {
+  padding-bottom: 30px;
 }
 
 /* ---- the AI assistant page's link preview (1200x630) ---- */
@@ -190,15 +211,7 @@ body.og {
   overflow: hidden;
   color: #ffffff;
   background:
-    radial-gradient(520px 520px at 600px 170px, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 70%),
-    linear-gradient(135deg, #052658 0%, #083f92 55%, #296bed 100%);
-}
-/* The repository's social preview: GitHub's size, the same picture. */
-body.og.social {
-  width: 1280px;
-  height: 640px;
-  background:
-    radial-gradient(520px 520px at 640px 175px, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(560px 560px at 600px 380px, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 70%),
     linear-gradient(135deg, #052658 0%, #083f92 55%, #296bed 100%);
 }
 .og {
@@ -207,17 +220,6 @@ body.og.social {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  text-align: center;
-}
-.og-art svg {
-  display: block;
-}
-/* Narrow enough that a square thumbnail, cut from the middle, keeps the whole line. */
-.og h1 {
-  max-width: 590px;
-  margin: 14px 0 24px;
-  font-size: 52px;
-  text-wrap: balance;
 }
 .og .eyebrow {
   align-self: center;
@@ -229,4 +231,18 @@ body.og.social {
   width: 30px;
   height: 30px;
   border-radius: 8px;
+}
+/* Narrow enough that a square thumbnail, cut from the middle, keeps the whole answer, and zoomed so it still reads
+   small. */
+.og .window {
+  position: relative;
+  top: auto;
+  right: auto;
+  width: 500px;
+  height: auto;
+  margin-top: 30px;
+  zoom: 1.2;
+}
+.og .chat-note {
+  display: none;
 }

@@ -121,7 +121,7 @@ Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare 
 | Screenshot 4 | `store/assets/screenshot-4-start.png` | The popup, ready to start: "Log in and press Start export", with the one line on price and privacy |
 | Screenshot 5 | `store/assets/screenshot-5-open.png` | The finished export: "Then open it in Claude or ChatGPT", with where each desktop app opens a folder and the first message to send |
 | Small promo tile (440×280) | `store/assets/promo-small-440x280.png` | The icon's artwork on a blue background, with no text |
-| Marquee promo tile (1400×560) | `store/assets/promo-marquee-1400x560.png` | The same artwork beside the name and "Ask an AI assistant about your Maccabi health records". Optional: the store uses it only when it features the extension |
+| Marquee promo tile (1400×560) | `store/assets/promo-marquee-1400x560.png` | Screenshot 1 in a wide frame: the name, the headline and the subline beside the assistant saying what stands out (`STANDS_OUT`). Optional: the store uses it only when it features the extension |
 | Global promo video | https://youtu.be/zY5TxwlsGjs | Optional. See [Promo video](#promo-video) below |
 
 The screenshots are 1280×800 PNG files with no transparency. They follow [positioning.md](positioning.md): what the

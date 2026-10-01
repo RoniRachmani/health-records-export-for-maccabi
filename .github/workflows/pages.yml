@@ -1,7 +1,7 @@
 # Publishes the pages the extension ships (public/: the AI assistant page, the Privacy Policy and the Terms of Use) at
 # https://ronirachmani.github.io/health-records-export-for-maccabi/, so they can be read before installing. The files
 # go up as they ship, plus what only the web copy needs: og.png, the link preview's picture, rendered here by
-# `store-assets -- og` with Roboto installed; social.png, the same at 1280x640 for the repository's social preview,
+# `store-assets -- og` with Roboto installed; social.png, the marquee at 1280x640 for the repository's social preview,
 # which GitHub takes only as an upload in its settings; and an index.html that sends the site's root to the AI
 # assistant page.
 name: Pages
