@@ -158,6 +158,9 @@ Nothing shown comes from a real account.
   changes. Nothing reads as a diagnosis, and every insight shows its source.
 - **Privacy in one line.** The details belong in the Privacy Policy, not the pitch.
 - **Warm and confident, not hyped.** A genius friend, not a miracle.
+- **Don't mention that other AI health tools are U.S.-only.** That gap explains our positioning (see *Alternatives the
+  customer has*), but customer-facing copy doesn't name it: not on the landing page, in the store listing or in the
+  video. Say what the extension does, not what other products can't do.
 
 ## Creative direction
 
