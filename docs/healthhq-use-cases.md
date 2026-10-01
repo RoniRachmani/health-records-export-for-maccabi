@@ -45,7 +45,7 @@ const VITD_BUY = ['2023-11-17', '2024-02-15', '2024-05-22', '2024-08-19']; // no
 // Loose ends: a = asked for or issued, b = due or valid until
 const ENDS = [
   { n: 'Knee X-ray', a: '2026-02-10', b: '2026-02-24', st: 'done', word: 'Done' },
-  { n: 'Blood sugar retest', a: '2025-10-08', b: '2026-04-08', st: 'overdue', word: 'Overdue' }, // "repeat in 6 months"
+  { n: 'Blood sugar retest', a: '2026-01-20', b: '2026-04-20', st: 'overdue', word: 'Overdue' }, // "repeat fasting blood sugar in 3 months"
   { n: 'Mole check, dermatology', a: '2025-07-15', b: '2026-07-15', st: 'overdue', word: 'Overdue' }, // "again in a year"
   { n: 'Eye doctor', a: '2025-12-02', b: '2026-06-01', st: 'lapsed', word: 'Lapsed' }, // referral, never used
   { n: 'Flu shot, 2026-27 season', a: '2026-09-01', b: '2027-03-31', st: 'open', word: 'Open now' },
