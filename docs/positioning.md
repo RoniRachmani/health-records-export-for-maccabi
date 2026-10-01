@@ -180,6 +180,9 @@ Nothing shown comes from a real account.
 - **Lead with the customer's outcome.** The extension is how they get it.
 - **Show, don't tell.** Every section's picture is the product itself: the extension, the export, or an assistant
   working on it.
+- **Show the assistant connecting the dots.** The best answers join records the site keeps apart. A result points to
+  the referral it led to, and whether that referral was used. A prescription is checked against what was bought, and a
+  trend against the season. Explaining one record well is not enough: every example should link at least two.
 - **Relatable, not clinical.** Say "cholesterol" and "blood sugar", not "LDL" and "HbA1c". Avoid jargon and technical
   terms.
 - **Advise, never decide.** Advice ends in "worth raising with your doctor", and plans say to check before big
