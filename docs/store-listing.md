@@ -75,7 +75,7 @@ HOW IT WORKS
 4. Unzip it and open the folder in an assistant's desktop app. In Claude, choose Project or folder under the message box. In ChatGPT, switch to Work, then choose the folder under Choose project. Claude Code and Codex work too.
 5. Start with "Read README.md first. Then summarize my health history from my full medical file."
 
-The desktop app is what reads the whole folder: a chat takes a few dozen files, and an export has hundreds. Claude's and ChatGPT's desktop apps usually need a paid plan.
+The desktop app is what reads the whole folder: a chat takes a few dozen files, and an export has hundreds. Claude's desktop app needs a paid plan for now. ChatGPT Work is in the free plan too, where it has rolled out, with lower usage limits, and a large export may need more.
 
 While the export runs, the tab moves to the site's medical-file page and back. The extension keeps your Maccabi Healthcare Services session from timing out until the export finishes. If the session ends anyway, the export pauses. Log in again and press Resume. Files collected so far are kept.
 
@@ -239,7 +239,7 @@ HOW IT WORKS
 4. Unzip it and open the folder in an assistant's desktop app. In Claude, choose Project or folder under the message box. In ChatGPT, switch to Work, then choose the folder under Choose project.
 5. Start with "Read README.md first. Then summarize my health history from my full medical file."
 
-The desktop app is what reads the whole folder: a chat takes a few dozen files, and an export has hundreds. Claude's and ChatGPT's desktop apps usually need a paid plan.
+The desktop app is what reads the whole folder: a chat takes a few dozen files, and an export has hundreds. Claude's desktop app needs a paid plan for now. ChatGPT Work is in the free plan too, where it has rolled out, with lower usage limits, and a large export may need more.
 
 Each export orders a fresh copy of your full medical file, so Maccabi Healthcare Services will text you about the order. That is the only change the extension makes to your account.
 

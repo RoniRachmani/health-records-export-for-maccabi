@@ -40,7 +40,7 @@ read your whole file**.
    move or a switch of health fund.
 6. **Language is a proof point, not the pitch.** They read English. "It reads the Hebrew" reassures them, but it isn't
    why they come.
-7. **Getting the export into an assistant needs the assistant's desktop app,** usually on a paid plan. Our page
+7. **Getting the export into an assistant needs the assistant's desktop app,** and for Claude a paid plan. Our page
    shouldn't hide that step; it should make it look easy.
 
 ## Value, in order
@@ -143,7 +143,7 @@ written for whoever builds them into the chart-gallery artifact.
 | "Is my health data safe?" | It goes from Maccabi Online to your computer and nowhere else. You choose which assistant, if any, reads it. |
 | "Is this official?" | No. It's unofficial and says so everywhere. It uses your own logged-in session, like you would. |
 | "Will the AI give me medical advice?" | It explains and suggests, and names the record behind every answer. You and your doctor decide. |
-| "Do I need to pay for an AI?" | The extension is free. Opening the folder takes the desktop app of Claude or ChatGPT, usually on a paid plan. |
+| "Do I need to pay for an AI?" | The extension is free. Opening the folder takes the desktop app of Claude, on a paid plan, or of ChatGPT, whose free plan includes Work with lower usage limits. |
 | "Is it complicated?" | Log in, press Start export, and open the folder in your assistant. The page shows each step as it looks. |
 
 ## Getting started, as the customer sees it

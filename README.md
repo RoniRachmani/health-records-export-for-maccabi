@@ -233,7 +233,8 @@ has hundreds:
 - **ChatGPT desktop app:** switch to **Work**, then choose the folder under **Choose project**. Codex works too: run it
   in the folder.
 
-Both desktop apps usually need a paid plan. Then start with:
+Claude's desktop app needs a paid plan for now. ChatGPT Work is in the free plan too, where it has rolled out, with
+lower usage limits, and a large export may need more. Then start with:
 
 > *Read README.md first. Then summarize my health history from my full medical file.*
 
