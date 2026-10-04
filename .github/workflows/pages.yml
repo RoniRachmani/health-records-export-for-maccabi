@@ -8,8 +8,8 @@
 #               its settings;
 #   clips/      the landing page's two silent loops, cut from the promo film: the popup working through an export, and
 #               the export's folder being opened. Each is a slice of the film rendered at 4K and cropped to its window,
-#               so it is sharp at twice the size the page shows it. They are kept in a cache keyed on everything the
-#               film is drawn from, since rendering them takes minutes.
+#               so it is sharp at twice the size the page shows it. They are kept in a cache keyed on what the film
+#               is drawn from, since rendering them takes about a quarter of an hour.
 name: Pages
 
 on:
@@ -52,7 +52,10 @@ jobs:
         uses: actions/cache@v6
         with:
           path: _clips
-          key: clips-${{ hashFiles('store/src/**', 'src/extension/**', 'public/**', 'scripts/stage.mjs', 'scripts/store-video.mjs', 'package-lock.json', '.github/workflows/pages.yml') }}
+          # Only what the film is drawn from: its own code, the popup it photographs, the icons, and the version the
+          # popup prints. The pages in public/ and site/ are not, so changing them deploys without a render. The number
+          # after "clips-" stands for the clip lines below: raise it when their times, crops or encoding change.
+          key: clips-1-${{ hashFiles('store/src/**', 'src/extension/**', 'public/icons/**', 'scripts/stage.mjs', 'scripts/store-video.mjs', 'vite.store.config.ts', 'package.json', 'package-lock.json') }}
       - name: Render the clips
         if: steps.clips.outputs.cache-hit != 'true'
         run: |
