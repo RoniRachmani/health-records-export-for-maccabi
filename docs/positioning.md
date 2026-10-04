@@ -78,23 +78,26 @@ what to do next.
 
 ## Use cases: Ask
 
-The landing page shows nine, as tabs in one Ask section (Round 4 of the mockups). Each is a question the member asks,
-answered with a picture and one or two short lines. They're ordered as a new user reaches for them.
+The landing page shows nine, as tabs in one Ask section (Round 7 of the mockups, the approved one). Each is a question
+the member asks, answered with a picture. Only *Before a visit* and *What I spent* add words to it. Each answer draws
+on several areas of the export, not one metric. They're ordered as a new user reaches for them.
 
 | Tab | Question | What the answer shows | Value to the customer |
 |---|---|---|---|
 | **What stands out?** | "What stands out in my records?" | Six tiles: cholesterol at 142 and rising, vitamin D low again, asthma quiet since 2019, blood pressure creeping from 118 to 131 across 31 visit notes, no eye exam since 2014, and a heart murmur noted once, at age six | **The big picture in a minute.** Years of records you never read end to end, turned into the things worth knowing. The first "wow". |
-| **One thing today** | "What's one thing I should do today to improve my health?" | A 20-minute walk after dinner, over the cholesterol and blood sugar trends, each blood test a dot | **Advice about you, not the internet's average person.** Small, doable, and tied to your own numbers. |
-| **Explain a result** | "What changed in my latest blood test?" | Each value against its range, marked new, better or same, then the repeat test the doctor asked for afterwards, marked "Not taken" | **Calm instead of worry.** A new number next to all your old ones, and the follow-up nobody chased. |
-| **Did it work?** | "My vitamin D was low. Did the treatment help?" | The three results against the healthy range, over what was prescribed and what was bought | **Whether a treatment helped.** Tests, prescriptions and purchases sit on three screens of the site; here they're one line. |
-| **Loose ends** | "Anything my doctors asked me to do that I haven't?" | One bar per request, from asked to due, with Done, Overdue, Lapsed, Open or Upcoming | **Nothing falls through the cracks.** It catches what's due before a referral lapses. |
-| **Quiet changes** | "Is anything moving, even though it's still normal?" | Five tests, six results each, on their normal range: three drifting, two steady | **What no single test flags.** A ten-year drift only shows when the years are read together. |
-| **Is there a pattern?** | "Do my asthma flares have a season?" | Inhaler purchases by month of the year, with spring picked out | **Patterns across decades.** Two thirds in spring is invisible one purchase at a time. |
+| **One thing today** | "What's one thing I should do today to improve my health?" | A 20-minute walk after dinner, over four tiles: cholesterol above healthy since 2024, blood sugar at the top of normal, weight up 9 kg since the knee operation in 2016, and blood pressure from 118 to 131 since 2004 | **Advice about you, not the internet's average person.** Small, doable, and tied to your own numbers. |
+| **Explain a result** | "What changed in my latest blood test?" | Each value against its range, marked new, better or same, then a red callout: "Repeat test. Due April, not taken" | **Calm instead of worry.** A new number next to all your old ones, and the follow-up nobody chased. |
+| **Did it work?** | "My vitamin D was low. Did the treatment help?" | The three results against the healthy range, over four lanes on the same dates: what the visits said ("tired", "better", "tired again"), what was prescribed, what was bought, and the doctor's message | **Whether a treatment helped.** Tests, visits, prescriptions, purchases and messages sit on separate screens of the site; here they're one picture. |
+| **Loose ends** | "Anything my doctors asked me to do that I haven't?" | One bar per request, from asked to due, with Done, Overdue, Lapsed, Open or Upcoming. Eight rows: tests, referrals, an approval that runs out on 15 November, and vaccines | **Nothing falls through the cracks.** It catches what's due before a referral lapses. |
+| **Quiet changes** | "Is anything moving, even though it's still normal?" | Ten small lines in three groups: five blood tests, weight and blood pressure from visit notes, and visits, sick days and medicines bought each year. Six are drifting, four are steady | **What no single test flags.** A ten-year drift only shows when the years are read together. |
+| **Is there a pattern?** | "Do my asthma flares have a season?" | Four counts by month of the year, with spring picked out: inhalers bought, asthma visits, antibiotic courses and sick notes | **Patterns across decades.** Four kinds of record peaking in the same months is invisible one record at a time. |
 | **Before a visit** | "What should I raise with my doctor on Thursday?" | Three questions to ask, and a one-page summary for the visit | **Walk in prepared.** Short visits go further, and a new doctor gets your history in a page. |
 | **What I spent** | "Chart what I've spent on medicines, and what insurance covered" | ₪4,120 paid and ₪3,270 covered, as columns by year from 2008 | **Every receipt, added up.** Nineteen years of pharmacy purchases in one chart. |
 
-Under the hero, before the tabs, a timeline band shows *Everything since 1981*: one dot for each year that holds a
-record of each kind, the milestones above it, and a pale panel over the years the site shows.
+Under the hero, before the tabs, a slim strip shows the whole history as a feature highlight: "612 records, over 45
+years, back to your first check-up" beside five flat lanes of dots, one dot for each year that holds a record of each
+kind. A pale panel sits over the years the site shows, and the only caption is *Your full medical file*. The strip has
+no milestones, lane names or paragraph.
 
 **Left out on purpose:**
 - **Health summary:** the hero's dashboard already shows it.
@@ -104,6 +107,11 @@ record of each kind, the milestones above it, and a pale panel over the years th
 - **A separate Build section:** its one-pager repeated *Before a visit*, and its cards moved into the Ask tabs or were
   dropped. Only *What I spent* remains.
 - **Is it the season?:** *Did it work?* already shades the winters behind the vitamin D line.
+- **A full timeline section:** the band with milestones and named lanes took a whole screen. Round 7 keeps it as a
+  strip.
+- **Sentences under the pictures:** the closing line of each answer, the "Read for this" line of sources and the
+  source label on each tile were all removed. So were the intro to *What stands out?*, the quoted visit summary in
+  *One thing today*, and the timeline's "What the site shows" label.
 
 The page no longer pictures the third value, *yours to keep, and to grow*: the dashboard card that showed it was
 removed. Bring it back in words or a picture if that value needs more weight.
@@ -170,6 +178,13 @@ Every example uses the same made-up member, so the story holds together across t
 - a liver enzyme rising at every test since 2016 (18 to 34) and good cholesterol falling (58 to 44), both still normal;
 - three loose ends: a blood sugar retest due in April, a mole check due in July, and an eye-doctor referral that lapsed
   unused in June;
+- two more requests still open: a physiotherapy approval that runs out on 15 November, and a shoulder ultrasound
+  referral;
+- weight written in visit notes, up from 78 to 87 kg since the knee operation;
+- visits a year up from 4 to 9 since 2016, while sick days and medicines bought stay level;
+- asthma visits, antibiotic courses and sick notes that peak in spring, as the inhaler purchases do;
+- visit notes around the vitamin D tests that say "tired", then "better", then "tired again", and a doctor's message
+  after the last result;
 - ₪4,120 spent on medicines since 2008, with insurance covering another ₪3,270;
 - 612 records from birth in 1981.
 
@@ -185,8 +200,11 @@ Nothing shown comes from a real account.
   trend against the season. Explaining one record well is not enough: every example should link at least two.
 - **Relatable, not clinical.** Say "cholesterol" and "blood sugar", not "LDL" and "HbA1c". Avoid jargon and technical
   terms.
-- **Short answers.** People don't read long AI answers: one or two lines under the picture. Anything that needs
-  explaining is said by the assistant, not in a caption beside it.
+- **The picture is the answer.** People don't read long AI answers. Draw it, and add words only for what a picture
+  can't say: a suggestion, a question to ask, a total. Don't add a closing sentence that repeats the picture, or a
+  line listing its sources.
+- **Many records, many areas.** An example shouldn't lean on one metric. Draw it from several areas of the export at
+  once: tests, visit notes, purchases, referrals, approvals, messages, sick notes.
 - **Say "insurance covered", not "Maccabi covered".**
 - **Advise, never decide.** Advice ends in "worth raising with your doctor", and plans say to check before big
   changes. Nothing reads as a diagnosis, and every insight shows its source.
