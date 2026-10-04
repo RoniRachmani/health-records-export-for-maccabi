@@ -33,7 +33,7 @@ Your whole Maccabi history, and a genius friend who's read all of it.
 
 Save everything from Maccabi Online to your computer, then ask anything: what changed, what stands out, what to do next. Open the export in the Claude or ChatGPT desktop app, and the assistant reads every record, written in Hebrew, and answers in plain English.
 
-Maccabi Online shows your records one page at a time, within date limits, and the AI health tools that connect to medical records reach only U.S. providers. This extension puts every record in one place on your computer, where an assistant can read all of it. It's free, and your records stay on your computer.
+Maccabi Online shows your records one page at a time, within date limits. This extension puts every record in one place on your computer, where an assistant can read all of it. It's free, and your records stay on your computer.
 
 EVERYTHING, IN ONE PLACE
 Your full medical file, ordered for the widest range Maccabi allows, plus every result, visit, prescription, referral, vaccination and letter the site has:
@@ -199,7 +199,7 @@ Your whole Maccabi history, and a genius friend who's read all of it.
 
 Save everything from Maccabi Online to your computer, then ask anything: what changed, what stands out, what to do next. This free Chrome extension saves every record the site has, and every PDF, as one ZIP, and you open the folder in the Claude or ChatGPT desktop app. The assistant reads every record, written in Hebrew, and answers in plain English.
 
-Maccabi Online shows your records one page at a time, within date limits, and the AI health tools that connect to medical records reach only U.S. providers. This puts every record in one place on your computer, where an assistant can read all of it.
+Maccabi Online shows your records one page at a time, within date limits. This puts every record in one place on your computer, where an assistant can read all of it.
 
 ▶ Find it on the Chrome Web Store: Health Records Export for Maccabi
 
@@ -402,4 +402,4 @@ of this page:
 | The manifest's `description` | Summary here (132 characters at most) |
 | What the export's README asks of the assistant (`shared/readme.ts`) | The description's "What the assistant is asked to do" and "Yours to keep, and to grow", the README's *Hand it to an AI assistant*, and the answers in `STANDS_OUT` and `ONE_THING` (`store/src/parts.ts`), which screenshots 1 and 3 and the video draw |
 | The questions to start with, or the Ask and Build use cases in [positioning.md](positioning.md) | The description's "A friend who's read it all", YouTube's "Things to ask", the README's list, and `FOLLOW_UPS` and `BUILDS` in `store/src/parts.ts` |
-| Health in ChatGPT, or another assistant's medical-record connection, reaches Maccabi or opens to Israel | The "reach only U.S. providers" line in the description, on YouTube and in the README, and the README's *What about ChatGPT Health?* |
+| Health in ChatGPT, or another assistant's medical-record connection, reaches Maccabi or opens to Israel | *Alternatives the customer has* and the positioning statement in [positioning.md](positioning.md). Customer-facing copy doesn't mention those tools, so nothing else changes |

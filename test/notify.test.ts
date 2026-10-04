@@ -18,7 +18,7 @@ describe('notify', () => {
     await notify('ready', 'Export ready', 'maccabi-export-2026-09-29.zip: 812 files.');
     await notify('attention', 'Export paused', 'Log in again.');
     expect(created.map((c) => noticeKind(c.id))).toEqual(['ready', 'attention']);
-    expect(created[0].options.buttons).toEqual([{ title: 'See what to ask your AI assistant' }]);
+    expect(created[0].options.buttons).toEqual([{ title: 'See how to open it in your AI assistant' }]);
     expect(READY_BUTTONS[0].page).toBe('ai-assistant.html');
     expect(created[1].options.buttons).toBeUndefined();
   });

@@ -6,9 +6,8 @@ Save everything from [Maccabi Online](https://online.maccabi4u.co.il) to your co
 changed, what stands out, what to do next. This Chrome extension saves every record the site has, and every PDF, as one
 ZIP, and you open the folder in the Claude or ChatGPT desktop app. It's free, and your records stay on your computer.
 
-Maccabi Online shows your records one page at a time, within date limits, and the AI health tools that connect to
-medical records reach only U.S. providers. The export puts every record in one place, where an assistant can read all
-of it.
+Maccabi Online shows your records one page at a time, within date limits. The export puts every record in one place,
+where an assistant can read all of it.
 
 > [!NOTE]
 > Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare Services.
