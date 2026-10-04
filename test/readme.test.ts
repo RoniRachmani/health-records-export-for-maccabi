@@ -25,7 +25,7 @@ describe('exportReadme', () => {
   it('points the member to the AI assistant page before anything else', () => {
     const md = readme();
     expect(md.split('\n')[2]).toMatch(/^> \*\*Member:\*\* to ask an AI assistant/);
-    expect(md).toContain('https://ronirachmani.github.io/health-records-export-for-maccabi/ai-assistant.html');
+    expect(md).toContain('https://maccabi.ronirachmani.com/ai-assistant.html');
   });
 
   it('says where to look for the questions people ask most', () => {

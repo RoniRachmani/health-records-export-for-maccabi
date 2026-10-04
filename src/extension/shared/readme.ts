@@ -265,7 +265,7 @@ scrambled — a letter per line, or words reversed: then read the pages as image
  * The published AI assistant page, for the one line addressed to the member: whoever opens the export months later
  * has no popup to ask, only this file.
  */
-const AI_PAGE = 'https://ronirachmani.github.io/health-records-export-for-maccabi/ai-assistant.html';
+const AI_PAGE = 'https://maccabi.ronirachmani.com/ai-assistant.html';
 
 /**
  * The README for one export. present is the folders this export actually has, with how many files

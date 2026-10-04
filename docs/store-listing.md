@@ -257,10 +257,10 @@ Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare 
 
 **Official URL:** None. This field needs a domain verified in Google Search Console.
 
-**Homepage URL:** https://ronirachmani.github.io/health-records-export-for-maccabi/ai-assistant.html
+**Homepage URL:** https://maccabi.ronirachmani.com/
 
-The page the popup's "See how" opens, published from `public/` by `.github/workflows/pages.yml`: it shows what the
-export is for, and links to the source.
+The landing page, published from `site/` by `.github/workflows/pages.yml`: it shows what the export is for and how
+to get one, and links to the source. The old `ronirachmani.github.io` addresses redirect to this domain.
 
 **Support URL:** https://github.com/RoniRachmani/health-records-export-for-maccabi/issues
 
@@ -357,7 +357,7 @@ Check all three:
 
 ### Privacy policy
 
-**URL:** https://github.com/RoniRachmani/health-records-export-for-maccabi/blob/main/docs/privacy.md
+**URL:** https://maccabi.ronirachmani.com/privacy.html
 
 The same policy ships in the extension as `privacy.html`.
 

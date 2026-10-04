@@ -1,4 +1,4 @@
-# Publishes the extension's website at https://ronirachmani.github.io/health-records-export-for-maccabi/: the landing
+# Publishes the extension's website at https://maccabi.ronirachmani.com/: the landing
 # page (site/), and the pages the extension ships (public/: the AI assistant page, the Privacy Policy and the Terms of
 # Use), so they can be read before installing. public/ goes up as it ships, and site/ on top of it, plus what is made
 # here, with Roboto installed:

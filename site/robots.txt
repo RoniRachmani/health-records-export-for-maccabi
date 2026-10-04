@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ronirachmani.github.io/health-records-export-for-maccabi/sitemap.xml
+Sitemap: https://maccabi.ronirachmani.com/sitemap.xml

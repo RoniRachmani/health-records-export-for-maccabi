@@ -20,13 +20,17 @@ of it.
 </p>
 
 <p align="center">
-  <a href="https://ronirachmani.github.io/health-records-export-for-maccabi/ai-assistant.html">
+  Website: <a href="https://maccabi.ronirachmani.com/">maccabi.ronirachmani.com</a>
+</p>
+
+<p align="center">
+  <a href="https://maccabi.ronirachmani.com/ai-assistant.html">
     <img src="store/assets/screenshot-1-ask.png" alt="Your whole Maccabi history, and a genius friend who’s read all of it: an AI assistant opened on an export, saying what stands out in a made-up member’s records and naming the file behind the answer" width="720">
   </a>
 </p>
 
 <p align="center">
-  <a href="https://ronirachmani.github.io/health-records-export-for-maccabi/ai-assistant.html">What to ask your AI assistant, and where to open your export</a> · every record in the picture is made up
+  <a href="https://maccabi.ronirachmani.com/ai-assistant.html">What to ask your AI assistant, and where to open your export</a> · every record in the picture is made up
 </p>
 
 - **Everything, in one place.** Your full medical file, ordered for the widest range Maccabi allows, plus every result,
@@ -222,7 +226,7 @@ in `files/` instead — those say so in their own `omitted` field.
 
 Open your export in an AI assistant, and it becomes a genius friend who's read your whole file. It reads the Hebrew,
 answers in plain English, and names the record behind every answer. **[See what to ask, with
-pictures](https://ronirachmani.github.io/health-records-export-for-maccabi/ai-assistant.html)**; the popup opens the
+pictures](https://maccabi.ronirachmani.com/ai-assistant.html)**; the popup opens the
 same page.
 
 Unzip the export and open the whole folder in an assistant's desktop app. A chat takes a few dozen files, and an export
