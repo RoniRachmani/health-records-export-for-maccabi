@@ -183,10 +183,10 @@ use only and asks to be credited; a paid plan is what allows commercial use of w
 Upload it as **Unlisted** or Public (the store cannot show a private video), and turn off ads and end screens so
 nothing is suggested over the last frame.
 
-**Title:**
+**Title** (the version in brackets is the release the film shows; change it with a new upload):
 
 ```
-Your whole Maccabi history, and a genius friend who's read all of it – free Chrome extension
+Ask Claude or ChatGPT about your Maccabi Online medical records – free Chrome extension [v0.8.1]
 ```
 
 **Description** (plain text with no links; the chapter times are the film's parts, `runFrom`, `saved` and `uses` in `T` in
