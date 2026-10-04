@@ -83,7 +83,7 @@ answered with a picture and one or two short lines. They're ordered as a new use
 
 | Tab | Question | What the answer shows | Value to the customer |
 |---|---|---|---|
-| **What stands out?** | "What stands out in my records?" | Six tiles: cholesterol at 142 and rising, vitamin D low again, asthma quiet since 2019, a blood type found in the 1989 hospital file, the busiest year (2016, the knee), and 14 antibiotic courses with none since 2015 | **The big picture in a minute.** Years of records you never read end to end, turned into the things worth knowing. The first "wow". |
+| **What stands out?** | "What stands out in my records?" | Six tiles: cholesterol at 142 and rising, vitamin D low again, asthma quiet since 2019, blood pressure creeping from 118 to 131 across 31 visit notes, no eye exam since 2014, and a heart murmur noted once, at age six | **The big picture in a minute.** Years of records you never read end to end, turned into the things worth knowing. The first "wow". |
 | **One thing today** | "What's one thing I should do today to improve my health?" | A 20-minute walk after dinner, over the cholesterol and blood sugar trends, each blood test a dot | **Advice about you, not the internet's average person.** Small, doable, and tied to your own numbers. |
 | **Explain a result** | "What changed in my latest blood test?" | Each value against its range, marked new, better or same, then the repeat test the doctor asked for afterwards, marked "Not taken" | **Calm instead of worry.** A new number next to all your old ones, and the follow-up nobody chased. |
 | **Did it work?** | "My vitamin D was low. Did the treatment help?" | The three results against the healthy range, over what was prescribed and what was bought | **Whether a treatment helped.** Tests, prescriptions and purchases sit on three screens of the site; here they're one line. |
@@ -160,10 +160,10 @@ Every example uses the same made-up member, so the story holds together across t
 - blood sugar at the top of normal;
 - asthma since childhood, quiet since 2019: 41 inhaler purchases from 1990 to 2018, 27 of them in spring;
 - a penicillin rash in 2011;
-- their tonsils out in 1989, and a knee operation in 2016, their only hospital stays. 2016 is their busiest year, with
-  23 records;
-- blood type A+, found in the 1989 hospital file;
-- 14 courses of antibiotics, none since 2015;
+- their tonsils out in 1989, and a knee operation in 2016, their only hospital stays;
+- blood pressure written in 31 visit notes since 2004 and never charted, creeping from 118 to 131;
+- eye exams in 2010, 2012 and 2014, and none since;
+- a heart murmur noted at age six, in 1987, and never mentioned again;
 - their last tetanus shot in 2017;
 - vitamin D at 11 in November 2023, 24 in May 2024 while they took supplements, and 17 in January 2026 after they stopped
   buying them in August 2024;
