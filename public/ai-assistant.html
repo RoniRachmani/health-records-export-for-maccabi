@@ -1,8 +1,9 @@
 <!doctype html>
 <!-- Shipped at chrome-extension://<id>/ai-assistant.html, the popup's "See how", and published on the web by
      .github/workflows/pages.yml. The README's "Hand it to an AI assistant" is its short form: keep the facts it
-     repeats in step. Every record, name and value in the pictures is made up. No script: the tabs are radio
-     buttons, so the page works under the extension's CSP and with nothing loaded. -->
+     repeats in step. It is the step-by-step guide to opening an export; what to ask is on the landing page (site/),
+     which it links to. Every record, name and value in the pictures is made up. No script, so the page works under
+     the extension's CSP and with nothing loaded. -->
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -62,215 +63,6 @@
     </header>
 
     <main>
-      <!-- Use cases, as tabs: radio buttons and labels, one panel each. -->
-      <section id="ask" class="band">
-        <h2>Ask what you'd ask a doctor who had read everything</h2>
-        <p class="sub">Six of the things it does well. Pick one to see an answer.</p>
-
-        <div class="tabs">
-          <input type="radio" name="uc" id="uc-summary" checked />
-          <input type="radio" name="uc" id="uc-labs" />
-          <input type="radio" name="uc" id="uc-trend" />
-          <input type="radio" name="uc" id="uc-changed" />
-          <input type="radio" name="uc" id="uc-visit" />
-          <input type="radio" name="uc" id="uc-find" />
-          <div class="tab-list" role="presentation">
-            <label for="uc-summary">Health summary</label>
-            <label for="uc-labs">Understand a result</label>
-            <label for="uc-trend">See a trend</label>
-            <label for="uc-changed">What changed</label>
-            <label for="uc-visit">Prepare for a visit</label>
-            <label for="uc-find">Find anything</label>
-          </div>
-
-          <div class="panel" id="p-summary">
-            <div class="panel-copy">
-              <h3>See your whole history</h3>
-              <p>
-                The full medical file reaches back to the earliest visit on record, far beyond the few years the site
-                itself shows. Start here.
-              </p>
-            </div>
-            <div class="chat">
-              <p class="msg you">Summarize my health history from my full medical file.</p>
-              <div class="msg bot">
-                <dl class="facts">
-                  <dt>Known problems</dt>
-                  <dd>High blood pressure, since 2014 · Asthma, mild, since childhood</dd>
-                  <dt>Operations</dt>
-                  <dd>Appendix removed, 2009</dd>
-                  <dt>Allergies</dt>
-                  <dd>Penicillin (a rash, 2011)</dd>
-                  <dt>Takes now</dt>
-                  <dd>Amlodipine 5 mg, daily</dd>
-                </dl>
-                <p class="src">
-                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5l3 3v10H4z M9 1.5v3h3" /></svg>
-                  medical-file.pdf · pages 1–4
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel" id="p-labs">
-            <div class="panel-copy">
-              <h3>Understand a result</h3>
-              <p>
-                Every value next to its reference range, in plain words, with what is worth asking about and what
-                isn't.
-              </p>
-            </div>
-            <div class="chat">
-              <p class="msg you">Help me understand my latest blood test.</p>
-              <div class="msg bot">
-                <ul class="ranges">
-                  <li>
-                    <span class="name">Hemoglobin <span lang="he" dir="rtl">המוגלובין</span></span>
-                    <span class="bar"><i style="--at: 48%"></i></span>
-                    <span class="val">14.1 g/dL</span>
-                  </li>
-                  <li>
-                    <span class="name">Glucose <span lang="he" dir="rtl">גלוקוז</span></span>
-                    <span class="bar"><i style="--at: 62%"></i></span>
-                    <span class="val">92 mg/dL</span>
-                  </li>
-                  <li class="high">
-                    <span class="name">LDL cholesterol <span lang="he" dir="rtl">כולסטרול LDL</span></span>
-                    <span class="bar"><i style="--at: 91%"></i></span>
-                    <span class="val">138 mg/dL</span>
-                  </li>
-                </ul>
-                <p>All in range but LDL, a little above it. Worth raising at your next visit, not urgent.</p>
-                <p class="src">
-                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5l3 3v10H4z M9 1.5v3h3" /></svg>
-                  test-results/details/2026-08-04_…-lab-result.json
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel" id="p-trend">
-            <div class="panel-copy">
-              <h3>See a trend</h3>
-              <p>Each lab measurement has its own history, often years of it, ready to chart.</p>
-            </div>
-            <div class="chat">
-              <p class="msg you">How has my HbA1c changed over the years?</p>
-              <div class="msg bot">
-                <!-- To scale: x 2018 to 2026 over 40..300, y 5.5% to 7.5% over 120..20 (50 px per percent). -->
-                <svg class="trend" viewBox="0 0 320 150" role="img" aria-label="HbA1c from 7.2% in 2018 down to 6.1% in 2026">
-                  <line class="grid" x1="40" y1="20" x2="300" y2="20" />
-                  <line class="grid" x1="40" y1="70" x2="300" y2="70" />
-                  <line class="grid" x1="40" y1="120" x2="300" y2="120" />
-                  <rect class="normal" x="40" y="95" width="260" height="25" />
-                  <text class="tick" x="34" y="24" text-anchor="end">7.5</text>
-                  <text class="tick" x="34" y="74" text-anchor="end">6.5</text>
-                  <text class="tick" x="34" y="124" text-anchor="end">5.5</text>
-                  <text class="tick" x="296" y="112" text-anchor="end">normal, below 6.0</text>
-                  <polyline class="line" points="40,35 72.5,30 105,40 137.5,55 170,65 202.5,75 235,80 267.5,85 300,90" />
-                  <g class="dots">
-                    <circle cx="40" cy="35" r="3" /><circle cx="72.5" cy="30" r="3" /><circle cx="105" cy="40" r="3" />
-                    <circle cx="137.5" cy="55" r="3" /><circle cx="170" cy="65" r="3" /><circle cx="202.5" cy="75" r="3" />
-                    <circle cx="235" cy="80" r="3" /><circle cx="267.5" cy="85" r="3" />
-                    <circle class="end" cx="300" cy="90" r="4.5" />
-                  </g>
-                  <text class="tick" x="40" y="142" text-anchor="middle">2018</text>
-                  <text class="tick" x="170" y="142" text-anchor="middle">2022</text>
-                  <text class="tick" x="300" y="142" text-anchor="end">2026</text>
-                </svg>
-                <p>Down from 7.2% in 2018 to 6.1% this year, falling steadily since 2020 and now just above the normal range.</p>
-                <p class="src">
-                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5l3 3v10H4z M9 1.5v3h3" /></svg>
-                  test-results/history/…_HbA1c.json · 9 results
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel" id="p-changed">
-            <div class="panel-copy">
-              <h3>See what changed</h3>
-              <p>
-                Every result against the years before it: what is new, what got better, what is creeping up while still
-                in range, and what was never checked again.
-              </p>
-            </div>
-            <div class="chat">
-              <p class="msg you">What changed in my latest blood tests?</p>
-              <div class="msg bot">
-                <dl class="facts">
-                  <dt>New</dt>
-                  <dd>LDL cholesterol, 138 mg/dL: above the range for the first time</dd>
-                  <dt>Better</dt>
-                  <dd>Ferritin, 45 ng/mL: back in range, low in 2024</dd>
-                  <dt>Creeping up</dt>
-                  <dd>Creatinine, 0.9 to 1.1 mg/dL over three years, still in range</dd>
-                  <dt>Not rechecked</dt>
-                  <dd>TSH, high in 2023 and not tested since</dd>
-                </dl>
-                <p>Worth asking at your next visit whether to test TSH again.</p>
-                <p class="src">
-                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5l3 3v10H4z M9 1.5v3h3" /></svg>
-                  test-results/history/ · 34 measurements
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel" id="p-visit">
-            <div class="panel-copy">
-              <h3>Prepare for a visit</h3>
-              <p>
-                Known problems, the latest results, recent visits and open referrals, turned into a short list to take
-                with you.
-              </p>
-            </div>
-            <div class="chat">
-              <p class="msg you">What should I raise at my next appointment?</p>
-              <div class="msg bot">
-                <ol class="checklist">
-                  <li>LDL has risen two tests running: ask whether to recheck.</li>
-                  <li>The dermatology referral from May was never used, and expires in November.</li>
-                  <li>Your blood pressure medicine was last renewed in March.</li>
-                </ol>
-                <p class="src">
-                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5l3 3v10H4z M9 1.5v3h3" /></svg>
-                  test-results/ · referrals/ · medications-and-prescriptions/
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel" id="p-find">
-            <div class="panel-copy">
-              <h3>Find anything</h3>
-              <p>A shot, a letter, a prescription from years ago: one question instead of an afternoon in the portal.</p>
-            </div>
-            <div class="chat">
-              <p class="msg you">When was my last tetanus shot?</p>
-              <div class="msg bot">
-                <p class="big">14 March 2017</p>
-                <p>Tetanus and diphtheria (Td), at your clinic. A booster is usually due every ten years, so 2027.</p>
-                <p class="src">
-                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5l3 3v10H4z M9 1.5v3h3" /></svg>
-                  vaccinations/list.json
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="more">
-          <p class="more-label">More to try</p>
-          <ul class="prompts">
-            <li>Translate my latest letter from the clinic into English.</li>
-            <li>Which referrals and approvals are still open?</li>
-            <li>Which medications have I bought this year, and how often?</li>
-            <li>Make a one-page summary to bring to a new doctor.</li>
-          </ul>
-        </div>
-      </section>
-
       <!-- How to open it: three steps, then where. -->
       <section id="start" class="band tinted">
         <h2>Three steps to your first answer</h2>
@@ -347,6 +139,16 @@
             </p>
           </div>
         </aside>
+      </section>
+
+      <!-- What to ask: the landing page shows it, one picture an answer. A full address, since inside the extension
+           this page has no site around it. -->
+      <section id="ask" class="band">
+        <h2>Ask what you'd ask a friend who's read everything</h2>
+        <p class="sub">
+          What stands out, what changed in your latest test, what to raise at your next visit.
+          <a href="https://maccabi.ronirachmani.com/#ask">See nine questions, each with its answer</a>.
+        </p>
       </section>
 
       <!-- What the README asks of the assistant. -->

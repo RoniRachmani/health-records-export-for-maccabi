@@ -146,7 +146,7 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   its accessible description. The font stacks ask for `Roboto` first and fall back to the system face — a local lookup
   only: never ship or fetch a font here. Tokens are at the top of `popup.css`; `public/pages.css` repeats
   the ones the shipped pages need, since `public/` is copied verbatim; `public/ai-assistant.css` adds that page's
-  picture-led layout (made-up records only, and no script: its tabs are radio buttons). There is no dark theme:
+  picture-led layout (made-up records only, and no script) and the radio-button tabs the landing page's Ask section uses. There is no dark theme:
   `popup.css` and `pages.css` `color-scheme: light`, which also keeps Chrome's auto-dark-mode off them, and every text colour
   must stay at WCAG AA. Chrome caps a popup at 600px tall: keep every non-disclosure state under it
   (`notice` and open `<details>` may scroll).

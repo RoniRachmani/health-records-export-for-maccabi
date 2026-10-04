@@ -1,8 +1,8 @@
 /* The landing page's own layout, on top of pages.css (tokens, type) and ai-assistant.css (tabs, chats, steps, flow).
-   It was built in review rounds, and each round's rules are kept in the order they were added: a later rule may
-   refine an earlier one, and the classes on <body> (r2 to r5) name the round a rule came from. There is no script:
-   the Ask tabs are radio buttons, and every animation is CSS that prefers-reduced-motion turns off. Every record
-   shown is made up. */
+   It was built in review rounds, and each round's rules are kept in the order they were added, under a comment
+   naming the round: a later rule may refine an earlier one, so add a new rule after the ones it changes. There is
+   no script: the Ask tabs are radio buttons, and every animation is CSS that prefers-reduced-motion turns off.
+   Every record shown is made up. */
 
 :root {
   --navy-1: #06306f;
@@ -11,15 +11,15 @@
   --pink: #f1c1cd;
   --glow: linear-gradient(135deg, #e6f0ff 0%, #f3f0fb 50%, #fde9ef 100%);
 }
-body.r2 {
+body {
   overflow-x: hidden;
 }
-.r2 h2 {
+h2 {
   font-size: clamp(26px, 3.2vw, 36px);
   line-height: 1.15;
   margin-bottom: 10px;
 }
-.r2 .sub {
+.sub {
   font-size: 18px;
   max-width: 38rem;
 }
@@ -40,20 +40,20 @@ body.r2 {
 }
 
 /* ---- hero ---- */
-.r2 .hero {
+.hero {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
   padding-block: 64px 72px;
 }
-.r2 .hero h1 {
+.hero h1 {
   font-size: clamp(34px, 4.8vw, 54px);
   line-height: 1.08;
   letter-spacing: -0.01em;
 }
-.r2 .hero h1 em {
+.hero h1 em {
   font-style: normal;
   color: var(--accent);
 }
-.r2 .lede {
+.lede {
   font-size: 19px;
   margin-bottom: 30px;
 }
@@ -187,7 +187,7 @@ body.r2 {
 /* ---- the last call: the film's navy ---- */
 
 @media (max-width: 860px) {
-  .r2 .hero,
+  .hero,
   .feature,
   .where {
     grid-template-columns: minmax(0, 1fr);
@@ -251,11 +251,11 @@ body.r2 {
 }
 
 /* ---- hero: what the friend hands you ---- */
-.r3 .hero {
+.hero {
   grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
   gap: 56px;
 }
-.r3 .hero h1 {
+.hero h1 {
   font-size: clamp(34px, 4.4vw, 50px);
 }
 .dash-stage {
@@ -487,7 +487,7 @@ body.r2 {
   color: var(--muted);
 }
 @media (max-width: 860px) {
-  .r3 .hero {
+  .hero {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -581,18 +581,18 @@ body.r2 {
 }
 
 /* The mark beside the product name: 40px, drawn inline. */
-.r3 .hero .eyebrow {
+.hero .eyebrow {
   gap: 12px;
   font-size: 20px;
   font-weight: 500;
   line-height: 1.2;
   color: var(--heading);
 }
-.r3 .hero .eyebrow .chip {
+.hero .eyebrow .chip {
   padding: 3px 11px;
   font-size: 14px;
 }
-.r3 .hero .eyebrow svg {
+.hero .eyebrow svg {
   flex: none;
   width: 40px;
   height: 40px;
@@ -742,7 +742,7 @@ body.r2 {
 
 /* ---- where to open it: each app as a small light desktop window, copied from its own home screen, floating on the
    page with no card around it; the control to use is ringed and the first message is typed into the box ---- */
-.r3 .app-card {
+.app-card {
   background: none;
   border: 0;
   padding: 0;
@@ -950,7 +950,7 @@ body.r2 {
 }
 
 /* The install row: the badge and the play button, side by side at the badge's height. */
-.r3 .hero .cta {
+.hero .cta {
   gap: 14px 26px;
 }
 
@@ -2370,32 +2370,32 @@ body.r2 {
 /* Eight tabs: two even rows of four on wide screens, the pills in each column as wide as each other, rather than six
    and a stray two. Narrower screens wrap them as before. */
 @media (min-width: 861px) {
-  .r3b .ask-band .tab-list {
+  .ask-band .tab-list {
     display: grid;
     grid-template-columns: repeat(4, max-content);
     gap: 8px;
   }
-  .r3b .ask-band .tab-list label {
+  .ask-band .tab-list label {
     text-align: center;
   }
 }
 
 /* The Ask answers stand alone: no title or description beside them, so each panel is just the chat, centred, at a
    width that keeps the pictures at their drawn size. */
-.r3b .ask-band .tabs {
+.ask-band .tabs {
   grid-template-rows: auto auto;
 }
-.r3b .ask-band .panel {
+.ask-band .panel {
   grid-row: 2;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: none;
 }
-.r3b .ask-band .panel .chat {
+.ask-band .panel .chat {
   width: 100%;
   max-width: 640px;
   justify-self: center;
 }
-.r3b .ask-band .tab-list {
+.ask-band .tab-list {
   justify-content: center;
 }
 
@@ -2474,7 +2474,7 @@ body.r2 {
 
 /* Round 4: Round 3B without the two plan tabs. Nine tabs: five over four on wide screens. */
 @media (min-width: 861px) {
-  .r4 .ask-band .tab-list {
+  .ask-band .tab-list {
     grid-template-columns: repeat(5, max-content);
   }
 }
@@ -2589,7 +2589,7 @@ body.r2 {
 }
 
 /* Loose ends: eight rows, a little closer. */
-.r5 .ends {
+.ends {
   gap: 7px;
 }
 
@@ -2845,7 +2845,7 @@ body.r2 {
 
 /* On a phone the hero's two buttons stack, so they sit on the page's centre line. */
 @media (max-width: 640px) {
-  .r3 .hero .cta {
+  .hero .cta {
     justify-content: center;
   }
 }

@@ -2,7 +2,8 @@
 # page (site/), and the pages the extension ships (public/: the AI assistant page, the Privacy Policy and the Terms of
 # Use), so they can be read before installing. public/ goes up as it ships, and site/ on top of it, plus what is made
 # here, with Roboto installed:
-#   og.png      the link preview's picture, by `store-assets -- og`;
+#   og.png      the AI assistant page's link preview, by `store-assets -- og`;
+#   og-site.png the landing page's, a photograph of its own hero, by `store-assets -- og-site`;
 #   social.png  the marquee at 1280x640 for the repository's social preview, which GitHub takes only as an upload in
 #               its settings;
 #   clips/      the landing page's two silent loops, cut from the promo film: the popup working through an export, and
@@ -46,7 +47,7 @@ jobs:
           # Ubuntu's AppArmor keeps Chrome's sandbox from starting without this.
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       - name: Render the link preview
-        run: npm run store-assets -- og social
+        run: npm run store-assets -- og og-site social
       - id: clips
         uses: actions/cache@v6
         with:
@@ -75,6 +76,7 @@ jobs:
         run: |
           cp -R public _site
           cp store/assets/og-1200x630.png _site/og.png
+          cp store/assets/og-site-1200x630.png _site/og-site.png
           cp store/assets/social-1280x640.png _site/social.png
           cp -R site/. _site/
           mkdir -p _site/images

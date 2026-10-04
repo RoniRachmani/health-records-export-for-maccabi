@@ -44,8 +44,13 @@ export async function openStage() {
   await build({ root, configFile: join(root, 'vite.store.config.ts'), logLevel: 'warn' });
 
   const server = createServer((req, res) => {
-    const file = resolve(outDir, '.' + decodeURIComponent(new URL(req.url, 'http://localhost').pathname));
-    if (!file.startsWith(outDir + sep) || !isFile(file)) {
+    const path = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+    // /site/ is the website as the Pages workflow lays it out: site/ over public/. Its images and clips are added
+    // there and are not served here.
+    const dirs = path.startsWith('/site/') ? [join(root, 'site'), join(root, 'public')] : [outDir];
+    const rel = path.startsWith('/site/') ? path.slice('/site'.length) : path;
+    const file = dirs.map((dir) => resolve(dir, '.' + rel)).find((f, i) => f.startsWith(dirs[i] + sep) && isFile(f));
+    if (!file) {
       res.writeHead(404).end();
       return;
     }
@@ -189,9 +194,11 @@ export async function openStage() {
      * Opens `path` at this size and waits until the page says it has finished rendering
      * (`<html data-ready="1">`, or `data-ready="error: …"` when it gave up). `scale` is the device
      * pixel ratio: the page lays out at width x height and is drawn, and photographed, `scale` times
-     * as large, which is how the video comes out in 4K from a 1920x1080 stage.
+     * as large, which is how the video comes out in 4K from a 1920x1080 stage. A page with no script of its own
+     * cannot say it is ready: give `prepare`, an expression run once the page has loaded, which arranges it for
+     * the picture, and the page counts as ready when that returns.
      */
-    async open(path, width, height, scale = 1) {
+    async open(path, width, height, scale = 1, prepare = '') {
       const { targetId } = await send('Target.createTarget', { url: 'about:blank' });
       const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true });
       await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: scale, mobile: false }, sessionId);
@@ -218,7 +225,9 @@ export async function openStage() {
       };
       for (let i = 0; ; i++) {
         // Until the navigation commits, the page can briefly have no document element at all.
-        const ready = await page.evaluate('document.documentElement?.dataset.ready || ""');
+        const ready = await page.evaluate(prepare
+          ? `location.href !== 'about:blank' && document.readyState === 'complete' ? (${prepare}, '1') : ''`
+          : 'document.documentElement?.dataset.ready || ""');
         if (ready === '1') break;
         if (ready) throw new Error(path + ': ' + ready);
         if (i > 150) throw new Error(path + ': timed out');

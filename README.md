@@ -24,13 +24,13 @@ of it.
 </p>
 
 <p align="center">
-  <a href="https://maccabi.ronirachmani.com/ai-assistant.html">
+  <a href="https://maccabi.ronirachmani.com/#ask">
     <img src="store/assets/screenshot-1-ask.png" alt="Your whole Maccabi history, and a genius friend who’s read all of it: an AI assistant opened on an export, saying what stands out in a made-up member’s records and naming the file behind the answer" width="720">
   </a>
 </p>
 
 <p align="center">
-  <a href="https://maccabi.ronirachmani.com/ai-assistant.html">What to ask your AI assistant, and where to open your export</a> · every record in the picture is made up
+  <a href="https://maccabi.ronirachmani.com/#ask">What to ask your AI assistant</a>, and <a href="https://maccabi.ronirachmani.com/ai-assistant.html">where to open your export</a> · every record in the picture is made up
 </p>
 
 - **Everything, in one place.** Your full medical file, ordered for the widest range Maccabi allows, plus every result,
@@ -226,8 +226,8 @@ in `files/` instead — those say so in their own `omitted` field.
 
 Open your export in an AI assistant, and it becomes a genius friend who's read your whole file. It reads the Hebrew,
 answers in plain English, and names the record behind every answer. **[See what to ask, with
-pictures](https://maccabi.ronirachmani.com/ai-assistant.html)**; the popup opens the
-same page.
+pictures](https://maccabi.ronirachmani.com/#ask)**, and
+[how to open it, step by step](https://maccabi.ronirachmani.com/ai-assistant.html), the page the popup opens.
 
 Unzip the export and open the whole folder in an assistant's desktop app. A chat takes a few dozen files, and an export
 has hundreds:
@@ -389,7 +389,7 @@ ships no fonts and downloads none.
 The tokens live at the top of `src/extension/popup/popup.css`, with `public/pages.css` repeating the ones the privacy,
 terms and AI assistant pages need (`public/` is copied verbatim, so it cannot import them). The AI assistant page adds
 `public/ai-assistant.css` for its wider, picture-led layout: its pictures are HTML and inline SVG with made-up records,
-and its tabs are radio buttons, so it runs no script. `.github/workflows/pages.yml` publishes `public/` on GitHub
+and it runs no script; the stylesheet also holds the tabs the landing page's Ask section uses, which are radio buttons. `.github/workflows/pages.yml` publishes `public/` on GitHub
 Pages whenever it changes on `main`, so the AI assistant page and the policies can be read before installing. The same
 workflow puts the landing page, `site/`, at the site's root: it is for the web only, so it is kept out of `public/`. `popup.css` and `pages.css` both pin `color-scheme: light` —
 there is no dark theme, and pinning it keeps Chrome's auto-dark-mode from repainting controls and scrollbars
