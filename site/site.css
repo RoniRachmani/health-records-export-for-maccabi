@@ -1,0 +1,2851 @@
+/* The landing page's own layout, on top of pages.css (tokens, type) and ai-assistant.css (tabs, chats, steps, flow).
+   It was built in review rounds, and each round's rules are kept in the order they were added: a later rule may
+   refine an earlier one, and the classes on <body> (r2 to r5) name the round a rule came from. There is no script:
+   the Ask tabs are radio buttons, and every animation is CSS that prefers-reduced-motion turns off. Every record
+   shown is made up. */
+
+:root {
+  --navy-1: #06306f;
+  --navy-2: #0b4296;
+  --navy-3: #2462dc;
+  --pink: #f1c1cd;
+  --glow: linear-gradient(135deg, #e6f0ff 0%, #f3f0fb 50%, #fde9ef 100%);
+}
+body.r2 {
+  overflow-x: hidden;
+}
+.r2 h2 {
+  font-size: clamp(26px, 3.2vw, 36px);
+  line-height: 1.15;
+  margin-bottom: 10px;
+}
+.r2 .sub {
+  font-size: 18px;
+  max-width: 38rem;
+}
+
+/* ---- a clip, cut to its window: the video keeps the film's navy around the app ---- */
+.clip {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--navy-2);
+  box-shadow: 0 24px 60px rgb(8 40 110 / 0.22);
+  max-width: 100%;
+}
+.clip video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ---- hero ---- */
+.r2 .hero {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  padding-block: 64px 72px;
+}
+.r2 .hero h1 {
+  font-size: clamp(34px, 4.8vw, 54px);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+}
+.r2 .hero h1 em {
+  font-style: normal;
+  color: var(--accent);
+}
+.r2 .lede {
+  font-size: 19px;
+  margin-bottom: 30px;
+}
+.cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+}
+.badge-link {
+  display: inline-block;
+  line-height: 0;
+  border-radius: 10px;
+}
+.badge-link img {
+  width: 206px;
+  height: auto;
+}
+
+/* ---- what people ask: the AI page's tabs on a soft panel ---- */
+.ask-band .tabs {
+  padding: 28px;
+  border-radius: 28px;
+  background: var(--glow);
+}
+.ask-band .tab-list {
+  margin-bottom: 22px;
+}
+.ask-band .panel {
+  background: rgb(255 255 255 / 0.72);
+}
+
+/* ---- a section with a clip on one side ---- */
+.feature {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 56px;
+  align-items: center;
+}
+.feature.flip > .clip-col {
+  order: -1;
+}
+.clip-col {
+  display: grid;
+  justify-items: center;
+}
+.clip-col .clip.popup-cut {
+  width: min(360px, 100%);
+}
+.clip-col .clip.folder-cut {
+  width: min(520px, 100%);
+}
+.clip-col figcaption {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.numbered {
+  list-style: none;
+  counter-reset: n;
+  display: grid;
+  gap: 18px;
+  margin: 26px 0;
+  padding: 0;
+}
+.numbered li {
+  counter-increment: n;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 14px;
+  margin: 0;
+}
+.numbered li::before {
+  content: counter(n);
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--tint);
+  color: var(--heading);
+  font-weight: 500;
+}
+.numbered strong {
+  display: block;
+  color: var(--heading);
+  font-weight: 500;
+}
+/* An example export's size, as the popup reports it when done. */
+.missing {
+  font-size: 15px;
+  color: var(--muted);
+}
+
+/* ---- where to open it ---- */
+.where {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-top: 28px;
+}
+.app-card {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  padding: 26px;
+  border-radius: 24px;
+  background: var(--bg);
+  border: 1px solid var(--line-soft);
+}
+.app-card h3 {
+  font-size: 22px;
+  margin: 0;
+}
+.app-card p {
+  margin: 0;
+}
+.app-card .plan {
+  font-size: 14px;
+  color: var(--muted);
+}
+/* A small window drawn with the app's own path to a folder. */
+.mini {
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  overflow: hidden;
+  font-size: 13px;
+}
+
+/* ---- the last call: the film's navy ---- */
+
+@media (max-width: 860px) {
+  .r2 .hero,
+  .feature,
+  .where {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .feature.flip > .clip-col {
+    order: 0;
+  }
+}
+@media (max-width: 640px) {
+  .ask-band .tabs {
+    padding: 16px;
+    border-radius: 20px;
+  }
+}
+/* The one control to use, ringed in the page's magenta. */
+.then {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.then svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  fill: #3b82f6;
+}
+.then b {
+  color: var(--heading);
+  font-weight: 500;
+}
+
+/* The two cards share rows, so their pictures, folder lines and words line up. */
+.where {
+  grid-template-rows: repeat(5, auto);
+  row-gap: 0;
+}
+.app-card {
+  grid-row: span 5;
+  grid-template-rows: subgrid;
+  row-gap: 16px;
+}
+.then b {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 860px) {
+  .where {
+    row-gap: 24px;
+  }
+}
+
+/* Round 3: docs/positioning.md made into a page. On top of r2.css: the dashboard hero, the Build gallery, and a
+   lighter privacy strip. Every record drawn here belongs to one made-up member. */
+
+:root {
+  --good: #0e7c5a;
+  --watch: #b0650b;
+  --watch-bg: #fdf1e1;
+  --good-bg: #e7f6f0;
+}
+
+/* ---- hero: what the friend hands you ---- */
+.r3 .hero {
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 56px;
+}
+.r3 .hero h1 {
+  font-size: clamp(34px, 4.4vw, 50px);
+}
+.dash-stage {
+  position: relative;
+  margin: 0;
+  padding: 30px 0 34px 40px;
+}
+/* The request that made it, as the member typed it. */
+.asked {
+  justify-self: end;
+  margin: 0;
+  padding: 8px 15px;
+  border-radius: 16px 16px 4px 16px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 14px;
+  max-width: 90%;
+}
+.dash-stage > .asked {
+  position: absolute;
+  top: 0;
+  right: 18px;
+  z-index: 2;
+  box-shadow: var(--shadow-lift);
+}
+/* A Hebrew lab line behind the dashboard: the source it read. */
+.he-slip {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  z-index: 2;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: var(--shadow-lift);
+  transform: rotate(-3deg);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.he-slip p {
+  margin: 0;
+}
+.he-slip b {
+  color: var(--heading);
+  font-weight: 500;
+}
+
+/* The dashboard itself: a page the assistant made, not either app's own window. */
+.dash {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+  border-radius: 22px;
+  background: #ffffff;
+  border: 1px solid var(--line-soft);
+  box-shadow: 0 24px 60px rgb(8 40 110 / 0.16);
+  font-size: 14px;
+}
+.dash-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+.dash-head h3 {
+  font-size: 19px;
+  margin: 0;
+}
+.dash-head span {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.label {
+  margin: 0 0 6px;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.stands {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+.stands li {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  margin: 0;
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+.stands li::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--watch);
+}
+.stands li.ok::before {
+  background: var(--good);
+}
+.chip-src {
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.dash-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 14px;
+}
+.tile {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+}
+.spark {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.spark .band {
+  fill: var(--good-bg);
+}
+.spark .line {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.spark circle {
+  fill: var(--primary);
+}
+.spark .tick {
+  font-size: 10px;
+  fill: var(--muted);
+}
+.big-num {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.big-num b {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--heading);
+}
+.coming {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+.coming li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.coming li:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.coming em {
+  font-style: normal;
+  color: var(--watch);
+  white-space: nowrap;
+}
+
+/* ---- Build: a gallery of things the friend made ---- */
+.made {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding: 16px;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: var(--shadow);
+  font-size: 13px;
+}
+.made h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--heading);
+}
+.made .note {
+  margin: 0;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: var(--good-bg);
+  color: var(--good);
+  font-size: 12.5px;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.legend i {
+  display: inline-block;
+  width: 14px;
+  height: 3px;
+  margin-right: 6px;
+  vertical-align: middle;
+  border-radius: 2px;
+  background: var(--primary);
+}
+
+/* ---- privacy, in one line and one picture ---- */
+.private-strip p {
+  margin: 0;
+  color: var(--muted);
+}
+@media (max-width: 860px) {
+  .r3 .hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .dash-stage {
+    padding: 44px 0 64px 0;
+  }
+  .dash-stage > .asked {
+    right: 8px;
+  }
+  .he-slip {
+    left: 8px;
+  }
+  .dash {
+    padding: 16px;
+  }
+  .dash-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .stands li {
+    grid-template-columns: 10px minmax(0, 1fr);
+  }
+  .stands .chip-src {
+    grid-column: 2;
+  }
+}
+
+/* ---- the hero's loop (timeline in r3-anim.css): what's on the stage while the assistant reads ---- */
+.scene {
+  position: absolute;
+  inset: 30px 0 34px 40px;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.reading {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  margin: 0;
+  padding: 14px 20px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid var(--line-soft);
+  box-shadow: var(--shadow-lift);
+  font-size: 14px;
+  color: var(--heading);
+}
+.reading i {
+  display: block;
+  width: 180px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+.reading b {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--primary);
+  transform-origin: left;
+}
+.he-slip.s1 {
+  top: 64px;
+  bottom: auto;
+  left: 20px;
+  transform: rotate(-6deg);
+}
+.he-slip.s2 {
+  top: auto;
+  bottom: 120px;
+  left: auto;
+  right: 10px;
+  transform: rotate(4deg);
+}
+@media (max-width: 640px) {
+  .scene {
+    inset: 44px 0 64px 0;
+  }
+  .he-slip.s1 {
+    left: 8px;
+  }
+}
+/* On a phone the tilted tetanus record sits further in, so its corners stay on screen mid-loop. (No clip on the
+   hero: that would also cut the dashboard's shadow.) */
+@media (max-width: 640px) {
+  .he-slip.s2 {
+    right: 18px;
+  }
+}
+
+/* The mark beside the product name: 40px, drawn inline. */
+.r3 .hero .eyebrow {
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--heading);
+}
+.r3 .hero .eyebrow .chip {
+  padding: 3px 11px;
+  font-size: 14px;
+}
+.r3 .hero .eyebrow svg {
+  flex: none;
+  width: 40px;
+  height: 40px;
+}
+
+/* The Ask panels share one grid cell, so the section is always as tall as its tallest panel and keeps its size
+   whichever tab is chosen. The others are there but invisible. */
+.ask-band .tabs {
+  display: grid;
+}
+.ask-band .tab-list {
+  grid-row: 1;
+}
+.ask-band .panel {
+  display: grid;
+  grid-row: 2;
+  grid-column: 1;
+  visibility: hidden;
+}
+#uc-summary:checked ~ #p-summary,
+#uc-labs:checked ~ #p-labs,
+#uc-trend:checked ~ #p-trend,
+#uc-changed:checked ~ #p-changed,
+#uc-visit:checked ~ #p-visit,
+#uc-find:checked ~ #p-find {
+  visibility: visible;
+}
+/* Every tab's chat box fills the panel, so the box keeps one position and size and only its contents change. */
+.ask-band .panel {
+  align-items: stretch;
+}
+.ask-band .panel .chat {
+  justify-content: flex-start;
+}
+/* Narrow screens stack the copy over the chat. Each panel then shares its two rows with the others (subgrid), so the
+   copy row and the chat row each take their tallest member and the box sits still across tabs. */
+@media (max-width: 860px) {
+  .ask-band .tabs {
+    grid-template-rows: auto auto auto;
+  }
+  .ask-band .panel {
+    grid-row: 2 / span 2;
+    grid-template-rows: subgrid;
+    row-gap: 28px;
+  }
+}
+/* One smooth stretch of blue behind both sections, eased so it has no bright ridge at the seam. */
+.film-run {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: linear-gradient(180deg, #0e2e5e 0%, #143c80 28%, #1a4b9e 50%, #143c80 72%, #0e2e5e 100%);
+}
+/* The abstract layer: soft glows (brighter blue behind each window, a faint pink echo of the mark) and the film's own
+   fine dot grid, all behind the content. The glows sit away from the text, and are faint where they reach it. */
+.film-run::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 34% 30% at 80% 22%, rgb(64 132 255 / 0.42), transparent 70%),
+    radial-gradient(ellipse 30% 26% at 26% 76%, rgb(64 132 255 / 0.36), transparent 70%),
+    radial-gradient(ellipse 26% 22% at 8% 42%, rgb(241 193 205 / 0.14), transparent 70%),
+    radial-gradient(ellipse 22% 20% at 96% 62%, rgb(241 193 205 / 0.12), transparent 70%),
+    radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.08) 1px, transparent 1.6px) 0 0 / 22px 22px;
+}
+.film-band {
+  max-width: none;
+  padding-inline: max(24px, calc((100% - var(--wide)) / 2 + 24px));
+  background: none;
+  color: #e3ebfc;
+}
+.film-band h2,
+.film-band .numbered strong {
+  color: #ffffff;
+}
+.film-band .sub,
+.film-band p,
+.film-band .missing,
+.film-band figcaption {
+  color: #e3ebfc;
+}
+.film-band a {
+  color: #ffffff;
+}
+.film-band a:focus-visible {
+  outline-color: #ffffff;
+}
+.film-band .numbered li::before {
+  background: rgb(255 255 255 / 0.16);
+  color: #ffffff;
+}
+/* On the blue, each clip shows its app window alone: none of the film's own (lighter) ground, so no frame, glow or
+   pale rectangle. Both windows keep one size and place for their whole clip (measured frame by frame); the run clip
+   stops before "Saved", whose popup is shorter. Cuts are 1px inside the window; the corners are the window's own. */
+.film-band .clip {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 24px 56px rgb(2 14 40 / 0.4);
+}
+/* The two clips are cut to their windows when the site is built: the popup at 378x595, the folder at 615x540. */
+.film-band .clip.popup-cut {
+  aspect-ratio: 378 / 595;
+}
+
+/* The film, one click from the hero: a play button beside the store badge (a link to YouTube, not an embed, so the
+   page loads nothing from it). */
+.watch {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--heading);
+  font-weight: 500;
+  text-decoration: none;
+}
+.watch .play {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 6px 16px rgb(41 107 237 / 0.3);
+}
+.watch .play svg {
+  width: 15px;
+  height: 15px;
+  margin-left: 3px;
+  fill: var(--on-primary);
+}
+.watch small {
+  display: block;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.watch:hover .play {
+  background: var(--primary-hover);
+}
+.watch:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+  border-radius: 999px;
+}
+
+/* ---- where to open it: each app as a small light desktop window, copied from its own home screen, floating on the
+   page with no card around it; the control to use is ringed and the first message is typed into the box ---- */
+.r3 .app-card {
+  background: none;
+  border: 0;
+  padding: 0;
+}
+.appwin {
+  overflow: hidden;
+  border-radius: 12px;
+  background: #fafafa;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.09), 0 20px 44px rgb(8 40 110 / 0.16);
+  font-size: 12px;
+  line-height: 1.4;
+  color: #6b6b6b;
+}
+.appwin svg {
+  width: 13px;
+  height: 13px;
+  flex: none;
+  fill: none;
+  stroke: #707070;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.appwin .dim svg {
+  stroke: #bdbdbd;
+}
+.appwin .grow {
+  flex: 1;
+}
+.appwin b {
+  font-weight: 500;
+  color: #1f1f1f;
+}
+.appwin .bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+}
+.appwin .lights {
+  display: flex;
+  gap: 6px;
+  margin-right: 4px;
+}
+.appwin .lights i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fe5f57;
+}
+.appwin .lights i:nth-child(2) {
+  background: #febc2e;
+}
+.appwin .lights i:nth-child(3) {
+  background: #28c840;
+}
+.appwin .composer {
+  display: grid;
+  gap: 10px;
+  padding: 11px 13px 9px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #e3e3e3;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.04);
+}
+.appwin .typed {
+  margin: 0;
+  color: #1f1f1f;
+  font-size: 12.5px;
+}
+.appwin .row,
+.appwin .under,
+.appwin .tray {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.appwin .plus {
+  font-size: 17px;
+  line-height: 1;
+  color: #1f1f1f;
+}
+/* The one control to use, ringed in the page's magenta. */
+.appwin .pick {
+  padding: 3px 9px;
+  margin: -3px -2px;
+  border-radius: 999px;
+  color: #1f1f1f;
+  box-shadow: 0 0 0 2px var(--accent);
+}
+/* Claude: one quiet canvas, the greeting over the box. */
+.appwin.claude {
+  background: #f9f9f8;
+}
+.appwin.claude .stagec {
+  display: grid;
+  gap: 10px;
+  padding: 26px 22px 30px;
+}
+.appwin.claude .greet {
+  justify-self: center;
+  margin: 0 0 4px;
+  font: 400 22px/1.2 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  color: #1f1f1f;
+}
+.appwin.claude .asterisk {
+  color: #d97757;
+}
+.appwin.claude .under {
+  padding: 0 4px;
+  font-size: 11.5px;
+}
+/* ChatGPT: a rail on the left, the white canvas on the right. */
+.appwin.gpt {
+  background: #f3f3f3;
+}
+.appwin.gpt .body {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+}
+.appwin.gpt .rail {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 10px;
+  padding: 4px 0 10px;
+}
+.appwin.gpt .rail i {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.3px solid #8a8a8a;
+}
+.appwin.gpt .rail i.on {
+  border-radius: 4px;
+  background: #1f1f1f;
+  border-color: #1f1f1f;
+}
+.appwin.gpt .rail .more {
+  color: #8a8a8a;
+  letter-spacing: 1px;
+}
+.appwin.gpt .rail .me {
+  margin-top: 26px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #8e9a9a;
+  color: #ffffff;
+  font-size: 8px;
+  display: grid;
+  place-items: center;
+}
+.appwin.gpt .main {
+  display: grid;
+  gap: 10px;
+  padding: 10px 18px 22px;
+  border-radius: 10px 0 0 0;
+  background: #ffffff;
+}
+.appwin.gpt .toggle {
+  justify-self: center;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #f0f0f0;
+  color: #1f1f1f;
+}
+.appwin.gpt .toggle span {
+  padding: 3px 14px;
+  border-radius: 999px;
+}
+.appwin.gpt .toggle .on {
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+}
+.appwin.gpt .ask-h {
+  justify-self: center;
+  margin: 14px 0 2px;
+  font-size: 18px;
+  color: #1f1f1f;
+}
+.appwin.gpt .go {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #3b82f6;
+}
+.appwin.gpt .tray {
+  margin: -14px 8px 0;
+  padding: 14px 12px 7px;
+  border-radius: 0 0 12px 12px;
+  background: #f4f4f4;
+  color: #1f1f1f;
+}
+@media (max-width: 640px) {
+  .appwin .muted-s {
+    display: none;
+  }
+  .appwin .row,
+  .appwin .under,
+  .appwin .tray {
+    gap: 8px;
+  }
+}
+
+/* The install row: the badge and the play button, side by side at the badge's height. */
+.r3 .hero .cta {
+  gap: 14px 26px;
+}
+
+/* ---- the run clip in a drawn Chrome window: toolbar with the address and the extension's icon, a white page with
+   placeholder lines, and the popup hanging from the icon, as the store screenshots show it ---- */
+.clip-col .browserwin {
+  width: 100%;
+}
+@media (min-width: 861px) {
+  .feature:has(.browserwin) {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  }
+}
+.browserwin {
+  overflow: hidden;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.08), 0 24px 56px rgb(2 14 40 / 0.4);
+}
+.bw-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  background: #f1f3f6;
+  border-bottom: 1px solid #e3e7ee;
+}
+.bw-bar .lights {
+  display: flex;
+  gap: 6px;
+}
+.bw-bar .lights i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fe5f57;
+}
+.bw-bar .lights i:nth-child(2) {
+  background: #febc2e;
+}
+.bw-bar .lights i:nth-child(3) {
+  background: #28c840;
+}
+.bw-address {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #4a5568;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.bw-address svg {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  fill: none;
+  stroke: #8a94a6;
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+}
+.bw-ext {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e2e7ef;
+}
+.bw-ext img {
+  border-radius: 4px;
+}
+.bw-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) min(330px, 66%);
+  gap: 16px;
+  align-items: start;
+  padding: 0 10px 14px 16px;
+}
+.bw-skeleton {
+  display: grid;
+  gap: 10px;
+  padding-top: 22px;
+}
+.bw-skeleton i {
+  height: 10px;
+  border-radius: 6px;
+  background: #e9edf3;
+}
+.bw-skeleton .w40 {
+  width: 40%;
+  height: 14px;
+}
+.bw-skeleton .w70 {
+  width: 70%;
+}
+.bw-skeleton .w55 {
+  width: 55%;
+}
+/* The popup hangs from the toolbar, under the icon. */
+.film-band .browserwin .clip.popup-cut {
+  width: 100%;
+  margin-top: 2px;
+  border-radius: 10px;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.06), 0 10px 28px rgb(8 40 110 / 0.18);
+}
+@media (max-width: 640px) {
+  .bw-page {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 0 10px 12px;
+  }
+  .bw-skeleton {
+    display: none;
+  }
+}
+/* The window takes the whole column (the figure otherwise centres its contents at their own width). */
+.clip-col:has(.browserwin) {
+  justify-items: stretch;
+  margin: 0;
+  text-align: center;
+}
+
+/* ---- open source: the proof behind the privacy line, a card under the flow ---- */
+.oss {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 18px 22px;
+  align-items: center;
+  margin-top: 26px;
+  padding: 22px 24px;
+  border-radius: 20px;
+  background: var(--bg);
+  border: 1px solid var(--line-soft);
+}
+.oss-mark {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: #1f2328;
+}
+.oss-mark svg {
+  width: 30px;
+  height: 30px;
+  fill: #ffffff;
+}
+.oss-text h3 {
+  margin: 0 0 4px;
+  font-size: 19px;
+}
+.private-strip .oss-text p {
+  margin: 0;
+  color: var(--fg);
+}
+.oss-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 20px;
+  border-radius: 999px;
+  background: #1f2328;
+  color: #ffffff;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.oss-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: #ffffff;
+}
+.oss-btn:hover {
+  background: #32383f;
+  color: #ffffff;
+}
+.oss-btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+@media (max-width: 760px) {
+  .oss {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .oss-btn {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+/* ---- privacy: the path a record takes, each hop labelled with who moves it ---- */
+.path {
+  list-style: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(120px, 0.8fr) minmax(0, 1fr) minmax(120px, 0.8fr) minmax(0, 1fr);
+  align-items: center;
+  margin: 24px 0 16px;
+  padding: 0;
+}
+.path li {
+  margin: 0;
+}
+.path .stop {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 18px 12px;
+  border-radius: 18px;
+  background: var(--bg);
+  border: 1px solid var(--line-soft);
+  text-align: center;
+}
+.path .stop.home {
+  border: 2px solid var(--primary);
+  box-shadow: 0 10px 24px rgb(41 107 237 / 0.14);
+}
+.path .stop svg {
+  width: 26px;
+  height: 26px;
+  margin-bottom: 4px;
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+.path .where-k {
+  color: var(--heading);
+  font-weight: 500;
+}
+.path .what {
+  font-size: 13px;
+  color: var(--muted);
+}
+.path .hop {
+  display: grid;
+  gap: 6px;
+  padding: 0 10px;
+  text-align: center;
+}
+.path .hop-label {
+  font-size: 13px;
+  color: var(--heading);
+}
+.path .line {
+  position: relative;
+  height: 2px;
+  background: var(--heading);
+}
+.path .line::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: -4px;
+  border: 5px solid transparent;
+  border-left: 7px solid var(--heading);
+  border-right: 0;
+}
+.path .maybe .hop-label {
+  color: var(--muted);
+}
+.path .maybe .line {
+  background: repeating-linear-gradient(90deg, var(--muted) 0 5px, transparent 5px 9px);
+}
+.path .maybe .line::after {
+  border-left-color: var(--muted);
+}
+@media (max-width: 760px) {
+  .path {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+  .path .hop {
+    grid-template-columns: 2px auto;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+    text-align: left;
+  }
+  .path .hop-label {
+    order: 2;
+  }
+  .path .line {
+    order: 1;
+    width: 2px;
+    height: 34px;
+  }
+  .path .line::after {
+    right: -4px;
+    top: auto;
+    bottom: -1px;
+    border: 5px solid transparent;
+    border-top: 7px solid var(--heading);
+    border-bottom: 0;
+  }
+  .path .maybe .line {
+    background: repeating-linear-gradient(180deg, var(--muted) 0 5px, transparent 5px 9px);
+  }
+  .path .maybe .line::after {
+    border-top-color: var(--muted);
+    border-left-color: transparent;
+  }
+}
+
+/* ---- the ZIP clip in a drawn Finder window, in the current macOS look: the sidebar is a rounded grey panel inset
+   from the window's edge, running its full height with the traffic lights at its top; the toolbar sits over the
+   file list only, its controls grouped in white capsules. The sidebar stays abstract (placeholder rows), and the
+   clip's file list (cut below its own title bar) is the main pane. ---- */
+.clip-col:has(.finderwin) {
+  justify-items: stretch;
+  margin: 0;
+}
+.finderwin {
+  --side: 132px;
+  --bar: 50px;
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: var(--side) minmax(0, 1fr);
+  grid-template-rows: var(--bar) auto;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.08), 0 24px 56px rgb(2 14 40 / 0.4);
+  font-size: 12px;
+  color: #3c3c43;
+}
+.finderwin svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  fill: none;
+  stroke: #4a4a4f;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.finderwin .dim,
+.appwin .dim {
+  display: inline-flex;
+  align-items: center;
+}
+.finderwin .dim svg {
+  stroke: #c4c4c6;
+}
+.finderwin .grow {
+  flex: 1;
+}
+.finderwin .lights {
+  display: flex;
+  gap: 7px;
+}
+.finderwin .lights i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #fe5f57;
+}
+.finderwin .lights i:nth-child(2) {
+  background: #febc2e;
+}
+.finderwin .lights i:nth-child(3) {
+  background: #28c840;
+}
+
+/* The toolbar: back and forward in one capsule, the folder's name, then the view buttons and the search field. Every
+   control is 28px tall and shares one centre line. */
+.fw-bar {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 0 12px;
+}
+.fw-bar > .lights {
+  display: none;
+}
+.fw-bar .cap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 9px;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.07), 0 1px 3px rgb(0 0 0 / 0.08);
+  flex: none;
+}
+.fw-bar .cap .sep {
+  width: 1px;
+  height: 14px;
+  background: #e2e2e5;
+}
+.fw-bar .views {
+  gap: 4px;
+  padding: 0 3px;
+}
+.fw-bar .views > svg,
+.fw-bar .views .sel {
+  box-sizing: content-box;
+  padding: 4px 6px;
+}
+.fw-bar .views .sel {
+  display: inline-flex;
+  border-radius: 11px;
+  background: #ececef;
+}
+.fw-bar .views .sel svg {
+  padding: 0;
+}
+.fw-bar .search {
+  gap: 6px;
+  width: 92px;
+  color: #8e8e93;
+}
+.fw-bar .search svg {
+  stroke: #8e8e93;
+}
+.fw-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+/* The sidebar, on the file list's rhythm. In the clip the rows are 35.29px apart (centres 128.5 to 622.5 across 15
+   rows) and the first centre is 22.5px into the cut, which is 615px wide; on the page the list is the window's width
+   less the sidebar. The first track holds the traffic lights on the toolbar's centre line; after it each row takes
+   one list row's pitch, its bar centred in it, so every bar sits level with a file row. */
+.fw-side {
+  --list: calc(100cqw - var(--side));
+  --pitch: calc(var(--list) * 35.29 / 615);
+  grid-column: 1;
+  grid-row: 1 / 3;
+  display: grid;
+  grid-template-rows: calc(var(--bar) - 8px + var(--list) * (22.5 - 17.645) / 615);
+  grid-auto-rows: var(--pitch);
+  align-items: center;
+  align-content: start;
+  margin: 8px 0 8px 8px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: #f3f3f5;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.04);
+}
+.fw-side > .lights {
+  align-self: start;
+  /* centre on the toolbar's line: bar/2 from the window's top, less the panel's 8px inset and half a light */
+  margin-top: calc(var(--bar) / 2 - 8px - 5.5px);
+}
+.fw-side i {
+  display: block;
+  height: 10px;
+  border-radius: 5px;
+  background: #e0e1e6;
+}
+/* An item row: a small blue icon, then its name as a bar. */
+.fw-side i.row {
+  position: relative;
+  margin-left: 20px;
+}
+.fw-side i.row::before {
+  content: "";
+  position: absolute;
+  left: -20px;
+  top: -1px;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: #a9c8fb;
+}
+.fw-side i.w80 {
+  width: calc(80% - 20px);
+}
+.fw-side i.w70 {
+  width: calc(70% - 20px);
+}
+.fw-side i.w60 {
+  width: calc(60% - 20px);
+}
+/* The folder the export is in: the row selected, a grey pill as Finder draws it. */
+.fw-side i.on {
+  box-shadow: 0 0 0 calc((var(--pitch) - 10px) / 2 - 2px) #e2e2e6, -26px 0 0 calc((var(--pitch) - 10px) / 2 - 2px) #e2e2e6;
+}
+.fw-side i.on {
+  background: #cdd0d8;
+}
+.fw-side i.on::before {
+  background: #3b82f6;
+}
+/* A section heading: a short, paler bar. */
+.fw-side i.h {
+  width: 42%;
+  height: 8px;
+  background: #e7e8ec;
+  align-self: end;
+  margin-bottom: 4px;
+}
+/* Tags: a coloured dot and a bar, as at the foot of Finder's sidebar. */
+.fw-side i.tag {
+  position: relative;
+  margin-left: 20px;
+  width: calc(55% - 20px);
+}
+.fw-side i.tag::before {
+  content: "";
+  position: absolute;
+  left: -19px;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff3b30;
+}
+.fw-side i.t2::before {
+  background: #ff9500;
+}
+
+.film-band .finderwin .clip.folder-cut {
+  grid-column: 2;
+  grid-row: 2;
+  aspect-ratio: 615 / 540;
+  width: 100%;
+  border-radius: 0;
+  box-shadow: none;
+  background: #ffffff;
+}
+/* From about 5.5s the film opens test-results and the list runs past the window's foot. The bottom margin (the cut's
+   last 15 of 540px, below the opening list's last row, whose ink ends at 630) fades to white, so a row that reaches
+   the edge fades out as in a scrolling list, and the opening list is untouched. */
+.film-band .finderwin .clip.folder-cut {
+  position: relative;
+}
+.film-band .finderwin .clip.folder-cut::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 -1px; /* a pixel past the foot, so rounding never leaves a row of the film uncovered */
+  height: calc(100% * 15 / 540 + 1px);
+  background: linear-gradient(rgb(255 255 255 / 0), rgb(255 255 255 / 0.85) 60%, #ffffff);
+  pointer-events: none;
+}
+/* Edges, as you marked them: the film's grey title bar sits right above the cut (row 104 is its separator), and the
+   video, scaled and composited on its own layer, let a hairline of it show along the list's top, and a hairline of
+   the film's navy along the window's foot. clip-path cuts the video exactly at the list's box, and a white strip one
+   film pixel tall covers any grey that scaling smears into the top row. */
+.film-band .finderwin .clip.folder-cut {
+  clip-path: inset(0);
+}
+.film-band .finderwin .clip.folder-cut::before {
+  content: "";
+  position: absolute;
+  inset: -1px 0 auto;
+  height: calc(100% * 2 / 540 + 1px);
+  background: #ffffff;
+  z-index: 1;
+  pointer-events: none;
+}
+/* The sidebar takes its height from the window rather than giving it one: its rows ran 4px taller than the toolbar
+   plus the list, leaving a white strip under the list. Now the window ends where the list does. */
+.fw-side {
+  contain: size;
+  overflow: hidden;
+}
+/* A window too narrow for the folder's whole name drops the view buttons; a phone also drops the search field. */
+@container (max-width: 700px) {
+  .fw-bar .views {
+    display: none;
+  }
+}
+@media (max-width: 640px) {
+  .finderwin {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .fw-side {
+    display: none;
+  }
+  .fw-bar,
+  .film-band .finderwin .clip.folder-cut {
+    grid-column: 1;
+  }
+  .fw-bar > .lights {
+    display: flex;
+    margin-right: 6px;
+  }
+  .fw-bar .search,
+  .fw-bar .nav {
+    display: none;
+  }
+}
+/* Like the browser window, the Finder window gets the wider column (it sits first here: the section is flipped). */
+@media (min-width: 861px) {
+  .feature.flip:has(.finderwin) {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  }
+}
+
+/* ---- Ask answers as pictures: each tab answers with its own kind of visual ---- */
+.tiles3,
+.because {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.because {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.tile3 {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+}
+.tile3 svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.tile3 .band {
+  fill: var(--good-bg);
+}
+.tile3 .ln {
+  fill: none;
+  stroke: var(--watch);
+  stroke-width: 2.4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.tile3 .end {
+  fill: var(--watch);
+}
+.tile3 .lo {
+  fill: var(--watch);
+  opacity: 0.8;
+}
+.tile3 .ok {
+  fill: var(--good);
+}
+.tile3 .thr {
+  stroke: var(--good);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 3;
+}
+.tile3 .zero {
+  fill: var(--good);
+}
+.tile3.good .lo {
+  fill: #9aa6bd;
+  opacity: 1;
+}
+.t-k {
+  margin: 0;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.t-v {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.35;
+}
+.t-v b {
+  font-weight: 500;
+  color: var(--heading);
+}
+.tile3.watch .t-v b {
+  color: var(--watch);
+}
+.tile3.good .t-v b {
+  color: var(--good);
+}
+.act {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--good-bg);
+}
+.act-ico {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  padding: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+  fill: none;
+  stroke: var(--good);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.act-ico circle {
+  fill: var(--good);
+  stroke: none;
+}
+.act-k {
+  margin: 0;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--good);
+}
+.act-v {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--heading);
+}
+/* Explain a result: a tag for what changed, on the range bars. */
+.tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  vertical-align: 1px;
+}
+.tag.new {
+  background: var(--watch-bg);
+  color: var(--watch);
+}
+.tag.better {
+  background: var(--good-bg);
+  color: var(--good);
+}
+.tag.same {
+  background: var(--chip);
+  color: var(--muted);
+}
+/* Before an appointment: the questions beside the page it made. */
+.prep {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 118px;
+  gap: 14px;
+  align-items: start;
+}
+.qs {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+}
+.qs li {
+  margin: 0;
+}
+.qs li::marker {
+  color: var(--accent);
+  font-weight: 500;
+}
+.page-mini {
+  display: grid;
+  gap: 6px;
+  padding: 12px 11px 16px;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  box-shadow: 0 6px 16px rgb(8 40 110 / 0.12);
+  transform: rotate(2deg);
+}
+.pm-h {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--heading);
+}
+.pm-s {
+  margin: 0 0 4px;
+  font-size: 9.5px;
+  color: var(--muted);
+}
+.page-mini i {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--line);
+}
+.page-mini .w80 {
+  width: 80%;
+}
+.page-mini .w70 {
+  width: 70%;
+}
+.page-mini .w60 {
+  width: 60%;
+}
+/* From years ago: a life timeline. */
+.life {
+  list-style: none;
+  position: relative;
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0 0 0 22px;
+}
+.life::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: var(--line-soft);
+}
+@media (max-width: 640px) {
+  .tiles3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .prep {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .page-mini {
+    width: 140px;
+  }
+}
+/* Explain a result: every row on the same three columns, so the range bars start and end level. */
+.life::before {
+  background: #b9cbe6;
+}
+
+/* Generated by anim.mjs: the hero's loop. Edit the timeline there, not here. */
+.anim .spark circle { transform-box: fill-box; transform-origin: center; }
+@keyframes k0 {
+  0%, 26% { opacity: 1; transform: none; }
+  31%, 34% { opacity: 0; transform: translateY(8px) scale(0.96); }
+  37%, 100% { opacity: 1; transform: none; }
+}
+.anim > .asked { animation: k0 16s linear infinite; }
+@keyframes k1 {
+  0%, 37% { opacity: 0; transform: translateY(6px); }
+  40%, 53% { opacity: 1; transform: none; }
+  56%, 100% { opacity: 0; transform: none; }
+}
+.anim .scene { opacity: 0; animation: k1 16s linear infinite; }
+@keyframes k2 {
+  0%, 38% { opacity: 0; transform: translate(-28px, 10px) rotate(-10deg); }
+  41%, 53% { opacity: 1; transform: rotate(-6deg); }
+  56%, 100% { opacity: 0; transform: rotate(-6deg); }
+}
+.anim .he-slip.s1 { opacity: 0; animation: k2 16s linear infinite; }
+@keyframes k3 {
+  0%, 41% { opacity: 0; transform: translate(28px, 10px) rotate(10deg); }
+  44%, 53% { opacity: 1; transform: rotate(4deg); }
+  56%, 100% { opacity: 0; transform: rotate(4deg); }
+}
+.anim .he-slip.s2 { opacity: 0; animation: k3 16s linear infinite; }
+@keyframes k4 {
+  0%, 26% { opacity: 1; transform: rotate(-3deg); }
+  31%, 44% { opacity: 0; transform: translate(-20px, 10px) rotate(-8deg); }
+  47%, 100% { opacity: 1; transform: rotate(-3deg); }
+}
+.anim .he-slip.s0 { animation: k4 16s linear infinite; }
+@keyframes fill {
+  0%, 38% { transform: scaleX(0); }
+  51%, 100% { transform: scaleX(1); }
+}
+.anim .scene i b { animation: fill 16s linear infinite; }
+@keyframes k5 {
+  0%, 26% { opacity: 1; transform: none; }
+  31%, 55% { opacity: 0; transform: translateY(14px) scale(0.97); }
+  58%, 100% { opacity: 1; transform: none; }
+}
+.anim .dash { animation: k5 16s linear infinite; }
+@keyframes k6 {
+  0%, 26% { opacity: 1; transform: none; }
+  31%, 57% { opacity: 0; transform: translateY(10px); }
+  60%, 100% { opacity: 1; transform: none; }
+}
+.anim .dash-head { animation: k6 16s linear infinite; }
+@keyframes k7 {
+  0%, 26% { opacity: 1; transform: none; }
+  31%, 58% { opacity: 0; transform: none; }
+  61%, 100% { opacity: 1; transform: none; }
+}
+.anim .dash .label { animation: k7 16s linear infinite; }
+@keyframes k8 {
+  0%, 26% { opacity: 1; transform: none; }
+  31%, 59% { opacity: 0; transform: translateX(-10px); }
+  62%, 100% { opacity: 1; transform: none; }
+}
+.anim .stands li:nth-child(1) { animation: k8 16s linear infinite; }
+@keyframes k9 {
+  0%, 26% { opacity: 1; transform: none; }
+  31%, 62% { opacity: 0; transform: translateX(-10px); }
+  65%, 100% { opacity: 1; transform: none; }
+}
+.anim .stands li:nth-child(2) { animation: k9 16s linear infinite; }
+@keyframes k10 {
+  0%, 26% { opacity: 1; transform: none; }
+  31%, 65% { opacity: 0; transform: translateX(-10px); }
+  68%, 100% { opacity: 1; transform: none; }
+}
+.anim .stands li:nth-child(3) { animation: k10 16s linear infinite; }
+@keyframes k11 {
+  0%, 26% { opacity: 1; transform: none; }
+  31%, 67% { opacity: 0; transform: translateY(10px); }
+  70%, 100% { opacity: 1; transform: none; }
+}
+.anim .tile:nth-child(1) { animation: k11 16s linear infinite; }
+@keyframes draw {
+  0%, 26% { stroke-dashoffset: 0; }
+  31%, 69% { stroke-dashoffset: 1; }
+  77%, 100% { stroke-dashoffset: 0; }
+}
+.anim .spark .line { stroke-dasharray: 1; animation: draw 16s ease-in-out infinite; }
+@keyframes k12 {
+  0%, 26% { opacity: 1; transform: none; }
+  31%, 77% { opacity: 0; transform: scale(0); }
+  80%, 100% { opacity: 1; transform: none; }
+}
+.anim .spark circle { animation: k12 16s linear infinite; }
+@keyframes k13 {
+  0%, 26% { opacity: 1; transform: none; }
+  31%, 78% { opacity: 0; transform: translateY(10px); }
+  81%, 100% { opacity: 1; transform: none; }
+}
+.anim .big-num { animation: k13 16s linear infinite; }
+@keyframes k14 {
+  0%, 26% { opacity: 1; transform: none; }
+  31%, 80% { opacity: 0; transform: translateY(10px); }
+  83%, 100% { opacity: 1; transform: none; }
+}
+.anim .tile:nth-child(2) { animation: k14 16s linear infinite; }
+@keyframes k15 {
+  0%, 26% { opacity: 1; transform: none; }
+  31%, 81% { opacity: 0; transform: translateX(10px); }
+  84%, 100% { opacity: 1; transform: none; }
+}
+.anim .coming li:nth-child(1) { animation: k15 16s linear infinite; }
+@keyframes k16 {
+  0%, 26% { opacity: 1; transform: none; }
+  31%, 83.5% { opacity: 0; transform: translateX(10px); }
+  86.5%, 100% { opacity: 1; transform: none; }
+}
+.anim .coming li:nth-child(2) { animation: k16 16s linear infinite; }
+@keyframes k17 {
+  0%, 26% { opacity: 1; transform: none; }
+  31%, 86% { opacity: 0; transform: translateX(10px); }
+  89%, 100% { opacity: 1; transform: none; }
+}
+.anim .coming li:nth-child(3) { animation: k17 16s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .anim, .anim * { animation: none !important; }
+}
+
+/* Round 3B: Round 3 with the healthHQ shortlist's use cases worked in (docs/healthhq-use-cases.md). On top of r3.css:
+   the timeline band under the hero, four new Ask answers, and the spending card. Colour keeps one meaning throughout:
+   blue is the member's own records, gray is context, magenta is the one thing to notice, and a state colour always
+   comes with its icon and word. */
+
+:root {
+  --ctx: #9aa6bd;
+  --ctx-soft: #e4e8ef;
+  --q2: #a9c4f7;
+  --late: #b42318;
+  --late-mark: #d92d20;
+}
+
+/* ---- Everything since 1981, in the style of your example: one evenly spaced dot for each year that holds a record of
+   that kind, a colour for each kind, a pale axis with the years under it, and the stretch the site shows as a soft
+   blue panel, captioned under the axis. ---- */
+.tl {
+  margin: 28px 0 0;
+  padding: 24px 26px 20px;
+  border-radius: 24px;
+  background: #ffffff;
+  border: 1px solid var(--line-soft);
+  box-shadow: var(--shadow);
+}
+.tl-plot {
+  --label: 150px;
+  --pad: 8px;
+  position: relative;
+  display: grid;
+  padding-top: 58px;
+}
+.tl-lane,
+.tl-axis,
+.tl-caps {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: var(--label) minmax(0, 1fr);
+  align-items: center;
+}
+.tl-lane {
+  height: 40px;
+}
+.tl-k {
+  font-size: 15px;
+  color: var(--muted);
+}
+.tl-k b {
+  margin-left: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--heading);
+  font-variant-numeric: tabular-nums;
+}
+.tl-track {
+  position: relative;
+  height: 100%;
+  margin: 0 var(--pad);
+}
+.tl-track i {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--c);
+  transform: translate(-50%, -50%);
+}
+.tl-lane.v {
+  --c: #296bed;
+}
+.tl-lane.t {
+  --c: #083f92;
+}
+.tl-lane.m {
+  --c: #b83b7c;
+}
+.tl-lane.x {
+  --c: #0e7c5a;
+}
+.tl-lane.h {
+  --c: #b0650b;
+}
+.tl-lane.h .tl-track i {
+  width: 13px;
+  height: 13px;
+}
+.tl-axis {
+  margin-top: 6px;
+}
+.tl-ticks {
+  position: relative;
+  height: 30px;
+  margin: 0 var(--pad);
+  border-top: 1.5px solid #c9dcf6;
+}
+.tl-ticks span {
+  position: absolute;
+  top: 8px;
+  font-size: 14px;
+  color: var(--muted);
+  transform: translateX(-50%);
+  font-variant-numeric: tabular-nums;
+}
+.tl-caps {
+  margin: 4px 0 0;
+  font-size: 15px;
+  font-weight: 500;
+}
+.tl-caps .all {
+  grid-column: 2;
+  grid-row: 1;
+  color: var(--heading);
+}
+/* What the site shows: a soft blue panel over the lanes and the years. */
+.tl-site {
+  position: absolute;
+  top: 50px;
+  bottom: 26px;
+  left: calc(var(--label) + var(--pad) + (100% - var(--label) - 2 * var(--pad)) * var(--site) - 10px);
+  right: 0;
+  border-radius: 10px;
+  background: #e3effd;
+}
+
+/* ---- Did it work? ---- */
+.worked,
+.months,
+.spend {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* Winters lie over the healthy band, so both read where they meet. */
+.worked .winter {
+  fill: rgb(36 40 63 / 0.06);
+}
+.worked .win-k {
+  font-size: 10.5px;
+  fill: var(--muted);
+}
+.worked .healthy {
+  fill: var(--good-bg);
+}
+.worked .band-k {
+  font-size: 11px;
+  fill: var(--good);
+}
+.worked .vline {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 2.4;
+  stroke-linejoin: round;
+}
+.worked .pt {
+  fill: var(--primary);
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+.worked .val {
+  font-size: 12.5px;
+  font-weight: 500;
+  fill: var(--heading);
+}
+.worked .axis,
+.months .base,
+.spend .base {
+  stroke: var(--line);
+}
+.worked .lane-k,
+.worked .tick,
+.months .tick,
+.spend .tick {
+  font-size: 11px;
+  fill: var(--muted);
+}
+.worked .rx {
+  fill: var(--accent);
+}
+.worked .buy {
+  fill: var(--primary);
+}
+.worked .today {
+  stroke: var(--muted);
+  stroke-dasharray: 3 3;
+}
+.worked .today-k {
+  font-size: 11px; /* on the years' line, in their size */
+  fill: var(--muted);
+}
+.legend i.k-paid,
+.legend i.k-cov {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+}
+.legend i.k-cov {
+  background: var(--q2);
+}
+
+/* ---- Loose ends: a bar from when it was asked for to when it was due, and today across them all ---- */
+.ends {
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+}
+.ends li,
+.drift li {
+  display: grid;
+  grid-template-columns: 136px minmax(0, 1fr) 96px;
+  gap: 12px;
+  align-items: center;
+  margin: 0;
+  font-size: 13.5px;
+}
+.le-k {
+  color: var(--heading);
+  font-weight: 500;
+}
+.le-bar {
+  position: relative;
+  height: 10px;
+}
+.le-bar::after {
+  content: "";
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  left: var(--today);
+  border-left: 1.5px dashed var(--muted);
+}
+.le-bar i {
+  position: absolute;
+  top: 0;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--c);
+}
+.le-bar i.from-before {
+  border-radius: 0 5px 5px 0;
+  background: linear-gradient(90deg, transparent, var(--c) 40%);
+}
+.le-bar i.late {
+  top: 4px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--late-mark);
+}
+.le-v {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--c-text, var(--c));
+  white-space: nowrap;
+}
+.le-v b {
+  display: inline-block;
+  width: 14px;
+  margin-right: 4px;
+  text-align: center;
+}
+.ends .done {
+  --c: var(--good);
+}
+.ends .overdue {
+  --c: var(--late-mark);
+  --c-text: var(--late);
+}
+.ends .lapsed {
+  --c: #d9922a;
+  --c-text: var(--watch);
+}
+.ends .open {
+  --c: var(--primary);
+}
+.ends .upcoming {
+  --c: var(--ctx);
+  --c-text: var(--muted);
+}
+.ends-axis {
+  position: relative;
+  height: 16px;
+  margin: -2px 108px 0 148px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.ends-axis span {
+  position: absolute;
+  top: 0;
+}
+.ends-axis span:first-child {
+  left: 0;
+}
+.ends-axis span:last-child {
+  right: 0;
+}
+.ends-axis .t {
+  left: var(--today);
+  transform: translateX(-50%);
+}
+
+/* ---- Changes no test flags: change since the first result, against the test's own usual swing ---- */
+.drift li {
+  grid-template-columns: 136px minmax(0, 1fr) 132px;
+}
+.drift {
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+}
+.dr-k {
+  display: grid;
+  color: var(--heading);
+  font-weight: 500;
+}
+.dr-k small {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.drift .leave .dr-k {
+  color: var(--muted);
+}
+
+/* ---- Is there a pattern? ---- */
+.months {
+  max-width: 440px;
+}
+.months .spring {
+  fill: var(--primary);
+}
+.months .other {
+  fill: #c9d1de;
+}
+
+/* ---- Build: what you spent ---- */
+.spend .paid {
+  fill: var(--primary);
+}
+.spend .cov {
+  fill: var(--q2);
+}
+.spend .tot {
+  font-size: 11px;
+  font-weight: 500;
+  fill: var(--heading);
+}
+.spend-sum {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 22px;
+  margin: 0;
+  color: var(--muted);
+}
+.spend-sum b {
+  margin-right: 4px;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--heading);
+}
+.legend i.k-paid {
+  background: var(--primary);
+}
+
+/* ---- narrow screens ---- */
+@media (max-width: 640px) {
+  .tl {
+    padding: 18px 16px 16px;
+  }
+  .tl-plot {
+    --label: 92px;
+    --pad: 6px;
+    padding-top: 8px;
+  }
+  .tl-site {
+    top: 2px;
+  }
+  .tl-lane {
+    height: 34px;
+  }
+  .tl-k {
+    font-size: 13px;
+  }
+  .tl-k b {
+    display: block;
+    margin: 0;
+  }
+  .tl-track i {
+    width: 7px;
+    height: 7px;
+  }
+  .tl-track i.o2,
+  .tl-ticks span.odd {
+    display: none;
+  }
+  .tl-lane.h .tl-track i {
+    width: 11px;
+    height: 11px;
+  }
+  .tl-ticks span {
+    font-size: 12px;
+  }
+  .tl-caps {
+    font-size: 13px;
+  }
+  .tl-caps .all {
+    grid-column: 1 / -1;
+  }
+  .ends li,
+  .drift li {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 10px;
+  }
+  .le-bar {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .ends-axis {
+    margin: 0;
+  }
+}
+
+/* The two tabs kept from Round 3 under new ids: shown when chosen, and the chosen pill in navy, like the others. */
+#uc-today:checked ~ #p-today,
+#uc-result:checked ~ #p-result {
+  visibility: visible;
+}
+#uc-today:checked ~ .tab-list [for='uc-today'],
+#uc-result:checked ~ .tab-list [for='uc-result'] {
+  background: var(--heading);
+  border-color: var(--heading);
+  color: var(--on-primary);
+}
+#uc-today:focus-visible ~ .tab-list [for='uc-today'],
+#uc-result:focus-visible ~ .tab-list [for='uc-result'] {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+#p-result .ranges li {
+  grid-template-columns: 160px minmax(0, 1fr) 84px;
+}
+#p-result .ranges .val {
+  text-align: right;
+}
+@media (max-width: 640px) {
+  #p-result .ranges li {
+    grid-template-columns: minmax(0, 1fr) 72px;
+  }
+  #p-result .ranges .bar {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+/* Eight tabs: two even rows of four on wide screens, the pills in each column as wide as each other, rather than six
+   and a stray two. Narrower screens wrap them as before. */
+@media (min-width: 861px) {
+  .r3b .ask-band .tab-list {
+    display: grid;
+    grid-template-columns: repeat(4, max-content);
+    gap: 8px;
+  }
+  .r3b .ask-band .tab-list label {
+    text-align: center;
+  }
+}
+
+/* The Ask answers stand alone: no title or description beside them, so each panel is just the chat, centred, at a
+   width that keeps the pictures at their drawn size. */
+.r3b .ask-band .tabs {
+  grid-template-rows: auto auto;
+}
+.r3b .ask-band .panel {
+  grid-row: 2;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: none;
+}
+.r3b .ask-band .panel .chat {
+  width: 100%;
+  max-width: 640px;
+  justify-self: center;
+}
+.r3b .ask-band .tab-list {
+  justify-content: center;
+}
+
+/* Build's three, now Ask tabs: shown when chosen, the chosen pill in navy. What the assistant made sits straight in its
+   reply, without the gallery's card around it. */
+#uc-spend:checked ~ #p-spend {
+  visibility: visible;
+}
+#uc-spend:checked ~ .tab-list [for='uc-spend'] {
+  background: var(--heading);
+  border-color: var(--heading);
+  color: var(--on-primary);
+}
+#uc-spend:focus-visible ~ .tab-list [for='uc-spend'] {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.msg.bot > .made {
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+/* Six tiles on a phone: two across, so "What stands out" isn't six tiles tall (and every tab with it). */
+@media (max-width: 640px) {
+  #p-summary .tiles3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  #p-summary .tile3 {
+    padding: 8px 10px;
+  }
+}
+/* One thing today: each blood test a dot on its trend line. */
+.tile3 .test {
+  fill: #ffffff;
+  stroke: var(--watch);
+  stroke-width: 1.6;
+}
+/* Quiet changes, redrawn: each test's six results on its own normal range (green), as on every other chart. */
+.dr-spark {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.dr-spark .nr {
+  fill: var(--good-bg);
+}
+.dr-spark polyline {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.dr-spark circle {
+  fill: var(--primary);
+}
+.drift .leave .dr-spark polyline {
+  stroke: var(--ctx);
+}
+.drift .leave .dr-spark circle {
+  fill: var(--ctx);
+}
+.legend i.k-normal {
+  width: 14px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--good-bg);
+  box-shadow: inset 0 0 0 1px #bfe3d4;
+}
+@media (max-width: 640px) {
+  .dr-spark {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
+/* Round 4: Round 3B without the two plan tabs. Nine tabs: five over four on wide screens. */
+@media (min-width: 861px) {
+  .r4 .ask-band .tab-list {
+    grid-template-columns: repeat(5, max-content);
+  }
+}
+
+/* What stands out: blood pressure read out of visit notes, the eye exams that stopped, and one childhood note. */
+.tile3 .bp {
+  fill: var(--watch);
+  opacity: 0.45;
+}
+.tile3 .had {
+  stroke: var(--ctx);
+  stroke-width: 2;
+}
+.tile3 .had-pt {
+  fill: var(--ctx);
+}
+.tile3 .gap {
+  stroke: var(--watch);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 1 6;
+}
+.tile3 .now {
+  stroke: var(--muted);
+  stroke-width: 1.5;
+}
+.tile3 .yk {
+  font-size: 9.5px;
+  fill: var(--muted);
+}
+.tile3 .life {
+  stroke: var(--ctx);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.tile3.once .pt {
+  fill: var(--accent);
+}
+.tile3.once .t-v b {
+  color: var(--accent);
+}
+
+/* One thing today: four trends across, and the doctor's own line from a visit summary. */
+.because.four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.because.four .tile3 {
+  padding: 8px 10px;
+}
+.because.four .t-v {
+  font-size: 12px;
+}
+/* Explain a result: the repeat test not taken, as a callout pointing up at the values. */
+.callout {
+  position: relative;
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+  padding: 10px 18px 10px 12px;
+  border: 1.5px solid #d92d20;
+  border-radius: 14px;
+  background: #fdecea;
+}
+.callout::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 26px;
+  width: 11px;
+  height: 11px;
+  border-top: 1.5px solid #d92d20;
+  border-left: 1.5px solid #d92d20;
+  background: #fdecea;
+  transform: rotate(45deg);
+}
+.callout p {
+  display: grid;
+  margin: 0;
+  color: var(--late);
+  font-size: 12.5px;
+}
+.callout b {
+  font-size: 15px;
+  font-weight: 500;
+}
+.co-mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1.5px solid #d92d20;
+  color: var(--late);
+  font-weight: 600;
+}
+
+/* Did it work?: the two new lanes. */
+.worked .vis {
+  fill: var(--heading);
+}
+.worked .said-t {
+  font-size: 10.5px;
+  fill: var(--muted);
+}
+.worked .mail {
+  fill: var(--good);
+}
+
+/* Loose ends: eight rows, a little closer. */
+.r5 .ends {
+  gap: 7px;
+}
+
+/* Quiet changes: three kinds of record side by side. */
+.quiet {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+.qg-k {
+  margin: 0 0 6px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.quiet .drift {
+  gap: 8px;
+}
+.quiet .drift li {
+  grid-template-columns: minmax(0, 1fr) 74px;
+  gap: 8px;
+  font-size: 12.5px;
+}
+.quiet .dr-k small {
+  font-size: 11px;
+}
+.quiet .mention .dr-k small {
+  color: var(--primary);
+}
+
+/* Is there a pattern?: four small charts over one row of months. */
+.months.many {
+  max-width: none;
+}
+.months .mk {
+  font-size: 12.5px;
+  font-weight: 500;
+  fill: var(--heading);
+}
+.months .ms {
+  font-size: 11px;
+  fill: var(--muted);
+}
+
+@media (max-width: 640px) {
+  .because.four {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .quiet {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .quiet .drift li {
+    grid-template-columns: minmax(0, 1fr) 90px;
+  }
+  .quiet .dr-spark {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+
+/* The five lanes pressed small: no milestones, small dots. */
+.tl.mini {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.tl.mini .tl-plot {
+  --label: 0px;
+  --pad: 6px;
+  padding-top: 6px;
+}
+.tl.mini .tl-lane {
+  height: 13px;
+}
+.tl.mini .tl-k {
+  visibility: hidden;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.tl.mini .tl-track i {
+  width: 5px;
+  height: 5px;
+}
+.tl.mini .tl-lane.h .tl-track i {
+  width: 8px;
+  height: 8px;
+}
+.tl.mini .tl-site {
+  top: 0;
+  bottom: 22px;
+  border-radius: 8px;
+}
+.tl.mini .tl-axis {
+  margin-top: 4px;
+}
+.tl.mini .tl-ticks {
+  height: 22px;
+}
+.tl.mini .tl-ticks span {
+  top: 5px;
+  font-size: 11px;
+}
+.tl.mini .tl-ticks span.odd {
+  display: none;
+}
+.tl.mini .tl-ticks span:first-child {
+  left: 0 !important;
+  transform: none;
+}
+.tl.mini .tl-caps {
+  margin: 0;
+  font-size: 12px;
+}
+
+/* A: a strip. */
+.band.hl {
+  padding-block: 8px 28px;
+}
+.hl-strip {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 36px;
+  align-items: center;
+}
+.hl-stat {
+  display: grid;
+  margin: 0;
+  max-width: 190px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.4;
+}
+.hl-stat b {
+  color: var(--heading);
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+/* C and D: one line, with one bar for the whole file. */
+
+@media (max-width: 860px) {
+  .hl-strip {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+  .hl-stat {
+    max-width: none;
+  }
+}
+@media (max-width: 640px) {
+  .tl.mini .tl-track i.o2 {
+    display: none;
+  }
+  .tl.mini .tl-caps .all {
+    grid-column: 2;
+  }
+}
+
+/* Round 7: the browser window around the export clip, after the current macOS Safari. Still abstract: no page content,
+   only the window's own controls, grouped in capsules, with the address centred. */
+.browserwin:has(.tahoe) {
+  border-radius: 18px;
+}
+.bw-bar.tahoe {
+  display: grid;
+  grid-template-columns: auto auto auto minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: 9px 10px 9px 14px;
+  background: #ebebeb;
+  border-bottom: 0;
+}
+.bw-bar.tahoe .lights {
+  margin-right: 4px;
+}
+.bw-bar.tahoe .cap,
+.bw-bar.tahoe .bw-address {
+  height: 30px;
+  border-radius: 999px;
+  background: #f6f6f6;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.06), 0 1px 2px rgb(0 0 0 / 0.06);
+}
+.bw-bar.tahoe .cap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 9px;
+}
+.bw-bar.tahoe .cap svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: #4b4b4f;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.bw-bar.tahoe .cap.nav svg {
+  stroke: #a3a3a8;
+}
+.bw-bar.tahoe .cap .sep {
+  width: 1px;
+  height: 14px;
+  background: #d5d5d9;
+}
+.bw-bar.tahoe .cap.side svg + svg {
+  width: 11px;
+  height: 11px;
+}
+.bw-bar.tahoe .bw-address {
+  flex: none;
+  justify-self: center;
+  justify-content: center;
+  width: min(100%, 250px);
+  padding: 0 14px;
+  color: #6b6b70;
+}
+.bw-bar.tahoe .cap.tools {
+  gap: 9px;
+  padding: 0 10px 0 4px;
+}
+.bw-bar.tahoe .bw-ext {
+  width: 24px;
+  height: 24px;
+  background: #dfe6f3;
+}
+.bw-bar.tahoe .bw-ext img {
+  width: 16px;
+  height: 16px;
+}
+@media (max-width: 640px) {
+  .bw-bar.tahoe {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .bw-bar.tahoe .cap.side,
+  .bw-bar.tahoe .cap.nav,
+  .bw-bar.tahoe .cap.tools svg {
+    display: none;
+  }
+  .bw-bar.tahoe .cap.tools {
+    padding: 0 3px;
+  }
+}
+
+/* On a phone the hero's two buttons stack, so they sit on the page's centre line. */
+@media (max-width: 640px) {
+  .r3 .hero .cta {
+    justify-content: center;
+  }
+}

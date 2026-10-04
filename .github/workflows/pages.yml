@@ -1,15 +1,20 @@
-# Publishes the pages the extension ships (public/: the AI assistant page, the Privacy Policy and the Terms of Use) at
-# https://ronirachmani.github.io/health-records-export-for-maccabi/, so they can be read before installing. The files
-# go up as they ship, plus what only the web copy needs: og.png, the link preview's picture, rendered here by
-# `store-assets -- og` with Roboto installed; social.png, the marquee at 1280x640 for the repository's social preview,
-# which GitHub takes only as an upload in its settings; and an index.html that sends the site's root to the AI
-# assistant page.
+# Publishes the extension's website at https://ronirachmani.github.io/health-records-export-for-maccabi/: the landing
+# page (site/), and the pages the extension ships (public/: the AI assistant page, the Privacy Policy and the Terms of
+# Use), so they can be read before installing. public/ goes up as it ships, and site/ on top of it, plus what is made
+# here, with Roboto installed:
+#   og.png      the link preview's picture, by `store-assets -- og`;
+#   social.png  the marquee at 1280x640 for the repository's social preview, which GitHub takes only as an upload in
+#               its settings;
+#   clips/      the landing page's two silent loops, cut from the promo film: the popup working through an export, and
+#               the export's folder being opened. Each is a slice of the film rendered at 4K and cropped to its window,
+#               so it is sharp at twice the size the page shows it. They are kept in a cache keyed on everything the
+#               film is drawn from, since rendering them takes minutes.
 name: Pages
 
 on:
   push:
     branches: [main]
-    paths: [public/**, store/src/**, scripts/stage.mjs, scripts/store-assets.mjs, .github/workflows/pages.yml]
+    paths: [public/**, site/**, store/src/**, src/extension/popup/**, scripts/stage.mjs, scripts/store-assets.mjs, scripts/store-video.mjs, docs/images/chrome-web-store-badge.png, .github/workflows/pages.yml]
   workflow_dispatch:
 
 permissions:
@@ -22,11 +27,10 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  # Run by hand on another branch, this job alone runs: the site is built and kept as the run's artifact, to look at
+  # before it goes anywhere. Only main deploys.
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}ai-assistant.html
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -34,30 +38,58 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Render the link preview
+      - name: Install Roboto
         run: |
           sudo apt-get update -q
           sudo apt-get install -y --no-install-recommends fonts-roboto
           fc-cache -f
           # Ubuntu's AppArmor keeps Chrome's sandbox from starting without this.
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-          npm run store-assets -- og social
+      - name: Render the link preview
+        run: npm run store-assets -- og social
+      - id: clips
+        uses: actions/cache@v6
+        with:
+          path: _clips
+          key: clips-${{ hashFiles('store/src/**', 'src/extension/**', 'public/**', 'scripts/stage.mjs', 'scripts/store-video.mjs', 'package-lock.json', '.github/workflows/pages.yml') }}
+      - name: Render the clips
+        if: steps.clips.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          mkdir -p _clips
+          # clip <name> <from> <to> <crop, in the film's 3840x2160> <size on the page, doubled>
+          clip() {
+            npm run store-video -- "$2" "$3" --silent
+            ffmpeg -y -loglevel error -i store/assets/promo-video.mp4 -an -r 30 \
+              -vf "crop=$4,scale=$5:flags=lanczos" \
+              -c:v libx264 -preset slow -crf 23 -tune animation -pix_fmt yuv420p \
+              -colorspace bt709 -color_primaries bt709 -color_trc bt709 -color_range tv \
+              -movflags +faststart "_clips/$1.mp4"
+            ffmpeg -y -loglevel error -i "_clips/$1.mp4" -frames:v 1 "_clips/$1.png"
+          }
+          clip run 19.6 29.6 1134:1785:2457:216 756:1190
+          clip folder 34.6 43.2 1845:1620:1812:318 1230:1080
+          ls -l _clips
       - uses: actions/configure-pages@v6
       - name: Assemble the site
         run: |
           cp -R public _site
           cp store/assets/og-1200x630.png _site/og.png
           cp store/assets/social-1280x640.png _site/social.png
-          cat > _site/index.html <<'EOF'
-          <!doctype html>
-          <meta charset="utf-8" />
-          <title>Health Records Export for Maccabi</title>
-          <meta http-equiv="refresh" content="0; url=ai-assistant.html" />
-          <link rel="canonical" href="ai-assistant.html" />
-          <a href="ai-assistant.html">Hand it to an AI assistant</a>
-          EOF
+          cp -R site/. _site/
+          mkdir -p _site/images
+          cp docs/images/chrome-web-store-badge.png _site/images/
+          cp -R _clips _site/clips
       - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v5

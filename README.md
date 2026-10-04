@@ -386,7 +386,8 @@ The tokens live at the top of `src/extension/popup/popup.css`, with `public/page
 terms and AI assistant pages need (`public/` is copied verbatim, so it cannot import them). The AI assistant page adds
 `public/ai-assistant.css` for its wider, picture-led layout: its pictures are HTML and inline SVG with made-up records,
 and its tabs are radio buttons, so it runs no script. `.github/workflows/pages.yml` publishes `public/` on GitHub
-Pages whenever it changes on `main`, so the AI assistant page and the policies can be read before installing. `popup.css` and `pages.css` both pin `color-scheme: light` —
+Pages whenever it changes on `main`, so the AI assistant page and the policies can be read before installing. The same
+workflow puts the landing page, `site/`, at the site's root: it is for the web only, so it is kept out of `public/`. `popup.css` and `pages.css` both pin `color-scheme: light` —
 there is no dark theme, and pinning it keeps Chrome's auto-dark-mode from repainting controls and scrollbars
 against a light page. Every text colour meets WCAG AA on the surface it sits on. Chrome caps a popup at 600px
 tall, so keep the states that are not disclosures under it; `npm run store-assets` re-renders the store images.
