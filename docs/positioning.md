@@ -78,54 +78,51 @@ what to do next.
 
 ## Use cases: Ask
 
-The first set is questions you ask. Each starts from a moment the customer recognises, not from a feature, and they're
-ordered as a new user reaches for them.
+The landing page shows nine, as tabs in one Ask section (Round 4 of the mockups). Each is a question the member asks,
+answered with a picture and one or two short lines. They're ordered as a new user reaches for them.
 
-| Use case | Example | Who it's for | Value to the customer |
+| Tab | Question | What the answer shows | Value to the customer |
 |---|---|---|---|
-| **What stands out?** | "What stands out in my records?" → cholesterol creeping up for three years, a vitamin D that's always low, asthma quiet since 2019, each with its source | Curious first-timers | **The big picture in a minute.** Years of records you never read end to end, turned into the three things worth knowing. The first "wow". |
-| **One thing today** | "What's one thing I should do today to improve my health?" → "A 20-minute walk after dinner. Your cholesterol has crept up, and it's the easiest thing that helps." | Everyone | **Advice about you, not the internet's average person.** Small, doable, and tied to your own numbers. |
-| **Preventive care** | "What might I be due for?" → a tetanus booster (last one 2017), a check-up that's usual at your age, this year's flu shot | Everyone | **Nothing falls through the cracks.** It knows the dates you'd have to dig for, so you catch what's due before it's overdue. |
-| **Explain a result** | "What changed in my latest blood test?" → one value newly above the range, one back to normal, the rest steady since 2021 | After every test | **Calm instead of worry.** A new number means something next to all your old ones: better, worse, or the same as always. |
-| **Before an appointment** | "What should I raise with my doctor on Thursday?" → three questions, plus a one-page summary for a specialist who has never seen you | Before a visit | **Walk in prepared.** Short visits go further, and a new doctor gets your history in a page instead of twenty minutes of you trying to remember it. |
-| **From years ago** | "Anything in my history a new doctor should know?" → the penicillin rash in 2011, a knee operation in 2016, asthma since childhood | A new doctor, a private one, or one abroad | **Your past, remembered.** Old things that matter again are there when you need them, and they stay yours forever. |
+| **What stands out?** | "What stands out in my records?" | Six tiles: cholesterol at 142 and rising, vitamin D low again, asthma quiet since 2019, a blood type found in the 1989 hospital file, the busiest year (2016, the knee), and 14 antibiotic courses with none since 2015 | **The big picture in a minute.** Years of records you never read end to end, turned into the things worth knowing. The first "wow". |
+| **One thing today** | "What's one thing I should do today to improve my health?" | A 20-minute walk after dinner, over the cholesterol and blood sugar trends, each blood test a dot | **Advice about you, not the internet's average person.** Small, doable, and tied to your own numbers. |
+| **Explain a result** | "What changed in my latest blood test?" | Each value against its range, marked new, better or same, then the repeat test the doctor asked for afterwards, marked "Not taken" | **Calm instead of worry.** A new number next to all your old ones, and the follow-up nobody chased. |
+| **Did it work?** | "My vitamin D was low. Did the treatment help?" | The three results against the healthy range, over what was prescribed and what was bought | **Whether a treatment helped.** Tests, prescriptions and purchases sit on three screens of the site; here they're one line. |
+| **Loose ends** | "Anything my doctors asked me to do that I haven't?" | One bar per request, from asked to due, with Done, Overdue, Lapsed, Open or Upcoming | **Nothing falls through the cracks.** It catches what's due before a referral lapses. |
+| **Quiet changes** | "Is anything moving, even though it's still normal?" | Five tests, six results each, on their normal range: three drifting, two steady | **What no single test flags.** A ten-year drift only shows when the years are read together. |
+| **Is there a pattern?** | "Do my asthma flares have a season?" | Inhaler purchases by month of the year, with spring picked out | **Patterns across decades.** Two thirds in spring is invisible one purchase at a time. |
+| **Before a visit** | "What should I raise with my doctor on Thursday?" | Three questions to ask, and a one-page summary for the visit | **Walk in prepared.** Short visits go further, and a new doctor gets your history in a page. |
+| **What I spent** | "Chart what I've spent on medicines, and what insurance covered" | ₪4,120 paid and ₪3,270 covered, as columns by year from 2008 | **Every receipt, added up.** Nineteen years of pharmacy purchases in one chart. |
+
+Under the hero, before the tabs, a timeline band shows *Everything since 1981*: one dot for each year that holds a
+record of each kind, the milestones above it, and a pale panel over the years the site shows.
 
 **Left out on purpose:**
 - **Health summary:** the hero's dashboard already shows it.
 - **Translate a letter:** a proof point, not a use case, for an audience that reads English.
+- **Meal plan and fitness plan:** dropped in Round 4. Several drawings were tried, and none showed why a plan made from
+  your records beats any other plan.
+- **A separate Build section:** its one-pager repeated *Before a visit*, and its cards moved into the Ask tabs or were
+  dropped. Only *What I spent* remains.
+- **Is it the season?:** *Did it work?* already shades the winters behind the vitamin D line.
 
-## Use cases: Build
-
-The second set is things the assistant makes, not only answers. This is what brings data lovers back:
-
-- **Heart and metabolic trends:** cholesterol, blood sugar and blood pressure over the years, against the normal
-  range.
-- **A weekly meal plan:** fitted to your cholesterol trend and your medications.
-- **A weekly fitness plan:** realistic, and aware of the asthma in your file.
-- **A one-pager for a new doctor:** problems, medications, allergies, operations and recent results.
-- **Your health dashboard, growing:** the first export's picture, with what you've added since.
-
-The requests are phrased as the member would type them. The gallery ends on the hero's dashboard again, small and
-marked "Added", to show it growing; that repeat is on purpose.
-
-Plans start from what the records already hold. Doctors often note weight and activity in visit summaries, so the
-assistant only asks for what's missing.
+The page no longer pictures the third value, *yours to keep, and to grow*: the dashboard card that showed it was
+removed. Bring it back in words or a picture if that value needs more weight.
 
 ## Use cases: the shortlist
 
-These are the seven we lead with. Each one needs records from different screens of the site, or from years apart, read
-together:
+These seven each need records from different screens of the site, or from years apart, read together:
 - *Did it work?*
 - *Loose ends*
 - *What I spent*
 - *Is there a pattern?*
 - *Is it the season?*
-- *Changes no test flags*
+- *Changes no test flags* (the *Quiet changes* tab)
 - *Everything since 1981*, the Timeline view in *healthHQ*. healthHQ is the working name for the viewer an export could
   include.
 
-For each one's place, picture, data, rules and copy, see [healthhq-use-cases.md](healthhq-use-cases.md), which is
-written for whoever builds them into the chart-gallery artifact.
+The landing page uses six of them: all but *Is it the season?*. For each one's place, picture, data, rules and copy,
+see [healthhq-use-cases.md](healthhq-use-cases.md), which is written for whoever builds them into the chart-gallery
+artifact.
 
 ## Alternatives the customer has
 
@@ -158,19 +155,22 @@ Keep the page's instructions matched to what the apps show. This was checked on 
 ## Demo persona
 
 Every example uses the same made-up member, so the story holds together across the page. What "stands out" matches the
-"one thing today", and the plans match the trends. They are in their mid-40s, with:
+"one thing today", and every tab agrees with the others. They are in their mid-40s, with:
 - cholesterol creeping up;
 - blood sugar at the top of normal;
 - asthma since childhood, quiet since 2019: 41 inhaler purchases from 1990 to 2018, 27 of them in spring;
 - a penicillin rash in 2011;
-- their tonsils out in 1989, and a knee operation in 2016, their only hospital stays;
+- their tonsils out in 1989, and a knee operation in 2016, their only hospital stays. 2016 is their busiest year, with
+  23 records;
+- blood type A+, found in the 1989 hospital file;
+- 14 courses of antibiotics, none since 2015;
 - their last tetanus shot in 2017;
 - vitamin D at 11 in November 2023, 24 in May 2024 while they took supplements, and 17 in January 2026 after they stopped
   buying them in August 2024;
 - a liver enzyme rising at every test since 2016 (18 to 34) and good cholesterol falling (58 to 44), both still normal;
 - three loose ends: a blood sugar retest due in April, a mole check due in July, and an eye-doctor referral that lapsed
   unused in June;
-- ₪4,120 spent on medicines since 2008, with Maccabi covering another ₪3,270;
+- ₪4,120 spent on medicines since 2008, with insurance covering another ₪3,270;
 - 612 records from birth in 1981.
 
 Nothing shown comes from a real account.
@@ -185,6 +185,9 @@ Nothing shown comes from a real account.
   trend against the season. Explaining one record well is not enough: every example should link at least two.
 - **Relatable, not clinical.** Say "cholesterol" and "blood sugar", not "LDL" and "HbA1c". Avoid jargon and technical
   terms.
+- **Short answers.** People don't read long AI answers: one or two lines under the picture. Anything that needs
+  explaining is said by the assistant, not in a caption beside it.
+- **Say "insurance covered", not "Maccabi covered".**
 - **Advise, never decide.** Advice ends in "worth raising with your doctor", and plans say to check before big
   changes. Nothing reads as a diagnosis, and every insight shows its source.
 - **Privacy in one line.** The details belong in the Privacy Policy, not the pitch.
@@ -218,7 +221,7 @@ Nothing shown comes from a real account.
 
 ## To validate with customers
 
-- Which of the six Ask use cases people try first, and which they come back for.
+- Which of the nine Ask use cases people try first, and which they come back for.
 - Whether the first reaction is "I finally understand it", "I found something my doctor missed", or "I finally have
   everything". The answer tells us which pillar leads.
 - How many visitors already have a paid Claude or ChatGPT desktop app. If few do, the "yours to keep" value needs more
