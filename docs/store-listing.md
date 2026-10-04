@@ -255,7 +255,10 @@ Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare 
 
 ### Additional fields
 
-**Official URL:** None. This field needs a domain verified in Google Search Console.
+**Official URL:** `ronirachmani.com`, once chosen on the dashboard. The domain is verified in Google Search Console
+(a Domain property, verified through the DNS provider on 5 October 2026), and the site's sitemap,
+`https://maccabi.ronirachmani.com/sitemap.xml`, is submitted there. The dashboard offers the domain only to the Google
+account that verified it, so it has to be the publisher's account.
 
 **Homepage URL:** https://maccabi.ronirachmani.com/
 
