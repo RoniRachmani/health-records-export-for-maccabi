@@ -44,6 +44,12 @@ const ORIGIN = 'https://online.maccabi4u.co.il';
 const START = ORIGIN + '/sonline/';
 const EXTENSION = join(root, 'dist-dev');
 const PROFILE = process.env.LIVE_PROFILE || join(homedir(), '.hrem-live-profile');
+
+// A value written into code that a page evaluates: JSON, with the characters escaped that JSON leaves
+// alone and JavaScript or an HTML parser would read as something else.
+const UNSAFE = { '<': '\\u003C', '>': '\\u003E', '/': '\\u002F', '\u2028': '\\u2028', '\u2029': '\\u2029' };
+const lit = (value) => JSON.stringify(value).replace(/[<>/\u2028\u2029]/g, (c) => UNSAFE[c]);
+
 const ITEM = process.env.MACCABI_OP_ITEM || 'Maccabi';
 const KEEP = process.argv.includes('--keep');
 const ROOT_FILES = process.argv.includes('--root-files');
@@ -198,7 +204,7 @@ async function openBrowser() {
         ok(e.data.res);
       }
       addEventListener('message', f);
-      postMessage({ __hremDev: 'req', id, msg: ${JSON.stringify(msg)} }, '*');
+      postMessage({ __hremDev: 'req', id, msg: ${lit(msg)} }, '*');
     })`, undefined),
   };
 
@@ -227,7 +233,7 @@ async function openBrowser() {
     // Chrome opens a popup only in a focused window, and the one this script started sits behind the terminal.
     await send('Target.activateTarget', { targetId: target0.targetId });
     const { exceptionDetails } = await send('Runtime.evaluate', {
-      expression: `chrome.tabs.query({ url: ${JSON.stringify(ORIGIN + '/*')} })
+      expression: `chrome.tabs.query({ url: ${lit(ORIGIN + '/*')} })
         .then(([tab]) => chrome.action.openPopup(tab ? { windowId: tab.windowId } : {}))`,
       awaitPromise: true,
     }, worker);
@@ -283,9 +289,9 @@ const inPage = (body) => `(() => {${HELPERS}${body}})()`;
 
 /** Which of the three sign-in pages the tab is on, or 'signedIn', or 'other' (between pages). */
 const STAGE = inPage(`
-  if (location.origin === ${JSON.stringify(ORIGIN)} && sessionStorage.getItem('token')) return 'signedIn';
+  if (location.origin === ${lit(ORIGIN)} && sessionStorage.getItem('token')) return 'signedIn';
   if (passwordField()) return 'password';
-  if (byText(${JSON.stringify(WITH_PASSWORD)})) return 'choose';
+  if (byText(${lit(WITH_PASSWORD)})) return 'choose';
   if (location.host === 'mac.maccabi4u.co.il' && textFields().length) return 'id';
   return 'other';
 `);
@@ -298,7 +304,7 @@ const ID_BEFORE_PASSWORD_EMPTY = inPage(`
   return focus(u);
 `);
 const FOCUS_PASSWORD = inPage(`return focus(passwordField());`);
-const clickText = (text) => inPage(`const b = byText(${JSON.stringify(text)}); if (!b) return false; b.click(); return true;`);
+const clickText = (text) => inPage(`const b = byText(${lit(text)}); if (!b) return false; b.click(); return true;`);
 const PAGE_SHAPE = inPage(`
   const inputs = {};
   for (const e of all('input')) {
