@@ -122,7 +122,7 @@ Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare 
 | Screenshot 5 | `store/assets/screenshot-5-open.png` | The finished export: "Then open it in Claude or ChatGPT", with where each desktop app opens a folder and the first message to send |
 | Small promo tile (440×280) | `store/assets/promo-small-440x280.png` | The icon's artwork on a blue background, with no text |
 | Marquee promo tile (1400×560) | `store/assets/promo-marquee-1400x560.png` | Screenshot 1 in a wide frame: the name, the headline and the subline beside the assistant saying what stands out (`STANDS_OUT`). Optional: the store uses it only when it features the extension |
-| Global promo video | https://youtu.be/tfTOSfOnCm4 | Optional. See [Promo video](#promo-video) below |
+| Global promo video | https://youtu.be/CmLpMc90It0 | Optional. See [Promo video](#promo-video) below |
 
 The screenshots are 1280×800 PNG files with no transparency. They follow [positioning.md](positioning.md): what the
 member gets comes first, in its order of value (the whole history, a friend who has read it, theirs to keep), and how
@@ -136,7 +136,7 @@ positioning.md's *Getting started*, so check them against the apps when that sec
 ### Promo video
 
 The store's video field takes a **YouTube link**, not a file. The one to paste is
-**https://youtu.be/tfTOSfOnCm4**, on the [Health Records Export for Maccabi](https://www.youtube.com/@Health-Records-Export) channel, with the title
+**https://youtu.be/CmLpMc90It0**, on the [Health Records Export for Maccabi](https://www.youtube.com/@Health-Records-Export) channel, with the title
 and description [below](#on-youtube). `npm run store-video` renders the video to `store/assets/promo-video.mp4`
 (3840×2160, 60 fps, 61 seconds, with narration). YouTube can't swap the file under a link, so a re-render is a
 new upload with a new link: paste it on the dashboard and put it in the README, in place of the one above.
@@ -186,7 +186,7 @@ nothing is suggested over the last frame.
 **Title** (the version in brackets is the release the film shows; change it with a new upload):
 
 ```
-Ask Claude or ChatGPT about your Maccabi Online medical records – free Chrome extension [v0.8.1]
+Ask Claude or ChatGPT about your Maccabi Online medical records – free Chrome extension [v0.8.4]
 ```
 
 **Description** (plain text with no links; the chapter times are the film's parts, `runFrom`, `saved` and `uses` in `T` in

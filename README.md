@@ -43,13 +43,13 @@ where an assistant can read all of it.
   record you keep, not a one-time snapshot.
 
 <p align="center">
-  <a href="https://youtu.be/tfTOSfOnCm4">
+  <a href="https://youtu.be/CmLpMc90It0">
     <img src="store/assets/video-poster.png" alt="Watch an export, start to finish: a one-minute video" width="720">
   </a>
 </p>
 
 <p align="center">
-  ▶︎ <a href="https://youtu.be/tfTOSfOnCm4">Watch an export, start to finish</a> · 1 minute, narrated
+  ▶︎ <a href="https://youtu.be/CmLpMc90It0">Watch an export, start to finish</a> · 1 minute, narrated
 </p>
 
 Under the hood, each record is the site's own JSON, exactly as it was sent, beside its PDF and named so you can read it:
