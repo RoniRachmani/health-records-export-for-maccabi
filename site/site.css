@@ -2920,3 +2920,121 @@ h2 {
     transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
   }
 }
+
+/* Round 9: two pictures that play as they come into view. Still no script: on a scroll timeline (animation-timeline),
+   a picture's progress is its place on the screen, so it can never be caught half-played off screen, and a page
+   opened at #private, or scrolled by find-in-page, shows it as far along as its place says. Where a browser has no
+   scroll timelines, or the reader asks for reduced motion, the pictures stand finished. Only clip-path, opacity and
+   transform move.
+   - The 612 records: the five lanes and the axis sweep in from 1981 to today, and only then does the soft panel of
+     what the site shows settle over the last few years. On a wide screen tall enough to have the strip on its first
+     screen, it would be half-swept and stopped there, so there it plays once, when the page opens, under the hero.
+   - The path a record takes: Maccabi Online; the extension's hop draws to your computer; then, slower and dashed, the
+     hop to an assistant only if you choose it. Each arrowhead arrives with its line, uncut. A clip starts a pixel past
+     empty, or its edge, on a fraction of a pixel, leaves a hairline before anything has drawn. */
+/* The strip inherits Round 2's .mini window, whose overflow: hidden makes it a scroll container: a scroll timeline would
+   then follow that box, which never scrolls, instead of the page. Clip clips the same and scrolls nothing. */
+.tl.mini {
+  overflow: clip;
+}
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes tl-sweep {
+    from { clip-path: inset(-8px calc(100% + 9px) -8px -8px); }
+    to { clip-path: inset(-8px -8px -8px -8px); }
+  }
+  @keyframes tl-site-in {
+    from { opacity: 0; }
+  }
+  @keyframes path-stop-in {
+    from { opacity: 0; transform: translateY(10px); }
+  }
+  @keyframes path-label-in {
+    from { opacity: 0; }
+  }
+  @keyframes path-draw {
+    from { clip-path: inset(-6px calc(100% + 1px) -6px 0); }
+    to { clip-path: inset(-6px -10px -6px 0); }
+  }
+  @keyframes path-draw-down {
+    from { clip-path: inset(0 -6px calc(100% + 1px) -6px); }
+    to { clip-path: inset(0 -6px -10px -6px); }
+  }
+
+  @supports (animation-timeline: view()) {
+    .tl.mini .tl-plot {
+      view-timeline: --tl block;
+    }
+    .tl.mini .tl-track,
+    .tl.mini .tl-ticks {
+      animation: tl-sweep linear both;
+      animation-timeline: --tl;
+      animation-range: cover 5% cover 40%;
+    }
+    .tl.mini .tl-site {
+      animation: tl-site-in linear both;
+      animation-timeline: --tl;
+      animation-range: cover 38% cover 48%;
+    }
+
+    .path {
+      view-timeline: --path block;
+    }
+    .path > li {
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: --path;
+    }
+    .path > li:nth-child(1) {
+      animation-name: path-stop-in;
+      animation-range: cover 0% cover 8%;
+    }
+    .path > li:nth-child(2) .line {
+      animation: path-draw linear both;
+      animation-timeline: --path;
+      animation-range: cover 8% cover 18%;
+    }
+    .path > li:nth-child(2) .hop-label {
+      animation: path-label-in linear both;
+      animation-timeline: --path;
+      animation-range: cover 10% cover 18%;
+    }
+    .path > li:nth-child(3) {
+      animation-name: path-stop-in;
+      animation-range: cover 17% cover 25%;
+    }
+    .path > li:nth-child(4) .line {
+      animation: path-draw linear both;
+      animation-timeline: --path;
+      animation-range: cover 26% cover 40%;
+    }
+    .path > li:nth-child(4) .hop-label {
+      animation: path-label-in linear both;
+      animation-timeline: --path;
+      animation-range: cover 28% cover 38%;
+    }
+    .path > li:nth-child(5) {
+      animation-name: path-stop-in;
+      animation-range: cover 38% cover 46%;
+    }
+    @media (max-width: 760px) {
+      .path > li:nth-child(2) .line,
+      .path > li:nth-child(4) .line {
+        animation-name: path-draw-down;
+      }
+    }
+  }
+
+  @media (min-width: 861px) and (min-height: 700px) {
+    .tl.mini .tl-track,
+    .tl.mini .tl-ticks {
+      animation: tl-sweep 1.6s cubic-bezier(0.45, 0, 0.25, 1) 0.5s both;
+      animation-timeline: auto;
+      animation-range: normal;
+    }
+    .tl.mini .tl-site {
+      animation: tl-site-in 0.6s ease-out 1.9s both;
+      animation-timeline: auto;
+      animation-range: normal;
+    }
+  }
+}
