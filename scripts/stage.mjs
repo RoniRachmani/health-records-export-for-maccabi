@@ -213,11 +213,18 @@ export async function openStage() {
         },
         /**
          * The page as it looks now, as PNG bytes. `fast` trades file size for encoding time, for
-         * frames that only pass through on their way to the video encoder.
+         * frames that only pass through on their way to the video encoder. `clip` ({ x, y, width,
+         * height }, in CSS pixels of the document, not the viewport) photographs only that part of it.
          */
-        async screenshot({ fast = false } = {}) {
-          const { data } = await send('Page.captureScreenshot', { format: 'png', optimizeForSpeed: fast }, sessionId);
+        async screenshot({ fast = false, clip } = {}) {
+          const params = { format: 'png', optimizeForSpeed: fast };
+          if (clip) params.clip = { ...clip, scale: 1 };
+          const { data } = await send('Page.captureScreenshot', params, sessionId);
           return Buffer.from(data, 'base64');
+        },
+        /** A DevTools Protocol command for this page, for what the helpers here don't cover. */
+        send(method, params = {}) {
+          return send(method, params, sessionId);
         },
         async close() {
           await send('Target.closeTarget', { targetId });

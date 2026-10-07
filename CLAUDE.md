@@ -29,6 +29,8 @@ npm run store-video -- --remux        # a changed soundtrack on the last render'
 npm run store-video -- --script       # the narration as one take's text, for ElevenLabs
 npm run store-video -- --import take.mp3 --audio-only   # cut that take into the narration's lines
 npm run icons                     # public/icons/ + store/assets/icon-128.png
+npm run site-check                # the landing page's motion: ends where the still page is, at five screen sizes
+npm run site-check -- frames .path scroll 10 375x812   # photograph one picture as it scrolls in (or `time 0 16 0.5`)
 ```
 
 There is no linter or formatter configured; `typecheck` and `test` are the whole gate you can run
@@ -213,6 +215,17 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   timing or layout has to be matched in the `clip` line there. The opened folder beside it is drawn in HTML
   (`.fw-list`), from the film's `FOLDERS` in `store/src/parts.ts`: keep the two lists in step. Its copy follows `docs/positioning.md`, and must agree
   with the README's opening and with `public/ai-assistant.html` on the facts they share.
+- **The landing page's motion is CSS, and it ends where the still page is.** The hero loops; the rest plays as it comes
+  into view, on scroll timelines (`animation-timeline: view()`), so a picture's progress is its place on the screen.
+  Every animation moves only opacity, transform, clip-path or colour; its last frame is exactly the page with no motion,
+  which is what `prefers-reduced-motion` (under which nothing moves) and a browser without scroll timelines (each
+  picture sits under `@supports`) both show. A picture that can be on the first screen at load would sit half-played
+  on a scroll timeline, so on those screens it plays once as the page opens instead. Never put `overflow: hidden` (or
+  auto) on anything around a scroll-timeline picture: it becomes the scroll container the timeline follows, which
+  never scrolls, so the picture just stands finished; `overflow: clip` clips the same. A picture near the foot of the
+  page measures its range in pixels of scroll, not in shares of the screen: on a tall screen there isn't that much
+  page left below it. `npm run site-check` checks all of this at five sizes (and is the Pages workflow's gate); look
+  at a change with its `frames` mode, since the check only says where the motion ends, not how it gets there.
 - **Keep `public/third-party-notices.txt` current** when a runtime dependency changes (only `fflate`
   today, plus Vite's module preload polyfill). The README's `docs/images/chrome-web-store-badge.png` isn't one of
   them: it is Google's own badge, committed byte for byte as it is served from

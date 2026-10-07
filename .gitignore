@@ -35,3 +35,6 @@ maccabi-export-*/
 *.token
 *.pdf
 *.raw.json
+
+# Frames of the landing page's motion, by `npm run site-check -- frames`.
+site-frames/

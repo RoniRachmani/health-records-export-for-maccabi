@@ -15,7 +15,7 @@ name: Pages
 on:
   push:
     branches: [main]
-    paths: [public/**, site/**, store/src/**, src/extension/popup/**, scripts/stage.mjs, scripts/store-assets.mjs, scripts/store-video.mjs, docs/images/chrome-web-store-badge.png, .github/workflows/pages.yml]
+    paths: [public/**, site/**, store/src/**, src/extension/popup/**, scripts/stage.mjs, scripts/site-check.mjs, scripts/store-assets.mjs, scripts/store-video.mjs, docs/images/chrome-web-store-badge.png, .github/workflows/pages.yml]
   workflow_dispatch:
 
 permissions:
@@ -46,6 +46,9 @@ jobs:
           fc-cache -f
           # Ubuntu's AppArmor keeps Chrome's sandbox from starting without this.
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      # Before anything is drawn or deployed: every animation on the landing page still ends where the still page is.
+      - name: Check the landing page's motion
+        run: npm run site-check
       - name: Render the link preview
         run: npm run store-assets -- og og-site social
       - id: clips

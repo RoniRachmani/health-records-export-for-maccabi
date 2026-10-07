@@ -25,6 +25,7 @@
     "live": "vite build --mode development && node scripts/live-run.mjs",
     "store-assets": "node scripts/store-assets.mjs",
     "store-video": "node scripts/store-video.mjs",
+    "site-check": "node scripts/site-check.mjs",
     "package": "npm run build && node scripts/package.mjs",
     "clean": "node -e \"for (const d of ['dist', 'dist-dev', 'dist-store', 'release']) require('node:fs').rmSync(d, { recursive: true, force: true })\"",
     "release:zip": "npm run clean && npm test && npm run build:dev && npm run package",
