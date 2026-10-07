@@ -3147,13 +3147,17 @@ h2 {
 }
 
 /* Round 11: the export's folder, drawn as a list instead of a clip of the film: the same rows the film shows
-   (store/src/parts.ts's FOLDERS, the README and the medical file), in real text, sharp at any size. It plays as it
-   comes into view, as Round 9's pictures do: the rows rise in, top to bottom; then the list makes room under the
-   medical file, a file of the member's own slides in there, and turns pink. Its finished state is the plain list, with
-   the added file in its place, which is also what reduced motion or a browser without scroll timelines shows.
-   Keep the folders in step with FOLDERS (and the README's list) when the export's layout changes. */
-/* (Under 760px wide, which is every size the page gives the window, a row puts what it holds under its name; on a
-   phone the longest two end in an ellipsis, as Finder's columns do.) */
+   (store/src/parts.ts's FOLDERS, the README and the medical file), in real text, sharp at any size. Its test-results
+   folder stands open, as the film's earlier cut opened it, and shows what ties the files together: each result's data
+   (details/<date>_<id>_<title>.json, as Maccabi sent it) and its PDF (files/, under the same name), bracketed, the name
+   they share marked in both. It plays as it comes into view, as Round 9's pictures do: the rows rise in; test-results
+   opens and its contents come in; the brackets draw, one pair after the other, and the shared names light up; then the
+   list makes room under the medical file, a file of the member's own slides in there, and turns pink. Its finished
+   state is all of that, which is also what reduced motion or a browser without scroll timelines shows.
+   Keep the folders in step with FOLDERS (and the README's list), and test-results' contents with the export's own
+   layout (src/core/sections/testResults.ts), when either changes.
+   Under 760px wide, which is every size the page gives the window, a row puts what it holds under its name; on a
+   phone the longest names end in an ellipsis, as Finder's columns do. */
 .fw-defs {
   position: absolute;
   width: 0;
@@ -3161,6 +3165,8 @@ h2 {
 }
 .fw-list {
   --rh: 34px;
+  --ih: 30px;
+  --dh: calc(5 * var(--ih));
   grid-column: 2;
   grid-row: 2;
   position: relative;
@@ -3172,6 +3178,8 @@ h2 {
   font-size: clamp(11px, calc((100cqi - var(--side)) / 46), 13px);
 }
 .fw-list li {
+  position: relative;
+  box-sizing: border-box;
   display: grid;
   grid-template-columns: 18px minmax(0, 15em) minmax(0, 1fr) auto;
   align-items: center;
@@ -3187,7 +3195,8 @@ h2 {
   stroke: none;
 }
 .fw-name,
-.fw-what {
+.fw-what,
+.fw-path {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -3196,7 +3205,8 @@ h2 {
   font-weight: 600;
   color: #083f92;
 }
-.fw-what {
+.fw-what,
+.fw-dir {
   color: #676a80;
 }
 .fw-kinds {
@@ -3214,6 +3224,57 @@ h2 {
 .fw-list li.added .fw-what {
   color: #b83b7c;
   font-weight: 500;
+}
+/* The open folder: selected, its chevron turned down, its contents indented under it. */
+.fw-list li.fw-open {
+  background: #e3effd;
+}
+.fw-list li.fw-open::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  margin-top: -4px;
+  border: solid #4a4a4f;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+.fw-list li.fw-in {
+  grid-template-columns: 14px minmax(0, 1fr) auto;
+  gap: 8px;
+  height: var(--ih);
+  padding-left: 46px;
+  font-size: 0.92em;
+}
+.fw-list li.fw-in > svg {
+  width: 14px;
+  height: 12px;
+}
+.fw-stem {
+  margin: 0 -1px 0 1px;
+  padding: 1px 1px;
+  border-radius: 3px;
+  color: #083f92;
+  font-weight: 500;
+}
+/* A result's data and its PDF: one name, marked in both, and a bracket from the one to the other. */
+.fw-list li.fw-pair .fw-stem,
+.fw-list li.fw-pair + li .fw-stem {
+  background: #dbe8fd;
+}
+.fw-list li.fw-pair::after {
+  content: '';
+  position: absolute;
+  left: 32px;
+  top: 50%;
+  box-sizing: border-box;
+  width: 8px;
+  height: var(--ih);
+  border: 2px solid #296bed;
+  border-right: 0;
+  border-radius: 6px 0 0 6px;
 }
 /* A window under 760px wide puts what each holds under its name. */
 @container (max-width: 760px) {
@@ -3238,28 +3299,50 @@ h2 {
   .fw-what {
     grid-column: 2;
   }
+  .fw-list li.fw-in {
+    grid-template-columns: 14px minmax(0, 1fr) auto;
+    grid-template-rows: auto;
+  }
+  .fw-list li.fw-in > svg,
+  .fw-list li.fw-in .fw-kinds {
+    grid-area: auto;
+  }
 }
-.fw-list li:nth-child(1) { --i: 0; }
-.fw-list li:nth-child(2) { --i: 1; }
-.fw-list li:nth-child(4) { --i: 2; }
-.fw-list li:nth-child(5) { --i: 3; }
-.fw-list li:nth-child(6) { --i: 4; }
-.fw-list li:nth-child(7) { --i: 5; }
-.fw-list li:nth-child(8) { --i: 6; }
-.fw-list li:nth-child(9) { --i: 7; }
-.fw-list li:nth-child(10) { --i: 8; }
-.fw-list li:nth-child(11) { --i: 9; }
-.fw-list li:nth-child(12) { --i: 10; }
-.fw-list li:nth-child(13) { --i: 11; }
-.fw-list li:nth-child(14) { --i: 12; }
-.fw-list li:nth-child(15) { --i: 13; }
+/* A phone's window keeps the whole path of each file inside and drops its kind (its extension says it). */
+@container (max-width: 420px) {
+  .fw-list li.fw-in {
+    grid-template-columns: 14px minmax(0, 1fr);
+  }
+  .fw-list li.fw-in .fw-kinds {
+    display: none;
+  }
+}
 @media (prefers-reduced-motion: no-preference) {
-  /* The rows rise with translate and make room with transform, so the two never fight over one property. */
+  /* Rows rise with translate and make room with transform, so the two never fight over one property. */
   @keyframes fw-rise {
     from { opacity: 0; translate: 0 12px; }
   }
   @keyframes fw-room {
     from { transform: translateY(calc(-1 * var(--rh))); }
+  }
+  /* Under the open folder: room for its contents first, then, later, for the added file. */
+  @keyframes fw-room-both {
+    0% { transform: translateY(calc(-1 * (var(--rh) + var(--dh)))); }
+    28%, 72% { transform: translateY(calc(-1 * var(--rh))); }
+    100% { transform: translateY(0); }
+  }
+  @keyframes fw-select {
+    from { background-color: #ffffff; }
+  }
+  @keyframes fw-turn {
+    from { transform: rotate(-45deg); }
+  }
+  @keyframes fw-bracket {
+    from { clip-path: inset(-2px -2px calc(100% + 1px) -2px); }
+    to { clip-path: inset(-2px -2px -2px -2px); }
+  }
+  @keyframes fw-same {
+    from { background-color: rgb(219 232 253 / 0); }
   }
   @keyframes fw-added {
     0% { opacity: 0; transform: translateX(110px) rotate(2deg); }
@@ -3271,27 +3354,76 @@ h2 {
     from { background-color: #ffffff; }
   }
   @supports (animation-timeline: view()) {
+    /* In pixels of scroll from when the window first shows, not in shares of the screen: the window is taller than a
+       phone's screen, and a share of it would finish only once the top rows, where the last steps happen, were gone. */
     .finderwin {
+      --u: 15px;
       view-timeline: --finder block;
     }
-    .fw-list li {
+    .fw-list li,
+    .fw-list li::before,
+    .fw-list li::after,
+    .fw-list .fw-stem {
       animation-timing-function: linear;
       animation-fill-mode: both;
       animation-timeline: --finder;
     }
+    /* The rows rise in, top to bottom. */
     .fw-list li:not(.added) {
       animation-name: fw-rise;
-      animation-range: cover calc(4% + var(--i) * 0.8%) cover calc(10% + var(--i) * 0.8%);
+      animation-range: cover calc((3 + var(--i) * 0.7) * var(--u)) cover calc((8 + var(--i) * 0.7) * var(--u));
     }
-    /* Everything under the medical file also makes room for the added file, later. */
+    /* Everything under the medical file also makes room for the added file, last. */
     .fw-list li.added ~ li {
       animation-name: fw-rise, fw-room;
-      animation-range: cover calc(4% + var(--i) * 0.8%) cover calc(10% + var(--i) * 0.8%), cover 28% cover 33%;
+      animation-range: cover calc((3 + var(--i) * 0.7) * var(--u)) cover calc((8 + var(--i) * 0.7) * var(--u)),
+        cover calc(32 * var(--u)) cover calc(37 * var(--u));
     }
+    /* test-results opens: it is selected and its chevron turns ... */
+    .fw-list li.added ~ li.fw-open {
+      animation-name: fw-rise, fw-room, fw-select;
+      animation-range: cover calc((3 + var(--i) * 0.7) * var(--u)) cover calc((8 + var(--i) * 0.7) * var(--u)),
+        cover calc(32 * var(--u)) cover calc(37 * var(--u)), cover calc(17 * var(--u)) cover calc(20 * var(--u));
+    }
+    .fw-list li.fw-open::before {
+      animation-name: fw-turn;
+      animation-range: cover calc(17 * var(--u)) cover calc(20 * var(--u));
+    }
+    /* ... the folders under it make room for what it holds ... */
+    .fw-list li.added ~ li.fw-below {
+      animation-name: fw-rise, fw-room-both;
+      animation-range: cover calc((3 + var(--i) * 0.7) * var(--u)) cover calc((8 + var(--i) * 0.7) * var(--u)),
+        cover calc(19 * var(--u)) cover calc(37 * var(--u));
+    }
+    /* ... and what it holds comes in, one file after the other. */
+    .fw-list li.added ~ li.fw-in {
+      animation-name: fw-rise, fw-room;
+      animation-range: cover calc((20 + var(--j) * 1.1) * var(--u)) cover calc((24 + var(--j) * 1.1) * var(--u)),
+        cover calc(32 * var(--u)) cover calc(37 * var(--u));
+    }
+    /* Each result's data is bracketed to its PDF, and the name they share lights up, one result after the other. */
+    .fw-list li.fw-pair::after {
+      animation-name: fw-bracket;
+    }
+    .fw-list li.p1::after {
+      animation-range: cover calc(28 * var(--u)) cover calc(31 * var(--u));
+    }
+    .fw-list li.p2::after {
+      animation-range: cover calc(30 * var(--u)) cover calc(33 * var(--u));
+    }
+    .fw-list li.p1 .fw-stem {
+      animation-name: fw-same;
+      animation-range: cover calc(29 * var(--u)) cover calc(32 * var(--u));
+    }
+    .fw-list li.p2 .fw-stem {
+      animation-name: fw-same;
+      animation-range: cover calc(31 * var(--u)) cover calc(34 * var(--u));
+    }
+    /* Then the member's own file slides in under the medical file, and turns pink. */
     .fw-list li.added {
       transform-origin: left center;
       animation-name: fw-added, fw-pink;
-      animation-range: cover 30% cover 37%, cover 36% cover 41%;
+      animation-range: cover calc(33 * var(--u)) cover calc(39 * var(--u)), cover calc(38 * var(--u)) cover calc(42 * var(--u));
     }
   }
 }
