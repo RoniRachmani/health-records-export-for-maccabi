@@ -2934,7 +2934,10 @@ h2 {
       animation-range: cover 38% cover 48%;
     }
 
+    /* In pixels of scroll from when the path first shows, not in shares of the screen: it sits near the foot of the
+       page, and on a tall screen a share of the screen is more scroll than is left below it, so it never finished. */
     .path {
+      --u: 8.5px;
       view-timeline: --path block;
     }
     .path > li {
@@ -2944,37 +2947,41 @@ h2 {
     }
     .path > li:nth-child(1) {
       animation-name: path-stop-in;
-      animation-range: cover 0% cover 8%;
+      animation-range: cover calc(0 * var(--u)) cover calc(8 * var(--u));
     }
     .path > li:nth-child(2) .line {
       animation: path-draw linear both;
       animation-timeline: --path;
-      animation-range: cover 8% cover 18%;
+      animation-range: cover calc(8 * var(--u)) cover calc(18 * var(--u));
     }
     .path > li:nth-child(2) .hop-label {
       animation: path-label-in linear both;
       animation-timeline: --path;
-      animation-range: cover 10% cover 18%;
+      animation-range: cover calc(10 * var(--u)) cover calc(18 * var(--u));
     }
     .path > li:nth-child(3) {
       animation-name: path-stop-in;
-      animation-range: cover 17% cover 25%;
+      animation-range: cover calc(17 * var(--u)) cover calc(25 * var(--u));
     }
     .path > li:nth-child(4) .line {
       animation: path-draw linear both;
       animation-timeline: --path;
-      animation-range: cover 26% cover 40%;
+      animation-range: cover calc(26 * var(--u)) cover calc(40 * var(--u));
     }
     .path > li:nth-child(4) .hop-label {
       animation: path-label-in linear both;
       animation-timeline: --path;
-      animation-range: cover 28% cover 38%;
+      animation-range: cover calc(28 * var(--u)) cover calc(38 * var(--u));
     }
     .path > li:nth-child(5) {
       animation-name: path-stop-in;
-      animation-range: cover 38% cover 46%;
+      animation-range: cover calc(38 * var(--u)) cover calc(46 * var(--u));
     }
     @media (max-width: 760px) {
+      /* Down the page, the path is as tall as a phone's screen is half: it gets more scroll, so its foot is in view. */
+      .path {
+        --u: 10px;
+      }
       .path > li:nth-child(2) .line,
       .path > li:nth-child(4) .line {
         animation-name: path-draw-down;
