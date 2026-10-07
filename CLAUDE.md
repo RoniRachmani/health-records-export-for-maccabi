@@ -208,9 +208,10 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
 - **The landing page lives in `site/`, not `public/`**: `public/` ships inside the extension verbatim, and the landing
   page is for the web only. The Pages workflow copies `site/` over `public/`, so `site/index.html` links the shipped
   `pages.css` and `ai-assistant.css` and adds `site/site.css`. It follows the same house rules: no script, no fetched
-  font, no Maccabi brand asset, made-up records only, WCAG AA, and no sideways scroll at 375px. Its two clips are
-  slices of the promo film that the workflow renders and crops (see the workflow's header), so a change to the film's
-  timing or layout has to be matched in the `clip` lines there. Its copy follows `docs/positioning.md`, and must agree
+  font, no Maccabi brand asset, made-up records only, WCAG AA, and no sideways scroll at 375px. Its run clip is a
+  slice of the promo film that the workflow renders and crops (see the workflow's header), so a change to the film's
+  timing or layout has to be matched in the `clip` line there. The opened folder beside it is drawn in HTML
+  (`.fw-list`), from the film's `FOLDERS` in `store/src/parts.ts`: keep the two lists in step. Its copy follows `docs/positioning.md`, and must agree
   with the README's opening and with `public/ai-assistant.html` on the facts they share.
 - **Keep `public/third-party-notices.txt` current** when a runtime dependency changes (only `fflate`
   today, plus Vite's module preload polyfill). The README's `docs/images/chrome-web-store-badge.png` isn't one of

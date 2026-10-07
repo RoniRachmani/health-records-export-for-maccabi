@@ -6,10 +6,10 @@
 #   og-site.png the landing page's, a photograph of its own hero, by `store-assets -- og-site`;
 #   social.png  the marquee at 1280x640 for the repository's social preview, which GitHub takes only as an upload in
 #               its settings;
-#   clips/      the landing page's two silent loops, cut from the promo film: the popup working through an export, and
-#               the export's folder being opened. Each is a slice of the film rendered at 4K and cropped to its window,
-#               so it is sharp at twice the size the page shows it. They are kept in a cache keyed on what the film
-#               is drawn from, since rendering them takes about a quarter of an hour.
+#   clips/      the landing page's silent loop, cut from the promo film: the popup working through an export. It is a
+#               slice of the film rendered at 4K and cropped to the popup, so it is sharp at twice the size the page
+#               shows it. It is kept in a cache keyed on what the film is drawn from, since rendering it takes about
+#               eight minutes. (The export's folder, opened, is drawn by the page itself: site/index.html's .fw-list.)
 name: Pages
 
 on:
@@ -55,21 +55,19 @@ jobs:
           # Only what the film is drawn from: its own code, the popup it photographs, the icons, and the version the
           # popup prints. The pages in public/ and site/ are not, so changing them deploys without a render. The number
           # after "clips-" stands for the clip lines below: raise it when their times, crops or encoding change.
-          key: clips-2-${{ hashFiles('store/src/**', 'src/extension/**', 'public/icons/**', 'scripts/stage.mjs', 'scripts/store-video.mjs', 'vite.store.config.ts', 'package.json', 'package-lock.json') }}
+          key: clips-3-${{ hashFiles('store/src/**', 'src/extension/**', 'public/icons/**', 'scripts/stage.mjs', 'scripts/store-video.mjs', 'vite.store.config.ts', 'package.json', 'package-lock.json') }}
       - name: Render the clips
         if: steps.clips.outputs.cache-hit != 'true'
         run: |
           sudo apt-get install -y --no-install-recommends ffmpeg
           mkdir -p _clips
-          # clip <name> <from> <to> <crop, in the film's 3840x2160> <size on the page, doubled> <seam>
-          # A clip loops without a jump: its last <seam> seconds blend into its first ones, and it starts where the
-          # blend ends, so the frame after its last is its first. The run dissolves (the popup keeps its layout, and only
-          # the progress changes); the folder dips through the window's white, so its rows don't double up when the
-          # added file's row goes, and they come back in as the film brings them in.
+          # clip <name> <from> <to> <crop, in the film's 3840x2160> <size on the page, doubled>
+          # A clip loops without a jump: its last half second dissolves into its first, and it starts where the
+          # dissolve ends, so the frame after its last is its first. (The popup keeps its layout across the seam; only
+          # the progress changes.)
           clip() {
             npm run store-video -- "$2" "$3" --silent
             local seam=0.5 how=fade
-            [ "$6" = white ] && seam=0.6 how=fadewhite
             local offset=$(awk "BEGIN { print $3 - $2 - 2 * $seam }")
             ffmpeg -y -loglevel error -i store/assets/promo-video.mp4 -an \
               -filter_complex "[0:v]crop=$4,scale=$5:flags=lanczos,fps=30,split[a][b];[a]trim=start=$seam,setpts=PTS-STARTPTS[body];[b]trim=end=$seam,setpts=PTS-STARTPTS[head];[body][head]xfade=transition=$how:duration=$seam:offset=$offset[v]" \
@@ -78,8 +76,7 @@ jobs:
               -movflags +faststart "_clips/$1.mp4"
             ffmpeg -y -loglevel error -i "_clips/$1.mp4" -frames:v 1 "_clips/$1.png"
           }
-          clip run 19.6 29.6 1134:1785:2457:216 756:1190 dissolve
-          clip folder 34.6 43.2 1845:1620:1812:318 1230:1080 white
+          clip run 19.6 29.6 1134:1785:2457:216 756:1190
           ls -l _clips
       - uses: actions/configure-pages@v6
       - name: Assemble the site

@@ -103,9 +103,6 @@ h2 {
 .clip-col .clip.popup-cut {
   width: min(360px, 100%);
 }
-.clip-col .clip.folder-cut {
-  width: min(520px, 100%);
-}
 .clip-col figcaption {
   margin-top: 12px;
   font-size: 13px;
@@ -695,7 +692,7 @@ h2 {
   border-radius: 12px;
   box-shadow: 0 24px 56px rgb(2 14 40 / 0.4);
 }
-/* The two clips are cut to their windows when the site is built: the popup at 378x595, the folder at 615x540. */
+/* The clip is cut to its window when the site is built: the popup at 378x595. */
 .film-band .clip.popup-cut {
   aspect-ratio: 378 / 595;
 }
@@ -1478,45 +1475,6 @@ h2 {
   background: #ff9500;
 }
 
-.film-band .finderwin .clip.folder-cut {
-  grid-column: 2;
-  grid-row: 2;
-  aspect-ratio: 615 / 540;
-  width: 100%;
-  border-radius: 0;
-  box-shadow: none;
-  background: #ffffff;
-}
-/* From about 5.5s the film opens test-results and the list runs past the window's foot. The bottom margin (the cut's
-   last 15 of 540px, below the opening list's last row, whose ink ends at 630) fades to white, so a row that reaches
-   the edge fades out as in a scrolling list, and the opening list is untouched. */
-.film-band .finderwin .clip.folder-cut {
-  position: relative;
-}
-.film-band .finderwin .clip.folder-cut::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 -1px; /* a pixel past the foot, so rounding never leaves a row of the film uncovered */
-  height: calc(100% * 15 / 540 + 1px);
-  background: linear-gradient(rgb(255 255 255 / 0), rgb(255 255 255 / 0.85) 60%, #ffffff);
-  pointer-events: none;
-}
-/* Edges, as you marked them: the film's grey title bar sits right above the cut (row 104 is its separator), and the
-   video, scaled and composited on its own layer, let a hairline of it show along the list's top, and a hairline of
-   the film's navy along the window's foot. clip-path cuts the video exactly at the list's box, and a white strip one
-   film pixel tall covers any grey that scaling smears into the top row. */
-.film-band .finderwin .clip.folder-cut {
-  clip-path: inset(0);
-}
-.film-band .finderwin .clip.folder-cut::before {
-  content: "";
-  position: absolute;
-  inset: -1px 0 auto;
-  height: calc(100% * 2 / 540 + 1px);
-  background: #ffffff;
-  z-index: 1;
-  pointer-events: none;
-}
 /* The sidebar takes its height from the window rather than giving it one: its rows ran 4px taller than the toolbar
    plus the list, leaving a white strip under the list. Now the window ends where the list does. */
 .fw-side {
@@ -1537,7 +1495,7 @@ h2 {
     display: none;
   }
   .fw-bar,
-  .film-band .finderwin .clip.folder-cut {
+  .fw-list {
     grid-column: 1;
   }
   .fw-bar > .lights {
@@ -3046,7 +3004,7 @@ h2 {
      screen tall enough to show the tiles on the first screen it plays once, after the timeline has swept.
    - The three steps come in one at a time as each reaches the screen, and the window with the run clip rises.
    - Each app window rises, and then the ring closes in on the one control to use, as a focus ring lands.
-   The band of blue behind the two clips, like the timeline, clipped with overflow: hidden, which made it the scroll
+   The band of blue behind the two windows, like the timeline, clipped with overflow: hidden, which made it the scroll
    container those timelines would follow; clip clips the same. The ring is inside its window, which clips too, so it
    follows the card's timeline by name. */
 .film-run {
@@ -3173,6 +3131,156 @@ h2 {
       animation-fill-mode: both;
       animation-timeline: auto;
       animation-range: normal;
+    }
+  }
+}
+
+/* Round 11: the export's folder, drawn as a list instead of a clip of the film: the same rows the film shows
+   (store/src/parts.ts's FOLDERS, the README and the medical file), in real text, sharp at any size. It plays as it
+   comes into view, as Round 9's pictures do: the rows rise in, top to bottom; then the list makes room under the
+   medical file, a file of the member's own slides in there, and turns pink. Its finished state is the plain list, with
+   the added file in its place, which is also what reduced motion or a browser without scroll timelines shows.
+   Keep the folders in step with FOLDERS (and the README's list) when the export's layout changes. */
+/* (Under 760px wide, which is every size the page gives the window, a row puts what it holds under its name; on a
+   phone the longest two end in an ellipsis, as Finder's columns do.) */
+.fw-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+.fw-list {
+  --rh: 34px;
+  grid-column: 2;
+  grid-row: 2;
+  position: relative;
+  margin: 0;
+  padding: 4px 0 10px;
+  list-style: none;
+  overflow: clip;
+  background: #ffffff;
+  font-size: clamp(11px, calc((100cqi - var(--side)) / 46), 13px);
+}
+.fw-list li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 15em) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  height: var(--rh);
+  margin: 0;
+  padding: 0 16px;
+  border-bottom: 1px solid #f1f3f4;
+}
+.fw-list li > svg {
+  width: 18px;
+  height: 15px;
+  stroke: none;
+}
+.fw-name,
+.fw-what {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.fw-name {
+  font-weight: 600;
+  color: #083f92;
+}
+.fw-what {
+  color: #676a80;
+}
+.fw-kinds {
+  padding: 2px 8px;
+  border: 1px solid #c4e5f8;
+  border-radius: 999px;
+  background: #f1f9fe;
+  color: #083f92;
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+.fw-list li.added {
+  background: #fbe9ef;
+}
+.fw-list li.added .fw-what {
+  color: #b83b7c;
+  font-weight: 500;
+}
+/* A window under 760px wide puts what each holds under its name. */
+@container (max-width: 760px) {
+  .fw-list {
+    --rh: 40px;
+    font-size: 11.5px;
+  }
+  .fw-list li {
+    grid-template-columns: 18px minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    align-content: center;
+    row-gap: 1px;
+    line-height: 1.3;
+  }
+  .fw-list li > svg {
+    grid-area: 1 / 1 / span 2;
+  }
+  .fw-kinds {
+    grid-area: 1 / 3 / span 2;
+  }
+  .fw-name,
+  .fw-what {
+    grid-column: 2;
+  }
+}
+.fw-list li:nth-child(1) { --i: 0; }
+.fw-list li:nth-child(2) { --i: 1; }
+.fw-list li:nth-child(4) { --i: 2; }
+.fw-list li:nth-child(5) { --i: 3; }
+.fw-list li:nth-child(6) { --i: 4; }
+.fw-list li:nth-child(7) { --i: 5; }
+.fw-list li:nth-child(8) { --i: 6; }
+.fw-list li:nth-child(9) { --i: 7; }
+.fw-list li:nth-child(10) { --i: 8; }
+.fw-list li:nth-child(11) { --i: 9; }
+.fw-list li:nth-child(12) { --i: 10; }
+.fw-list li:nth-child(13) { --i: 11; }
+.fw-list li:nth-child(14) { --i: 12; }
+.fw-list li:nth-child(15) { --i: 13; }
+@media (prefers-reduced-motion: no-preference) {
+  /* The rows rise with translate and make room with transform, so the two never fight over one property. */
+  @keyframes fw-rise {
+    from { opacity: 0; translate: 0 12px; }
+  }
+  @keyframes fw-room {
+    from { transform: translateY(calc(-1 * var(--rh))); }
+  }
+  @keyframes fw-added {
+    0% { opacity: 0; transform: translateX(110px) rotate(2deg); }
+    45% { opacity: 1; }
+    80% { transform: translateX(-4px) rotate(0deg); }
+    100% { opacity: 1; transform: translateX(0) rotate(0deg); }
+  }
+  @keyframes fw-pink {
+    from { background-color: #ffffff; }
+  }
+  @supports (animation-timeline: view()) {
+    .finderwin {
+      view-timeline: --finder block;
+    }
+    .fw-list li {
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: --finder;
+    }
+    .fw-list li:not(.added) {
+      animation-name: fw-rise;
+      animation-range: cover calc(4% + var(--i) * 0.8%) cover calc(10% + var(--i) * 0.8%);
+    }
+    /* Everything under the medical file also makes room for the added file, later. */
+    .fw-list li.added ~ li {
+      animation-name: fw-rise, fw-room;
+      animation-range: cover calc(4% + var(--i) * 0.8%) cover calc(10% + var(--i) * 0.8%), cover 28% cover 33%;
+    }
+    .fw-list li.added {
+      transform-origin: left center;
+      animation-name: fw-added, fw-pink;
+      animation-range: cover 30% cover 37%, cover 36% cover 41%;
     }
   }
 }
