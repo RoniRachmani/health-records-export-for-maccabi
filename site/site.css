@@ -1753,7 +1753,8 @@ h2 {
    - A transform keeps the same functions at every keyframe, so it interpolates function by function and never
      through a matrix; and every step eases in and out, with nothing at a constant speed.
    - Every frame is opacity and transform only: nothing is laid out again while it plays.
-   The frame at 0% is the frame at 100% (the finished dashboard), which is also what is left with the animation off. */
+   The frame at 0% is the frame at 100% (the finished dashboard), which is also what is left with the animation off.
+   It plays from 34%, below. */
 .anim > .asked,
 .anim .scene,
 .anim .scene i b,
@@ -1770,6 +1771,9 @@ h2 {
   animation-duration: 16s;
   animation-iteration-count: infinite;
   animation-timing-function: cubic-bezier(0.32, 0, 0.18, 1);
+  /* The page opens on the story's first beat, the question being asked (34%), not on its last: started at 0%, a
+     visitor met the finished dashboard and then watched it vanish. */
+  animation-delay: -5.44s;
 }
 .anim > .asked { transform-origin: 100% 100%; }
 .anim .spark circle { transform-box: fill-box; transform-origin: center; }

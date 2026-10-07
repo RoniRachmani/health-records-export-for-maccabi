@@ -38,11 +38,13 @@ const PAGE = '/site/index.html';
 /** Waits for the page to draw twice, so a scroll or a paused animation has been applied. */
 const settle = '(new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))';
 
-/** In the page: plays every time-based animation to its end. The hero's loop ends where it starts, at 0. */
+/** In the page: plays every time-based animation to its end. A loop's end is the end of an iteration, wherever its
+ * delay makes it start (the hero's opens a third of the way in). */
 const finishAll = `(() => {
   for (const a of document.getAnimations()) {
     if (a.timeline !== document.timeline) continue;
-    if (a.effect.getTiming().iterations === Infinity) { a.pause(); a.currentTime = 0; } else a.finish();
+    const { iterations, duration, delay } = a.effect.getTiming();
+    if (iterations === Infinity) { a.pause(); a.currentTime = duration + Math.min(0, delay); } else a.finish();
   }
 })()`;
 
