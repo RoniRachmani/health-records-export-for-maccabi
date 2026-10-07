@@ -55,24 +55,31 @@ jobs:
           # Only what the film is drawn from: its own code, the popup it photographs, the icons, and the version the
           # popup prints. The pages in public/ and site/ are not, so changing them deploys without a render. The number
           # after "clips-" stands for the clip lines below: raise it when their times, crops or encoding change.
-          key: clips-1-${{ hashFiles('store/src/**', 'src/extension/**', 'public/icons/**', 'scripts/stage.mjs', 'scripts/store-video.mjs', 'vite.store.config.ts', 'package.json', 'package-lock.json') }}
+          key: clips-2-${{ hashFiles('store/src/**', 'src/extension/**', 'public/icons/**', 'scripts/stage.mjs', 'scripts/store-video.mjs', 'vite.store.config.ts', 'package.json', 'package-lock.json') }}
       - name: Render the clips
         if: steps.clips.outputs.cache-hit != 'true'
         run: |
           sudo apt-get install -y --no-install-recommends ffmpeg
           mkdir -p _clips
-          # clip <name> <from> <to> <crop, in the film's 3840x2160> <size on the page, doubled>
+          # clip <name> <from> <to> <crop, in the film's 3840x2160> <size on the page, doubled> <seam>
+          # A clip loops without a jump: its last <seam> seconds blend into its first ones, and it starts where the
+          # blend ends, so the frame after its last is its first. The run dissolves (the popup keeps its layout, and only
+          # the progress changes); the folder dips through the window's white, so its rows don't double up when the
+          # added file's row goes, and they come back in as the film brings them in.
           clip() {
             npm run store-video -- "$2" "$3" --silent
-            ffmpeg -y -loglevel error -i store/assets/promo-video.mp4 -an -r 30 \
-              -vf "crop=$4,scale=$5:flags=lanczos" \
-              -c:v libx264 -preset slow -crf 23 -tune animation -pix_fmt yuv420p \
+            local seam=0.5 how=fade
+            [ "$6" = white ] && seam=0.6 how=fadewhite
+            local offset=$(awk "BEGIN { print $3 - $2 - 2 * $seam }")
+            ffmpeg -y -loglevel error -i store/assets/promo-video.mp4 -an \
+              -filter_complex "[0:v]crop=$4,scale=$5:flags=lanczos,fps=30,split[a][b];[a]trim=start=$seam,setpts=PTS-STARTPTS[body];[b]trim=end=$seam,setpts=PTS-STARTPTS[head];[body][head]xfade=transition=$how:duration=$seam:offset=$offset[v]" \
+              -map "[v]" -c:v libx264 -preset slow -crf 23 -tune animation -pix_fmt yuv420p \
               -colorspace bt709 -color_primaries bt709 -color_trc bt709 -color_range tv \
               -movflags +faststart "_clips/$1.mp4"
             ffmpeg -y -loglevel error -i "_clips/$1.mp4" -frames:v 1 "_clips/$1.png"
           }
-          clip run 19.6 29.6 1134:1785:2457:216 756:1190
-          clip folder 34.6 43.2 1845:1620:1812:318 1230:1080
+          clip run 19.6 29.6 1134:1785:2457:216 756:1190 dissolve
+          clip folder 34.6 43.2 1845:1620:1812:318 1230:1080 white
           ls -l _clips
       - uses: actions/configure-pages@v6
       - name: Assemble the site
