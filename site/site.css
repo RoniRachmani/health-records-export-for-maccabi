@@ -1743,7 +1743,7 @@ h2 {
   background: #b9cbe6;
 }
 
-/* The hero's loop, 16s: the finished dashboard; it clears to a clean slate; the question is asked; the assistant reads (a bar,
+/* The hero's loop, 13s: the finished dashboard; it clears to a clean slate; the question is asked; the assistant reads (a bar,
    and three of the Hebrew records it read); the dashboard builds back up, part by part. Times are % of the loop.
    - Leaving, only the outermost things fade: the dashboard, the question and the LDL record. Whatever builds inside
      the dashboard keeps its place until the card is fully gone, and only then is set back to where it will enter
@@ -1768,12 +1768,12 @@ h2 {
 .anim .spark circle,
 .anim .big-num,
 .anim .coming li {
-  animation-duration: 16s;
+  animation-duration: 13s;
   animation-iteration-count: infinite;
   animation-timing-function: cubic-bezier(0.32, 0, 0.18, 1);
   /* The page opens on the story's first beat: a clean slate (31%), and then the question (36%), not on its last.
      Started at 0%, a visitor met the finished dashboard and then watched it vanish. */
-  animation-delay: -4.96s;
+  animation-delay: -4.03s;
 }
 .anim > .asked { transform-origin: 100% 100%; }
 .anim .spark circle { transform-box: fill-box; transform-origin: center; }

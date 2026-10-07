@@ -30,7 +30,7 @@ npm run store-video -- --script       # the narration as one take's text, for El
 npm run store-video -- --import take.mp3 --audio-only   # cut that take into the narration's lines
 npm run icons                     # public/icons/ + store/assets/icon-128.png
 npm run site-check                # the landing page's motion: ends where the still page is, at five screen sizes
-npm run site-check -- frames .path scroll 10 375x812   # photograph one picture as it scrolls in (or `time 0 16 0.5`)
+npm run site-check -- frames .path scroll 10 375x812   # photograph one picture as it scrolls in (or `time 0 13 0.5`)
 ```
 
 There is no linter or formatter configured; `typecheck` and `test` are the whole gate you can run

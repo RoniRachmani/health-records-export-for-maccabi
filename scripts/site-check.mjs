@@ -129,7 +129,7 @@ async function check(stage, [width, height]) {
       }
       window.scrollTo({ top: 0, behavior: 'instant' });
       const loop = document.getAnimations().filter((a) => a.timeline === document.timeline);
-      for (let t = 0; t < 16000; t += 250) {
+      for (let t = 0; t < 13000; t += 250) {
         for (const a of loop) { a.pause(); a.currentTime = t; }
         await ${settle};
         if (document.documentElement.scrollWidth > innerWidth) worst.push('at ' + t + 'ms of the loop: ' + document.documentElement.scrollWidth + 'px wide');
@@ -162,7 +162,7 @@ async function frames(stage, [sel, mode = 'scroll', ...rest]) {
     console.log('wrote ' + file);
   };
   if (mode === 'time') {
-    const [from = 0, to = 16, step = 0.5] = nums;
+    const [from = 0, to = 13, step = 0.5] = nums;
     await page.evaluate(`(() => { const e = document.querySelector(${JSON.stringify(sel)});
       window.scrollTo({ top: e.getBoundingClientRect().top + scrollY - 120, behavior: 'instant' }); })(), ${settle}`);
     for (let t = from, i = 0; t <= to + 1e-9; t += step, i++) {
