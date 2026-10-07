@@ -3038,3 +3038,141 @@ h2 {
     }
   }
 }
+
+/* Round 10: three more that play as they come into view, as Round 9's do (a scroll timeline, no script; finished
+   without one, or with reduced motion).
+   - What stands out: each of the six charts is drawn as its tile comes up, left to right: lines draw from their first
+     point, bars grow from their baseline, the scattered readings come up, and each end point lands last. On a wide
+     screen tall enough to show the tiles on the first screen it plays once, after the timeline has swept.
+   - The three steps come in one at a time as each reaches the screen, and the window with the run clip rises.
+   - Each app window rises, and then the ring closes in on the one control to use, as a focus ring lands.
+   The band of blue behind the two clips, like the timeline, clipped with overflow: hidden, which made it the scroll
+   container those timelines would follow; clip clips the same. The ring is inside its window, which clips too, so it
+   follows the card's timeline by name. */
+.film-run {
+  overflow: clip;
+}
+#p-summary .tile3:nth-child(1) { --d: 0%; --t: 0s; }
+#p-summary .tile3:nth-child(2) { --d: 2%; --t: 0.1s; }
+#p-summary .tile3:nth-child(3) { --d: 4%; --t: 0.2s; }
+#p-summary .tile3:nth-child(4) { --d: 6%; --t: 0.3s; }
+#p-summary .tile3:nth-child(5) { --d: 8%; --t: 0.4s; }
+#p-summary .tile3:nth-child(6) { --d: 10%; --t: 0.5s; }
+#p-summary .tile3 :is(.end, .pt, .had-pt, .lo, .ok, .zero) {
+  transform-box: fill-box;
+}
+#p-summary .tile3 :is(.end, .pt, .had-pt) {
+  transform-origin: center;
+}
+#p-summary .tile3 :is(.lo, .ok, .zero) {
+  transform-origin: 50% 100%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes stands-draw {
+    0% { stroke-dashoffset: 1; }
+    70%, 100% { stroke-dashoffset: 0; }
+  }
+  @keyframes stands-grow {
+    0% { transform: scaleY(0); }
+    70%, 100% { transform: scaleY(1); }
+  }
+  @keyframes stands-fade {
+    0% { opacity: 0; }
+    60% { opacity: var(--o, 1); }
+    100% { opacity: var(--o, 1); }
+  }
+  @keyframes stands-late {
+    0%, 35% { opacity: 0; }
+    80%, 100% { opacity: 1; }
+  }
+  @keyframes stands-pop {
+    0%, 62% { opacity: 0; transform: scale(0); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  @keyframes step-in {
+    from { opacity: 0; transform: translateY(14px); }
+  }
+  @keyframes rise-in {
+    from { opacity: 0; transform: translateY(28px); }
+  }
+  @keyframes ring-in {
+    from { box-shadow: 0 0 0 10px rgb(184 59 124 / 0); }
+    to { box-shadow: 0 0 0 2px var(--accent); }
+  }
+  #p-summary .tile3 .ln,
+  #p-summary .tile3 .had,
+  #p-summary .tile3 .life {
+    stroke-dasharray: 1;
+    animation-name: stands-draw;
+  }
+  #p-summary .tile3 :is(.lo, .ok, .zero) {
+    animation-name: stands-grow;
+  }
+  #p-summary .tile3 :is(.band, .thr, .bp, .now) {
+    animation-name: stands-fade;
+  }
+  #p-summary .tile3 .bp {
+    --o: 0.45;
+  }
+  #p-summary .tile3 .gap {
+    animation-name: stands-late;
+  }
+  #p-summary .tile3 :is(.end, .pt, .had-pt) {
+    animation-name: stands-pop;
+  }
+
+  @supports (animation-timeline: view()) {
+    #p-summary .tiles3 {
+      view-timeline: --stands block;
+    }
+    #p-summary .tile3 :is(.ln, .had, .life, .lo, .ok, .zero, .band, .thr, .bp, .now, .gap, .end, .pt, .had-pt) {
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: --stands;
+      animation-range: cover calc(6% + var(--d)) cover calc(26% + var(--d));
+    }
+
+    #collect .numbered li {
+      animation: step-in linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 20%;
+    }
+    #collect-clip .browserwin {
+      animation: rise-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 45%;
+    }
+
+    .app-card {
+      view-timeline: --card block;
+    }
+    .app-card .appwin {
+      animation: rise-in linear both;
+      animation-timeline: --card;
+      animation-range: cover 0% cover 20%;
+    }
+    #app-chatgpt .appwin {
+      animation-range: cover 3% cover 23%;
+    }
+    .app-card .appwin .pick {
+      animation: ring-in linear both;
+      animation-timeline: --card;
+      animation-range: cover 24% cover 34%;
+    }
+    #app-chatgpt .appwin .pick {
+      animation-range: cover 27% cover 37%;
+    }
+  }
+
+  @media (min-width: 861px) and (min-height: 1100px) {
+    #p-summary .tile3 :is(.ln, .had, .life, .lo, .ok, .zero, .band, .thr, .bp, .now, .gap, .end, .pt, .had-pt) {
+      animation-duration: 1.2s;
+      animation-timing-function: cubic-bezier(0.32, 0, 0.18, 1);
+      animation-delay: calc(2.3s + var(--t));
+      animation-fill-mode: both;
+      animation-timeline: auto;
+      animation-range: normal;
+    }
+  }
+}
