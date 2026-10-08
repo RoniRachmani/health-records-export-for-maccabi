@@ -214,7 +214,8 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   slice of the promo film that the workflow renders and crops (see the workflow's header), so a change to the film's
   timing or layout has to be matched in the `clip` line there. The opened folder beside it is drawn in HTML
   (`.fw-list`), from the film's `FOLDERS` in `store/src/parts.ts`: keep the two lists in step, and its open
-  `test-results/` (a result's `details/` JSON bracketed to its `files/` PDF of the same name) in step with the export. Its copy follows `docs/positioning.md`, and must agree
+  `test-results/` (a result's `details/` JSON beside its `files/` PDF of the same name, the film's earlier drill) in step
+  with the export. Its copy follows `docs/positioning.md`, and must agree
   with the README's opening and with `public/ai-assistant.html` on the facts they share.
 - **The landing page's motion is CSS, and it ends where the still page is.** The hero loops; the rest plays as it comes
   into view, on scroll timelines (`animation-timeline: view()`), so a picture's progress is its place on the screen.
