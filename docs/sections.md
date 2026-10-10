@@ -131,7 +131,9 @@ same: 2 min 5 s on line 16, and the new PDF 4 min 47 s and 4 min 53 s after the 
 from the order (`orderedAt`), which the rest of the run has usually used up, so the first check takes the file. That
 rests on Maccabi having swapped the new file in by then: an order with no same-day file has been found ready 2 min
 43 s after it at the earliest check, and nothing measures how much sooner it is. A reorder that got the old file
-would show in the PDF, which is byte for byte the same when a file is used again and differs after each order. A same-day file over another range (the site's own order form asks for a narrower one) is waited
+would show in the PDF, which is byte for byte the same when a file is used again and differs after each order. The
+first reorder under the new rule, the same day, took 2 min 48 s and 254 requests: the first check, 2 min 34 s after
+the order, took the file, the run had the PDF 2 min 42 s after the order, and it was a new one. A same-day file over another range (the site's own order form asks for a narrower one) is waited
 past for as long as the new one takes, up to 15 minutes, since its range shows it is not the new one.
 
 The next day's first export (2026-09-30, `--export`, no same-day file) ordered in 1.5 s, and line 16's first check,
