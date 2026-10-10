@@ -346,7 +346,9 @@ async function collector(): Promise<Collector> {
         const key = stagingKey(PLAN[state.next], ev.detail ?? '');
         if (key !== timing?.key) timeUnder(key);
         state.detail = ev.detail ? LABELS[PLAN[state.next]] + ': ' + ev.detail : LABELS[PLAN[state.next]];
-        state.percent = percentOf(state.next, ev.done, ev.total);
+        // A part that starts its own count (the medical file's download, after the wait) holds the bar; it never
+        // steps back within a step. The step's start set it, so a step that runs again starts over.
+        state.percent = Math.max(state.percent, percentOf(state.next, ev.done, ev.total));
         saveSoon();
       },
       shouldStop: () => cancelRequested,
