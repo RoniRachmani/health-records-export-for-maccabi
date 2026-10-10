@@ -2,7 +2,7 @@
 
 Health Records Export for Maccabi
 
-Effective 23 September 2026
+Effective 10 October 2026
 
 <!-- Keep in sync with public/terms.html, which ships in the extension at chrome-extension://<id>/terms.html. -->
 
@@ -21,7 +21,8 @@ not made, reviewed, endorsed or sponsored by Maccabi Healthcare Services, and Ma
 ## 2. Using the extension
 
 - Use it only with your own Maccabi Online account, or an account whose records you are legally entitled to access.
-- You remain bound by Maccabi Online's own terms of use, and you are responsible for your account and your login.
+- You remain bound by Maccabi's own terms, its [terms of use](https://www.maccabi4u.co.il/23085/policies_and_procedures/terms_of_use/) and its
+  [online services terms](https://www.maccabi4u.co.il/31276/digital-services/data_security_terms/online_services/) (both in Hebrew), and you are responsible for your account and your login.
 - Do not use the extension, or a modified copy of it, to access records without permission, to overload or disrupt
   Maccabi Online, or for any unlawful purpose.
 
