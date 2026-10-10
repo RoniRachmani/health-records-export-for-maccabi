@@ -438,6 +438,26 @@ describe('full run against the fake site', () => {
     expect(details.data.d[0].DocumentTitle).toBe('סיכום אשפוז');
   });
 
+  it('reports an upload too large to bring back from the tab, without retrying it or ending the session', async () => {
+    const site = fakeMaccabi();
+    let downloads = 0;
+    const big: Route = (_req, url) => {
+      if (!url.pathname.includes('PHRDownloadDocument')) return undefined;
+      downloads++;
+      return { status: 200, redirected: false, contentType: 'application/pdf', bytes: new Uint8Array(), tooLarge: true };
+    };
+    const { c, sink } = makeCollector(fakeTransport([big, ...site.routes]));
+    const s = await runAll(c, newCtx(), ['savedDocuments']);
+    // One request per upload (the fake site has two): asking again would only fail the same way.
+    expect(downloads).toBe(2);
+    expect(s.problems).toEqual([
+      expect.stringMatching(/^uploads\/files\/2026-05-01_F1_סיכום-אשפוז\.pdf PROBLEM: too large for the extension/),
+      expect.stringMatching(/^uploads\/files\/2026-05-02_F2_סיכום\.pdf PROBLEM: too large for the extension/),
+    ]);
+    // The upload's details are kept, without a file to point to.
+    expect((sink as MemorySink).json('uploads/details/2026-05-01_F1_סיכום-אשפוז.json').files).toBeUndefined();
+  });
+
   it('falls back to windows-1255 for the saved-documents service when the header names no charset', async () => {
     const site = fakeMaccabi();
     const bare: Route = (req, url) => {

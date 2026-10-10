@@ -62,7 +62,8 @@ export function errMessage(e: unknown): string {
  * member is told that, and the status stays for whoever reads export-errors.json. Anything else is the extension's
  * to explain, so it keeps the details.
  */
-export function pdfFailure(b: { status: number; type: string }): string {
+export function pdfFailure(b: { status: number; type: string; tooLarge?: boolean }): string {
+  if (b.tooLarge) return TOO_LARGE;
   if (b.status === 404) return 'Maccabi has no PDF for this, and the site cannot open it either (HTTP 404)';
   return 'PDF download: HTTP ' + b.status + ' ' + b.type;
 }
@@ -73,10 +74,14 @@ export interface ApiResult {
   data: Json;
 }
 
+/** The problem a file too large to bring back from the tab files. Asking again would only fail the same way. */
+export const TOO_LARGE = 'too large for the extension to bring back from the Maccabi Online tab; download it from the site';
+
 export interface BinResult {
   status: number;
   type: string;
   bytes: Uint8Array;
+  tooLarge?: boolean;
 }
 
 /** One export session: the seams, the member's session and the per-phase log. */
@@ -260,6 +265,10 @@ export class Collector {
       const out = signedOut(r);
       if (out) throw new SessionEndedError(out);
       if (r.status === 401 && !headers) throw new SessionEndedError('HTTP 401');
+      if (r.tooLarge) {
+        await this.sleep(PACE_MS);
+        return { status: r.status, type: mimeType(r.contentType), bytes: r.bytes, tooLarge: true };
+      }
       if (r.status === 429) {
         await this.rateLimitPause(r, waited ? 1 : 2);
         waited = true;

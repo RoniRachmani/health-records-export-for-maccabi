@@ -3,11 +3,11 @@
    worker can pick it up); the member's session token lives only in
    chrome.storage.session; exported files live in IndexedDB staging. */
 import {
-  CancelledError, Collector, errMessage, LEGACY_STEPS, letters, MEDICAL_FILE, newCtx, placeOrder, RateLimitedError, runStep,
+  CancelledError, Collector, errMessage, LEGACY_STEPS, letters, MEDICAL_FILE, newCtx, orderSettled, placeOrder, RateLimitedError, runStep,
   SessionEndedError, sha256Hex, waitMedicalFile, type Session, type StepName, type Transport,
 } from '../../core';
 import {
-  alignToPlan, exportName, FILE_LAYOUT, LABELS, MACCABI_ORIGIN, percentOf, PLAN, resumeIndex, sameLayout, SONLINE_PAGE, SUMMARY_PAGE, type PlanStep, type RunState,
+  alignToPlan, exportName, FILE_LAYOUT, LABELS, MACCABI_ORIGIN, percentOf, PLAN, resumeIndex, sameLayout, savingOutcome, SONLINE_PAGE, SUMMARY_PAGE, type PlanStep, type RunState,
 } from '../shared/state';
 import {
   clearProblemsOfStep, clearStaging, listMeta, listProblems, putTextDirect, setCurrentPart, setCurrentStep, stagedTotals, stagingKey, stagingSink,
@@ -163,6 +163,10 @@ export async function dismiss(): Promise<void> {
 export async function recover(reason: 'startup' | 'heartbeat'): Promise<void> {
   const run = await loadRun();
   if (!run || active) return;
+  if (run.status === 'saving') {
+    await settleSave(run);
+    return;
+  }
   if (run.status === 'running' || run.status === 'paused_hidden') {
     if (reason === 'startup' || !(await getSession())) {
       await pause('paused_session', 'Chrome was restarted during the export. Log in to Maccabi Online, then click this extension’s icon on that tab and press Resume. Files collected so far are kept.');
@@ -387,8 +391,9 @@ async function runPlanStep(step: PlanStep): Promise<void> {
       return;
     case 'orderMedicalFile': {
       // The steps that follow rewind to openLegacyPage when a paused run resumes, which comes back
-      // through here: one order per run, or Maccabi would build the file again and text again.
-      if (run.order && (run.order.ordered || run.order.skipped_ready_today)) return;
+      // through here: one order per run, or Maccabi would build the file again and text again. That holds for an
+      // order whose answer was lost or unclear too, since Maccabi may have taken it.
+      if (orderSettled(run.order)) return;
       // dev:skipOrder: a test run collects everything else without ordering, and waitMedicalFile then keeps
       // the file Maccabi already has, as it does when an order fails.
       if (__DEV_BRIDGE__ && (await chrome.storage.local.get('devSkipOrder')).devSkipOrder) return;
@@ -500,15 +505,38 @@ async function saveZip(): Promise<void> {
   // Completion arrives through chrome.downloads.onChanged (onDownloadChanged).
 }
 
+/**
+ * A run left saving that this worker is not driving: Chrome was closed or crashed with the ZIP on its way, or the
+ * download's last event never arrived. Without this it would stay saving for good, with no Cancel or Save again to
+ * leave it by, and Start refused.
+ */
+async function settleSave(run: RunState): Promise<void> {
+  const id = run.downloadId;
+  const [item] = id === undefined ? [] : await chrome.downloads.search({ id }).catch(() => []);
+  // The download's own event may have settled the run while Chrome was asked.
+  if (run.status !== 'saving') return;
+  const outcome = savingOutcome(item?.state);
+  if (outcome === 'complete') await onDownloadChanged({ id: id as number, state: { current: 'complete' } });
+  else if (outcome === 'interrupted') await saveFailed(run, item?.error || 'it stopped before it finished, perhaps when Chrome closed');
+}
+
+async function saveFailed(run: RunState, reason: string): Promise<void> {
+  run.status = 'error';
+  run.message = 'The ZIP could not be saved (' + reason + '). Your files are still collected: press “Save again”.';
+  await save();
+  await notify('attention', 'Export not saved', run.message);
+}
+
 export async function onDownloadChanged(delta: chrome.downloads.DownloadDelta): Promise<void> {
   const run = await loadRun();
   if (!run || run.downloadId !== delta.id || run.status !== 'saving') return;
   const blobUrl = run.blobUrl;
   if (delta.state?.current === 'complete') {
+    // Before anything is awaited: settleSave and the download's own event can both get here, and only one finishes.
+    run.status = 'done';
     const problems = await listProblems();
     run.problems = problems.slice(0, 50);
     run.problemCount = problems.length;
-    run.status = 'done';
     run.finishedAt = new Date().toISOString();
     if (run.downloadStartedAt) run.timings = { ...run.timings, 'save:download': { ms: Date.now() - run.downloadStartedAt, requests: 0 } };
     run.percent = 100;
@@ -523,10 +551,7 @@ export async function onDownloadChanged(delta: chrome.downloads.DownloadDelta): 
     const p = run.problemCount;
     await notify('ready', 'Export ready', run.zipName + ': ' + run.fileCount + ' files' + (p ? ', ' + p + ' problem' + (p === 1 ? '' : 's') : '') + '.');
   } else if (delta.state?.current === 'interrupted') {
-    run.status = 'error';
-    run.message = 'The ZIP could not be saved (' + (delta.error?.current || 'interrupted') + '). Your files are still collected: press “Save again”.';
-    await save();
-    await notify('attention', 'Export not saved', run.message);
+    await saveFailed(run, delta.error?.current || 'interrupted');
   }
 }
 

@@ -61,6 +61,19 @@ export interface OrderResult {
   same_range_before?: boolean;
   /** Nothing was ordered: a file from today over the same range was already waiting, and is used instead. */
   skipped_ready_today?: boolean;
+  /** The order request went out, whatever came back: Maccabi may have taken it even when no clear answer did. */
+  sent?: boolean;
+}
+
+/**
+ * Whether a run holding this result must not order again (a resume or a reconnect rewinds through the order step):
+ * Maccabi took the order, or may have, or a ready file was used instead. Only an order that was never sent, or that
+ * Maccabi plainly refused (Success '3'), is tried again: anything else could build the file and text the member twice.
+ */
+export function orderSettled(o: OrderResult | undefined): boolean {
+  if (!o) return false;
+  if (o.ordered || o.skipped_ready_today) return true;
+  return !!o.sent && o.success_code !== '3';
 }
 
 // Orders the medical file (Maccabi sends an SMS and replaces the previous file
@@ -109,13 +122,16 @@ export async function placeOrder(c: Collector, opts: { reorder?: boolean } = {})
     /* reported below */
   }
   await c.sleep(PACE_MS);
-  // Success '1' = ordered, SMS sent. '2' (ordered, no SMS) or '3' (failed) is reported, not waited on.
-  if (res.status !== 200 || !data || data.Success !== '1') {
-    await c.problem(MEDICAL_FILE, 'medical file order not confirmed: HTTP ' + res.status + ' Success ' + (data && data.Success) +
-      (data && data.Success === '2' ? ' (ordered without SMS)' : ''));
-    return { ordered: false, success_code: data ? data.Success : undefined };
+  // Success '1' = ordered, SMS sent; '2' = ordered, no SMS: either way Maccabi builds the file, and the run waits
+  // for it. '3' (failed) or no clear answer is reported, not waited on.
+  if (res.status !== 200 || !data || (data.Success !== '1' && data.Success !== '2')) {
+    await c.problem(MEDICAL_FILE, 'medical file order not confirmed: HTTP ' + res.status + ' Success ' + (data && data.Success));
+    return { ordered: false, sent: true, success_code: data ? data.Success : undefined };
   }
-  return { ordered: true, success_code: data.Success, from_date: fromDate, to_date: toDate, same_day_before: sameDayBefore, same_range_before: sameRangeBefore };
+  return {
+    ordered: true, sent: true, success_code: data.Success, from_date: fromDate, to_date: toDate,
+    same_day_before: sameDayBefore, same_range_before: sameRangeBefore,
+  };
 }
 
 /**

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { letters, newCtx, placeOrder, waitMedicalFile } from '../src/core';
+import { letters, newCtx, orderSettled, placeOrder, waitMedicalFile } from '../src/core';
 import { fakeMaccabi, fakeTransport, makeCollector, FakeClock, MemorySink, PDF, bytesResp } from './fakes';
 
 const SUMMARY = '/online/medicalfile/summary/';
@@ -14,7 +14,7 @@ describe('placeOrder', () => {
     expect(xhrs).toBe(0);
   });
 
-  it('sends the site\'s request with the Israel date and counts only Success 1', async () => {
+  it('sends the site\'s request with the Israel date and counts Success 1 and 2 as ordered', async () => {
     const site = fakeMaccabi();
     const sent: string[] = [];
     const clock = new FakeClock();
@@ -27,9 +27,37 @@ describe('placeOrder', () => {
       "{'startDate':'1900-01-01','endDate':'2026-09-17'}",
     ]);
 
+    // '2' is an order Maccabi took without texting: the file is built all the same, and waited for.
     const { c: c2, sink } = makeCollector(fakeTransport(site.routes, { pagePath: SUMMARY, xhr: () => ok('2') }));
-    expect(await placeOrder(c2)).toMatchObject({ ordered: false, success_code: '2' });
-    expect((sink as MemorySink).problems[0].what).toMatch(/not confirmed: HTTP 200 Success 2/);
+    expect(await placeOrder(c2)).toMatchObject({ ordered: true, sent: true, success_code: '2', to_date: '2026-09-17' });
+    expect((sink as MemorySink).problems).toEqual([]);
+  });
+
+  it('reports a refused or unanswered order as sent, and only a refusal may be sent again', async () => {
+    const site = fakeMaccabi();
+    const { c, sink } = makeCollector(fakeTransport(site.routes, { pagePath: SUMMARY, xhr: () => ok('3') }));
+    const refused = await placeOrder(c);
+    expect(refused).toMatchObject({ ordered: false, sent: true, success_code: '3' });
+    expect((sink as MemorySink).problems[0].what).toMatch(/not confirmed: HTTP 200 Success 3/);
+    expect(orderSettled(refused)).toBe(false);
+
+    // No answer (the tab's XHR fails or times out) is not a refusal: Maccabi may have taken the order.
+    const { c: c2 } = makeCollector(fakeTransport(site.routes, { pagePath: SUMMARY, xhr: () => ({ status: 0, text: '' }) }));
+    const lost = await placeOrder(c2);
+    expect(lost).toMatchObject({ ordered: false, sent: true });
+    expect(orderSettled(lost)).toBe(true);
+    const { c: c3 } = makeCollector(fakeTransport(site.routes, { pagePath: SUMMARY, xhr: () => ({ status: 500, text: 'oops' }) }));
+    expect(orderSettled(await placeOrder(c3))).toBe(true);
+  });
+
+  it('settles an order once it was placed, skipped or possibly taken, and not before', () => {
+    expect(orderSettled(undefined)).toBe(false);
+    expect(orderSettled({ error: 'open /online/medicalfile/summary/ first' })).toBe(false);
+    expect(orderSettled({ ordered: false })).toBe(false); // the letters list failed: nothing was sent
+    expect(orderSettled({ ordered: true, sent: true, success_code: '1' })).toBe(true);
+    expect(orderSettled({ ordered: false, skipped_ready_today: true })).toBe(true);
+    // A run stored by an earlier version has no sent: it goes by ordered, as it did.
+    expect(orderSettled({ ordered: true, success_code: '1' })).toBe(true);
   });
 
   it('orders nothing when a file from today over the same range is already waiting', async () => {

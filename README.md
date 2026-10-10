@@ -130,7 +130,7 @@ Then load the `dist/` folder the same way.
 | **Export paused** | Your session ended. Logging in to Maccabi Online anywhere else (another browser or computer) does this: Maccabi keeps one session per member. Log in to Maccabi Online again, click the icon on that tab and press **Resume**. (The extension first tries to reconnect by itself.) Also shown after Chrome restarts mid-export. |
 | **Waiting for the Maccabi Online tab** | Bring the tab back to the front. The export continues on its own. |
 | **Export stopped** | Press **Try again** on the Maccabi Online tab. It continues from the step that failed. |
-| **The ZIP was not saved** | Press **Save again**. |
+| **The ZIP was not saved** | Press **Save again**. Also shown when Chrome closed while the ZIP was downloading. |
 
 Resume refuses to continue if a different member is logged in. **Cancel export** ends the export and deletes the files
 collected so far, once you confirm it.
@@ -332,7 +332,9 @@ flowchart LR
 The service worker walks a fixed plan (`PLAN` in `src/extension/shared/state.ts`): one crossing to the old site to
 order the medical file and collect purchases, hospital stays and uploads (with the member's details and prescriptions,
 which the REST API answers from any page), back to `/sonline/` for the other REST API sections, and the medical file collected last, by which time Maccabi Healthcare Services has had the whole run to build it. Each finished step is
-checkpointed in `chrome.storage.local`, so a paused run, or a restarted service worker, continues from there.
+checkpointed in `chrome.storage.local`, so a paused run, or a restarted service worker, continues from there. The
+medical file is ordered at most once per run: once the order has gone out, a resume or a reconnect that comes back
+through that step skips it, even when Maccabi Healthcare Services' answer was lost, and only a plain refusal is tried again.
 
 A step that continues is run again from its start, so every step is safe to repeat: JSON is rewritten only when
 its content changed, and a document already staged is not asked for again. Staging also keeps a SHA-256 index of the
@@ -357,6 +359,8 @@ renews the session token only there, and the wait is the longest part of the run
 
 REST API requests (`/sonline/`) go from the service worker, with the session token read from the tab. Legacy requests
 (`/online/`) and the medical file order go from inside the Maccabi Online tab, where the site requires them to originate.
+Like the service worker's own requests, a download from the tab gives up only after 60 s with nothing arriving, so a large
+upload on a slow line still finishes; a file over 32 MB, more than the tab can hand back, is filed as a problem instead.
 
 | Path | Contents |
 |---|---|

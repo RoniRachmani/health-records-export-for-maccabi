@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { STEP_ORDER } from '../src/core';
-import { alignToPlan, FILE_LAYOUT, PLAN, resumeIndex, sameLayout } from '../src/extension/shared/state';
+import { alignToPlan, FILE_LAYOUT, PLAN, resumeIndex, sameLayout, savingOutcome } from '../src/extension/shared/state';
 
 describe('PLAN', () => {
   it('runs every collection step once, in the order core lists them', () => {
@@ -86,5 +86,15 @@ describe('sameLayout', () => {
   it('lets such a run finish when only the medical file and the ZIP are left', () => {
     expect(sameLayout({ next: PLAN.indexOf('waitMedicalFile') })).toBe(true);
     expect(sameLayout({ next: PLAN.length })).toBe(true);
+  });
+});
+
+describe('savingOutcome', () => {
+  it('lets a download in progress finish, finishes a completed one, and saves again otherwise', () => {
+    expect(savingOutcome('in_progress')).toBe('wait');
+    expect(savingOutcome('complete')).toBe('complete');
+    // Chrome restarted mid-download marks it interrupted; one it never started, or forgot, is not there at all.
+    expect(savingOutcome('interrupted')).toBe('interrupted');
+    expect(savingOutcome(undefined)).toBe('interrupted');
   });
 });

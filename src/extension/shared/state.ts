@@ -264,6 +264,17 @@ export function sameLayout(run: { next: number; layout?: number }): boolean {
   return run.next >= PLAN.indexOf('waitMedicalFile');
 }
 
+/**
+ * What a run left saving, with no worker driving it, comes to by the state of its download in chrome.downloads (undefined
+ * when Chrome has none: the browser closed before the ZIP was handed over, or forgot it). A download Chrome is still
+ * receiving is left to finish; anything else that has not completed will never complete, since its blob: URL died with
+ * the offscreen document, and the run has to save again from staging.
+ */
+export function savingOutcome(downloadState: string | undefined): 'wait' | 'complete' | 'interrupted' {
+  if (downloadState === 'in_progress') return 'wait';
+  return downloadState === 'complete' ? 'complete' : 'interrupted';
+}
+
 /** Where a resumed run continues: Resume reloads the tab, so a step that needs a page opens it again. */
 export function resumeIndex(next: number): number {
   const opener = OPENED_BY[PLAN[next]];

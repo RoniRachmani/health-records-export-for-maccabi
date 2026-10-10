@@ -29,6 +29,8 @@ export interface HttpResponse {
   retryAfter?: string;
   /** Where the response came from after followed redirects (fetch's Response.url), when known. */
   url?: string;
+  /** The body was too large for the transport to bring back, and bytes is empty: a file to report, not to retry. */
+  tooLarge?: boolean;
 }
 
 export interface Transport {

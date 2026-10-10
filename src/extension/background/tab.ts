@@ -262,17 +262,69 @@ interface PageResult {
   retryAfter?: string;
   url?: string;
   b64?: string;
+  /** The body was over maxBytes, and was left behind. */
+  tooLarge?: boolean;
 }
 
-async function fetchInPage(req: HttpRequest): Promise<PageResult> {
+/**
+ * The largest body a request from the tab brings back. It returns through executeScript as base64, a third bigger,
+ * and Chrome refuses a result over 64 MiB: a larger file would fail every time, and read as a tab that stopped answering.
+ */
+export const TAB_MAX_BYTES = 32 * 1024 * 1024;
+/**
+ * The longest a request from the tab may take in all. The page gives up on its own after STALL_MS without a byte;
+ * this is only for a tab that stops answering altogether, and is long enough for TAB_MAX_BYTES on a slow line.
+ */
+const TAB_FETCH_TIMEOUT_MS = 10 * 60_000;
+
+/**
+ * Runs in the page. Like extensionFetch, it gives up only when nothing has arrived for stallMs, so a large file on a slow
+ * line is not cut off while it is still arriving, and it leaves a body over maxBytes behind rather than read it.
+ */
+export async function fetchInPage(req: HttpRequest, stallMs: number, maxBytes: number): Promise<PageResult> {
+  const abort = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const alive = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => abort.abort(), stallMs);
+  };
   try {
-    const r = await fetch(req.url, { method: req.method, headers: req.headers, body: req.body, credentials: 'include', redirect: req.redirect || 'follow' });
-    const buf = new Uint8Array(await r.arrayBuffer());
+    alive();
+    const r = await fetch(req.url, { method: req.method, headers: req.headers, body: req.body, credentials: 'include', redirect: req.redirect || 'follow', signal: abort.signal });
+    const head = { ok: true, status: r.status, redirected: r.type === 'opaqueredirect', contentType: r.headers.get('content-type') || '', retryAfter: r.headers.get('retry-after') || undefined, url: r.url };
+    if (Number(r.headers.get('content-length')) > maxBytes) {
+      abort.abort();
+      return { ...head, tooLarge: true };
+    }
+    const parts: Uint8Array[] = [];
+    let length = 0;
+    if (r.body) {
+      const reader = r.body.getReader();
+      for (;;) {
+        alive();
+        const { done, value } = await reader.read();
+        if (done) break;
+        length += value.length;
+        if (length > maxBytes) {
+          abort.abort();
+          return { ...head, tooLarge: true };
+        }
+        parts.push(value);
+      }
+    }
+    const buf = new Uint8Array(length);
+    let at = 0;
+    for (const p of parts) {
+      buf.set(p, at);
+      at += p.length;
+    }
     let bin = '';
     for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode.apply(null, Array.from(buf.subarray(i, i + 0x8000)));
-    return { ok: true, status: r.status, redirected: r.type === 'opaqueredirect', contentType: r.headers.get('content-type') || '', retryAfter: r.headers.get('retry-after') || undefined, url: r.url, b64: btoa(bin) };
+    return { ...head, b64: btoa(bin) };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    return { ok: false, error: abort.signal.aborted ? 'Maccabi Healthcare Services sent nothing for ' + stallMs / 1000 + ' s' : e instanceof Error ? e.message : String(e) };
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -300,9 +352,12 @@ export function tabTransport(tabId: number, waitVisible: () => Promise<void>): T
   return {
     async fetch(req) {
       await waitVisible();
-      const r = await inTab(tabId, fetchInPage, [req]);
+      const r = await inTab(tabId, fetchInPage, [req, STALL_MS, TAB_MAX_BYTES], TAB_FETCH_TIMEOUT_MS);
       if (!r.ok) throw new Error(r.error);
-      return { status: r.status as number, redirected: !!r.redirected, contentType: r.contentType || '', retryAfter: r.retryAfter, url: r.url, bytes: b64bytes(r.b64 || '') };
+      return {
+        status: r.status as number, redirected: !!r.redirected, contentType: r.contentType || '', retryAfter: r.retryAfter, url: r.url,
+        bytes: b64bytes(r.b64 || ''), ...(r.tooLarge ? { tooLarge: true } : {}),
+      };
     },
     async xhr(req) {
       await waitVisible();

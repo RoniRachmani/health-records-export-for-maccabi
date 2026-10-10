@@ -1,4 +1,4 @@
-import { errMessage, isControl, PACE_MS, type Collector } from '../collector';
+import { errMessage, isControl, PACE_MS, TOO_LARGE, type Collector } from '../collector';
 import type { Ctx, DocRef, Json } from '../types';
 import { iso, safe, shortHash, stem, title, titleOf } from '../util';
 import { VISIT_TITLE, visitPdfUrl } from './visits';
@@ -134,7 +134,7 @@ export async function savedDocuments(c: Collector, _ctx: Ctx): Promise<void> {
         if (!ref) {
           const f = await c.fetchBin('/online/Pages/Popups/PHR/PHRDownloadDocument.aspx?fileid=' + encodeURIComponent(arg), {});
           if (f.status === 200 && !/text\/html/.test(f.type) && f.bytes.length) ref = await c.saveOnce(rel, f.bytes);
-          else await c.problem(rel, 'attachment download: HTTP ' + f.status + ' ' + f.type);
+          else await c.problem(rel, f.tooLarge ? TOO_LARGE : 'attachment download: HTTP ' + f.status + ' ' + f.type);
         }
         if (ref) files.push(ref);
       } else {
