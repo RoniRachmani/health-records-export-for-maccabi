@@ -54,29 +54,32 @@ The run keeps `timings`: the time and the requests of each step, or `step:part` 
 by), summed over every time a step ran. `npm run live` prints them. The time is wall-clock, so it includes the
 `PACE_MS` (300 ms) between requests and any wait. `alive` pings are not counted.
 
-Measured on 2026-09-29 by `npm run live -- --export` on one account: a real export, with the order and the ZIP
+Measured on 2026-10-10 (0.8.5) by `npm run live -- --export` on one account: a real export, with the order and the ZIP
 (232 files, 15.8 MB), and the Maccabi tab in front throughout:
 
 | # | Line | Keys | Time | Requests |
 |---|---|---|---|---|
-| 1 | Ordering your medical file | `openLegacyPage` (4.6 s), `orderMedicalFile` | 6.1 s | 2 |
-| 2 | Your details and doctor | `profileAndDoctors`, `emptySections:*` | 7.6 s | 10 |
-| 3 | Prescriptions | `medications`, `medications:prescriptions` | 1.9 s | 3 |
-| 4 | Medication purchases | `purchases:purchase history`, `purchases:purchase report` | 2.4 s | 3 |
-| 5 | Hospital stays | `hospitalStays:hospital stays` | 0.8 s | 1 |
-| 6 | Your uploads | `savedDocuments`, `savedDocuments:saved documents` | 9.3 s | 9 |
-| 7 | Test results | `returnToSonline` (2.4 s), `testResults`, `testResults:test results` | 33.0 s | 31 |
-| 8 | Lab histories | `testResults:lab histories` | 44.1 s | 73 |
-| 9 | Visit summaries | `visits`, `visits:visits` | 9.2 s | 17 |
-| 10 | Referrals | `referrals`, `referrals:referrals` | 16.9 s | 32 |
+| 1 | Ordering your medical file | `openLegacyPage` (5.1 s), `orderMedicalFile` | 7.2 s | 2 |
+| 2 | Your details and doctor | `profileAndDoctors`, `emptySections:*` | 6.4 s | 10 |
+| 3 | Prescriptions | `medications`, `medications:prescriptions` | 3.7 s | 3 |
+| 4 | Medication purchases | `purchases:purchase history`, `purchases:purchase report` | 2.1 s | 3 |
+| 5 | Hospital stays | `hospitalStays:hospital stays` | 0.6 s | 1 |
+| 6 | Your uploads | `savedDocuments`, `savedDocuments:saved documents` | 10.9 s | 9 |
+| 7 | Test results | `returnToSonline` (2.6 s), `testResults`, `testResults:test results` | 35.3 s | 31 |
+| 8 | Lab histories | `testResults:lab histories` | 43.5 s | 73 |
+| 9 | Visit summaries | `visits`, `visits:visits` | 8.4 s | 17 |
+| 10 | Referrals | `referrals`, `referrals:referrals` | 16.8 s | 32 |
 | 11 | Approvals | `approvals`, `approvals:approvals` | 3.1 s | 6 |
-| 12 | Vaccinations | `vaccinations`, `vaccinations:vaccinations` | 6.2 s | 9 |
-| 13 | Letters | `letters`, `letters:letters` | 2.6 s | 4 |
-| 14 | Messages with your doctor | `doctorCommunications`, `doctorCommunications:doctor inquiries` | 25.3 s | 48 |
-| 15 | Information pages | `infoPages`, `infoPages:information pages` | 1.0 s | 2 |
-| 16 | Collecting your medical file | `waitMedicalFile`, `waitMedicalFile:medical file status 1`, `waitMedicalFile:letters` | 8.6 s | 4 |
-| 17 | Saving the ZIP | `save:root files`, `save:zip` (0.2 s), `save:download` (0.3 s) | 0.5 s | 0 |
-| | All | | 2 min 59 s | 254 |
+| 12 | Vaccinations | `vaccinations`, `vaccinations:vaccinations` | 5.2 s | 9 |
+| 13 | Letters | `letters`, `letters:letters` | 2.9 s | 4 |
+| 14 | Messages with your doctor | `doctorCommunications`, `doctorCommunications:doctor inquiries` | 24.8 s | 48 |
+| 15 | Information pages | `infoPages`, `infoPages:information pages` | 1.1 s | 2 |
+| 16 | Collecting your medical file | `waitMedicalFile`, `waitMedicalFile:medical file status 1`, `waitMedicalFile:letters` | 9.1 s | 4 |
+| 17 | Saving the ZIP | `save:root files`, `save:zip` (0.2 s), `save:download` (0.2 s) | 0.4 s | 0 |
+| | All | | 3 min 1 s | 254 |
+
+The same export on 2026-09-29 took 2 min 59 s and the same 254 requests, with no line more than 2.3 s from the
+table.
 
 On 2026-09-30, `npm run live` on two more accounts, both with a longer history (these tests skip the order and the
 ZIP), took 3 min 24 s (263 files, 282 requests) and 4 min 8 s (288 files, 330 requests). Where they differ most from
@@ -84,31 +87,31 @@ the table:
 
 | # | Line | Above | Second account | Third account |
 |---|---|---|---|---|
-| 3 | Prescriptions | 1.9 s, 3 requests | 19.5 s, 31 requests | 13.3 s, 20 requests |
-| 7–8 | Test results and lab histories | 77 s | 87 s | 101 s |
-| 9 | Visit summaries | 9.2 s | 6.1 s | 18.5 s |
-| 10 | Referrals | 16.9 s | 29.8 s | 32.2 s |
-| 14 | Messages with your doctor | 25.3 s | 23.6 s | 38.9 s |
-| 6 | Your uploads | 9.3 s | 0.6 s | 0.4 s |
+| 3 | Prescriptions | 3.7 s, 3 requests | 19.5 s, 31 requests | 13.3 s, 20 requests |
+| 7–8 | Test results and lab histories | 79 s | 87 s | 101 s |
+| 9 | Visit summaries | 8.4 s | 6.1 s | 18.5 s |
+| 10 | Referrals | 16.8 s | 29.8 s | 32.2 s |
+| 14 | Messages with your doctor | 24.8 s | 23.6 s | 38.9 s |
+| 6 | Your uploads | 10.9 s | 0.6 s | 0.4 s |
 
-`WEIGHTS` in `state.ts` are fitted to the three accounts: the whole numbers that keep the progress bar closest to
+`WEIGHTS` in `state.ts` are fitted to the three accounts, the first as measured on 2026-09-29: the whole numbers that keep the progress bar closest to
 the elapsed time on the worst of them, at each line's end and halfway through test results. That is within about
 5 points, where the weights set from the table alone were 6.7 points behind on the second account and held the bar on
 one percent through its 20 s of prescriptions. It assumes the medical file is ready when line 16 comes. Re-measure
 before changing them.
 
-About 0.70 s a request: the 300 ms of pacing and about 0.4 s of the site's answer. Test results, lab histories, the
+About 0.71 s a request: the 300 ms of pacing and about 0.4 s of the site's answer. Test results, lab histories, the
 doctor messages and referrals are about two thirds of the time; each grows with the member's history. Building and
 downloading the ZIP is under a second.
 
 The medical file overlaps the whole run: it is ordered on line 1 and collected on line 16. The run keeps
-`orderedAt` and `medicalFileMs`, the time from the order until the run has the PDF: here 2 min 52 s. Line 16's first
+`orderedAt` and `medicalFileMs`, the time from the order until the run has the PDF: here 2 min 54 s. Line 16's first
 check already found the file ready, so Maccabi took at most that, and the line waited only for the PDF. A file Maccabi is slower with makes line 16 poll every 15 s, up to 15 minutes (`waitMedicalFile`'s
 `timeoutMs`), and the parts then name each status it waited in.
 
-The same day, with `--export --reorder` (`dev:reorder`: order even though today's file is ready), the run took
-5 min 2 s and 262 requests. Line 1 was 13.0 s, of which the order request took 8.9 s, against 1.5 s in the run
-above. Line 16 was 2 min 15 s, and the run had the new PDF 4 min 49 s after the order. That wait is the run's own
+On 2026-09-29, after that day's export, with `--export --reorder` (`dev:reorder`: order even though today's file is ready), the run took
+5 min 2 s and 262 requests. Line 1 was 13.0 s, of which the order request took 8.9 s, against 1.5 s in the export
+before it. Line 16 was 2 min 15 s, and the run had the new PDF 4 min 49 s after the order. That wait is the run's own
 rule, not Maccabi's pace. Maccabi swaps the new file into the list's one medical-file entry in place, without listing
 it pending first, and nothing in the entry but its range tells a new file from an earlier one (`timestamp`, `hash`
 and `link` change on every read). So with a ready file from earlier that day over the same range, which only
