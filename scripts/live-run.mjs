@@ -490,7 +490,12 @@ async function main() {
   }
   // Time and requests per step, or step:part, as the runner summed them: a step a resume or a rewind ran again counts
   // twice. The time is wall-clock, so it includes the PACE_MS between requests and any wait.
-  const secs = (ms) => (ms < 60_000 ? (ms / 1000).toFixed(1) + ' s' : Math.floor(ms / 60_000) + ' min ' + Math.round((ms % 60_000) / 1000) + ' s');
+  // Rounded before it is split, so 4 min 59.6 s is "5 min 0 s", not "4 min 60 s" (and 59.96 s is not "60.0 s").
+  const secs = (ms) => {
+    if (ms < 59_950) return (ms / 1000).toFixed(1) + ' s';
+    const s = Math.round(ms / 1000);
+    return Math.floor(s / 60) + ' min ' + (s % 60) + ' s';
+  };
   const timed = Object.entries(run.timings || {});
   if (timed.length) {
     const width = Math.max(...timed.map(([key]) => key.length));
