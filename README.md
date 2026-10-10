@@ -62,7 +62,7 @@ password.
 
 ## Install
 
-You need Chrome 116 or newer.
+You need Chrome 120 or newer.
 
 **[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp)**, and
 Chrome keeps it up to date. However you install it, the build isn't minified, so you can read exactly the code that

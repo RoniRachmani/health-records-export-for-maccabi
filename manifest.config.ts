@@ -6,7 +6,7 @@ export default defineManifest(({ mode }) => ({
   name: mode === 'development' ? 'Health Records Export for Maccabi (dev)' : 'Health Records Export for Maccabi',
   version: pkg.version,
   description: "Your whole Maccabi history, and a genius friend who's read all of it: save your records, then ask Claude or ChatGPT. Unofficial.",
-  minimum_chrome_version: '116',
+  minimum_chrome_version: '120',
   icons: {
     16: 'icons/icon-16.png',
     32: 'icons/icon-32.png',
