@@ -109,6 +109,10 @@ The medical file overlaps the whole run: it is ordered on line 1 and collected o
 check already found the file ready, so Maccabi took at most that, and the line waited only for the PDF. A file Maccabi is slower with makes line 16 poll every 15 s, up to 15 minutes (`waitMedicalFile`'s
 `timeoutMs`), and the parts then name each status it waited in.
 
+A second export the same day found today's file over the same range already ready and placed no order: line 1 made
+one request, not two (0.7 s after the page change), line 16 went straight to the download with no status part (8.6 s,
+3 requests), and the run took 2 min 53 s and 252 requests.
+
 On 2026-09-29, after that day's export, with `--export --reorder` (`dev:reorder`: order even though today's file is ready), the run took
 5 min 2 s and 262 requests. Line 1 was 13.0 s, of which the order request took 8.9 s, against 1.5 s in the export
 before it. Line 16 was 2 min 15 s, and the run had the new PDF 4 min 49 s after the order. That wait is the run's own
