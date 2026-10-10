@@ -12,6 +12,9 @@ the extension changes, update this file along with it (see [Keeping it true](#ke
    the popup too: re-render it with `npm run store-video` and re-upload it to YouTube (see [Promo video](#promo-video)).
 4. `npm run package`, which builds `dist/` and writes `release/health-records-export-for-maccabi-<version>.zip`.
    Upload that file on the **Package** tab. The script refuses to package a development build.
+5. For the GitHub release, write its notes in `docs/releases/<version>.md` (the first line, `# <title>`, names it),
+   push them and the bump to `main`, and run the **Release** workflow from the Actions tab with the version. It runs the
+   gate, packages the same ZIP, tags `main` as `v<version>` and publishes the release with the ZIP attached.
 
 ## Store listing tab
 

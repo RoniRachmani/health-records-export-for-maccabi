@@ -371,11 +371,11 @@ upload on a slow line still finishes; a file over 32 MB, more than the tab can h
 | `src/extension/popup/` | The popup |
 | `src/extension/dev/` | The bridge content script, injected by the development build only |
 | `test/` | Vitest tests against a fake Maccabi Online (`fakes.ts`) |
-| `docs/` | Endpoint map, privacy policy, terms, store listing; the README's images in `images/` |
+| `docs/` | Endpoint map, privacy policy, terms, store listing; each release's notes in `releases/`; the README's images in `images/` |
 | `public/` | Icons, and the privacy policy, terms and third-party notices that ship in the extension |
 | `store/` | Chrome Web Store images in `assets/`, and the pages they're rendered from in `src/` |
 | `scripts/` | Build scripts: icons, store images and video, the release ZIP |
-| `.github/` | The CI workflow that runs the gate, the issue forms, the security policy, and Dependabot |
+| `.github/` | The CI workflow that runs the gate, the workflow that publishes a release, the issue forms, the security policy, and Dependabot |
 
 ### The look
 

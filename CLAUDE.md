@@ -46,6 +46,10 @@ still never ships or fetches one. Without Roboto here, run the *Store images* wo
 (`gh workflow run store-assets.yml`, optionally `-f shots="start open"`): it renders on Linux with Roboto and
 commits the images that changed to `main`, so pull afterwards.
 
+A session can push to `main` but not push tags, so a GitHub release is published by the *Release* workflow
+(`.github/workflows/release.yml`, run with the version): it needs the version bump and `docs/releases/<version>.md`
+on `main` first, then tags `v<version>` and attaches the packaged ZIP.
+
 ## Git
 
 Work directly on `main`: commit and push to `main` (`git push origin main`), even when a session
