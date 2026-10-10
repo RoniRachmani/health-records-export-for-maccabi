@@ -124,9 +124,14 @@ rule, not Maccabi's pace. Maccabi swaps the new file into the list's one medical
 it pending first, and nothing in the entry but its range tells a new file from an earlier one (`timestamp`, `hash`
 and `link` change on every read). So with a ready file from earlier that day over the same range, which only
 `--reorder` orders past, the wait takes a ready file as the new one only after it has seen the new order pending
-(`mustSeePending`), or after 2 minutes (`appearMs`). Here every check showed a ready file, so the run waited out the
-2 minutes. The new file may have been ready when the wait began, 2 min 35 s after the order. The ZIP's PDF did differ
-from the earlier one. A same-day file over another range (the site's own order form asks for a narrower one) is waited
+(`mustSeePending`), or after 2 minutes (`appearMs`). Those 2 minutes were then counted from the start of the wait.
+Here every check showed a ready file, so the run waited them out. The new file may have been ready when the wait
+began, 2 min 35 s after the order. The ZIP's PDF did differ from the earlier one. Two such runs on 2026-10-10 were the
+same: 2 min 5 s on line 16, and the new PDF 4 min 47 s and 4 min 53 s after the order. Since then the 2 minutes count
+from the order (`orderedAt`), which the rest of the run has usually used up, so the first check takes the file. That
+rests on Maccabi having swapped the new file in by then: an order with no same-day file has been found ready 2 min
+43 s after it at the earliest check, and nothing measures how much sooner it is. A reorder that got the old file
+would show in the PDF, which is byte for byte the same when a file is used again and differs after each order. A same-day file over another range (the site's own order form asks for a narrower one) is waited
 past for as long as the new one takes, up to 15 minutes, since its range shows it is not the new one.
 
 The next day's first export (2026-09-30, `--export`, no same-day file) ordered in 1.5 s, and line 16's first check,

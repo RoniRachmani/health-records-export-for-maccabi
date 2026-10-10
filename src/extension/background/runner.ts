@@ -427,6 +427,7 @@ async function runPlanStep(step: PlanStep): Promise<void> {
           toDate: run.order.to_date,
           fromDate: run.order.from_date,
           mustSeePending: run.order.same_range_before ?? run.order.same_day_before,
+          orderedAt: run.orderedAt ? Date.parse(run.orderedAt) : undefined,
         });
         if (waited.ready && run.orderedAt) run.medicalFileMs = Date.now() - Date.parse(run.orderedAt);
       } else {

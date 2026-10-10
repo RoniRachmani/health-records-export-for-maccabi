@@ -152,9 +152,14 @@ export interface WaitOptions {
   timeoutMs?: number;
   /**
    * A ready file over this same day and range existed before the order (only dev:reorder orders then), so the list
-   * cannot tell the two apart: wait until it shows the new one pending, or appearMs passes.
+   * cannot tell the two apart: wait until it shows the new one pending, or appearMs has passed since the order.
    */
   mustSeePending?: boolean;
+  /**
+   * When the order was placed (the Clock's time). The rest of the run comes between the order and this wait, so
+   * appearMs is usually over before the first check; without it, appearMs counts from the start of the wait.
+   */
+  orderedAt?: number;
 }
 
 // Waits until the medical file ordered with endDate toDate is ready, then
@@ -180,7 +185,7 @@ export async function waitMedicalFile(c: Collector, opts: WaitOptions = {}): Pro
     c.progress(Math.min(waited, timeoutMs), timeoutMs,
       x ? 'medical file status ' + x.status : sameDay ? 'medical file status pending' : 'waiting for the medical file to appear');
     if (x && x.status !== 1) sawPending = true;
-    if (x && x.status === 1 && x.link && (sawPending || !opts.mustSeePending || waited > appearMs)) break;
+    if (x && x.status === 1 && x.link && (sawPending || !opts.mustSeePending || c.now() - (opts.orderedAt ?? started) > appearMs)) break;
     if (!sameDay && waited > appearMs) {
       await c.problem(MEDICAL_FILE, 'no medical file with to_date ' + toDate + ' after ' + Math.round(waited / 1000) + ' s');
       return { polls, ready: false };

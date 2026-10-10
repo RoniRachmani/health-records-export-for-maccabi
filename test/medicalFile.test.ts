@@ -103,6 +103,22 @@ describe('waitMedicalFile', () => {
     expect(sink.problems).toEqual([]);
   });
 
+  it('takes a ready same-range file as the new one 2 minutes after the order, not after the wait began', async () => {
+    // Maccabi never lists the new file pending, and the rest of the run has usually used up the 2 minutes already.
+    const ready = { letter_type: 2, status: 1, to_date: '2026-09-17', from_date: '1900-01-01T00:00:00', item_date: '2026-09-17T12:00:00', link: 'mf.pdf', timestamp: 'ts' };
+    const wait = async (sinceOrderMs: number) => {
+      const clock = new FakeClock();
+      const { c } = makeCollector(fakeTransport(fakeMaccabi({ medicalFile: ready }).routes), new MemorySink(), clock);
+      return waitMedicalFile(c, { toDate: '2026-09-17', fromDate: '1900-01-01', mustSeePending: true, orderedAt: clock.t - sinceOrderMs });
+    };
+    expect(await wait(150_000)).toMatchObject({ ready: true, polls: 1 });
+    // Ordered a minute ago: the other minute is waited here.
+    const w = await wait(60_000);
+    expect(w.ready).toBe(true);
+    expect(w.ready_after_s).toBeGreaterThanOrEqual(60);
+    expect(w.ready_after_s).toBeLessThan(120);
+  });
+
   it('waits past today\'s file over a narrower range, however long the new one takes', async () => {
     // Maccabi swaps the file in place and never lists it pending: only the range tells the new one from the old.
     const narrower = { letter_type: 2, status: 1, to_date: '2026-09-17', from_date: '2023-09-17T00:00:00', item_date: '2026', link: 'old.pdf', timestamp: 'a' };
