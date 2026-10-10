@@ -9,7 +9,8 @@
    It says only what a reader cannot get by opening a file -- the layout, the gaps, the traps, the
    join keys -- and leaves the field names to the JSON, which carries them already. Before adding a
    line, ask whether a record would be read wrongly without it; if not, leave it out. */
-import { israelDay, type PlanStep } from './state';
+import { israelToday } from '../../core/util';
+import type { PlanStep } from './state';
 
 interface Folder {
   name: string;
@@ -289,7 +290,7 @@ export function exportReadme(
     ? '\n  This export has no ' + inWords(failed) + ' because collecting ' + (failed.length > 1 ? 'them' : 'it') +
       ' failed: it cannot say what is\n  on record there. Look in the medical file, and ask.'
     : '');
-  const started = israelDay(Date.parse(made.startedAt));
+  const started = israelToday(Date.parse(made.startedAt));
   const version = 'version ' + made.version + ', file layout ' + made.layout + (made.dev ? ' (development build)' : '');
   const folders = here
     .map((f) => '**`' + f.name + '/`** · ' + present[f.name] + (present[f.name] === 1 ? ' file — ' : ' files — ') + f.summary + '.' +

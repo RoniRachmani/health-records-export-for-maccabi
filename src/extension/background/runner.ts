@@ -13,7 +13,7 @@ import {
   clearProblemsOfStep, clearStaging, listMeta, listProblems, putTextDirect, setCurrentPart, setCurrentStep, stagedTotals, stagingKey, stagingSink,
 } from '../shared/staging';
 import { EXPORT_ERRORS, exportErrors, exportReadme, INSTRUCTION_POINTERS, type ExportError } from '../shared/readme';
-import { callOffscreen, closeOffscreen, offscreenHtml } from './offscreenClient';
+import { callOffscreen, closeOffscreen, offscreenHtml, revokeBlob } from './offscreenClient';
 import { capturingTransport, rawDumpOn } from './rawDump';
 import { currentRoutes, currentSession, extensionFetch, isVisible, keepSessionAlive, navigate, routedTransport, snapshot } from './tab';
 import { updateBadge, notify } from './ui';
@@ -487,12 +487,16 @@ async function saveZip(): Promise<void> {
   const run = state as RunState;
   run.status = 'saving';
   run.detail = LABELS.save;
+  // Save again builds a new ZIP: the one that did not make it would otherwise stay in memory beside it.
+  await dropBlob(run);
   await save();
   const root = exportName(Date.now());
   timeUnder(stagingKey('save', 'root files'));
   await writeReadme(root, run);
   timeUnder(stagingKey('save', 'zip'));
   const zip = await callOffscreen<{ url: string; bytes: number; files: number }>({ type: 'zip', root });
+  // Kept before the download is asked for, which can fail, so the blob can always be let go of.
+  run.blobUrl = zip.url;
   run.zipName = root + '.zip';
   run.fileCount = zip.files;
   run.zipBytes = zip.bytes;
@@ -500,7 +504,6 @@ async function saveZip(): Promise<void> {
   timeUnder(null);
   run.downloadStartedAt = Date.now();
   run.downloadId = await chrome.downloads.download({ url: zip.url, filename: run.zipName, conflictAction: 'uniquify', saveAs: false });
-  run.blobUrl = zip.url;
   await save();
   // Completion arrives through chrome.downloads.onChanged (onDownloadChanged).
 }
@@ -520,8 +523,17 @@ async function settleSave(run: RunState): Promise<void> {
   else if (outcome === 'interrupted') await saveFailed(run, item?.error || 'it stopped before it finished, perhaps when Chrome closed');
 }
 
+/** Lets go of the run's ZIP blob, if it holds one. */
+async function dropBlob(run: RunState): Promise<void> {
+  if (!run.blobUrl) return;
+  await revokeBlob(run.blobUrl);
+  run.blobUrl = undefined;
+}
+
 async function saveFailed(run: RunState, reason: string): Promise<void> {
   run.status = 'error';
+  // Save again builds the ZIP afresh from staging: this one is no use, and holds the whole export in memory.
+  await dropBlob(run);
   run.message = 'The ZIP could not be saved (' + reason + '). Your files are still collected: press “Save again”.';
   await save();
   await notify('attention', 'Export not saved', run.message);
@@ -530,7 +542,6 @@ async function saveFailed(run: RunState, reason: string): Promise<void> {
 export async function onDownloadChanged(delta: chrome.downloads.DownloadDelta): Promise<void> {
   const run = await loadRun();
   if (!run || run.downloadId !== delta.id || run.status !== 'saving') return;
-  const blobUrl = run.blobUrl;
   if (delta.state?.current === 'complete') {
     // Before anything is awaited: settleSave and the download's own event can both get here, and only one finishes.
     run.status = 'done';
@@ -542,8 +553,8 @@ export async function onDownloadChanged(delta: chrome.downloads.DownloadDelta): 
     run.percent = 100;
     run.next = PLAN.length;
     run.message = undefined;
+    await dropBlob(run);
     await save();
-    if (blobUrl) await callOffscreen({ type: 'revoke', url: blobUrl }).catch(() => undefined);
     await clearStaging();
     await chrome.storage.session.remove('session');
     await chrome.alarms.clear(HEARTBEAT);

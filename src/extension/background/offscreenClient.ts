@@ -6,10 +6,14 @@ import type { OffscreenReply, OffscreenRequest } from '../shared/offscreenProtoc
 const PATH = 'src/extension/offscreen/offscreen.html';
 let creating: Promise<void> | null = null;
 
-async function ensure(): Promise<void> {
+async function isOpen(): Promise<boolean> {
   const url = chrome.runtime.getURL(PATH);
   const contexts = await chrome.runtime.getContexts({ contextTypes: [chrome.runtime.ContextType.OFFSCREEN_DOCUMENT], documentUrls: [url] });
-  if (contexts.length) return;
+  return contexts.length > 0;
+}
+
+async function ensure(): Promise<void> {
+  if (await isOpen()) return;
   if (!creating) {
     creating = chrome.offscreen
       .createDocument({
@@ -30,6 +34,18 @@ export async function callOffscreen<T extends OffscreenReply>(req: OffscreenRequ
   if (!res) throw new Error('no reply from the offscreen document');
   if ('error' in res && res.error) throw new Error(res.error);
   return res as T;
+}
+
+/**
+ * Lets go of a ZIP's blob: URL, which holds the whole export in memory. With no offscreen document there is nothing
+ * to do, since its blobs went with it, and none is opened just to say so. Failures are ignored.
+ */
+export async function revokeBlob(url: string): Promise<void> {
+  try {
+    if (await isOpen()) await callOffscreen({ type: 'revoke', url });
+  } catch {
+    /* gone already */
+  }
 }
 
 export async function closeOffscreen(): Promise<void> {

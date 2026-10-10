@@ -89,7 +89,8 @@ export interface StagedTotals {
 /** Files and bytes staged, for the popup. Loaded from the meta store once, then kept up to date by writes. */
 let totals: StagedTotals | null = null;
 
-async function putFile(rel: string, bytes: Uint8Array, key?: string): Promise<void> {
+/** Stages a file, and returns its SHA-256 (hex), which its meta records. */
+async function putFile(rel: string, bytes: Uint8Array, key?: string): Promise<string> {
   const meta: FileMeta = { rel, size: bytes.length, sha256: await sha256Hex(bytes) };
   const tx = (await db()).transaction(['files', 'meta'], 'readwrite');
   const metaStore = tx.objectStore('meta');
@@ -109,6 +110,7 @@ async function putFile(rel: string, bytes: Uint8Array, key?: string): Promise<vo
     }
     totals.bytes += meta.size - (prev?.size ?? 0);
   }
+  return meta.sha256;
 }
 
 export async function listMeta(): Promise<FileMeta[]> {
@@ -190,9 +192,9 @@ export const stagingSink: Sink = {
     if (bad) return { error: bad };
     const result = binResult(await getFile(rel), bytes, replace);
     if (result === 'written' || result === 'updated') {
-      await putFile(rel, bytes, stagingKey(currentStep, currentPart));
+      const sha = await putFile(rel, bytes, stagingKey(currentStep, currentPart));
       const tx = (await db()).transaction('shas', 'readwrite');
-      tx.objectStore('shas').put(rel, await sha256Hex(bytes));
+      tx.objectStore('shas').put(rel, sha);
       await done(tx);
     }
     return { result };

@@ -1,4 +1,5 @@
 import type { Ctx, OrderResult, Problem } from '../../core';
+import { israelToday } from '../../core/util';
 
 export const MACCABI_ORIGIN = 'https://online.maccabi4u.co.il';
 
@@ -183,7 +184,7 @@ export interface RunState {
   /** Size of the saved ZIP. */
   zipBytes?: number;
   downloadId?: number;
-  /** The ZIP's blob: URL in the offscreen document, revoked once the download finishes. */
+  /** The ZIP's blob: URL in the offscreen document, revoked once the download finishes or fails, and before Save again builds another. */
   blobUrl?: string;
   /** Hash of the member id, to refuse resuming as a different member. */
   memberHash?: string;
@@ -290,11 +291,7 @@ export function percentOf(next: number, stepDone: number, stepTotal: number): nu
   return Math.min(100, Math.round(((before + current) / total) * 100));
 }
 
-/** The day it is in Israel at `now`, as YYYY-MM-DD: the date an export is named by. */
-export function israelDay(now: number): string {
-  return new Date(now).toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
-}
-
+/** An export is named by the day it is in Israel, as the medical file it orders is dated. */
 export function exportName(now: number): string {
-  return 'maccabi-export-' + israelDay(now);
+  return 'maccabi-export-' + israelToday(now);
 }
