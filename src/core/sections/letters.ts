@@ -193,6 +193,7 @@ export async function waitMedicalFile(c: Collector, opts: WaitOptions = {}): Pro
     await c.sleep(everyMs);
   }
   const ready = Math.round((c.now() - started) / 1000);
+  c.progress(0, 1, 'letters'); // the download is its own part, as in a run that ordered nothing
   await medicalFilePdf(c, x, true);
   await letters(c, newCtx()); // letters/list.json; the PDF is saved now, so not fetched twice
   return { polls, ready: true, ready_after_s: ready };

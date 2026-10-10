@@ -109,6 +109,10 @@ The medical file overlaps the whole run: it is ordered on line 1 and collected o
 check already found the file ready, so Maccabi took at most that, and the line waited only for the PDF. A file Maccabi is slower with makes line 16 poll every 15 s, up to 15 minutes (`waitMedicalFile`'s
 `timeoutMs`), and the parts then name each status it waited in.
 
+The download itself is the `letters` part: about 8 s here, two requests of which the first was most likely answered
+202, with the 5 s before the second. The table's run was measured before the wait announced that part, so there the
+download and the letters list are under `medical file status 1`, and `waitMedicalFile:letters` is empty.
+
 A second export the same day found today's file over the same range already ready and placed no order: line 1 made
 one request, not two (0.7 s after the page change), line 16 went straight to the download with no status part (8.6 s,
 3 requests), and the run took 2 min 53 s and 252 requests.

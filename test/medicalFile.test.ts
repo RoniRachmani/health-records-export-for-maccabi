@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { letters, newCtx, orderSettled, placeOrder, waitMedicalFile } from '../src/core';
+import type { HttpRequest } from '../src/core/types';
 import { fakeMaccabi, fakeTransport, makeCollector, FakeClock, MemorySink, PDF, bytesResp } from './fakes';
 
 const SUMMARY = '/online/medicalfile/summary/';
@@ -114,8 +115,13 @@ describe('waitMedicalFile', () => {
       if (clock.t - t0 >= 180_000) state.medicalFile = { ...narrower, from_date: '1900-01-01T00:00:00', link: 'mf.pdf', timestamp: 'b' };
     };
     const details: string[] = [];
-    const { c, sink } = makeCollector(fakeTransport(site.routes), new MemorySink(), clock, { progress: (ev) => details.push(ev.detail ?? '') });
+    const transport = fakeTransport(site.routes);
+    const partAtDownload: string[] = [];
+    const watched = { ...transport, fetch: (req: HttpRequest) => (req.url.includes('mf.pdf') && partAtDownload.push(details[details.length - 1]), transport.fetch(req)) };
+    const { c, sink } = makeCollector(watched, new MemorySink(), clock, { progress: (ev) => details.push(ev.detail ?? '') });
     const w = await waitMedicalFile(c, { toDate: '2026-09-17', fromDate: '1900-01-01', mustSeePending: false });
+    // The download is timed and described as the `letters` part, not as the last status the wait saw.
+    expect(partAtDownload).toEqual(['letters']);
     // Taking the narrower file would have been immediate: nothing about it is pending.
     expect(w.ready).toBe(true);
     expect(w.ready_after_s).toBeGreaterThanOrEqual(180);
