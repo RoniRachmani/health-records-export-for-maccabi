@@ -471,6 +471,30 @@ script retrying a wrong password is how an account gets locked. The browser prof
 reused: every new sign-in ends your other sessions. Branded Chrome ignores `--load-extension`; there, load
 `dist-dev/` by hand once in that profile, and the script says so when it finds no extension answering.
 
+### An export from the terminal, without the extension
+
+`npm run export` makes an export with no extension installed: it opens the same browser and signs in the same way as
+`npm run live` (the profile, `.env` and 1Password references above), then runs the collector in Node — `src/core/`
+bundled for it into `dist-cli/` — with the requests sent from inside the Maccabi Online page, as the extension sends
+them from the tab, and writes the folder the ZIP would hold into `./maccabi-export-<today>/`, root files included:
+the `README.md`, `CLAUDE.md`, `AGENTS.md` and `export-errors.json` of a popup export, so an assistant reads it the same.
+
+```sh
+npm run export                          # test results and lab histories: about a minute, and nothing on the account changes
+npm run export -- --all                 # every section the extension collects
+npm run export -- --steps visits,referrals   # just those (the names in STEPS, src/core/steps.ts)
+npm run export -- --out ~/health        # the folder goes under that directory; --keep leaves the browser open
+```
+
+It never orders the medical file — the one request that changes anything, and what makes Maccabi send an SMS — so
+`--all` takes the medical file already on the site, if there is one. A rerun into the same folder rewrites only the
+JSON that changed and asks for no document it already has, which is what Resume does for a popup run. Like the
+popup, it ends the member's other Maccabi sessions when it has to sign in, and a wrong password is never resubmitted.
+For a member who wants their records refreshed on a schedule, or who would rather not install an extension, this is
+the way; the popup remains the way for everyone else. `scripts/headless-lib.mjs` holds the two seams it puts under
+the collector, the page as `Transport` and a folder as `Sink`, and `test/headless.test.ts` runs the test-results step
+through them against the fake site.
+
 ### Releasing
 
 ```sh
