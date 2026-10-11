@@ -70,7 +70,7 @@ export function credentials() {
  * (branded Chrome ignores the flag; the profile then keeps one loaded by hand). `keep` leaves the
  * browser open when the process exits; otherwise it is killed. Returns the page (evaluate, probe,
  * navigate, insertText, pressEnter) with the raw protocol `send`, its `sessionId` and `targetId`,
- * for what the page object does not cover.
+ * and `on` for protocol events, for what the page object does not cover.
  */
 export async function openBrowser({ startUrl = START, extension = null, keep = false } = {}) {
   const exe = BROWSERS.find(isFile);
@@ -109,8 +109,13 @@ export async function openBrowser({ startUrl = START, extension = null, keep = f
   });
   let lastId = 0;
   const pending = new Map();
+  const listeners = new Map(); // protocol event -> handlers, for a script that watches the page (on())
   ws.onmessage = (e) => {
     const m = JSON.parse(e.data);
+    if (m.method) {
+      for (const f of listeners.get(m.method) || []) f(m.params, m.sessionId);
+      return;
+    }
     const p = m.id && pending.get(m.id);
     if (!p) return;
     pending.delete(m.id);
@@ -171,6 +176,12 @@ export async function openBrowser({ startUrl = START, extension = null, keep = f
     send,
     sessionId,
     targetId: target0.targetId,
+    /** Subscribes to a protocol event (enable its domain with send() first); returns the unsubscribe. */
+    on(method, handler) {
+      if (!listeners.has(method)) listeners.set(method, new Set());
+      listeners.get(method).add(handler);
+      return () => listeners.get(method).delete(handler);
+    },
   };
   return page;
 }
