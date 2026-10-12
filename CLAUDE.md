@@ -207,7 +207,7 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   `public/terms.html`, and change their effective date. For a material change also bump `TERMS_EFFECTIVE`
   in `shared/state.ts`, which makes the popup ask everyone to accept again. Likewise `public/ai-assistant.html`
   must agree with the README's short *Hand it to an AI assistant* on the facts it keeps (the apps, the first
-  message, the safeguards); the page carries the rest. The page is the popup's "See how", the "Export ready"
+  message, the safeguards); the page carries the rest. The page is the popup's "How to ask an AI", the "Export ready"
   notification's button, and the popup's reminder while the medical file is prepared, which opens it in a window of
   its own: a tab would hide the Maccabi one and pause the run.
   `.github/workflows/pages.yml` publishes `public/` on GitHub Pages, so these pages are also public web pages.

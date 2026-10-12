@@ -517,7 +517,7 @@ film, drawn by the same page: `npm run store-assets -- poster`.
 - **Keep the policies in sync.** `docs/privacy.md` goes with `public/privacy.html`, and `docs/terms.md` with
   `public/terms.html`. Change the effective date when you change either. For a material change, also set
   `TERMS_EFFECTIVE` in `src/extension/shared/state.ts` to the new date, so the popup asks users to accept again.
-  `public/ai-assistant.html`, the page the popup's "See how" opens and GitHub Pages publishes, must agree with
+  `public/ai-assistant.html`, the page the popup's "How to ask an AI" opens and GitHub Pages publishes, must agree with
   *Hand it to an AI assistant* above on the facts that section keeps: the apps, the first message and the safeguards.
 - **Keep [public/third-party-notices.txt](public/third-party-notices.txt) current.** It carries the licenses of
   third-party code bundled into the package (fflate, and Vite's module preload polyfill). Update it when a runtime
