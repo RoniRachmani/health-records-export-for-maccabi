@@ -179,10 +179,11 @@ function noticeView(): Child[] {
       ' texts you about it, and it replaces the previous one on the site. A copy already ordered today is reused.'),
     h('ul', { class: 'points' },
       // One line each: two would take the view past the popup's 600px.
+      // What it does first, then what is asked of the member.
       h('li', {}, 'Everything stays on this computer, in one ZIP.'),
-      h('li', {}, 'Only for records you may legally access.'),
-      h('li', {}, 'It keeps your Maccabi session from timing out.'),
-      h('li', {}, 'The ZIP holds sensitive health information.')),
+      h('li', {}, 'It keeps you logged in to Maccabi while it runs.'),
+      h('li', {}, 'The ZIP holds sensitive health information.'),
+      h('li', {}, 'Only for records you may legally access.')),
     // Pinned with the button, in case a larger font takes the text past the popup's height: what the click
     // agrees to must be in view when it is clicked.
     stickyActions(
@@ -340,8 +341,9 @@ function doneView(run: RunState): Child[] {
   icon.innerHTML = ZIP_ICON;
   const caution = h('p', { class: 'caution' }, h('span', {}, 'The ZIP contains sensitive health information. Store and share it with care.'));
   caution.insertAdjacentHTML('afterbegin', LOCK_ICON);
-  const done = actionButton('Done', { type: 'dismiss' });
-  done.title = 'Clears this summary. The ZIP stays in your Downloads folder.';
+  // Not one of the pair: it clears this summary and goes back to the start, which is nobody's next step.
+  const clear = h('p', { class: 'dismiss' }, actionButton('Clear this summary', { type: 'dismiss' }, 'quiet'));
+  (clear.firstElementChild as HTMLElement).title = 'The ZIP stays in your Downloads folder.';
   return [
     status('Saved', 'ok'),
     h('h2', {}, 'Your export is ready'),
@@ -359,10 +361,10 @@ function doneView(run: RunState): Child[] {
           h('h3', {}, g.label),
           h('ul', {}, ...g.items.map((p) => h('li', {}, problemText(p.what), p.where.includes('/') && h('span', { class: 'path' }, p.where))))))),
       count > shown.length && h('p', { class: 'small' }, 'Showing the first ' + shown.length + '.')),
-    actions(actionButton('Show in folder', { type: 'showFile' }, 'primary'), done),
-    // What the ZIP is for, so its way in is a button and not a link at the end of a sentence.
-    note('', h('strong', {}, 'Next: '), 'unzip it and open the folder in your AI assistant, then ask about your records.',
-      h('div', { class: 'note-action' }, button('See how', () => void window.open(AI_HELP, '_blank'), 'small'))),
+    // What the ZIP is for comes first, and its way in is one of the pair: finding the file, then asking about it.
+    note('', h('strong', {}, 'Next: '), 'unzip it and open the folder in your AI assistant, then ask about your records.'),
+    actions(actionButton('Show in folder', { type: 'showFile' }, 'primary'), button('How to ask an AI', () => void window.open(AI_HELP, '_blank'))),
+    clear,
     caution,
   ];
 }
@@ -378,6 +380,8 @@ function errorView(run: RunState, st: StateReply): Child[] {
     h('h2', {}, atSave ? 'The ZIP was not saved' : 'Export stopped'),
     note('err',
       h('div', {}, run.message || 'The export failed.'),
+      // What went wrong in the code's own words: no use to the member, and what a report needs.
+      run.errorDetail && h('div', { class: 'small err-detail' }, 'Details, for a report: ', h('span', {}, run.errorDetail)),
       !atSave && h('div', { class: 'small' }, st.tab.onMaccabi
         ? 'Files collected so far are kept. Try again continues from where it stopped.'
         : 'Files collected so far are kept. To try again, open this popup on the logged-in Maccabi Online tab.'),

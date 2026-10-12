@@ -421,6 +421,13 @@ code {
   text-transform: uppercase;
   color: var(--muted);
 }
+/* How to take the message along, said in view: the tooltip is no use to a finger, or to an eye that never hovers. */
+.first-hint {
+  margin-left: 8px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
 .prompts {
   display: flex;
   flex-wrap: wrap;

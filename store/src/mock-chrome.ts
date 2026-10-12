@@ -69,7 +69,7 @@ const STATES: Record<string, Omit<StateReply, 'noticeAccepted'> & { noticeAccept
     tab,
   },
   error: {
-    run: run({ status: 'error', next: PLAN.indexOf('purchases'), percent: 8, message: 'Unexpected error in “Medication purchases”: the purchase table has an unknown layout' }),
+    run: run({ status: 'error', next: PLAN.indexOf('purchases'), percent: 8, message: 'The export ran into something it did not expect in “Medication purchases”.', errorDetail: 'the purchase table has an unknown layout' }),
     tab,
   },
   done: { run: done, tab },

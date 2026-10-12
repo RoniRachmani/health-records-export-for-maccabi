@@ -135,6 +135,7 @@ export async function resume(tabId: number): Promise<void> {
   run.next = resumeIndex(run.next);
   run.status = 'running';
   run.message = undefined;
+  run.errorDetail = undefined;
   await save();
   void loop();
 }
@@ -252,7 +253,8 @@ function loop(): Promise<void> {
           }
           if (state) {
             state.status = 'error';
-            state.message = 'Unexpected error in “' + LABELS[step] + '”: ' + errMessage(e);
+            state.message = 'The export ran into something it did not expect in “' + LABELS[step] + '”.';
+            state.errorDetail = errMessage(e);
             await save();
             await notify('attention', 'Export failed', state.message);
           }
@@ -300,6 +302,7 @@ async function waitVisible(): Promise<void> {
   if (state) {
     state.status = 'running';
     state.message = undefined;
+    state.errorDetail = undefined;
     await save();
     // A frozen tab's idle timers fire as soon as it runs again.
     await keepSessionAlive(state.tabId);
@@ -552,6 +555,7 @@ export async function onDownloadChanged(delta: chrome.downloads.DownloadDelta): 
     run.percent = 100;
     run.next = PLAN.length;
     run.message = undefined;
+    run.errorDetail = undefined;
     await dropBlob(run);
     await save();
     await clearStaging();
@@ -570,6 +574,7 @@ export async function retrySave(): Promise<void> {
   if (!run || run.status !== 'error' || run.next !== PLAN.indexOf('save')) throw new UserError('Nothing to save again.');
   run.status = 'running';
   run.message = undefined;
+  run.errorDetail = undefined;
   await save();
   void loop();
 }

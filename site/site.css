@@ -2746,7 +2746,8 @@ h2 {
       animation-timeline: --tl;
       animation-range: cover 5% cover 40%;
     }
-    .tl.mini .tl-site {
+    .tl.mini .tl-site,
+    .tl.mini .tl-caps .site {
       animation: tl-site-in linear both;
       animation-timeline: --tl;
       animation-range: cover 38% cover 48%;
@@ -2814,7 +2815,8 @@ h2 {
       animation-timeline: auto;
       animation-range: normal;
     }
-    .tl.mini .tl-site {
+    .tl.mini .tl-site,
+    .tl.mini .tl-caps .site {
       animation: tl-site-in 0.6s ease-out 1.9s both;
       animation-timeline: auto;
       animation-range: normal;
@@ -2992,7 +2994,7 @@ h2 {
   position: relative;
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: 18px minmax(0, 14em) minmax(0, 1fr) auto;
+  grid-template-columns: 18px minmax(0, 17em) minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   height: var(--rh);
@@ -3225,5 +3227,62 @@ h2 {
   #p-summary .t-k {
     font-size: 11px;
     letter-spacing: 0.02em;
+  }
+}
+
+/* Round 10: what a second audit of the whole journey found. */
+/* The strip says what its two parts are: the dots are the whole file, the soft panel is what the site shows. The
+   second caption sits under the panel, ends where it ends, and arrives with it. */
+.tl-caps .site {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  padding-right: 6px;
+  color: #1f5bd6;
+  white-space: nowrap;
+}
+/* The link a phone can use: the page, sent to where the extension installs. Not shown where it already is. */
+.send-self {
+  display: none;
+}
+/* A control in a drawn app window is one line, as in the app. */
+.appwin .under > span {
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  /* A phone cannot install it, so what it can do comes first: watch, then send the page to a computer. */
+  .hero .cta .watch {
+    order: -1;
+  }
+  .send-self {
+    display: block;
+    margin-top: 6px;
+    padding: 4px 0;
+    color: var(--accent);
+  }
+  /* No room for every control beside the ringed one: the one after it goes. */
+  .appwin.claude .under > span:nth-child(2) {
+    display: none;
+  }
+  /* The label of a tile two across: small enough, and untracked, to end inside it. */
+  #p-summary .t-k {
+    font-size: 10.5px;
+    letter-spacing: 0;
+  }
+  /* The pills are above the box here, so nothing in view moves when a tab changes: only the chosen panel takes
+     room, and its box ends with its answer instead of standing as tall as the longest one. */
+  .ask-band .panel {
+    display: none;
+  }
+  #uc-summary:checked ~ #p-summary,
+  #uc-today:checked ~ #p-today,
+  #uc-result:checked ~ #p-result,
+  #uc-labs:checked ~ #p-labs,
+  #uc-trend:checked ~ #p-trend,
+  #uc-changed:checked ~ #p-changed,
+  #uc-spend:checked ~ #p-spend,
+  #uc-visit:checked ~ #p-visit,
+  #uc-find:checked ~ #p-find {
+    display: grid;
   }
 }

@@ -231,11 +231,21 @@ describe('popup', () => {
     expect(document.querySelector('.file-card')?.textContent).toContain('1,234 files · 48 MB · took 6 min');
   });
 
+  it('says an unexpected error in words, with the code\'s own beside it for a report', async () => {
+    const failed = running({ status: 'error', message: 'The export ran into something it did not expect in “Referrals”.', errorDetail: 'x is not iterable' });
+    await openPopup({ run: failed, tab });
+    const note = document.querySelector('.note.err') as HTMLElement;
+    expect(note.firstElementChild?.textContent).toBe('The export ran into something it did not expect in “Referrals”.');
+    expect(note.querySelector('.err-detail')?.textContent).toBe('Details, for a report: x is not iterable');
+  });
+
   it('pairs the done buttons, and ends on the caution about what the ZIP holds', async () => {
     const done = running({ status: 'done', next: PLAN.length, percent: 100, fileCount: 12, zipName: 'maccabi-export-2026-09-17.zip', finishedAt: new Date().toISOString() });
     await openPopup({ run: done, tab });
     const row = buttonNamed('Show in folder').parentElement as HTMLElement;
-    expect([...row.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Show in folder', 'Done']);
+    expect([...row.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Show in folder', 'How to ask an AI']);
+    expect(row.previousElementSibling?.textContent).toBe('Next: unzip it and open the folder in your AI assistant, then ask about your records.');
+    expect(buttonNamed('Clear this summary').className).toBe('quiet');
     expect(row.classList.contains('actions')).toBe(true);
     const caution = document.querySelector('#view > :last-child') as HTMLElement;
     expect(caution.className).toBe('caution');

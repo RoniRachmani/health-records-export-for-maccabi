@@ -2,7 +2,7 @@
 
 Health Records Export for Maccabi
 
-Effective 28 September 2026
+Effective 12 October 2026
 
 <!-- Keep in sync with public/privacy.html, which ships in the extension at chrome-extension://<id>/privacy.html. -->
 
@@ -49,7 +49,7 @@ not used for any other purpose.
   storage and is not written to disk. It is deleted when the ZIP is saved, when you cancel or discard the export, or
   when Chrome closes.
 - Export progress, including the list of problems, your birth date and the code computed from your member ID, is
-  kept in the extension's local storage, on your computer's disk. It is deleted when you press Done, or cancel or
+  kept in the extension's local storage, on your computer's disk. It is deleted when you press Clear this summary, or cancel or
   discard the export.
 - The notice setting is kept in the extension's local storage. It is deleted when you remove the extension.
 - The ZIP file is saved to your Downloads folder and stays there until you delete it. Chrome also lists it in its

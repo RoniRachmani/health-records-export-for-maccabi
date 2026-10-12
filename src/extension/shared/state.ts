@@ -161,6 +161,8 @@ export interface RunState {
   items?: { done: number; total: number };
   percent: number;
   message?: string;
+  /** With an unexpected error's message: the error in the code's own words, for a report. */
+  errorDetail?: string;
   /** The first problems, for the popup; problemCount has the total. */
   problems?: Problem[];
   problemCount?: number;
