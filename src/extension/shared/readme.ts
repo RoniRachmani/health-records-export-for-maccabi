@@ -330,7 +330,7 @@ before them. It says where to start, what the export lacks and which values misl
 ## How to work with these records
 
 - **Say where each fact comes from** — the file's path, and the page of a PDF — so the member can
-  check it. Give each finding its date: a record describes the day it was made, and a diagnosis or
+  check it, a weight or blood pressure read off the medical file included. Give each finding its date: a record describes the day it was made, and a diagnosis or
   a medication in an old one may no longer hold.
 - **Leave the export as it is.** Write what you make — notes, tables, summaries — into a new folder
   of your own, such as \`notes/\`; never edit, rename or delete the export's files.
@@ -354,7 +354,9 @@ with, and the specialists' answers in \`approvals/\` — keep a condition's note
 \`test-results/history/\`, and the latest of each in \`latest-lab-results.json\`; for what changed
 since the last visit, whatever is dated after the newest file in \`visit-summaries/\` — results,
 prescriptions, referrals, letters; for an appointment, the medical file's known problems, the latest
-results, recent \`visit-summaries/\` and open \`referrals/\`; for allergies, \`allergies-sensitivity/\`
+results, recent \`visit-summaries/\` and open \`referrals/\`; for what is still open, each referral,
+each request in a visit's notes and each prescription's \`to_date\` against what is dated after it
+(nothing there is not proof it wasn't done: ask); for allergies, \`allergies-sensitivity/\`
 and the medical file's sensitivities; for preventive care due, age and sex in
 \`profile/member.json\`, \`vaccinations/\` and the screenings in \`test-results/\`, judged by Israel's
 current guidance (the Ministry of Health's and Maccabi Healthcare Services's), which differs from

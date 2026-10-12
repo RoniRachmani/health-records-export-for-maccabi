@@ -42,6 +42,9 @@ describe('exportReadme', () => {
       'for preventive care due, age and sex in `profile/member.json`, `vaccinations/`',
       "judged by Israel's current guidance",
       'open `referrals/`',
+      "for what is still open, each referral, each request in a visit's notes and each prescription's `to_date` against what is dated after it",
+      "nothing there is not proof it wasn't done: ask",
+      'a weight or blood pressure read off the medical file included',
     ]) {
       expect(md).toContain(pointer);
     }
@@ -197,7 +200,7 @@ describe('exportReadme', () => {
 
   // It shares an AI reader's context with the records themselves, so its length is part of its job.
   it('stays short enough to read beside the records', () => {
-    expect(readme().length).toBeLessThan(14000);
+    expect(readme().length).toBeLessThan(14250);
   });
 });
 
