@@ -32,7 +32,7 @@ async function inTab<A extends unknown[], R>(tabId: number, func: (...args: A) =
   }
 }
 
-function snapshotInPage(): PageSnapshot {
+export function snapshotInPage(): PageSnapshot {
   return {
     host: location.hostname,
     path: location.pathname,
@@ -56,7 +56,7 @@ function clearTokenInPage(): void {
 
 const ACTIVITY_TIMEOUT_MS = 5000;
 
-function activityInPage(): void {
+export function activityInPage(): void {
   document.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
   // Legacy /online/ pages run a second idle timer of their own, which mouse events do not reach.
   const page = window as unknown as {
@@ -275,7 +275,7 @@ export const TAB_MAX_BYTES = 32 * 1024 * 1024;
  * The longest a request from the tab may take in all. The page gives up on its own after STALL_MS without a byte;
  * this is only for a tab that stops answering altogether, and is long enough for TAB_MAX_BYTES on a slow line.
  */
-const TAB_FETCH_TIMEOUT_MS = 10 * 60_000;
+export const TAB_FETCH_TIMEOUT_MS = 10 * 60_000;
 
 /**
  * Runs in the page. Like extensionFetch, it gives up only when nothing has arrived for stallMs, so a large file on a slow
@@ -328,7 +328,7 @@ export async function fetchInPage(req: HttpRequest, stallMs: number, maxBytes: n
   }
 }
 
-function xhrInPage(req: HttpRequest): Promise<{ status: number; text: string }> {
+export function xhrInPage(req: HttpRequest): Promise<{ status: number; text: string }> {
   return new Promise((resolve) => {
     const x = new XMLHttpRequest();
     x.open(req.method, req.url, true);

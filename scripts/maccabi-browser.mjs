@@ -11,7 +11,10 @@ import { execFileSync, spawn } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { lit } from './in-page.mjs';
 import { BROWSERS, isFile, root, sleep } from './stage.mjs';
+
+export { lit };
 
 if (existsSync(join(root, '.env'))) process.loadEnvFile(join(root, '.env'));
 
@@ -19,14 +22,11 @@ export const ORIGIN = 'https://online.maccabi4u.co.il';
 export const START = ORIGIN + '/sonline/';
 export const PROFILE = process.env.LIVE_PROFILE || join(homedir(), '.hrem-live-profile');
 
-// A value written into code that a page evaluates: JSON, with the characters escaped that JSON leaves
-// alone and JavaScript or an HTML parser would read as something else.
-const UNSAFE = { '<': '\\u003C', '>': '\\u003E', '/': '\\u002F', '\u2028': '\\u2028', '\u2029': '\\u2029' };
-export const lit = (value) => JSON.stringify(value).replace(/[<>/\u2028\u2029]/g, (c) => UNSAFE[c]);
-
 const ITEM = process.env.MACCABI_OP_ITEM || 'Maccabi';
 const SIGN_IN_WAIT_MS = 3 * 60_000;
 const POLL_MS = 5000;
+/** How long the browser has to answer a protocol command, unless the caller gives it longer. */
+const REPLY_MS = 30_000;
 
 const NO_OP = 'The 1Password CLI (op) is not installed: brew install 1password-cli, then turn on '
   + '"Integrate with 1Password CLI" in the 1Password app (Settings > Developer).';
@@ -117,14 +117,14 @@ export async function openBrowser({ startUrl = START, extension = null, keep = f
     if (m.error) p.reject(new Error(m.error.message));
     else p.resolve(m.result);
   };
-  const send = (method, params = {}, sessionId) => {
+  const send = (method, params = {}, sessionId, timeoutMs = REPLY_MS) => {
     const id = ++lastId;
     ws.send(JSON.stringify({ id, method, params, sessionId }));
     return new Promise((res, rej) => {
       const timer = setTimeout(() => {
         pending.delete(id);
-        rej(new Error(method + ': no reply in 30s'));
-      }, 30_000);
+        rej(new Error(method + ': no reply in ' + timeoutMs / 1000 + ' s'));
+      }, timeoutMs);
       pending.set(id, {
         resolve: (v) => { clearTimeout(timer); res(v); },
         reject: (e) => { clearTimeout(timer); rej(e); },
@@ -143,10 +143,13 @@ export async function openBrowser({ startUrl = START, extension = null, keep = f
   const { sessionId } = await send('Target.attachToTarget', { targetId: target.targetId, flatten: true });
 
   const page = {
-    /** Evaluates in the page. A page that navigates mid-call throws; callers poll, so they retry. */
-    async evaluate(expression) {
+    /**
+     * Evaluates in the page. A page that navigates mid-call throws; callers poll, so they retry. timeoutMs is
+     * how long the page has to answer: longer than the default for a request it sends and waits on.
+     */
+    async evaluate(expression, timeoutMs) {
       const { result, exceptionDetails } = await send(
-        'Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true }, sessionId);
+        'Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true }, sessionId, timeoutMs);
       if (exceptionDetails) throw new Error(exceptionDetails.exception?.description || exceptionDetails.text);
       return result.value;
     },

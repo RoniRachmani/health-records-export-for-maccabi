@@ -2,20 +2,18 @@
 // a Transport (requests evaluated inside the page) and a folder as a Sink. Here the "page" evaluates the
 // in-page sources for real, with fetch answered by the fake Maccabi, and the folder is a temp dir; the
 // collector's own test-results step runs over them and writes what the extension would write.
-import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Collector, newCtx, runStep, type HttpRequest, type HttpResponse } from '../src/core';
-import { EXPORT_ERRORS, exportErrors, exportReadme, INSTRUCTION_POINTERS } from '../src/extension/shared/readme';
+// What the script bundles into dist-cli/, from the sources.
+import * as core from '../src/cli/index';
+import { EXPORT_ERRORS, INSTRUCTION_POINTERS } from '../src/extension/shared/readme';
 import { FILE_LAYOUT } from '../src/extension/shared/state';
-import { badPath, binResult, israelToday, jsonBytes, jsonResult, sessionFrom } from '../src/core';
-import { FETCH_IN_PAGE, folderSink, pageTransport, sessionOf, SNAPSHOT, XHR_IN_PAGE } from '../scripts/headless-lib.mjs';
+import { TAB_FETCH_TIMEOUT_MS } from '../src/extension/background/tab';
+import { folderSink, keepAlive, pageTransport, sessionOf, SINK_STATE } from '../scripts/headless-lib.mjs';
 import { fakeMaccabi, htmlParser, MID } from './fakes';
-
-/** The bundle src/cli/index.ts stands for, from the sources. */
-const core = { Collector, newCtx, runStep, badPath, binResult, jsonBytes, jsonResult, israelToday, sessionFrom,
-  EXPORT_ERRORS, exportErrors, exportReadme, INSTRUCTION_POINTERS, FILE_LAYOUT };
 
 /** A page whose evaluate runs the expression as the browser would, with fetch and XMLHttpRequest answered by routes. */
 function fakePage(routes: ReturnType<typeof fakeMaccabi>['routes'], snapshot: Record<string, unknown>) {
@@ -45,12 +43,17 @@ function fakePage(routes: ReturnType<typeof fakeMaccabi>['routes'], snapshot: Re
       this.onload?.();
     }
   }
+  const events: string[] = [];
+  const timeouts: (number | undefined)[] = [];
   const scope = { fetch, XMLHttpRequest, location: { hostname: snapshot.host, pathname: snapshot.path },
-    document: { cookie: snapshot.cookie }, sessionStorage: { getItem: () => snapshot.jwt },
+    document: { cookie: snapshot.cookie, dispatchEvent: (e: { type: string }) => events.push(e.type) },
+    sessionStorage: { getItem: () => snapshot.jwt }, window: {}, MouseEvent: class { constructor(readonly type: string) {} },
     AbortController, setTimeout, clearTimeout, btoa, String, Number, Array, Uint8Array, Promise, URL };
-  const evaluate = (expression: string) =>
-    new Function(...Object.keys(scope), 'return (' + expression + ')')(...Object.values(scope));
-  return { evaluate, probe: async (e: string, fallback: unknown) => { try { return await evaluate(e); } catch { return fallback; } } };
+  const evaluate = (expression: string, timeoutMs?: number) => {
+    timeouts.push(timeoutMs);
+    return new Function(...Object.keys(scope), 'return (' + expression + ')')(...Object.values(scope));
+  };
+  return { evaluate, events, timeouts, probe: async (e: string, fallback: unknown) => { try { return await evaluate(e); } catch { return fallback; } } };
 }
 
 const dirs: string[] = [];
@@ -67,7 +70,7 @@ describe('headless export', () => {
     const dir = mkdtempSync(join(tmpdir(), 'hrem-headless-'));
     dirs.push(dir);
     const sink = folderSink(core, dir, '0.0.0');
-    const c = new Collector({ transport: pageTransport(page), sink, html: htmlParser(), clock: { now: () => Date.now(), sleep: async () => {} } }, session!);
+    const c = new Collector({ transport: pageTransport(page, core), sink, html: htmlParser(), clock: { now: () => Date.now(), sleep: async () => {} } }, session!);
     await runStep(c, newCtx(), 'testResults');
 
     const files = readdirSync(join(dir, 'test-results'));
@@ -83,18 +86,23 @@ describe('headless export', () => {
     expect(readFileSync(join(dir, 'test-results/files', pdfs[0])).subarray(0, 5).toString()).toBe('%PDF-');
     expect(sink.problems).toEqual([]);
 
-    const { files: counts, errors } = sink.writeRootFiles(new Date().toISOString());
+    const { files: counts, errors } = sink.writeRootFiles(new Date().toISOString(), ['testResults']);
     expect(errors).toEqual([]);
     const onDisk = (d: string): number => readdirSync(d).reduce((n, f) => n + (statSync(join(d, f)).isDirectory() ? onDisk(join(d, f)) : 1), 0);
     expect(counts).toEqual({ 'test-results': onDisk(join(dir, 'test-results')) });
     const readme = readFileSync(join(dir, 'README.md'), 'utf8');
     expect(readme).toContain('version 0.0.0 (headless-export), file layout ' + FILE_LAYOUT);
     expect(readme).toContain('`test-results/`');
+    // Only this step ran: the README says the other sections were left out, never that the site had nothing there.
+    expect(readme).toMatch(/This export has no `profile\/`, .*`visit-summaries\/`.* they were not collected in this run/);
+    expect(readme).not.toContain('nothing on record for');
+    expect(readme).toContain('This run did not order one, and took none from the\nsite.');
+    expect(readme).not.toContain('Ordering or downloading it failed');
     expect(JSON.parse(readFileSync(join(dir, EXPORT_ERRORS), 'utf8'))).toEqual([]);
     expect(readFileSync(join(dir, 'CLAUDE.md'), 'utf8')).toBe(INSTRUCTION_POINTERS['CLAUDE.md']);
 
     // A second run into the same folder changes nothing and asks for no document again.
-    const c2 = new Collector({ transport: pageTransport(page), sink: folderSink(core, dir, '0.0.0'), html: htmlParser(), clock: { now: () => Date.now(), sleep: async () => {} } }, session!);
+    const c2 = new Collector({ transport: pageTransport(page, core), sink: folderSink(core, dir, '0.0.0'), html: htmlParser(), clock: { now: () => Date.now(), sleep: async () => {} } }, session!);
     await runStep(c2, newCtx(), 'testResults');
     // Documents already there are not asked for (pdfIfMissing returns before the sink), so the log is JSON only, all unchanged.
     expect(new Set(c2.log.map(([, r]) => r))).toEqual(new Set(['unchanged']));
@@ -105,16 +113,56 @@ describe('headless export', () => {
       (req) => (req.url.startsWith('/x/redirect') ? { status: 302, redirected: true, contentType: '', bytes: new Uint8Array() } : undefined),
       (req) => (req.url.startsWith('/x/json') ? { status: 200, redirected: false, contentType: 'application/json', bytes: new TextEncoder().encode('{"a":1}') } : undefined),
     ], { host: 'online.maccabi4u.co.il', path: '/sonline/', cookie: '', jwt: null });
-    const t = pageTransport(page);
+    const t = pageTransport(page, core);
     expect(await t.pagePath()).toBe('/sonline/');
     const ok = await t.fetch({ url: '/x/json', method: 'GET' });
     expect(ok.status).toBe(200);
     expect(new TextDecoder().decode(ok.bytes)).toBe('{"a":1}');
     expect(await t.xhr({ url: '/x/json', method: 'GET' })).toEqual({ status: 200, text: '{"a":1}' });
     expect(await sessionOf(page, core, 1)).toBeNull(); // no token on the page
-    expect(typeof FETCH_IN_PAGE).toBe('string');
-    expect(typeof XHR_IN_PAGE).toBe('string');
-    expect(SNAPSHOT).toContain('sessionStorage');
+    // A request gets the time the extension gives the tab, not the protocol's default; the rest take the default.
+    expect(page.timeouts.filter((ms) => ms !== undefined)).toEqual([TAB_FETCH_TIMEOUT_MS]);
+    await keepAlive(page, core);
+    expect(page.events).toEqual(['mousedown']);
+  });
+
+  it('files a problem under the step it was told, so a step that failed whole is put against its folders', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'hrem-headless-'));
+    dirs.push(dir);
+    const sink = folderSink(core, dir, '0.0.0');
+    await sink.putJson('test-results/list.json', { x: 1 });
+    sink.setStep('visits');
+    await sink.problem({ where: 'visits', what: 'SESSION ENDED: HTTP 401', at: '2026-09-18T07:00:00.000Z' });
+    const { errors } = sink.writeRootFiles('2026-09-18T06:00:00.000Z', ['testResults', 'visits']);
+    expect(errors).toEqual([{ folders: ['visit-summaries'], step: 'visits', where: 'visits', what: 'SESSION ENDED: HTTP 401', at: '2026-09-18T07:00:00.000Z' }]);
+    const readme = readFileSync(join(dir, 'README.md'), 'utf8');
+    expect(readme).toMatch(/This export has no `visit-summaries\/` because collecting it failed/);
+    expect(readme).toMatch(/This export has no `profile\/`.* they were not collected in this run/);
+    expect(readme).not.toContain('nothing on record for');
+  });
+
+  it('remembers across runs which documents were copies, and never keeps a file cut off mid-write', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'hrem-headless-'));
+    dirs.push(dir);
+    const sink = folderSink(core, dir, '0.0.0');
+    const pdf = new TextEncoder().encode('%PDF-1.4 x');
+    await sink.putBin('a/f.pdf', pdf, false);
+    await sink.putBin('a/h.pdf', new TextEncoder().encode('%PDF-1.4 h'), false);
+    await sink.putAlias('b/g.pdf', 'a/f.pdf');
+    await sink.putAlias('b/i.pdf', 'a/h.pdf');
+    expect(readdirSync(join(dir, 'a')).sort()).toEqual(['f.pdf', 'h.pdf']); // nothing left under a part's name
+    // What a run killed inside a write leaves behind: the part, and no file under the document's name.
+    writeFileSync(join(dir, 'a/cut.pdf.part'), '%PDF-1.4 half');
+    rmSync(join(dir, 'a/h.pdf'));
+
+    const again = folderSink(core, dir, '0.0.0');
+    expect(await again.aliasOf('b/g.pdf')).toBe('a/f.pdf');
+    expect(await again.aliasOf('b/i.pdf')).toBeNull(); // its file has gone: asked for again
+    expect(await again.exists('a/cut.pdf')).toBe(false);
+    expect(existsSync(join(dir, 'a/cut.pdf.part'))).toBe(false);
+    // The sink's own state is not a file of the export: not counted, and not indexed as a document.
+    expect(again.writeRootFiles('2026-09-18T06:00:00.000Z', []).files).toEqual({ a: 1 });
+    expect(existsSync(join(dir, SINK_STATE))).toBe(true);
   });
 
   it('refuses a bad path and keeps a document it already holds', async () => {

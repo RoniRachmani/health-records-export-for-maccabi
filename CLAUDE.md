@@ -19,7 +19,7 @@ npm run package                   # build + release/<name>-<version>.zip (refuse
 npm run live                      # a live export on your own account, never ordering, no ZIP (1Password refs in .env)
 npm run export                    # an export with no extension: test results into ./maccabi-export-<today>/ (same .env)
 npm run export -- --all           # every section, nothing ordered; --steps a,b for some; --out DIR; --keep
-npm run clean                     # remove dist/, dist-dev/, dist-store/, release/
+npm run clean                     # remove dist/, dist-dev/, dist-store/, dist-cli/, release/
 npm run release:zip               # clean, test, build:dev, package
 npm run release                   # release:zip, then store-assets, store-video
 npm run store-assets              # re-render store/assets/ images (needs Chrome; CHROME_PATH)

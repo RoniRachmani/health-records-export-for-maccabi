@@ -39,6 +39,12 @@ export const STEP_ORDER = Object.keys(STEPS) as StepName[];
 export const LEGACY_STEPS: StepName[] = ['purchases', 'savedDocuments', 'hospitalStays'];
 
 /**
+ * Steps that read what an earlier one left in Ctx: the vaccination details are asked for by birth date, which the
+ * member record gives. A run of only some steps takes these with them.
+ */
+export const STEP_NEEDS: Partial<Record<StepName, StepName[]>> = { vaccinations: ['profileAndDoctors'] };
+
+/**
  * Runs one step. A failure inside it is recorded as a problem under the step's
  * name; SessionEnded and Cancelled are thrown on for the caller to handle.
  */

@@ -173,6 +173,17 @@ export const STEP_FOLDERS: Record<PlanStep, string[]> = {
   save: [],
 };
 
+/**
+ * The folders, and the medical file, that a run of only these steps did not ask the site for: what the steps it
+ * left out write, less what the ones it ran write too. A popup run takes every step, so this is for a run that
+ * does not (the terminal export): its README must not say the site had nothing there.
+ */
+export function notCollected(ran: readonly string[]): string[] {
+  const asked = new Set(ran.flatMap((s) => STEP_FOLDERS[s as PlanStep] ?? []));
+  const left = (Object.keys(STEP_FOLDERS) as PlanStep[]).filter((s) => !ran.includes(s)).flatMap((s) => STEP_FOLDERS[s]);
+  return [...new Set(left)].filter((f) => !asked.has(f));
+}
+
 /** The export's list of what it failed to collect, written beside the README. */
 export const EXPORT_ERRORS = 'export-errors.json';
 
@@ -242,7 +253,11 @@ function failedSection(errors: ExportError[]): string {
   return lines.join('\n') + '\n\n`' + EXPORT_ERRORS + '` lists each, with where it happened and the error it gave.';
 }
 
-function medicalFileSection(file: string | null): string {
+function medicalFileSection(file: string | null, asked: boolean): string {
+  if (!file && !asked) {
+    return `**This export has no full medical file.** This run did not order one, and took none from the
+site. Without it, this export reaches back only as far as the data below.`;
+  }
   if (!file) {
     return `**This export has no full medical file.** Ordering or downloading it failed, and
 \`${EXPORT_ERRORS}\` says why. Without it, this export reaches back only as far as the data below.`;
@@ -272,19 +287,25 @@ const AI_PAGE = 'https://maccabi.ronirachmani.com/ai-assistant.html';
  * The README for one export. present is the folders this export actually has, with how many files
  * each holds, so nothing is described that is not there; medicalFile is the name of the full
  * medical file PDF at the root, or null when the export has none; errors is what the run failed to
- * collect (export-errors.json), and made names the extension and file layout that made it.
+ * collect (export-errors.json), and made names the extension and file layout that made it. skipped
+ * is what this run did not ask for (notCollected), for a run that takes only some of the steps.
  */
 export function exportReadme(
   exportedOn: string, present: Record<string, number>, medicalFile: string | null, errors: ExportError[], made: MadeBy,
+  skipped: readonly string[] = [],
 ): string {
   const here = FOLDERS.filter((f) => present[f.name]);
   // A step writes its folder whenever the site answers, and files a problem when it does not: a
   // missing folder with a problem against it failed, and one without had nothing on record.
   const failedIn = new Set(errors.flatMap((e) => e.folders));
   const missing = FOLDERS.filter((f) => !present[f.name]);
-  const empty = missing.filter((f) => !failedIn.has(f.name)).map((f) => '`' + f.name + '/`');
+  const empty = missing.filter((f) => !failedIn.has(f.name) && !skipped.includes(f.name)).map((f) => '`' + f.name + '/`');
   const failed = missing.filter((f) => failedIn.has(f.name)).map((f) => '`' + f.name + '/`');
-  const absent = (empty.length
+  const unasked = missing.filter((f) => !failedIn.has(f.name) && skipped.includes(f.name)).map((f) => '`' + f.name + '/`');
+  const absent = (unasked.length
+    ? '\n  This export has no ' + inWords(unasked) + ': ' + (unasked.length > 1 ? 'they were' : 'it was') +
+      ' not collected in this run, so it cannot say what is\n  on record there.'
+    : '') + (empty.length
     ? '\n  This export has no ' + inWords(empty) + ': the site had nothing on record for ' + (empty.length > 1 ? 'them' : 'it') + '.'
     : '') + (failed.length
     ? '\n  This export has no ' + inWords(failed) + ' because collecting ' + (failed.length > 1 ? 'them' : 'it') +
@@ -343,7 +364,7 @@ now, so ask.
 
 ## Start with the full medical file
 
-${medicalFileSection(medicalFile)}
+${medicalFileSection(medicalFile, failedIn.has(MEDICAL_FILE) || !skipped.includes(MEDICAL_FILE))}
 
 ## What this export does not contain
 

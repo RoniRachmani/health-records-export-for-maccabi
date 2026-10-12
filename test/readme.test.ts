@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { exportErrors, exportReadme, INSTRUCTION_POINTERS, STEP_FOLDERS, type ExportError, type MadeBy } from '../src/extension/shared/readme';
+import { exportErrors, exportReadme, INSTRUCTION_POINTERS, notCollected, STEP_FOLDERS, type ExportError, type MadeBy } from '../src/extension/shared/readme';
+import { STEP_NEEDS, STEP_ORDER } from '../src/core';
 import { PLAN } from '../src/extension/shared/state';
 
 const PRESENT = { profile: 4, 'test-results': 6, letters: 2 };
@@ -229,5 +230,38 @@ describe('INSTRUCTION_POINTERS', () => {
   it('has Claude Code import the README and Codex read it', () => {
     expect(INSTRUCTION_POINTERS['CLAUDE.md']).toMatch(/^@README\.md$/m);
     expect(INSTRUCTION_POINTERS['AGENTS.md']).toContain('Read README.md');
+  });
+});
+
+// A run that takes only some steps (the terminal export) must not have the README speak for the rest.
+describe('a run of only some steps', () => {
+  it('lists the folders of the steps left out, less the ones a step that ran writes too', () => {
+    expect(notCollected(PLAN)).toEqual([]);
+    const left = notCollected(['testResults', 'purchases']);
+    expect(left).toContain('medical-file');
+    expect(left).toContain('visit-summaries');
+    expect(left).not.toContain('test-results');
+    expect(left).not.toContain('medications-and-prescriptions'); // medications did not run, but purchases writes there
+    expect(notCollected(STEP_ORDER)).toEqual(['medical-file']); // every section, and nothing ordered
+  });
+
+  it('says a folder was not collected, and keeps "nothing on record" for the steps that ran', () => {
+    const md = exportReadme('2026-09-18', { 'test-results': 6 }, null, [], MADE, notCollected(['testResults', 'visits']));
+    expect(md).toContain('This export has no `visit-summaries/`: the site had nothing on record for it.');
+    expect(md).toMatch(/This export has no `profile\/`, .* they were not collected in this run, so it cannot say what is\n  on record there\./);
+    expect(md).toContain('**This export has no full medical file.** This run did not order one');
+  });
+
+  it('still says the medical file failed when it was tried, and changes nothing for a run of every step', () => {
+    const failed = exportErrors([{ step: 'letters', where: 'medical-file', what: 'HTTP 500', at }]);
+    expect(exportReadme('2026-09-18', PRESENT, null, failed, MADE, notCollected(STEP_ORDER))).toContain('Ordering or downloading it failed');
+    expect(exportReadme('2026-09-18', PRESENT, null, [], MADE, [])).toBe(readme(PRESENT, null));
+  });
+
+  it('names only real steps as the ones a step reads from, each earlier in the run', () => {
+    for (const [step, needs] of Object.entries(STEP_NEEDS)) {
+      for (const n of needs) expect(STEP_ORDER.indexOf(n)).toBeLessThan(STEP_ORDER.indexOf(step as (typeof STEP_ORDER)[number]));
+      expect(STEP_ORDER.indexOf(needs[0])).toBeGreaterThanOrEqual(0);
+    }
   });
 });

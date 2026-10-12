@@ -476,31 +476,37 @@ reused: every new sign-in ends your other sessions. Branded Chrome ignores `--lo
 `npm run export` makes an export with no extension installed: it opens the same browser and signs in the same way as
 `npm run live` (the profile, `.env` and 1Password references above), then runs the collector in Node — `src/core/`
 bundled for it into `dist-cli/` — with the requests sent from inside the Maccabi Online page, as the extension sends
-them from the tab, and writes the folder the ZIP would hold into `./maccabi-export-<today>/`, root files included:
-the `README.md`, `CLAUDE.md`, `AGENTS.md` and `export-errors.json` of a popup export, so an assistant reads it the same.
+them from the tab (by the same functions: the script evaluates the source of `fetchInPage` and the others in `tab.ts`),
+and writes the folder the ZIP would hold into `./maccabi-export-<today>/`, root files included: the `README.md`,
+`CLAUDE.md`, `AGENTS.md` and `export-errors.json` of a popup export. A run of only some sections says so in its
+`README.md`: the sections it left out were not collected, which is not the site having nothing on record for them.
 
 ```sh
 npm run export                          # test results and lab histories: about a minute, and nothing on the account changes
 npm run export -- --all                 # every section the extension collects
-npm run export -- --steps visits,referrals   # just those (the names in STEPS, src/core/steps.ts)
+npm run export -- --steps visits,referrals   # just those (the names in STEPS, src/core/steps.ts), in the run's order
 npm run export -- --out ~/health        # the folder goes under that directory; --keep leaves the browser open
 ```
 
 It never orders the medical file — the one request that changes anything, and what makes Maccabi send an SMS — so
-`--all` takes the medical file already on the site, if there is one. A rerun into the same folder rewrites only the
-JSON that changed and asks for no document it already has, which is what Resume does for a popup run. Like the
-popup, it ends the member's other Maccabi sessions when it has to sign in, and a wrong password is never resubmitted.
-For a member who wants their records refreshed on a schedule, or who would rather not install an extension, this is
-the way; the popup remains the way for everyone else. `scripts/headless-lib.mjs` holds the two seams it puts under
-the collector, the page as `Transport` and a folder as `Sink`, and `test/headless.test.ts` runs the test-results step
-through them against the fake site.
+`--all` takes the medical file already on the site, if there is one. A step that reads from another brings it along
+(`STEP_NEEDS`: the vaccination details need the birth date in the member record). A rerun into the same folder
+rewrites only the JSON that changed and asks for no document it already has, which is what Resume does for a popup
+run; the documents it found to be copies of another are remembered in `.export-state.json`, the one file in the
+folder that is the script's and not the export's. A run that is stopped (an ended session, a 429, a page that will not
+open) keeps what it collected and still writes the root files, with the stop filed against the step it happened in.
+Like the popup, it ends the member's other Maccabi sessions when it has to sign in, and a wrong password is never
+resubmitted. It is a tool for working on the collector, and for an export without the popup; the popup remains the
+way to export for everyone else. `scripts/headless-lib.mjs` holds the two seams it puts under the collector, the page
+as `Transport` and a folder as `Sink`, and `test/headless.test.ts` runs the test-results step through them against
+the fake site.
 
 ### Releasing
 
 ```sh
 npm run release        # all of it from clean: tests, dist-dev/, the release ZIP, the store images and the video
 npm run release:zip    # the same without the store images and the video
-npm run clean          # remove dist/, dist-dev/, dist-store/ and release/
+npm run clean          # remove dist/, dist-dev/, dist-store/, dist-cli/ and release/
 npm run package        # release/health-records-export-for-maccabi-<version>.zip for the Chrome Web Store and GitHub release
 npm run store-assets   # store/assets/ screenshots, promo tiles, the video's poster and the web page's link preview (needs Chrome, Chromium or Edge; set CHROME_PATH if not found)
 npm run store-video    # store/assets/promo-video.mp4, the promo video (same browser; ffmpeg if you have it)
