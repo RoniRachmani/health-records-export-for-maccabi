@@ -121,7 +121,7 @@ describe('popup', () => {
     const panel = document.querySelector('.panel') as HTMLElement;
     expect([...panel.children].map((e) => e.className)).toEqual(['status-row', 'activity', 'bar active', 'stats']);
     expect(document.querySelector('.status')?.textContent).toBe('Exporting · 12%');
-    expect(panel.querySelector('.activity .what')?.textContent).toBe('Saving how each lab value changed over time');
+    expect(panel.querySelector('.activity .what')?.textContent).toBe('Saving each lab value’s history');
     expect(panel.querySelector('.activity .count')?.textContent).toBe('38 of 61');
     expect(document.querySelector('.stats')?.textContent).toBe('40 files · 2.3 MB · 6 min elapsed');
     // The list names the sections: the current line by its name only.

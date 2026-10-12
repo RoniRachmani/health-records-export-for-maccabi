@@ -529,7 +529,10 @@ code {
   background: var(--bg);
   border: 1px solid var(--line-soft);
 }
+/* One click selects the whole message, ready to copy: the page has no script to copy it. */
 .first-msg {
+  user-select: all;
+  cursor: text;
   justify-self: start;
   margin: 0;
   padding: 10px 16px;
@@ -736,4 +739,14 @@ code {
     border-top-color: var(--muted);
     border-left-color: transparent;
   }
+}
+
+/* Under the example questions: the way to the rest of them. */
+.more-asks {
+  margin: 16px 0 0;
+  color: var(--muted);
+}
+/* The foot's links are a line of text tall: the padding makes each a 24px target without moving the line. */
+.foot a {
+  padding: 4px 0;
 }

@@ -172,6 +172,11 @@ h2 {
   font-size: 14px;
   color: var(--muted);
 }
+/* What it costs is read before the export is made, not after. */
+.app-card .plan b {
+  font-weight: 500;
+  color: var(--fg);
+}
 /* A small window drawn with the app's own path to a folder. */
 .mini {
   border-radius: 14px;
@@ -242,7 +247,7 @@ h2 {
 
 :root {
   --good: #0e7c5a;
-  --watch: #b0650b;
+  --watch: #a35c08;
   --watch-bg: #fdf1e1;
   --good-bg: #e7f6f0;
 }
@@ -320,9 +325,12 @@ h2 {
   justify-content: space-between;
   gap: 4px 12px;
 }
-.dash-head h3 {
-  font-size: 19px;
+/* A title inside a picture, so not a heading: the page's outline is its own h1 and h2s. */
+.dash-head .dash-title {
   margin: 0;
+  font-size: 19px;
+  font-weight: 500;
+  color: var(--heading);
 }
 .dash-head span {
   font-size: 12.5px;
@@ -446,7 +454,7 @@ h2 {
   box-shadow: var(--shadow);
   font-size: 13px;
 }
-.made h4 {
+.made .made-title {
   margin: 0;
   font-size: 15px;
   font-weight: 500;
@@ -713,14 +721,15 @@ h2 {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: var(--primary);
-  box-shadow: 0 6px 16px rgb(41 107 237 / 0.3);
+  /* Ringed, not filled: the store badge beside it is the page's one action, and Google's terms leave its look alone. */
+  background: var(--bg);
+  border: 2px solid var(--primary);
 }
 .watch .play svg {
   width: 15px;
   height: 15px;
   margin-left: 3px;
-  fill: var(--on-primary);
+  fill: var(--primary);
 }
 .watch small {
   display: block;
@@ -729,7 +738,7 @@ h2 {
   color: var(--muted);
 }
 .watch:hover .play {
-  background: var(--primary-hover);
+  background: color-mix(in srgb, var(--primary) 12%, var(--bg));
 }
 .watch:focus-visible {
   outline: 2px solid var(--focus);
@@ -1792,7 +1801,7 @@ h2 {
   --c: #0e7c5a;
 }
 .tl-lane.h {
-  --c: #b0650b;
+  --c: #a35c08;
 }
 .tl-lane.h .tl-track i {
   width: 13px;
@@ -3169,5 +3178,52 @@ h2 {
       animation-name: fw-added, fw-pink;
       animation-range: cover calc(33 * var(--u)) cover calc(39 * var(--u)), cover calc(38 * var(--u)) cover calc(42 * var(--u));
     }
+  }
+}
+
+/* Round 9: what an audit of the whole journey found. */
+/* Under the hero's two buttons: what it costs and where it runs, for the visitor on a phone above all. */
+.cta-note {
+  margin: 14px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+/* The page ends on the way in: the store badge again, as a card under the open-source one. */
+.get {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 24px;
+  margin-top: 16px;
+  padding: 22px 24px;
+  border-radius: 20px;
+  background: var(--bg);
+  border: 1px solid var(--line-soft);
+}
+.get-text h3 {
+  margin: 0 0 4px;
+  font-size: 19px;
+}
+.private-strip .get-text p {
+  margin: 0;
+  color: var(--fg);
+}
+/* The foot's links are a line of text tall: the padding makes each a 24px target without moving the line. */
+.foot a {
+  padding: 4px 0;
+}
+@media (max-width: 640px) {
+  .cta-note {
+    text-align: center;
+  }
+  /* Nine pills wrap to rows of one and two: from the left edge they read as a list, centred as a ragged stack. */
+  .ask-band .tab-list {
+    justify-content: flex-start;
+  }
+  /* Two tiles across leave a label 100px: a little less tracking keeps CHOLESTEROL clear of the tile's edge. */
+  #p-summary .t-k {
+    font-size: 11px;
+    letter-spacing: 0.02em;
   }
 }

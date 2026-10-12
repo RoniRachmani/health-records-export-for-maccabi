@@ -176,23 +176,24 @@ export function hintText(run: RunState): string {
 
 /**
  * What the panel says the current line is doing, per step and per part of it: the key is the collector's progress detail
- * ("lab histories"), and '' is the step before its first progress report. Kept short enough for one line.
+ * ("lab histories"), and '' is the step before its first progress report. Kept short enough for one line in the system face as well as in
+ * Roboto, with a count in the hundreds beside it ("888 of 888"): a longer one is cut to an ellipsis.
  */
 export const DESCRIPTIONS: Record<PlanStep, Record<string, string>> = {
   profileAndDoctors: { '': 'Reading your details and your doctor' },
   testResults: {
     '': 'Reading your list of tests',
-    'test results': 'Downloading each test result and its PDF',
-    'lab histories': 'Saving how each lab value changed over time',
+    'test results': 'Downloading each result and its PDF',
+    'lab histories': 'Saving each lab value’s history',
   },
-  visits: { '': 'Reading your visit history', visits: 'Downloading visit details and summaries' },
+  visits: { '': 'Reading your visit history', visits: 'Downloading visit summaries' },
   medications: { '': 'Reading your prescriptions', prescriptions: 'Downloading prescription PDFs' },
   referrals: { '': 'Reading your referrals', referrals: 'Downloading each referral as a PDF' },
   approvals: { '': 'Reading your approvals', approvals: 'Downloading each approval as a PDF' },
   infoPages: { '': 'Reading your information pages', 'information pages': 'Downloading each page as a PDF' },
-  vaccinations: { '': 'Reading your vaccinations', vaccinations: 'Reading vaccines and the vaccination booklet' },
+  vaccinations: { '': 'Reading your vaccinations', vaccinations: 'Reading vaccines and the booklet' },
   letters: { '': 'Reading your letters', letters: 'Downloading your letters as PDFs' },
-  doctorCommunications: { '': 'Reading your messages to your doctor', 'doctor inquiries': 'Downloading messages and attached forms' },
+  doctorCommunications: { '': 'Reading your messages to your doctor', 'doctor inquiries': 'Downloading messages and forms' },
   emptySections: {
     '': 'Checking for allergies and sensitivities',
     allergies: 'Checking for allergies and sensitivities',
@@ -203,9 +204,9 @@ export const DESCRIPTIONS: Record<PlanStep, Record<string, string>> = {
   purchases: {
     '': 'Reading every medication purchase',
     'purchase history': 'Reading every medication purchase',
-    'purchase report': 'Creating the 2-year purchase report PDF',
+    'purchase report': 'Creating the 2-year purchase report',
   },
-  savedDocuments: { '': 'Reading the documents you uploaded', 'saved documents': 'Downloading the documents you uploaded' },
+  savedDocuments: { '': 'Reading the documents you uploaded', 'saved documents': 'Downloading your uploads' },
   hospitalStays: { '': 'Reading your hospital stays', 'hospital stays': 'Reading your hospital stays', 'hospital letters': 'Downloading hospital discharge letters' },
   orderMedicalFile: { '': 'Ordering a fresh copy (you’ll get an SMS)' },
   returnToSonline: { '': 'Taking your tab back to the main site' },
@@ -271,6 +272,19 @@ export function groupProblems(problems: Problem[]): ProblemGroup[] {
     else groups.set(label, [p]);
   }
   return [...groups].map(([label, items]) => ({ label, items }));
+}
+
+/**
+ * A problem as the member reads it. The collector records what the site answered ("HTTP 500"); the popup says what
+ * that means and keeps the code, which is what a report needs.
+ */
+export function problemText(what: string): string {
+  const code = /^HTTP (\d{3})\b/.exec(what)?.[1];
+  if (!code) return what;
+  if (code === '404' || code === '410') return 'Maccabi Online no longer has this file (' + what + ')';
+  if (code === '401' || code === '403') return 'Maccabi Online would not release this file (' + what + ')';
+  if (code[0] === '5') return 'Maccabi Online failed to send this file (' + what + ')';
+  return 'Maccabi Online did not send this file (' + what + ')';
 }
 
 export type Confirm = 'cancel' | 'discard';

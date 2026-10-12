@@ -1,6 +1,6 @@
 import { PLAN, type Request, type RunState, type StateReply } from '../shared/state';
 import {
-  countOf, countText, currentStage, formatBytes, formatDuration, groupProblems, hintText, STAGES, stageFileCounts, stageSpan, stageStates, statsText,
+  countOf, countText, currentStage, formatBytes, formatDuration, groupProblems, hintText, problemText, STAGES, stageFileCounts, stageSpan, stageStates, statsText,
   waitingForFile,
   stepText, viewKey, type Confirm, type UiFlags,
 } from './model';
@@ -228,7 +228,8 @@ function idleView(st: StateReply): Child[] {
       h('h2', {}, 'Log in to Maccabi Online'),
       h('ol', { class: 'numbered' },
         h('li', {}, st.tab.onMaccabi ? 'Log in to Maccabi Online in this tab.' : 'Open Maccabi Online and log in (or finish logging in).'),
-        h('li', {}, 'On that tab, click this extension’s icon again.')),
+        // Chrome keeps a new extension's icon under the puzzle piece until it is pinned.
+        h('li', {}, 'On that tab, click this extension’s icon again. Not in the toolbar? It’s under the puzzle-piece button.')),
       !st.tab.onMaccabi && actions(actionButton('Open Maccabi Online', { type: 'openMaccabi' }, 'primary block')),
     ];
   }
@@ -312,6 +313,9 @@ const LOCK_ICON = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" s
 
 const ZIP_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M11 6h1M12 8.5h1M11 11h1M12 13.5h1"/><rect x="10.5" y="16" width="3" height="3" rx=".8"/></svg>';
 
+/** The footer's Report a problem, for the error view. */
+const REPORT = 'https://github.com/RoniRachmani/health-records-export-for-maccabi/issues/new/choose';
+
 /** The shipped page on opening the export in an AI assistant (the README's section of the same name). */
 const AI_HELP = '/ai-assistant.html';
 
@@ -336,6 +340,8 @@ function doneView(run: RunState): Child[] {
   icon.innerHTML = ZIP_ICON;
   const caution = h('p', { class: 'caution' }, h('span', {}, 'The ZIP contains sensitive health information. Store and share it with care.'));
   caution.insertAdjacentHTML('afterbegin', LOCK_ICON);
+  const done = actionButton('Done', { type: 'dismiss' });
+  done.title = 'Clears this summary. The ZIP stays in your Downloads folder.';
   return [
     status('Saved', 'ok'),
     h('h2', {}, 'Your export is ready'),
@@ -347,15 +353,16 @@ function doneView(run: RunState): Child[] {
           [countOf(run.fileCount ?? 0, 'file', 'files'), run.zipBytes !== undefined && formatBytes(run.zipBytes), took, 'in your Downloads folder'].filter(Boolean).join(' · ')))),
     count > 0 && h('details', { class: 'problems' },
       h('summary', {}, count + (count === 1 ? ' item' : ' items') + ' could not be exported'),
-      h('p', { class: 'small' }, 'Everything else was saved. This list is shown until the next export starts.'),
+      h('p', { class: 'small' }, 'Everything else was saved. A new export tries these again; this list is shown until it starts.'),
       h('div', { class: 'problem-list' },
         ...groupProblems(shown).map((g) => h('section', {},
           h('h3', {}, g.label),
-          h('ul', {}, ...g.items.map((p) => h('li', {}, p.what, p.where.includes('/') && h('span', { class: 'path' }, p.where))))))),
+          h('ul', {}, ...g.items.map((p) => h('li', {}, problemText(p.what), p.where.includes('/') && h('span', { class: 'path' }, p.where))))))),
       count > shown.length && h('p', { class: 'small' }, 'Showing the first ' + shown.length + '.')),
-    actions(actionButton('Show in folder', { type: 'showFile' }, 'primary'), actionButton('Done', { type: 'dismiss' })),
-    note('', h('strong', {}, 'Next: '), 'unzip it and open the folder in your AI assistant, then ask about your records. ',
-      h('a', { href: AI_HELP, target: '_blank' }, 'See how')),
+    actions(actionButton('Show in folder', { type: 'showFile' }, 'primary'), done),
+    // What the ZIP is for, so its way in is a button and not a link at the end of a sentence.
+    note('', h('strong', {}, 'Next: '), 'unzip it and open the folder in your AI assistant, then ask about your records.',
+      h('div', { class: 'note-action' }, button('See how', () => void window.open(AI_HELP, '_blank'), 'small'))),
     caution,
   ];
 }
@@ -373,7 +380,9 @@ function errorView(run: RunState, st: StateReply): Child[] {
       h('div', {}, run.message || 'The export failed.'),
       !atSave && h('div', { class: 'small' }, st.tab.onMaccabi
         ? 'Files collected so far are kept. Try again continues from where it stopped.'
-        : 'Files collected so far are kept. To try again, open this popup on the logged-in Maccabi Online tab.')),
+        : 'Files collected so far are kept. To try again, open this popup on the logged-in Maccabi Online tab.'),
+      // The next step when trying again does not help, so it is here and not only in the footer.
+      !atSave && h('div', { class: 'small' }, 'Still stopping here? ', h('a', { href: REPORT, target: '_blank', rel: 'noreferrer' }, 'Report the problem'), '.')),
     ui.confirm === 'discard'
       ? confirmPanel('Delete the files collected so far? You will need to start a new export.', 'Delete files', { type: 'dismiss' }, 'Deleting…', 'Keep them')
       : actions(retry, button('Discard collected files', () => askConfirm('discard'))),
@@ -423,13 +432,15 @@ function updateLive(run: RunState): void {
   if (live.stages) {
     const states = stageStates(run);
     const files = stageFileCounts(run);
+    // The first number in the column says what the column counts; the rest are heard as files and read as numbers.
+    const first = states.findIndex((s, i) => s === 'done' && files[i]);
     live.stages.forEach((li, i) => {
-      // A finished line's files; screen readers hear what the number counts.
       const n = states[i] === 'done' ? files[i] : undefined;
       const count = li.querySelector('.count') as HTMLElement;
-      if (count.dataset.n !== String(n ?? '')) {
-        count.dataset.n = String(n ?? '');
-        count.replaceChildren(...(n ? [n.toLocaleString('en-US'), h('span', { class: 'visually-hidden' }, n === 1 ? ' file' : ' files')] : []));
+      const key = String(n ?? '') + (i === first ? ' unit' : '');
+      if (count.dataset.n !== key) {
+        count.dataset.n = key;
+        count.replaceChildren(...(n ? [n.toLocaleString('en-US'), h('span', i === first ? {} : { class: 'visually-hidden' }, n === 1 ? ' file' : ' files')] : []));
       }
       if (li.className === states[i]) return;
       li.className = states[i];

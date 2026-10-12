@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  countText, currentStage, DESCRIPTIONS, formatBytes, formatDuration, groupProblems, hintText, STAGES, stageFileCounts, stageSpan, stageStates, statsText,
+  countText, currentStage, DESCRIPTIONS, formatBytes, formatDuration, groupProblems, hintText, problemText, STAGES, stageFileCounts, stageSpan, stageStates, statsText,
   stepText, viewKey, waitingForFile, type UiFlags,
 } from '../src/extension/popup/model';
 import { LABELS, PLAN, percentOf, WEIGHTS, type RunState, type StateReply } from '../src/extension/shared/state';
@@ -196,8 +196,8 @@ describe('statsText and stepText', () => {
 
   it('describes what the current part of the step collects', () => {
     expect(stepText({ ...base, detail: 'Test results' })).toEqual({ title: 'Test results', detail: 'Reading your list of tests' });
-    expect(stepText({ ...base, detail: 'Test results: test results' })).toEqual({ title: 'Test results', detail: 'Downloading each test result and its PDF' });
-    expect(stepText({ ...base, detail: 'Test results: lab histories' })).toEqual({ title: 'Lab histories', detail: 'Saving how each lab value changed over time' });
+    expect(stepText({ ...base, detail: 'Test results: test results' })).toEqual({ title: 'Test results', detail: 'Downloading each result and its PDF' });
+    expect(stepText({ ...base, detail: 'Test results: lab histories' })).toEqual({ title: 'Lab histories', detail: 'Saving each lab value’s history' });
     expect(stepText({ ...base, next: PLAN.indexOf('referrals'), detail: 'Referrals: referrals' }))
       .toEqual({ title: 'Referrals', detail: 'Downloading each referral as a PDF' });
     expect(stepText({ ...base, next: PLAN.indexOf('approvals'), detail: 'Approvals: approvals' }).detail).toBe('Downloading each approval as a PDF');
@@ -263,5 +263,18 @@ describe('viewKey', () => {
   it('changes when the notice is accepted', () => {
     const idle = { ...st, run: null };
     expect(viewKey({ ...idle, noticeAccepted: false }, ui)).not.toBe(viewKey(idle, ui));
+  });
+});
+
+describe('problemText', () => {
+  it('says what a status code means, and keeps the code for a report', () => {
+    expect(problemText('HTTP 500')).toBe('Maccabi Online failed to send this file (HTTP 500)');
+    expect(problemText('HTTP 404')).toBe('Maccabi Online no longer has this file (HTTP 404)');
+    expect(problemText('HTTP 403')).toBe('Maccabi Online would not release this file (HTTP 403)');
+    expect(problemText('HTTP 429')).toBe('Maccabi Online did not send this file (HTTP 429)');
+  });
+
+  it('leaves a problem already in words as it is', () => {
+    expect(problemText('the vaccination booklet was not available')).toBe('the vaccination booklet was not available');
   });
 });

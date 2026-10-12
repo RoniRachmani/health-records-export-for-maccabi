@@ -238,7 +238,7 @@ function loop(): Promise<void> {
               }
             }
             if (cancelRequested) break;
-            await pause('paused_session', 'Your Maccabi Healthcare Services session ended (' + stripSessionPrefix(errMessage(e)) + '). Log in to Maccabi Online again, then click this extension’s icon on that tab and press Resume. Files collected so far are kept.');
+            await pause('paused_session', 'Your Maccabi Online session ended. Log in again on the Maccabi Online tab, then open this popup there and press Resume. Files collected so far are kept.');
             return;
           }
           if ((e as RateLimitedError).rateLimited) {
@@ -272,10 +272,6 @@ function loop(): Promise<void> {
     }
   })();
   return active;
-}
-
-function stripSessionPrefix(msg: string): string {
-  return msg.replace(/^SESSION ENDED: /, '').replace(/ -- log in again.*$/, '');
 }
 
 /** A fresh token from the tab, as Resume gets one. False when nobody (or another member) is logged in. */
