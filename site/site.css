@@ -3442,3 +3442,348 @@ h2 {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ---- HealthOS: the page one request for a dashboard gets, in four tabs. Like the hero's dashboard it is a page the
+   assistant made, so it is drawn in the site's own register rather than either app's. The tabs are radio buttons, as
+   Ask's are; nothing here moves, so there is no timeline to end anywhere. ---- */
+.hos-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  margin: 0;
+}
+.hos-stage > .asked {
+  box-shadow: var(--shadow-lift);
+}
+.hos-stage figcaption {
+  font-size: 14px;
+  color: var(--muted);
+  text-align: center;
+}
+.hos {
+  position: relative;
+  padding: 28px;
+  border-radius: 22px;
+  background: #ffffff;
+  border: 1px solid var(--line-soft);
+  box-shadow: 0 24px 60px rgb(8 40 110 / 0.16);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.hos > input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.hos p {
+  margin: 0;
+}
+/* A title inside a picture, so not a heading: the page's outline is its own h1 and h2s. */
+.hos-title {
+  font-size: 26px;
+  line-height: 1.2;
+  font-weight: 500;
+  color: var(--heading);
+}
+.hos-take {
+  margin-top: 6px !important;
+  max-width: 46rem;
+  font-size: 15px;
+  text-wrap: pretty;
+}
+.hos-take b,
+.hos-h {
+  font-weight: 500;
+  color: var(--heading);
+}
+.hos-asof,
+.hos-note,
+.hos-s,
+.hos-k {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.hos-asof {
+  margin-top: 6px !important;
+}
+/* The dashboard's own tabs: a rule under the row, and the chosen one underlined in navy. */
+.hos-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 18px 0 20px;
+  border-bottom: 1px solid var(--line);
+}
+.hos-tabs label {
+  margin-bottom: -1px;
+  padding: 9px 14px;
+  border-bottom: 2px solid transparent;
+  border-radius: 8px 8px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.hos-tabs label:hover {
+  background: var(--surface-2);
+}
+#hos-today:checked ~ .hos-tabs [for='hos-today'],
+#hos-labs:checked ~ .hos-tabs [for='hos-labs'],
+#hos-history:checked ~ .hos-tabs [for='hos-history'],
+#hos-meds:checked ~ .hos-tabs [for='hos-meds'] {
+  color: var(--heading);
+  font-weight: 500;
+  border-bottom-color: var(--heading);
+}
+#hos-today:focus-visible ~ .hos-tabs [for='hos-today'],
+#hos-labs:focus-visible ~ .hos-tabs [for='hos-labs'],
+#hos-history:focus-visible ~ .hos-tabs [for='hos-history'],
+#hos-meds:focus-visible ~ .hos-tabs [for='hos-meds'] {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+/* The four panels share one cell, so the dashboard is as tall as its tallest tab and keeps its size as they change. */
+.hos-panels {
+  display: grid;
+}
+.hos-panel {
+  grid-area: 1 / 1;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  min-width: 0;
+  visibility: hidden;
+}
+#hos-today:checked ~ .hos-panels #hp-today,
+#hos-labs:checked ~ .hos-panels #hp-labs,
+#hos-history:checked ~ .hos-panels #hp-history,
+#hos-meds:checked ~ .hos-panels #hp-meds {
+  visibility: visible;
+}
+.hos-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.hos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.hos-card {
+  min-width: 0;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.hos-big {
+  margin-top: 2px !important;
+  font-size: 26px;
+  line-height: 1.2;
+  font-weight: 500;
+  color: var(--heading);
+  font-variant-numeric: tabular-nums;
+}
+.hos-s {
+  margin-top: 2px !important;
+}
+.hos-h {
+  font-size: 16px;
+}
+.hos-note {
+  margin: 2px 0 10px !important;
+}
+.hos-t {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.hos-t th {
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.hos-t td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.hos-t tr > :first-child {
+  padding-left: 0;
+}
+.hos-t tr > :last-child {
+  padding-right: 0;
+}
+.hos-t tbody tr:last-child td {
+  border-bottom: 0;
+}
+.hos-t .num {
+  text-align: right;
+  white-space: nowrap;
+}
+.hos-t .nw {
+  white-space: nowrap;
+}
+.hos-t .mut,
+.hos-t small {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.hos-pill {
+  display: inline-block;
+  padding: 1px 9px;
+  border-radius: var(--r-pill);
+  background: var(--chip);
+  color: var(--fg);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+.hos-pill.late {
+  background: var(--watch-bg);
+  color: var(--warn);
+}
+.hos-pill.ok {
+  background: var(--good-bg);
+  color: var(--good);
+}
+/* Where a result sits in its lab's range: the range is the middle of the bar, the result a dot on it. */
+.hos-range {
+  position: relative;
+  display: block;
+  min-width: 5rem;
+  height: 6px;
+  margin-top: 7px;
+  border-radius: 3px;
+  background: var(--chip);
+}
+.hos-range::before {
+  content: '';
+  position: absolute;
+  inset: 0 20%;
+  background: var(--good-bg);
+  box-shadow: inset 0 0 0 1px rgb(14 124 90 / 0.35);
+}
+.hos-range i {
+  position: absolute;
+  top: -3px;
+  left: var(--at);
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+.hos-range.out i {
+  background: var(--watch);
+}
+/* The measurement picker, drawn only: the picture has one trend. */
+.hos-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 4px;
+  padding: 1px 9px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--fg);
+  white-space: nowrap;
+}
+.hos-select svg {
+  width: 10px;
+  height: 10px;
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.hos-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.hos-chart .rng {
+  fill: var(--good-bg);
+}
+.hos-chart .grid {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.hos-chart .ln {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.hos-chart circle {
+  fill: var(--primary);
+}
+.hos-chart .ln.two {
+  stroke: var(--accent);
+}
+.hos-chart circle.two {
+  fill: var(--accent);
+}
+.hos-chart .tk {
+  font-size: 11px;
+  fill: var(--muted);
+}
+.hos-chart .val {
+  font-size: 12px;
+  font-weight: 500;
+  fill: var(--heading);
+}
+@media (max-width: 860px) {
+  .hos-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .hos-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* On a phone each tab is as tall as its own contents (four stacked would leave the short ones a screen of white),
+   the tab row scrolls inside the dashboard if it has to, and a table keeps the columns that say what and when. */
+@media (max-width: 640px) {
+  .hos {
+    padding: 16px;
+    border-radius: 18px;
+  }
+  .hos-tabs {
+    overflow-x: auto;
+  }
+  .hos-tabs label {
+    padding: 9px 8px;
+    font-size: 14px;
+  }
+  .hos-wide {
+    display: none;
+  }
+  .hos-panel {
+    display: none;
+    visibility: visible;
+  }
+  #hos-today:checked ~ .hos-panels #hp-today,
+  #hos-labs:checked ~ .hos-panels #hp-labs,
+  #hos-history:checked ~ .hos-panels #hp-history,
+  #hos-meds:checked ~ .hos-panels #hp-meds {
+    display: grid;
+  }
+  .hos-card {
+    padding: 12px 14px;
+  }
+  .hos-big {
+    font-size: 21px;
+  }
+  .hos-t .hn {
+    display: none;
+  }
+  .hos-t td,
+  .hos-t th {
+    padding-inline: 6px;
+  }
+}

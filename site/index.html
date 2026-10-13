@@ -238,6 +238,192 @@
         </div>
       </section>
 
+      <!-- What one request for a dashboard gets: the page an assistant built on 12 October 2026 and named HealthOS,
+           redrawn here with the made-up member's records. Four tabs, radio buttons like Ask's; nothing in it moves. -->
+      <section class="band hos-band" id="healthos">
+        <h2>Ask for a dashboard, and it builds your HealthOS</h2>
+        <p class="sub">One request, and the assistant lays the whole export out as a page of your own: what needs attention, every result against its lab's range, your care history, your medicines. Claude named this one HealthOS.</p>
+        <figure class="hos-stage" id="healthos-picture" aria-label="A dashboard an AI assistant built from a made-up export, in four tabs: today, labs, care history, and medications and vaccines">
+          <p class="asked">Build me a dashboard of everything in my records</p>
+          <div class="hos">
+            <input type="radio" name="hos" id="hos-today" checked />
+            <input type="radio" name="hos" id="hos-labs" />
+            <input type="radio" name="hos" id="hos-history" />
+            <input type="radio" name="hos" id="hos-meds" />
+            <div class="hos-head">
+              <p class="hos-title">HealthOS</p>
+              <p class="hos-take"><b>3 things need attention.</b> Most pressing: blood sugar retest (due April). 2 results on your latest tests sit outside the lab's range.</p>
+              <p class="hos-asof">From your export of 17 Sep 2026 · 486 files. Not medical advice. Something missing here doesn't mean it never happened.</p>
+            </div>
+            <div class="hos-tabs" role="presentation">
+              <label for="hos-today">Today</label>
+              <label for="hos-labs">Labs</label>
+              <label for="hos-history">Care history</label>
+              <label for="hos-meds">Medications<span class="hos-wide"> &amp; vaccines</span></label>
+            </div>
+            <div class="hos-panels">
+              <div class="hos-panel" id="hp-today">
+                <div class="hos-tiles">
+                  <div class="hos-card"><p class="hos-k">Needs attention</p><p class="hos-big">3</p><p class="hos-s">Due soon, or asked for with no result since</p></div>
+                  <div class="hos-card"><p class="hos-k">Latest labs outside range</p><p class="hos-big">2</p><p class="hos-s">Cholesterol, vitamin D</p></div>
+                  <div class="hos-card"><p class="hos-k">Next appointment</p><p class="hos-big">24 Sep</p><p class="hos-s">Cardiologist</p></div>
+                  <div class="hos-card"><p class="hos-k">Newest prescription</p><p class="hos-big">Ibuprofen</p><p class="hos-s">For the shoulder · valid to 30 Nov</p></div>
+                </div>
+                <div class="hos-card">
+                  <p class="hos-h">Follow-ups</p>
+                  <p class="hos-note">What your records asked for, and whether the export shows it happened.<span class="hos-wide"> The Hebrew column is what to ask for.</span></p>
+                  <table class="hos-t">
+                    <thead><tr><th>What</th><th class="hn">Area</th><th>Due</th><th>Status</th><th class="hn">Ask for</th><th class="hn">Why</th></tr></thead>
+                    <tbody>
+                      <tr><td>Blood sugar retest</td><td class="hn">Blood tests</td><td class="nw">Apr 2026</td><td><span class="hos-pill late">Overdue</span></td><td class="hn"><bdi dir="rtl" lang="he">בדיקת סוכר בצום</bdi></td><td class="hn mut">Asked for in January, no result since</td></tr>
+                      <tr><td>Mole check</td><td class="hn">Skin</td><td class="nw">Jul 2026</td><td><span class="hos-pill late">Overdue</span></td><td class="hn"><bdi dir="rtl" lang="he">בדיקת שומות אצל רופא עור</bdi></td><td class="hn mut">Referred in July 2025, no visit on record</td></tr>
+                      <tr><td>Eye doctor referral</td><td class="hn">Eyes</td><td class="nw">Jun 2026</td><td><span class="hos-pill late">Lapsed</span></td><td class="hn"><bdi dir="rtl" lang="he">הפניה חדשה לרופא עיניים</bdi></td><td class="hn mut">No eye exam since 2014</td></tr>
+                      <tr><td>Flu shot</td><td class="hn">Vaccines</td><td class="nw">Now</td><td><span class="hos-pill">Open</span></td><td class="hn"><bdi dir="rtl" lang="he">חיסון שפעת</bdi></td><td class="hn mut">This winter's dose isn't on record</td></tr>
+                      <tr><td>Physiotherapy</td><td class="hn">Shoulder</td><td class="nw">15 Nov</td><td><span class="hos-pill">Open</span></td><td class="hn"><bdi dir="rtl" lang="he">תור לפיזיותרפיה</bdi></td><td class="hn mut">The approval runs out on 15 November</td></tr>
+                      <tr><td>Tetanus booster</td><td class="hn">Vaccines</td><td class="nw">Jun 2027</td><td><span class="hos-pill">Upcoming</span></td><td class="hn"><bdi dir="rtl" lang="he">חיסון טטנוס</bdi></td><td class="hn mut">Last dose on 20 June 2017</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="hos-card">
+                  <p class="hos-h">Health problems on record</p>
+                  <p class="hos-note">Grouped by condition across every doctor who saw it.</p>
+                  <table class="hos-t">
+                    <thead><tr><th>Condition</th><th>Status</th><th class="hn">First noted</th><th>Summary</th><th class="hn">Where it's from</th></tr></thead>
+                    <tbody>
+                      <tr><td>High cholesterol</td><td><span class="hos-pill late">Rising</span></td><td class="hn">2024</td><td>Up at every test since 2021</td><td class="hn mut">test-results/history</td></tr>
+                      <tr><td>Low vitamin D</td><td><span class="hos-pill late">Back</span></td><td class="hn">2023</td><td>Treated in 2024, low again in January</td><td class="hn mut">test-results/history</td></tr>
+                      <tr><td>Asthma</td><td><span class="hos-pill ok">Quiet</span></td><td class="hn">1994</td><td>No inhaler bought since 2019</td><td class="hn mut">medical file · page 9</td></tr>
+                      <tr><td>Penicillin allergy</td><td><span class="hos-pill">On file</span></td><td class="hn">2011</td><td>A rash after taking it</td><td class="hn mut">medical file · page 14</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="hos-panel" id="hp-labs">
+                <div class="hos-grid">
+                  <div class="hos-card">
+                    <p class="hos-h">Outside the range on your latest tests</p>
+                    <p class="hos-note">Each result is judged against the range its own lab printed.</p>
+                    <table class="hos-t">
+                      <thead><tr><th>Test</th><th class="num">Result</th><th>Lab range</th><th>Flag</th><th class="hn">Date</th></tr></thead>
+                      <tbody>
+                        <tr><td>Cholesterol (LDL)</td><td class="num">142 <small>mg/dL</small></td><td>up to 130</td><td><span class="hos-pill late">High</span></td><td class="hn">8 Jan 2026</td></tr>
+                        <tr><td>Vitamin D</td><td class="num">17 <small>ng/mL</small></td><td>20–50</td><td><span class="hos-pill late">Low</span></td><td class="hn">8 Jan 2026</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="hos-card">
+                    <p class="hos-h">Trend over the years</p>
+                    <p class="hos-note">The shaded band is the lab's range. <span class="hos-select">Cholesterol (LDL) <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" /></svg></span></p>
+                    <svg class="hos-chart" viewBox="0 0 420 170" role="img" aria-label="Cholesterol from 118 in 2021 to 142 in 2026, above the lab's range of up to 130 since 2024">
+                      <rect class="rng" x="40" y="68" width="372" height="72" rx="4" />
+                      <text class="tk" x="34" y="72" text-anchor="end">130</text><text class="tk" x="34" y="144" text-anchor="end">100</text>
+                      <polyline class="ln" points="52,96.8 122,89.6 192,75.2 262,65.6 332,53.6 402,39.2" />
+                      <circle cx="52" cy="96.8" r="3.5" /><circle cx="122" cy="89.6" r="3.5" /><circle cx="192" cy="75.2" r="3.5" /><circle cx="262" cy="65.6" r="3.5" /><circle cx="332" cy="53.6" r="3.5" /><circle class="end" cx="402" cy="39.2" r="5" />
+                      <text class="val" x="52" y="114">118</text><text class="val" x="402" y="26" text-anchor="end">142</text>
+                      <text class="tk" x="52" y="162" text-anchor="middle">2021</text><text class="tk" x="122" y="162" text-anchor="middle">2022</text><text class="tk" x="192" y="162" text-anchor="middle">2023</text><text class="tk" x="262" y="162" text-anchor="middle">2024</text><text class="tk" x="332" y="162" text-anchor="middle">2025</text><text class="tk" x="402" y="162" text-anchor="middle">2026</text>
+                    </svg>
+                  </div>
+                </div>
+                <div class="hos-card">
+                  <p class="hos-h">All latest results</p>
+                  <p class="hos-note">The newest value of each measurement. The bar shows where it sits in the lab's range.</p>
+                  <table class="hos-t">
+                    <thead><tr><th>Test</th><th class="hn">Panel</th><th class="num">Result</th><th class="hn">Units</th><th>Range</th><th class="hn">Flag</th><th class="hn">Date</th></tr></thead>
+                    <tbody>
+                      <tr><td>Cholesterol (LDL)</td><td class="hn mut">Lipids</td><td class="num">142</td><td class="hn mut">mg/dL</td><td><span class="hos-range out"><i style="--at:86%"></i></span></td><td class="hn"><span class="hos-pill late">High</span></td><td class="hn">8 Jan 2026</td></tr>
+                      <tr><td>Good cholesterol (HDL)</td><td class="hn mut">Lipids</td><td class="num">44</td><td class="hn mut">mg/dL</td><td><span class="hos-range"><i style="--at:32%"></i></span></td><td class="hn mut">In range</td><td class="hn">8 Jan 2026</td></tr>
+                      <tr><td>Vitamin D</td><td class="hn mut">Vitamins</td><td class="num">17</td><td class="hn mut">ng/mL</td><td><span class="hos-range out"><i style="--at:14%"></i></span></td><td class="hn"><span class="hos-pill late">Low</span></td><td class="hn">8 Jan 2026</td></tr>
+                      <tr><td>Blood sugar</td><td class="hn mut">Chemistry</td><td class="num">99</td><td class="hn mut">mg/dL</td><td><span class="hos-range"><i style="--at:78%"></i></span></td><td class="hn mut">In range</td><td class="hn">8 Jan 2026</td></tr>
+                      <tr><td>Liver enzyme (ALT)</td><td class="hn mut">Chemistry</td><td class="num">34</td><td class="hn mut">U/L</td><td><span class="hos-range"><i style="--at:71%"></i></span></td><td class="hn mut">In range</td><td class="hn">8 Jan 2026</td></tr>
+                      <tr><td>Kidneys (creatinine)</td><td class="hn mut">Chemistry</td><td class="num">0.9</td><td class="hn mut">mg/dL</td><td><span class="hos-range"><i style="--at:40%"></i></span></td><td class="hn mut">In range</td><td class="hn">8 Jan 2026</td></tr>
+                      <tr><td>Iron</td><td class="hn mut">Chemistry</td><td class="num">68</td><td class="hn mut">µg/dL</td><td><span class="hos-range"><i style="--at:29%"></i></span></td><td class="hn mut">In range</td><td class="hn">14 Feb 2026</td></tr>
+                      <tr><td>Hemoglobin</td><td class="hn mut">Blood count</td><td class="num">14.1</td><td class="hn mut">g/dL</td><td><span class="hos-range"><i style="--at:37%"></i></span></td><td class="hn mut">In range</td><td class="hn">14 Feb 2026</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="hos-panel" id="hp-history">
+                <div class="hos-card">
+                  <p class="hos-h">The last year</p>
+                  <p class="hos-note">Visits, results and messages, newest first<span class="hos-wide">, each with the folder it comes from</span>.</p>
+                  <table class="hos-t">
+                    <thead><tr><th>Date</th><th class="hn">Area</th><th>What</th><th>Details</th><th class="hn">Where it's from</th></tr></thead>
+                    <tbody>
+                      <tr><td class="nw">20 Aug 2026</td><td class="hn mut">Orthopaedics</td><td>Shoulder pain</td><td>Referred for an ultrasound and physiotherapy</td><td class="hn mut">visit-summaries</td></tr>
+                      <tr><td class="nw">14 Feb 2026</td><td class="hn mut">Blood tests</td><td>Blood count</td><td>All in range</td><td class="hn mut">test-results</td></tr>
+                      <tr><td class="nw">10 Feb 2026</td><td class="hn mut">Imaging</td><td>Knee X-ray</td><td>Done, as the orthopaedist asked</td><td class="hn mut">referrals</td></tr>
+                      <tr><td class="nw">15 Jan 2026</td><td class="hn mut">Family doctor</td><td>Message</td><td>Repeat the blood sugar test in three months</td><td class="hn mut">communication-with-doctor</td></tr>
+                      <tr><td class="nw">8 Jan 2026</td><td class="hn mut">Blood tests</td><td>Cholesterol, vitamin D</td><td>LDL 142, high. Vitamin D 17, low</td><td class="hn mut">test-results</td></tr>
+                      <tr><td class="nw">6 Jan 2026</td><td class="hn mut">Family doctor</td><td>Visit</td><td>“Tired again”. Blood tests ordered</td><td class="hn mut">visit-summaries</td></tr>
+                      <tr><td class="nw">9 Dec 2025</td><td class="hn mut">Eyes</td><td>Referral</td><td>To an eye doctor. Never used</td><td class="hn mut">referrals</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="hos-grid">
+                  <div class="hos-card">
+                    <p class="hos-h">Weight</p>
+                    <p class="hos-note">Measured at clinic visits, in kg. Read from the medical file.</p>
+                    <svg class="hos-chart" viewBox="0 0 300 130" role="img" aria-label="Weight from 78 kg in 2016 to 87 kg in 2026">
+                      <line class="grid" x1="30" y1="105" x2="290" y2="105" />
+                      <polyline class="ln" points="30,91 81,84 132,70 183,56 234,42 285,28" />
+                      <circle cx="30" cy="91" r="3.5" /><circle cx="81" cy="84" r="3.5" /><circle cx="132" cy="70" r="3.5" /><circle cx="183" cy="56" r="3.5" /><circle cx="234" cy="42" r="3.5" /><circle class="end" cx="285" cy="28" r="5" />
+                      <text class="val" x="30" y="80">78</text><text class="val" x="285" y="16" text-anchor="end">87</text>
+                      <text class="tk" x="30" y="122">2016</text><text class="tk" x="157" y="122" text-anchor="middle">2021</text><text class="tk" x="290" y="122" text-anchor="end">2026</text>
+                    </svg>
+                  </div>
+                  <div class="hos-card">
+                    <p class="hos-h">Blood pressure</p>
+                    <p class="hos-note">Upper and lower number, mmHg. Read from visit notes.</p>
+                    <svg class="hos-chart" viewBox="0 0 300 130" role="img" aria-label="Blood pressure from 118 over 76 in 2016 to 131 over 83 in 2026">
+                      <line class="grid" x1="30" y1="105" x2="290" y2="105" />
+                      <polyline class="ln" points="30,53.6 81,49.7 132,47.1 183,43.2 234,40.6 285,36.7" />
+                      <polyline class="ln two" points="30,96.2 81,94.9 132,93.6 183,91 234,89.7 285,87.1" />
+                      <circle class="end" cx="285" cy="36.7" r="5" /><circle class="end two" cx="285" cy="87.1" r="5" />
+                      <text class="val" x="30" y="42">118</text><text class="val" x="285" y="24" text-anchor="end">131</text>
+                      <text class="val" x="30" y="86">76</text><text class="val" x="285" y="76" text-anchor="end">83</text>
+                      <text class="tk" x="30" y="122">2016</text><text class="tk" x="157" y="122" text-anchor="middle">2021</text><text class="tk" x="290" y="122" text-anchor="end">2026</text>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div class="hos-panel" id="hp-meds">
+                <div class="hos-card">
+                  <p class="hos-h">Prescriptions and pharmacy purchases</p>
+                  <p class="hos-note">Neither shows what you take today. Purchases go back to 2008.</p>
+                  <table class="hos-t">
+                    <thead><tr><th>Date</th><th>Medicine</th><th>Type</th><th class="num hn">Qty</th><th class="hn">Instructions</th></tr></thead>
+                    <tbody>
+                      <tr><td class="nw">22 Aug 2026</td><td>Ibuprofen 400 mg</td><td>Purchase</td><td class="num hn">20</td><td class="hn mut"></td></tr>
+                      <tr><td class="nw">20 Aug 2026</td><td>Ibuprofen 400 mg</td><td>Prescription</td><td class="num hn">20</td><td class="hn mut">As needed, with food</td></tr>
+                      <tr><td class="nw">19 Aug 2024</td><td>Vitamin D 1,000 IU</td><td>Purchase</td><td class="num hn">1</td><td class="hn mut"></td></tr>
+                      <tr><td class="nw">21 May 2024</td><td>Vitamin D 1,000 IU</td><td>Prescription</td><td class="num hn">2</td><td class="hn mut">One a day</td></tr>
+                      <tr><td class="nw">14 Nov 2023</td><td>Vitamin D 1,000 IU</td><td>Prescription</td><td class="num hn">2</td><td class="hn mut">One a day</td></tr>
+                      <tr><td class="nw">12 Mar 2019</td><td>Salbutamol inhaler</td><td>Purchase</td><td class="num hn">1</td><td class="hn mut"></td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="hos-card">
+                  <p class="hos-h">Vaccinations</p>
+                  <p class="hos-note">Older doses may only appear in the medical file or a booklet you uploaded.</p>
+                  <table class="hos-t">
+                    <thead><tr><th>Vaccine</th><th class="num">Doses</th><th class="hn">First</th><th>Latest</th></tr></thead>
+                    <tbody>
+                      <tr><td>Flu</td><td class="num">12</td><td class="hn">2014</td><td>Oct 2025</td></tr>
+                      <tr><td>Tetanus and diphtheria</td><td class="num">5</td><td class="hn">1981</td><td>20 Jun 2017</td></tr>
+                      <tr><td>Polio</td><td class="num">5</td><td class="hn">1981</td><td>1987</td></tr>
+                      <tr><td>COVID-19</td><td class="num">4</td><td class="hn">2021</td><td>2022</td></tr>
+                      <tr><td>Hepatitis B</td><td class="num">3</td><td class="hn">1999</td><td>2000</td></tr>
+                      <tr><td>Measles, mumps, rubella</td><td class="num">2</td><td class="hn">1982</td><td>1987</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+          <figcaption>Made-up records. It shows the day it was built: add a file or export again, then ask for it again.</figcaption>
+        </figure>
+      </section>
+
             <div class="film-run">
       <section class="band film-band" id="collect">
         <div class="feature">

@@ -280,9 +280,11 @@ Nothing shown comes from a real account.
   read off the medical file lost their page numbers. The README has asked for them since 13 October 2026.
 
 **Not yet:**
-- **"HealthOS" or a "living dashboard":** promise a dashboard you grow by adding files, not more, until the product
-  does more. The 12 October dashboard shows the gap. The assistant named it HealthOS itself, but it is a snapshot:
-  "due soon" was worked out on the day it was built and stays that way, and a new export means building it again.
+- **A "living dashboard":** promise a dashboard you grow by adding files, not more, until the product does more. The
+  12 October dashboard shows the gap. The assistant named it HealthOS itself, but it is a snapshot: "due soon" was
+  worked out on the day it was built and stays that way, and a new export means building it again. Since 13 October
+  2026 the page shows that dashboard under its name (`#healthos`, redrawn with the demo persona's records), as what
+  one request gets, and its caption says it shows the day it was built.
 
 ## To validate with customers
 
