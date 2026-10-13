@@ -36,7 +36,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { call } from './in-page.mjs';
 import { ORIGIN, START, openBrowser, signIn } from './maccabi-browser.mjs';
-import { REA_FILTER, batches, candidates, chunkFiles, chunkUrl, readEvidence, servicesIn, knownFrom, isKnown } from './rea-endpoints-lib.mjs';
+import { REA_FILTER, batches, candidates, chunkFiles, chunkUrl, readEvidence, routesIn, servicesIn, knownFrom, isKnown } from './rea-endpoints-lib.mjs';
 import { root, sleep } from './stage.mjs';
 
 /** The rea release this was written against: its result's shape is what readEvidence reads. */
@@ -99,10 +99,13 @@ const ours = (url) => {
   }
 };
 
-/** Where a script is kept: its path on the site, under `dir`. */
+/**
+ * Where a script is kept: its path on the site, under `dir`. One the site serves under another ending
+ * (/online/languagepack.ashx) is kept as .js too, which is how rea and a later --from know it for a script.
+ */
 function fileFor(dir, url) {
   const rel = new URL(url).pathname.split('/').filter(Boolean).map((s) => s.replace(/[^\w.@-]+/g, '_')).join('/');
-  const file = resolve(dir, rel || 'index.js');
+  const file = resolve(dir, !rel ? 'index.js' : /\.m?js$/.test(rel) ? rel : rel + '.js');
   return file.startsWith(dir + sep) ? file : null;
 }
 
@@ -272,6 +275,9 @@ async function main() {
   const pages = all.filter((p) => p.kind === 'page');
   const app = all.filter((p) => p.kind === 'app');
   const services = servicesIn(files, known);
+  // The routes a router's table spells out, read here, and rea's, which also follows the ones built in code.
+  const routes = new Set(evidence.routes);
+  for (const text of files.values()) routesIn(text).forEach((r) => routes.add(r));
   const legacy = found.legacyPages.map((path) => ({ path, known: isKnown(path, known) }));
 
   const show = (list, label, line) => {
@@ -306,7 +312,7 @@ async function main() {
   show(legacy, 'Legacy pages linked from the summary page', (p) => p.path);
   if (ALL) {
     console.log(`\nThe app's own pages and service bases (${app.length}): ${app.map((p) => p.path).join('  ')}`);
-    if (evidence.routes.size) console.log(`\nThe app's page routes, as rea read them (${evidence.routes.size}): ${[...evidence.routes].sort().join('  ')}`);
+    console.log(`\nThe app's page routes (${routes.size}): ${[...routes].sort().join('  ')}`);
   }
   console.log('\n[ast] rea parsed the call, its address a literal; [call] a call read here, its address built from parts ({})'
     + '\nor taken from the value just above it;'
@@ -320,7 +326,7 @@ async function main() {
       rea: args.includes('--no-rea') ? null : REA_VERSION,
       files: [...files.keys()],
       failed: [...found.failed].map(([u, why]) => ({ file: new URL(u).pathname, why })),
-      services, calls, pages, app, legacyPages: legacy, routes: [...evidence.routes].sort(),
+      services, calls, pages, app, legacyPages: legacy, routes: [...routes].sort(),
       sourceMaps: evidence.sourceMaps, parsedInPart: evidence.partial, unparsed: evidence.unparsed, notAnalyzed: evidence.failed,
     }, null, 2) + '\n');
     console.log('Wrote ' + file);

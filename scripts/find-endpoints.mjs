@@ -20,7 +20,7 @@ import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { call } from './in-page.mjs';
 import { ORIGIN, START, openBrowser, signIn } from './maccabi-browser.mjs';
-import { literals as readLiterals } from './rea-endpoints-lib.mjs';
+import { literals as readLiterals, routesIn } from './rea-endpoints-lib.mjs';
 import { root, sleep } from './stage.mjs';
 
 /** Requests are paced as the collector's are (PACE_MS in src/core), one at a time. */
@@ -60,14 +60,13 @@ export function shape(path) {
 /** What one script names: API paths, service names, the app's page routes, and other script files. */
 export function scan(text) {
   const paths = new Set();
-  const routes = new Set();
+  const routes = routesIn(text);
   const files = new Set();
   for (const s of literals(text)) {
     if (API_MARK.test(s) && URLISH.test(s.replace(/\{\}/g, ''))) paths.add(s);
     // A script file by name; "./x.js" and node_modules are a bundle's module ids, not files the server has.
     if (/^[\w.\-/]+\.m?js$/.test(s) && !s.includes('//') && !/^\.\/|node_modules\//.test(s)) files.add(s);
   }
-  for (const m of text.matchAll(/\bpath\s*:\s*["'`]([\w\-/:]*)["'`]/g)) if (m[1]) routes.add(m[1]);
   // webpack's and Rspack's runtimes name lazy chunks from an id-to-hash map, after a folder and, for some, a
   // name in place of the id: "static/js/async/"+(({354:"lib-axios"})[e]||e)+"."+({337:"1343e675"})[e]+".js", or
   // ("354"===e?"lib-axios":e) for the name. They load them from the public path the same script sets

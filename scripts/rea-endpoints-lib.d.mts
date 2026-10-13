@@ -46,5 +46,6 @@ export function chunkFiles(text: string): Set<string>;
 export function chunkUrl(file: string, from: string): string;
 export function readEvidence(result: unknown): Evidence;
 export function candidates(files: Map<string, string>, evidence: Evidence, known: Known): Candidate[];
+export function routesIn(text: string): Set<string>;
 export function servicesIn(files: Map<string, string>, known: Known): { name: string; known: boolean }[];
 export function batches(sizes: Map<string, number>, maxBytes?: number, maxFiles?: number): string[][];

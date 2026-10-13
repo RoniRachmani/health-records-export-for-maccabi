@@ -3,7 +3,7 @@
 // result shaped as rea 6.4.0 writes one.
 import { describe, expect, it } from 'vitest';
 import {
-  batches, builtString, candidates, chunkFiles, chunkUrl, isKnown, knownFrom, literals, locator, readCalls, readEvidence,
+  batches, builtString, candidates, chunkFiles, chunkUrl, isKnown, knownFrom, literals, locator, readCalls, readEvidence, routesIn,
 } from '../scripts/rea-endpoints-lib.mjs';
 import { scan } from '../scripts/find-endpoints.mjs';
 
@@ -185,6 +185,10 @@ describe('the rest', () => {
   it('knows a legacy handler written from /online/ down', () => {
     expect(isKnown('/Ajax/GetVisits.ashx', known)).toBe(true);
     expect(isKnown('/Ajax/GetOther.ashx', known)).toBe(false);
+  });
+
+  it('reads the page routes a router\'s table spells out', () => {
+    expect([...routesIn('[{path:"/HomePage/",element:a},{path:"/go/:url"},{path:""},{path:e.p}]')]).toEqual(['/HomePage/', '/go/:url']);
   });
 
   it('counts lines and columns from 1', () => {

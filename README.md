@@ -536,12 +536,12 @@ Nearly everything comes from that reader, not from rea. The site formats a path 
 records a call only when its address is a literal at the call: its own limits say string-built endpoints stay unknown.
 Where the site picks an address by a condition (`isV2 ? "v2/…" : "v1/…"`), the reader gives the call once for each side.
 On a run of October 2026 the reader found 199 calls with their methods, and rea five, each a service's base with
-no path; what rea adds is the app's page routes, the source maps declared, and a parser's word on how far each file
-could be read.
+no path; what rea adds is the page routes built in code (the scan reads a router's table itself), the source maps
+declared, and a parser's word on how far each file could be read.
 
 ```sh
 npm run endpoints:rea                        # the services and API calls endpoints.json does not have
-npm run endpoints:rea -- --all               # the mapped ones too, marked, and the app's page routes as rea read them
+npm run endpoints:rea -- --all               # the mapped ones too, marked, and the app's page routes
 npm run endpoints:rea -- --save ~/scripts    # also the scripts it read, laid out as on the site
 npm run endpoints:rea -- --from ~/scripts    # analyze a saved folder again: no browser, no sign-in
 npm run endpoints:rea -- --no-rea            # a second instead of a quarter of an hour: the reader alone, nothing parsed

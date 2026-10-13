@@ -570,6 +570,13 @@ export function candidates(files, evidence, known) {
   return [...byKey.values()].sort((a, b) => shape(a.path).localeCompare(shape(b.path)) || String(a.method).localeCompare(String(b.method)));
 }
 
+/** The app's page routes a script declares: each `path: "…"` of a router's table. */
+export function routesIn(text) {
+  const routes = new Set();
+  for (const m of text.matchAll(/\bpath\s*:\s*["'`]([\w\-/:]*)["'`]/g)) if (m[1]) routes.add(m[1]);
+  return routes;
+}
+
 /** The service names (…API) the scripts mention. */
 export function servicesIn(files, known) {
   const names = new Set();
