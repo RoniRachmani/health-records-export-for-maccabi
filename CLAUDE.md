@@ -226,7 +226,8 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   `pages.css` and adds `site/ai-assistant.css` and `site/site.css`. It follows the same house rules: no script, no fetched
   font, no Maccabi brand asset, made-up records only, WCAG AA, and no sideways scroll at 375px. Its one request to
   another host is the visit counter, a cookieless GoatCounter image in the footer of `site/index.html` only, which the
-  footer and the Privacy Policy both name: add nothing else that calls out, and never put it on a page in `public/`. Its run clip is a
+  footer and the Privacy Policy both name: add nothing else that calls out, and never put it on a page in `public/`. The headless Chrome in
+  `scripts/stage.mjs` resolves no host but this machine, so the checks and renders are never counted as visits. Its run clip is a
   slice of the promo film that the workflow renders and crops (see the workflow's header), so a change to the film's
   timing or layout has to be matched in the `clip` line there. The opened folder beside it is drawn in HTML
   (`.fw-list`), from the film's `FOLDERS` in `store/src/parts.ts`: keep the two lists in step, and its open

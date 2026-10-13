@@ -96,6 +96,9 @@ export async function openStage() {
       '--disable-background-networking',
       '--metrics-recording-only',
       '--mute-audio',
+      // And no page here reaches another host: every name but this machine's fails to resolve. That keeps the landing
+      // page's visit counter from counting the renders and checks as visits.
+      '--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1, EXCLUDE localhost',
       'about:blank',
     ]);
 
