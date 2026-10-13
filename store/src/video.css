@@ -107,6 +107,18 @@ body.video {
   font-size: 16px;
   color: #5b6785;
 }
+.hook-pre {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 404px;
+  margin: 0;
+  text-align: center;
+  font-size: 44px;
+  line-height: 1.2;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+}
 .hook-line {
   position: absolute;
   left: 0;
@@ -380,6 +392,8 @@ iframe.popup {
   border-radius: 22px;
   background: rgba(3, 24, 66, 0.34);
   border: 1px solid rgba(255, 255, 255, 0.14);
+  /* video.ts sets the height to the files in it; what is below the last of them is cut off. */
+  overflow: hidden;
 }
 .feed-head {
   display: flex;

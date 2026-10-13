@@ -109,10 +109,10 @@ function blep(t, dt) {
 }
 
 // ---- the music ---------------------------------------------------------------
-// D major, I–vi–IV–V with added tones, voiced close so the pad moves by step. Twenty bars from the
+// D major, I–vi–IV–V with added tones, voiced close so the pad moves by step. Twenty-one bars from the
 // start to the closing card, so the bar lines fall on the film's own cuts: two bars of IV–V under the
-// opening answer, resolving as the first card lands, then the loop four times, then IV–V under the
-// assistant again, resolving on the closing card.
+// opening answer, resolving as the first card lands, then the loop four times and its first bar once
+// more, then IV–V under the assistant again, resolving on the closing card.
 const CHORDS = {
   D: { pad: [57, 61, 64, 66], root: 50, bass: 38 },
   Bm: { pad: [57, 61, 62, 66], root: 47, bass: 35 },
@@ -120,7 +120,7 @@ const CHORDS = {
   A: { pad: [57, 59, 62, 64], root: 45, bass: 33 },
 };
 const LOOP = ['D', 'Bm', 'G', 'A'];
-const BARS = 20;
+const BARS = 21;
 /** The bars before the first card, under the opening answer (OPEN in store/src/video.ts). */
 const INTRO = 2;
 const ARP = [0, 2, 3, 4, 2, 3, 1, 3];
@@ -132,7 +132,7 @@ function grid(scenes) {
     bar,
     beat: bar / 4,
     at: (b, beat = 0) => start + b * bar + beat * (bar / 4),
-    chord: (b) => CHORDS[b >= BARS ? 'D' : b < INTRO ? LOOP[b + 2] : b >= INTRO + 16 ? LOOP[b - INTRO - 14] : LOOP[(b - INTRO) % 4]],
+    chord: (b) => CHORDS[b >= BARS ? 'D' : b < INTRO ? LOOP[b + 2] : b >= BARS - 2 ? LOOP[b - BARS + 4] : LOOP[(b - INTRO) % 4]],
   };
 }
 

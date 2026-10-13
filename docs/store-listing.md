@@ -141,7 +141,7 @@ positioning.md's *Getting started*, so check them against the apps when that sec
 The store's video field takes a **YouTube link**, not a file. The one to paste is
 **https://youtu.be/CmLpMc90It0**, on the [Health Records Export for Maccabi](https://www.youtube.com/@Health-Records-Export) channel, with the title
 and description [below](#on-youtube). `npm run store-video` renders the video to `store/assets/promo-video.mp4`
-(3840×2160, 60 fps, 61 seconds, with narration). YouTube can't swap the file under a link, so a re-render is a
+(3840×2160, 60 fps, 64 seconds, with narration). YouTube can't swap the file under a link, so a re-render is a
 new upload with a new link: paste it on the dashboard and put it in the README, in place of the one above.
 
 It is not committed — it is rebuilt from `store/src/video.ts`, which draws it a frame at a time in headless
@@ -152,14 +152,14 @@ file names that stream past while the export runs, are made up, in the collector
 
 What it shows, in order, tells [positioning.md](positioning.md)'s story about its demo member: what it is for, first: a
 generic assistant opened on the export, saying what stands out in it and naming the file it came from (`chatWindow`
-with `STANDS_OUT`) · record cards from all over the site, "one page at a time", pulled into the extension's folder ·
+with `STANDS_OUT`) · record cards from all over the site, under "Maccabi Online shows your records one page at a time", pulled into the extension's folder ·
 the name and the headline · the clicks that start an export, on a placeholder page, then the camera closing in on the
 popup · the export running, sped up, beside the files it writes and the progress badge on the toolbar icon · the
 finished ZIP, which opens into its folders ("your whole history, in one place"), then a file of the member's own
-dropped into it ("yours to keep, and to grow") · "Ask anything": the use cases as pill tabs over a pink panel, three of
-them opened in turn · the assistant again, with advice tied to the member's own numbers and its source (`ONE_THING`) ·
+dropped into it ("yours to keep, and to grow") · "Ask anything": the use cases as pill tabs over a pink panel, two of
+them opened in turn, each up long enough to read · the assistant again, with advice tied to the member's own numbers and its source (`ONE_THING`) ·
 the closing card, with the one line on privacy ("Stays on your computer") beside "Free on the Chrome Web Store", and
-the repository's address. The disclaimer is on the title and closing cards, and the popup's own *Unofficial* chip (the
+the website's address. The disclaimer is on the title and closing cards, and the popup's own *Unofficial* chip (the
 whole disclaimer is its tooltip) is on screen whenever the popup is.
 
 The README shows the video as a poster that links to it: `store/assets/video-poster.png`, one frame of the same film

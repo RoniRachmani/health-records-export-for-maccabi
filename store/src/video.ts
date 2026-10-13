@@ -53,13 +53,13 @@ const T = {
   // 5 · The ZIP, opened, and then added to. Its two parts are as long as their narration needs.
   open: OPEN + 28.3,
   keep: OPEN + 33.8,
-  // 6 · What to ask.
+  // 6 · What to ask: three of the music's bars, so that each example stays up long enough to read.
   uses: OPEN + 38.5,
   // 7 · Then, asked of the assistant the member chooses: two of the music's bars.
-  ask: OPEN + 43.7,
+  ask: OPEN + 46.42,
   // 8 · Where to get it.
-  close: OPEN + 49.0,
-  end: OPEN + 55.85,
+  close: OPEN + 51.72,
+  end: OPEN + 58.57,
 };
 
 /** The second the README's poster is taken from: the export running, which is what the film is about. */
@@ -270,6 +270,9 @@ function feedPath(step: PlanStep, n: number): string | null {
 
 /** Every file the feed shows, and when: one every FEED_EVERY seconds, from whichever step is running. */
 const FEED_EVERY = 0.17;
+/** The feed panel's height with one file in it, and with all it can show (video.css's .feed). */
+const FEED_MIN = 176;
+const FEED_FULL = 500;
 const FEED: { at: number; path: string }[] = (() => {
   const out: { at: number; path: string }[] = [];
   const written: Record<string, number> = {};
@@ -381,7 +384,7 @@ const CAPTIONS: Caption[] = [
   },
   {
     from: T.open + 0.3, to: T.keep, top: 360, title: 'Your whole history, in one place', accent: [1, 2],
-    text: 'Your full medical file, plus every result, visit, prescription, referral, vaccination and letter the site has.',
+    text: 'Your full medical file, plus the results, visits, prescriptions, referrals, vaccinations and letters the site keeps.',
   },
   {
     from: T.keep, to: T.uses - 0.1, top: 360, title: 'Yours to keep, and to grow', accent: [0],
@@ -405,12 +408,12 @@ const USES: { tab: string; q?: string; a?: string }[] = [
   { tab: 'One thing today' },
   { tab: 'Preventive care', q: 'What might I be due for?', a: 'A tetanus booster: your last one was in May 2017.' },
   { tab: 'Explain a result', q: 'What changed in my latest blood test?', a: 'One value newly above the range, one back to normal, the rest steady since 2021.' },
-  { tab: 'Before an appointment', q: 'What should I raise with my doctor on Thursday?', a: 'Three questions, and a one-page summary of your history for a new specialist.' },
+  { tab: 'Before an appointment' },
   { tab: 'From years ago' },
 ];
-/** The tabs part 6 opens in turn: the ones the opening and the end don't already answer. */
+/** The tabs part 6 opens in turn: two, each up for about three seconds, which is what reading one takes. */
 const USE_TABS = USES.flatMap((u, i) => (u.q ? [i] : []));
-const USE_EVERY = 1.15;
+const USE_EVERY = 3.05;
 /** When tab `i` (of USES) comes up. */
 const useAt = (i: number): number => T.uses + 1.3 + USE_TABS.indexOf(i) * USE_EVERY;
 
@@ -474,8 +477,10 @@ async function main(): Promise<void> {
 
   // 1 · years of records, as the site shows them
   const cards = CARDS.map(recordCard);
+  // The line's subject is on screen too: with the sound off, "One page at a time." alone says nothing.
+  const hookPre = h('p', 'hook-pre', 'Maccabi Online shows your records');
   const hookLine = kinetic('h1', 'hook-line', 'One page at a time.');
-  const hook = h('div', 'layer', ...cards, hookLine.el);
+  const hook = h('div', 'layer', ...cards, hookPre, hookLine.el);
 
   // 2 · the name and the headline
   const art = artwork();
@@ -549,7 +554,7 @@ async function main(): Promise<void> {
   const endName = kinetic('h1', 'end-title', 'Health Records Export for Maccabi');
   // The one line on privacy, beside where to get it (docs/positioning.md: say it once, lightly).
   const endSub = h('p', 'end-sub', 'Free on the Chrome Web Store  ·  Stays on your computer');
-  const endLink = h('p', 'end-link', 'github.com/RoniRachmani/health-records-export-for-maccabi');
+  const endLink = h('p', 'end-link', 'maccabi.ronirachmani.com');
   const endNote = h('p', 'disclaimer', DISCLAIMER);
   const ending = h('div', 'layer', endName.el, endSub, endLink, endNote);
 
@@ -634,6 +639,7 @@ async function main(): Promise<void> {
 
   // ---- where everything is, at time t ----
   let pushed = '';
+  let pushedRun: RunState | null = null;
   let shownHeight = 0;
   const feedShown: number[] = feedRows.map(() => -1);
 
@@ -703,6 +709,8 @@ async function main(): Promise<void> {
       fade(el, Math.min(ramp(t, T.cards + c.arrives * 0.09, 0.25), 1 - ramp(t, leave + 0.38, 0.17, linear)));
     });
     rise(hookLine.words, t, T.hookLine, 0.09, 0.8);
+    fade(hookPre, Math.min(ramp(t, T.hookLine - 0.15, 0.5), 1 - ramp(t, T.swallow - 0.35, 0.4)));
+    place(hookPre, 0, 14 * (1 - ramp(t, T.hookLine - 0.15, 0.6, outQuint)) - 30 * ramp(t, T.swallow - 0.35, 0.4));
     fade(hookLine.el, 1 - ramp(t, T.swallow - 0.35, 0.4));
     place(hookLine.el, 0, -30 * ramp(t, T.swallow - 0.35, 0.4), 1 - 0.04 * ramp(t, T.swallow - 0.35, 0.4));
 
@@ -750,6 +758,7 @@ async function main(): Promise<void> {
     const key = run ? run.status + run.percent.toFixed(2) + run.fileCount : 'idle';
     if (key !== pushed) {
       pushed = key;
+      pushedRun = run;
       push(run);
     }
     // Its height follows the view, as a real popup's does; anchored at the top, only its bottom moves.
@@ -825,7 +834,8 @@ async function main(): Promise<void> {
     const feedOn = showing(t, T.runFrom + 0.4, T.saved + 0.25, 0.5, 0.35);
     fade(feed, feedOn);
     place(feed, 0, 30 * (1 - ramp(t, T.runFrom + 0.4, 0.7, outQuint)));
-    const counted = run ?? runAt(0);
+    // The state the popup was last given, so the two counts on screen never disagree by a rounding.
+    const counted = pushedRun ?? runAt(0);
     feedCount.textContent = counted.fileCount + ' files · ' + formatBytes(counted.byteCount ?? 0);
     let newest = -1;
     while (newest + 1 < FEED.length && FEED[newest + 1].at <= t) newest++;
@@ -849,6 +859,10 @@ async function main(): Promise<void> {
       fade(el, ramp(t, FEED[j].at, 0.12) * (1 - clamp01(slot - 5.5)));
       el.style.setProperty('--flash', (pulse(t, FEED[j].at, 0.7) * 0.16).toFixed(3));
     });
+    // The panel is as tall as the files in it, up to its full height: it never stands as an empty box.
+    let landed = 0;
+    for (let m = 0; m <= newest && landed < 7; m++) landed += ramp(t, FEED[m].at, 0.15, out);
+    feed.style.height = Math.round(lerp(FEED_MIN, FEED_FULL, clamp01((landed - 1) / 6))) + 'px';
 
     // ---- 5 · the ZIP, opened ----
     const grow = ramp(t, T.open, 0.8, inOut);
