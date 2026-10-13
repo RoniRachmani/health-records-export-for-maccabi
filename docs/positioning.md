@@ -141,15 +141,21 @@ artifact.
 
 | Alternative | Why it falls short |
 |---|---|
-| **Maccabi Online and the Maccabi app** | You can see your records, one page at a time and within date limits. Fine for "what's open now"; no way to see years together or ask about them. |
+| **Maccabi Online and the Maccabi app** | You can see your records, one page at a time and within date limits. Fine for "what's open now"; no way to see years together or ask about them. The app's AI representative, Aia, finds clinics, labs and doctors and books appointments. Her answers are general: Maccabi says she can't answer personal questions from your medical file. |
 | **Health in ChatGPT, Claude's health connectors** | They connect medical records from U.S. providers only, so they can't reach Maccabi. |
 | **Uploading files to a chat** | A chat takes a few dozen files at most, and an export has hundreds. The assistant needs the whole folder. |
 | **Ordering the medical file by hand** | Only from July 2020, one PDF, and nothing else from the rest of the site. |
-| **Giving an assistant live access** ([maccabi-health](https://github.com/orenyomtov/maccabi-health): a command-line tool and connector) | The assistant logs in as you and fetches records as it needs them. It takes a terminal or a coding agent to set up, your ID number and SMS code pass through the conversation, and Maccabi ends each login after an hour, so every sitting starts with a new code. It reads what it asks for, not the whole history, and it doesn't order the medical file. Nothing is saved to keep. |
+| **Giving an assistant live access** ([maccabi-health](https://github.com/orenyomtov/maccabi-health): a command-line tool and connector) | The assistant reads your account live and fetches records as it needs them. It takes a terminal or a coding agent to set up. You log in with your ID number and an SMS code, in the terminal or a browser page; the assistant can also log in for you, and then both pass through the conversation. Maccabi ends each login after an hour, so every sitting starts with a new code. It reads what it asks for, not the whole history, and it doesn't order the medical file. It downloads a PDF when asked, but leaves no folder to keep. It reads two things the export doesn't: imaging studies and billing reports. |
 
 The last row is the closest alternative, and it serves a different person: someone at home in a terminal who wants today's
 records on demand. Ours is for a member who installs an extension, presses one button and keeps the folder. Checked on
-13 October 2026, at its version 0.1.6.
+14 October 2026, at its version 0.1.6.
+
+Aia is the one to watch. Maccabi's own page on her, updated on 1 September 2026, says she has no way to answer personal
+questions from the medical file or to act for the member, and that she will soon help with navigating the app and with
+more processes. When the new app was announced, on 16 March 2026, Maccabi said she would later offer "personal and
+advanced" capabilities and information, and gave no date. An Aia that answers from a member's records would take the
+curious first question. It would still read what the app's screens show, and leave the member nothing to keep.
 
 ## Objections and answers
 
