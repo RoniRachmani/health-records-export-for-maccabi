@@ -192,7 +192,7 @@ nothing is suggested over the last frame.
 **Title** (the version in brackets is the release the film shows; change it with a new upload):
 
 ```
-Ask Claude or ChatGPT about your Maccabi Online medical records – free Chrome extension [v0.8.4]
+Ask Claude or ChatGPT about your Maccabi Online medical records – free Chrome extension [v0.8.9]
 ```
 
 **Description** (plain text with no links; the chapter times are the film's parts, `runFrom`, `saved` and `uses` in `T` in
