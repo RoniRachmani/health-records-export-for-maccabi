@@ -6,6 +6,9 @@
    Every text colour meets WCAG AA (4.5:1) on the surface it sits on, in both themes. */
 
 :root {
+  /* A tick, drawn: white for a filled circle, and as a mask to take any colour. */
+  --tick-white: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 5.4l2.1 2.1L8 3' fill='none' stroke='%23fff' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 5.4l2.1 2.1L8 3' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   /* Surfaces: white page, a pale-blue card fill, a blue wash for tinted areas. */
   --bg: #ffffff;
   --surface: #fafdff;
@@ -552,11 +555,16 @@ details.more summary:hover {
   margin-bottom: 3px;
   break-inside: avoid;
 }
+/* The tick is drawn, not typed: as a character it came from whichever font the machine had one in, and looked
+   different on each (Roboto has none). */
 .included li::before {
-  content: '✓' / '';
-  color: var(--primary);
-  font-size: 11px;
-  font-weight: 700;
+  content: '' / '';
+  flex: none;
+  align-self: center;
+  width: 11px;
+  height: 11px;
+  background: var(--primary);
+  mask: var(--tick) center / contain no-repeat;
 }
 .limits {
   margin: 12px 0 0;
@@ -761,10 +769,9 @@ details.more summary:hover {
   color: var(--fg);
 }
 .stages li.done::before {
-  content: '✓' / 'Done: ';
-  background: var(--primary);
+  content: '' / 'Done: ';
+  background: var(--primary) var(--tick-white) center / 10px 10px no-repeat;
   border-color: var(--primary);
-  color: #ffffff;
 }
 .stages li.current {
   color: var(--heading);
