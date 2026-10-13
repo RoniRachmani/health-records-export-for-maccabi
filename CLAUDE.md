@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Chrome MV3 extension (TypeScript, Vite, no framework) that exports a member's Maccabi Online medical
 records as one ZIP. `README.md` is the user-facing document and `CONTRIBUTING.md` the contributor-facing one, and
 both are kept current: read `CONTRIBUTING.md`'s *How a run works* before changing the run, and update them when
-behaviour changes. `docs/endpoints/README.md` describes the endpoint scan.
+behaviour changes. `tools/endpoint-scan/README.md` describes the endpoint scan.
 
 ## Commands
 

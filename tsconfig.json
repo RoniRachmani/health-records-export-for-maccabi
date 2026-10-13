@@ -16,5 +16,5 @@
     "noEmit": true,
     "allowImportingTsExtensions": true
   },
-  "include": ["src", "test", "store/src", "vite.config.ts", "vite.store.config.ts", "manifest.config.ts", "vitest.config.ts"]
+  "include": ["src", "test", "tools", "store/src", "vite.config.ts", "vite.store.config.ts", "manifest.config.ts", "vitest.config.ts"]
 }

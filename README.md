@@ -316,11 +316,12 @@ the Maccabi Online tab, where the site requires them to originate.
 | `public/` | Icons, and the privacy policy, terms and third-party notices that ship in the extension |
 | `site/` | The landing page, for the web only: published by the Pages workflow, never shipped in the extension |
 | `store/` | Chrome Web Store images in `assets/`, and the pages they're rendered from in `src/` |
-| `scripts/` | Build scripts (icons, store images and video, the release ZIP), the live run, the export from the terminal, the endpoint scan, and the check of the landing page's motion (`npm run site-check`) |
+| `scripts/` | Build scripts (icons, store images and video, the release ZIP), the live run, the export from the terminal, and the check of the landing page's motion (`npm run site-check`) |
+| `tools/` | Tools for working on the extension that are no part of it: `endpoint-scan/`, which lists what the site's own code can call that the endpoint maps lack (`npm run endpoints`) |
 | `.github/` | The CI workflow that runs the gate, the workflows that publish a release, publish the website and re-render the store images, the issue forms, the security policy, and Dependabot |
 
 [CONTRIBUTING.md](CONTRIBUTING.md) has the rest: how a run is checkpointed and resumed, the design system, driving a
-run from the console or the terminal, releasing, and the ground rules. [docs/endpoints/README.md](docs/endpoints/README.md)
+run from the console or the terminal, releasing, and the ground rules. [tools/endpoint-scan/README.md](tools/endpoint-scan/README.md)
 covers the scan for requests the site makes that the export doesn't.
 
 ## Issues

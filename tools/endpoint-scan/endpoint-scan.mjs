@@ -1,7 +1,7 @@
 // Lists what Maccabi Online's own front-end code can call that docs/endpoints/endpoints.json does not map, with the
 // HTTP method of each call and the place in the code that makes it, and which of the requests the maps write
 // out the code no longer makes. For finding records the export could add, and for seeing what moved after the
-// site changes. How it reads the code and how long a run takes are in docs/endpoints/README.md; what it
+// site changes. How it reads the code and how long a run takes are in the README beside it; what it
 // decides is in endpoint-scan-lib.mjs.
 //
 //   npm run endpoints                    the services and API calls that endpoints.json does not have
@@ -27,10 +27,10 @@ import { spawn } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve, sep } from 'node:path';
-import { call } from './in-page.mjs';
-import { ORIGIN, START, openBrowser, signIn } from './maccabi-browser.mjs';
+import { call } from '../../scripts/in-page.mjs';
+import { ORIGIN, START, openBrowser, signIn } from '../../scripts/maccabi-browser.mjs';
 import { REA_FILTER, batches, candidates, chunkFiles, chunkUrl, coverage, mappedRequests, readEvidence, routesIn, servicesIn, knownFrom, isKnown } from './endpoint-scan-lib.mjs';
-import { root, sleep } from './stage.mjs';
+import { root, sleep } from '../../scripts/stage.mjs';
 
 /** The rea release this was written against: its result's shape is what readEvidence reads. */
 const REA_VERSION = '6.4.0';

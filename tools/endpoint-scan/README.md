@@ -1,6 +1,6 @@
 # The endpoint scan
 
-`npm run endpoints` lists what Maccabi Online's own front-end code can call that [endpoints.json](endpoints.json) does not map.
+`npm run endpoints` lists what Maccabi Online's own front-end code can call that [endpoints.json](../../docs/endpoints/endpoints.json) does not map.
 It signs in the way `npm run live` does (the profile, `.env` and 1Password references in
 [CONTRIBUTING.md](../../CONTRIBUTING.md#a-live-run-from-the-terminal)), then reads only static files: the
 scripts the `/sonline/` app loads and the chunks they name, and the scripts of the legacy summary page with the
@@ -64,8 +64,8 @@ declared. It runs on this machine, on the script files alone, and is not a depen
 fetches `rea-agents` from npm at the version the script names (`REA_BIN` points at an installed one). It takes about
 four minutes for the whole app, three groups at a time (`--jobs`).
 
-`scripts/endpoint-scan.mjs` is the run, `scripts/endpoint-scan-lib.mjs` holds what the scan decides, and
-`test/endpointScan.test.ts` runs that on made-up scripts.
+`endpoint-scan.mjs` is the run, `endpoint-scan-lib.mjs` holds what the scan decides, and
+`endpoint-scan.test.ts` runs that on made-up scripts.
 
 To see what a candidate returns, open its section in Maccabi Online yourself with DevTools' Network panel recording,
 and read the requests the site sent. A saved capture (`.har`) holds that section's records, the member id and the

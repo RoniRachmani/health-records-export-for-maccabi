@@ -7,7 +7,7 @@ is the short version of this page for an AI coding assistant.
 [Driving a run from the console](#driving-a-run-from-the-console) ·
 [A live run from the terminal](#a-live-run-from-the-terminal) ·
 [An export from the terminal](#an-export-from-the-terminal-without-the-extension) ·
-[The endpoint scan](docs/endpoints/README.md) · [Releasing](#releasing) · [Ground rules](#ground-rules)
+[The endpoint scan](tools/endpoint-scan/README.md) · [Releasing](#releasing) · [Ground rules](#ground-rules)
 
 ## Setup
 
@@ -192,7 +192,7 @@ the fake site.
 
 `npm run endpoints` lists what Maccabi Online's own front-end code can call that `docs/endpoints/endpoints.json` does
 not map, and which mapped requests the code has dropped. It reads static script files only and calls no API.
-[docs/endpoints/README.md](docs/endpoints/README.md) says how it reads the code and what each option does.
+[tools/endpoint-scan/README.md](tools/endpoint-scan/README.md) says how it reads the code and what each option does.
 
 ## Releasing
 
