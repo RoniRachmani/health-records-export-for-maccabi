@@ -503,6 +503,25 @@ way to export for everyone else. `scripts/headless-lib.mjs` holds the two seams 
 as `Transport` and a folder as `Sink`, and `test/headless.test.ts` runs the test-results step through them against
 the fake site.
 
+### Finding what the export could add
+
+`npm run endpoints` lists what Maccabi Online's own front-end code can call that `docs/endpoints.json` does not map.
+It signs in the same way (the profile, `.env` and 1Password references above), then reads only static files: the
+scripts the `/sonline/` app loads and the chunks they name, and the scripts of the legacy summary page with the
+addresses it links to. It prints the API services and paths those files name that the map lacks, each with the file it
+was found in. It calls no API: an unknown call may change something on the account, so a path it prints is a
+candidate to look at in the site by hand, not something to try.
+
+```sh
+npm run endpoints                       # the services, API paths and legacy pages endpoints.json does not have
+npm run endpoints -- --all              # the mapped ones too, marked, and the app's own page routes
+npm run endpoints -- --out ~/scan.json  # also everything found, as JSON; --keep leaves the browser open
+```
+
+To see what a candidate returns, open its section in Maccabi Online yourself with DevTools' Network panel recording,
+and read the requests the site sent. A saved capture (`.har`) holds that section's records, the member id and the
+session token in the clear: keep it on your machine and delete it when done. `.gitignore` blocks `*.har`.
+
 ### Releasing
 
 ```sh

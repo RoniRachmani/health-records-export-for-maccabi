@@ -36,6 +36,8 @@ maccabi-export-*/
 *.token
 *.pdf
 *.raw.json
+# DevTools network captures hold the responses, the member id and the session token in the clear.
+*.har
 
 # Frames of the landing page's motion, by `npm run site-check -- frames`.
 site-frames/
