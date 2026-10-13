@@ -2,25 +2,30 @@
 // HTTP method of each call and the place in the code that makes it. For finding records the export could
 // add, and for seeing what moved after the site changes.
 //
-//   npm run endpoints:rea                    the services and API calls that endpoints.json does not have
-//   npm run endpoints:rea -- --all           the ones it has too, marked, and the app's own page routes
-//   npm run endpoints:rea -- --out FILE      also writes everything found to FILE as JSON
-//   npm run endpoints:rea -- --save DIR      also keeps the script files read, in DIR, laid out as on the site
-//   npm run endpoints:rea -- --from DIR      analyzes scripts a --save kept, with no browser and no sign-in
-//   npm run endpoints:rea -- --no-rea        skips rea: seconds instead of minutes, nothing parsed
-//   npm run endpoints:rea -- --jobs N        how many rea processes run at once (default 3); --keep leaves the browser open
+//   npm run endpoints                    the services and API calls that endpoints.json does not have
+//   npm run endpoints -- --all           the ones it has too, marked, and the app's own page routes
+//   npm run endpoints -- --out FILE      also writes everything found to FILE as JSON
+//   npm run endpoints -- --save DIR      also keeps the script files read, in DIR, laid out as on the site
+//   npm run endpoints -- --from DIR      analyzes scripts a --save kept, with no browser and no sign-in
+//   npm run endpoints -- --rea           also runs rea on the files: about four minutes more
+//   npm run endpoints -- --jobs N        how many rea processes run at once (default 3); --keep leaves the browser open
 //
-// Two readers go over the same files. REA (Reverse Engineer Anything, github.com/morluto/rea) parses each
-// script without running it and reports what an AST can prove: the calls whose address is a literal and the
-// method of the call that makes each, the app's page routes, the source maps declared, and how far it parsed
-// each file. Its own limits say what it leaves out ("string-built routes and endpoints may remain unknown"),
-// and this site builds nearly all of them: a path is formatted into a variable ("v1/members/{0}/{1}/visits")
-// and handed to the site's client after the service's base, rest.get(base, path). So a reader here
-// (rea-endpoints-lib.mjs) takes those: it reads each fetch, client call, ajax and XHR open, follows the
-// address to the value just above it, and writes {} for the parts made at run time. On a run of October
-// 2026 that reader found 199 calls with their methods, and rea five, each a service's base with no path, at
-// a quarter of an hour for rea and a second without it: --no-rea is the quick look. What neither saw called but reads as an address is listed
-// last, as named only (most are documents the site opens in a tab, which no call fetches).
+// The reader is here (endpoint-scan-lib.mjs). The site formats a path into a variable
+// ("v1/members/{0}/{1}/visits") and hands it to its client after the service's base, rest.get(base, path),
+// so the reader takes each fetch, client call, ajax and XHR open, follows the address to the value just
+// above it, and writes {} for the parts made at run time. What it saw no call for but reads as an address
+// is listed last, as named only (most are documents the site opens in a tab, which no call fetches). On
+// the runs of 13 October 2026 it found 199 calls with their methods, in a second or so once the files are
+// read.
+//
+// --rea puts a parser beside it. REA (Reverse Engineer Anything, github.com/morluto/rea) parses each script
+// without running it and reports what an AST can prove: the calls whose address is a literal and the method
+// of the call that makes each, the app's page routes, the source maps declared, and how far it parsed each
+// file. Its own limits say what it leaves out ("string-built routes and endpoints may remain unknown"), and
+// this site builds nearly all of them: on those runs rea added no call to the reader's. What it added was
+// the page routes built in code (21 for the 12 a router's table spells out), a parser's word on each file
+// (all parsed, 12 of them around a syntax error) and the source maps declared (none), for about four
+// minutes: 4 min 0 s for 107 files at 3 jobs on an 8-core Apple M2, 4 min 34 s with the machine busy.
 //
 // It opens the browser and signs in as `npm run export` does (scripts/maccabi-browser.mjs), then reads only
 // static files: the scripts the /sonline/ app loads, the chunks they name, and the scripts of the legacy
@@ -28,15 +33,16 @@
 // call it prints is a candidate to look at by hand, in the site, never something to try from here: an
 // unknown call may change something on the account (see "Read-only" in CLAUDE.md), and one that is not a
 // GET is marked for that. Script files hold no member's data, and links are kept without their query
-// strings, so what it prints and writes is the site's code, not the account's. rea runs on this machine,
-// on those files alone; the first run downloads it from npm (REA_VERSION below; REA_BIN names an installed one).
+// strings, so what it prints and writes is the site's code, not the account's. rea, when asked for, runs on
+// this machine, on those files alone; its first run downloads it from npm (REA_VERSION below; REA_BIN names
+// an installed one).
 import { spawn } from 'node:child_process';
 import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { call } from './in-page.mjs';
 import { ORIGIN, START, openBrowser, signIn } from './maccabi-browser.mjs';
-import { REA_FILTER, batches, candidates, chunkFiles, chunkUrl, readEvidence, routesIn, servicesIn, knownFrom, isKnown } from './rea-endpoints-lib.mjs';
+import { REA_FILTER, batches, candidates, chunkFiles, chunkUrl, readEvidence, routesIn, servicesIn, knownFrom, isKnown } from './endpoint-scan-lib.mjs';
 import { root, sleep } from './stage.mjs';
 
 /** The rea release this was written against: its result's shape is what readEvidence reads. */
@@ -232,6 +238,7 @@ async function main() {
   const args = process.argv.slice(2);
   const ALL = args.includes('--all');
   const KEEP = args.includes('--keep');
+  const REA = args.includes('--rea');
   const OUT = option(args, '--out', 'a file: --out ~/endpoint-scan.json');
   const SAVE = option(args, '--save', 'a folder: --save ~/maccabi-scripts');
   const FROM = option(args, '--from', 'a folder a --save kept: --from ~/maccabi-scripts');
@@ -266,8 +273,8 @@ async function main() {
   const files = scriptsIn(dir);
   if (!files.size) throw new Error(`No script files in ${dir}.`);
   let evidence = { endpoints: [], routes: new Set(), sourceMaps: [], partial: [], unparsed: [], parsed: 0, failed: [...files.keys()] };
-  if (!args.includes('--no-rea')) {
-    console.log(`Analyzing ${files.size} script files with rea ${REA_VERSION} (parsed, never run; a quarter of an hour for the whole app, and --no-rea skips it).`);
+  if (REA) {
+    console.log(`Analyzing ${files.size} script files with rea ${REA_VERSION} (parsed, never run; about four minutes for the whole app).`);
     evidence = await analyze(dir, files, JOBS);
   }
   const all = candidates(files, evidence, known);
@@ -275,7 +282,7 @@ async function main() {
   const pages = all.filter((p) => p.kind === 'page');
   const app = all.filter((p) => p.kind === 'app');
   const services = servicesIn(files, known);
-  // The routes a router's table spells out, read here, and rea's, which also follows the ones built in code.
+  // The routes a router's table spells out, read here, and with --rea its own, which also follow the ones built in code.
   const routes = new Set(evidence.routes);
   for (const text of files.values()) routesIn(text).forEach((r) => routes.add(r));
   const legacy = found.legacyPages.map((path) => ({ path, known: isKnown(path, known) }));
@@ -312,9 +319,9 @@ async function main() {
   show(legacy, 'Legacy pages linked from the summary page', (p) => p.path);
   if (ALL) {
     console.log(`\nThe app's own pages and service bases (${app.length}): ${app.map((p) => p.path).join('  ')}`);
-    console.log(`\nThe app's page routes (${routes.size}): ${[...routes].sort().join('  ')}`);
+    console.log(`\nThe app's page routes (${routes.size}${REA ? '' : '; --rea also follows the ones built in code'}): ${[...routes].sort().join('  ')}`);
   }
-  console.log('\n[ast] rea parsed the call, its address a literal; [call] a call read here, its address built from parts ({})'
+  console.log('\n[ast] rea parsed the call, its address a literal (with --rea); [call] a call read here, its address built from parts ({})'
     + '\nor taken from the value just above it;'
     + '\n[named] a string that reads as an address, no call seen: a table of paths, or the address of a call that takes it'
     + '\nfrom a variable. These are candidates, not calls to try: open the matching section in the site and record its traffic.');
@@ -323,7 +330,7 @@ async function main() {
     const file = resolve(OUT);
     writeFileSync(file, JSON.stringify({
       scanned: new Date().toISOString(),
-      rea: args.includes('--no-rea') ? null : REA_VERSION,
+      rea: REA ? REA_VERSION : null,
       files: [...files.keys()],
       failed: [...found.failed].map(([u, why]) => ({ file: new URL(u).pathname, why })),
       services, calls, pages, app, legacyPages: legacy, routes: [...routes].sort(),

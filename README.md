@@ -509,49 +509,48 @@ the fake site.
 It signs in the same way (the profile, `.env` and 1Password references above), then reads only static files: the
 scripts the `/sonline/` app loads and the chunks they name, and the scripts of the legacy summary page with the
 addresses it links to. Each section of the app is a build of its own (`/sonline/MedicalFile/remoteEntry.js` and its
-chunks under `/sonline/medicalFile/static/js/async/`), so most of what it finds comes from those. It prints the API services and paths those files name that the map lacks, each with the file it
-was found in. It calls no API: an unknown call may change something on the account, so a path it prints is a
-candidate to look at in the site by hand, not something to try.
+chunks under `/sonline/medicalFile/static/js/async/`), so most of what it finds comes from those. It calls no API: an
+unknown call may change something on the account, so a call it prints is a candidate to look at in the site by hand,
+not something to try.
+
+It reads the calls themselves, not the strings near them. The site formats a path into a variable
+(`"v1/members/{0}/{1}/visits"`) and hands it to its client after the service's base, `rest.get(base, path)`, so the
+scan takes each fetch, client call, ajax and XHR open, follows the address to the value just above it, and joins it to
+its base. Each candidate comes with its HTTP method, the file, line and column of the call, and how it was found:
+`[call]` for a call the scan followed, `[named]` for a string that reads as an address with no call seen (most are
+documents the site opens in a tab). A call that is not a `GET` is marked, since it may change something. Where the
+site picks an address by a condition (`isV2 ? "v2/…" : "v1/…"`), the call is given once for each side. A call is found
+whatever its path looks like: `DirectorshipAPI`'s `eligibilities` has no version and no `members/` in it.
 
 ```sh
-npm run endpoints                       # the services, API paths and legacy pages endpoints.json does not have
-npm run endpoints -- --all              # the mapped ones too, marked, and the app's own page routes
-npm run endpoints -- --out ~/scan.json  # also everything found, as JSON; --keep leaves the browser open
-npm run endpoints -- --save ~/scripts   # also each script file it read, to see how one names its chunks
+npm run endpoints                        # the services, API calls and legacy pages endpoints.json does not have
+npm run endpoints -- --all               # the mapped ones too, marked, and the app's page routes and service bases
+npm run endpoints -- --save ~/scripts    # also the scripts it read, laid out as on the site
+npm run endpoints -- --from ~/scripts    # analyze a saved folder again: no browser, no sign-in, a second
+npm run endpoints -- --out ~/scan.json   # also everything found, as JSON; --keep leaves the browser open
+npm run endpoints -- --rea               # also REA's parser on the files: about four minutes more; --jobs N
 ```
 
-A healthy scan reads about a hundred files and fails on a handful. When many "would not load", the site has changed
-how it names its chunks: the summary prints a few of the failed addresses, and `--save` keeps the scripts to read the
-naming from (site code, not records; still, keep it out of the repository).
+A healthy scan reads about a hundred files and fails on a handful, in about a minute and a half, nearly all of it the
+sign-in and the pause between files; the reading itself takes a second. On the runs of 13 October 2026 it gave 242
+entries, 199 of them calls with a method (102 `GET`, 69 `POST`, 17 `PATCH`, 11 `PUT`), and 190 that the map lacks. When
+many files "would not load", the site has changed how it names its chunks: the summary prints a few of the failed
+addresses, and `--save` keeps the scripts to read the naming from (site code, not records; still, keep it out of the
+repository).
 
-`npm run endpoints:rea` is the same scan with a parser under it:
-[REA](https://github.com/morluto/rea) (Reverse Engineer Anything) parses each script without running it, and the scan
-reads the calls themselves instead of the strings near them. So each candidate comes with its HTTP method, the file,
-line and column of the call, and how it was found: `[ast]` when rea parsed the call and its address is a literal,
-`[call]` when the scan's own reader followed it, `[named]` for a string that reads as an address with no call seen
-(most are documents the site opens in a tab). A call that is not a `GET` is marked, since it may change something.
+`--rea` puts a parser beside the scan's own reader: [REA](https://github.com/morluto/rea) (Reverse Engineer Anything)
+parses each script without running it, and a call it parsed with a literal address is marked `[ast]`. It records a
+call only when its address is a literal at the call (its own limits say string-built endpoints stay unknown), and this
+site builds nearly all of them, so on those runs it added no call. What it adds is the page routes built in code (21
+with their wildcards, such as `/medicalFile/**`, for the 12 a router's table spells out and the scan reads itself), a
+parser's word on how far each file could be read (all of them, 12 around a syntax error), and the source maps declared
+(none). It runs on this machine, on the script files alone, and is not a dependency of the repository: the first run
+fetches `rea-agents` from npm at the version the script names (`REA_BIN` points at an installed one). It takes about
+four minutes for the whole app (107 files, 53 MB, three groups of them at a time on an 8-core Apple M2: 4 min 0 s, and
+4 min 34 s with the machine busy).
 
-Nearly everything comes from that reader, not from rea. The site formats a path into a variable
-(`"v1/members/{0}/{1}/visits"`) and hands it to its client after the service's base, `rest.get(base, path)`, and rea
-records a call only when its address is a literal at the call: its own limits say string-built endpoints stay unknown.
-Where the site picks an address by a condition (`isV2 ? "v2/…" : "v1/…"`), the reader gives the call once for each side.
-On a run of October 2026 the reader found 199 calls with their methods, and rea five, each a service's base with
-no path; what rea adds is the page routes built in code (the scan reads a router's table itself), the source maps
-declared, and a parser's word on how far each file could be read.
-
-```sh
-npm run endpoints:rea                        # the services and API calls endpoints.json does not have
-npm run endpoints:rea -- --all               # the mapped ones too, marked, and the app's page routes
-npm run endpoints:rea -- --save ~/scripts    # also the scripts it read, laid out as on the site
-npm run endpoints:rea -- --from ~/scripts    # analyze a saved folder again: no browser, no sign-in
-npm run endpoints:rea -- --no-rea            # a second instead of a quarter of an hour: the reader alone, nothing parsed
-npm run endpoints:rea -- --out ~/scan.json   # also everything found, as JSON; --jobs N, --keep
-```
-
-rea runs on this machine, on the script files alone, and is not a dependency of the repository: the first run fetches
-`rea-agents` from npm at the version the script names (`REA_BIN` points at an installed one). It takes a quarter of an
-hour for the whole app (53 MB of scripts), a few groups of files at a time. `scripts/rea-endpoints-lib.mjs` holds what the scan decides, and
-`test/reaEndpoints.test.ts` runs it on made-up scripts.
+`scripts/endpoint-scan.mjs` is the run, `scripts/endpoint-scan-lib.mjs` holds what the scan decides, and
+`test/endpointScan.test.ts` runs that on made-up scripts.
 
 To see what a candidate returns, open its section in Maccabi Online yourself with DevTools' Network panel recording,
 and read the requests the site sent. A saved capture (`.har`) holds that section's records, the member id and the

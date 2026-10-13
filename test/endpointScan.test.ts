@@ -1,11 +1,10 @@
-// scripts/rea-endpoints.mjs lists what the site's own scripts can call. What it decides, apart from the
-// browser and the rea process, is in rea-endpoints-lib.mjs: these run it on made-up scripts, and on a
+// scripts/endpoint-scan.mjs lists what the site's own scripts can call. What it decides, apart from the
+// browser and the rea process, is in endpoint-scan-lib.mjs: these run it on made-up scripts, and on a
 // result shaped as rea 6.4.0 writes one.
 import { describe, expect, it } from 'vitest';
 import {
-  batches, builtString, candidates, chunkFiles, chunkUrl, isKnown, knownFrom, literals, locator, readCalls, readEvidence, routesIn,
-} from '../scripts/rea-endpoints-lib.mjs';
-import { scan } from '../scripts/find-endpoints.mjs';
+  batches, builtString, candidates, chunkFiles, chunkUrl, isKnown, knownFrom, literals, locator, pathLike, readCalls, readEvidence, routesIn,
+} from '../scripts/endpoint-scan-lib.mjs';
 
 const known = knownFrom({ steps: [{ url: 'LabsAPI/v1/members/{mid}/labtests' }, { url: '/online/Ajax/GetVisits.ashx' }] });
 
@@ -34,7 +33,7 @@ describe('literals', () => {
     expect(values('x="";get("v1/banks/{0}/{1}",e)')).toEqual(['v1/banks/{0}/{1}']);
     expect(values('x="a";y=\'\';get("v1/banks/{0}/{1}",e)')).toEqual(['v1/banks/{0}/{1}']);
     expect(values(`x="${'z'.repeat(301)}";get("v1/banks/{0}/{1}",e)`)).toEqual(['v1/banks/{0}/{1}']);
-    expect(scan('x="";get("v1/banks/{0}/{1}",e)').paths).toEqual(new Set(['v1/banks/{0}/{1}']));
+    expect(values('x="";get("v1/banks/{0}/{1}",e)').filter(pathLike)).toEqual(['v1/banks/{0}/{1}']);
   });
 
   it('gives a template with {} for its parts, and the strings inside them', () => {

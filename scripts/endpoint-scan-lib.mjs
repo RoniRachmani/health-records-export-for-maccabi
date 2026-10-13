@@ -1,6 +1,6 @@
-// What scripts/rea-endpoints.mjs decides, apart from the browser and the rea process: how a script names
+// What scripts/endpoint-scan.mjs decides, apart from the browser and the rea process: how a script names
 // its lazy chunks, what its calls are, what rea's analysis says of it, and which of all that
-// docs/endpoints/endpoints.json already maps. Pure, so test/reaEndpoints.test.ts runs it on made-up scripts.
+// docs/endpoints/endpoints.json already maps. Pure, so test/endpointScan.test.ts runs it on made-up scripts.
 
 // ---- paths ---------------------------------------------------------------------------------------
 

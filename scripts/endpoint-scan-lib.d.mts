@@ -1,4 +1,4 @@
-// Types of rea-endpoints-lib.mjs for the test that imports it; the script itself is plain JavaScript.
+// Types of endpoint-scan-lib.mjs for the test that imports it; the script itself is plain JavaScript.
 
 export interface Known {
   paths: string[];
