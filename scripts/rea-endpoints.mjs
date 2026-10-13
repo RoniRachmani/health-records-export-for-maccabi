@@ -18,7 +18,7 @@
 // and handed to the site's client after the service's base, rest.get(base, path). So a reader here
 // (rea-endpoints-lib.mjs) takes those: it reads each fetch, client call, ajax and XHR open, follows the
 // address to the value just above it, and writes {} for the parts made at run time. On a run of October
-// 2026 that reader found 193 calls with their methods, and rea five, each a service's base with no path, at
+// 2026 that reader found 199 calls with their methods, and rea five, each a service's base with no path, at
 // a quarter of an hour for rea and a second without it: --no-rea is the quick look. What neither saw called but reads as an address is listed
 // last, as named only (most are documents the site opens in a tab, which no call fetches).
 //

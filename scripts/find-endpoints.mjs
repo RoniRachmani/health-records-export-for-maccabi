@@ -20,6 +20,7 @@ import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { call } from './in-page.mjs';
 import { ORIGIN, START, openBrowser, signIn } from './maccabi-browser.mjs';
+import { literals as readLiterals } from './rea-endpoints-lib.mjs';
 import { root, sleep } from './stage.mjs';
 
 /** Requests are paced as the collector's are (PACE_MS in src/core), one at a time. */
@@ -37,15 +38,9 @@ const SETTLE_MS = 5000;
 const API_MARK = /[A-Za-z]API\/|webapi|(?:^|\/)v\d+\/|(?:^|\/)members\/|\.asmx|\.ashx|\.aspx|\/s?online\//i;
 const URLISH = /^[\w\-./{}*:?=&%]+$/;
 
-/** String literals in a script; a template literal's ${...} becomes {}. */
+/** String literals in a script; a template literal's ${...} becomes {}. Read as the other scan reads them. */
 export function literals(text) {
-  const out = [];
-  const re = /"((?:[^"\\\n]|\\.){2,300})"|'((?:[^'\\\n]|\\.){2,300})'|`((?:[^`\\]|\\.){2,600})`/g;
-  for (const m of text.matchAll(re)) {
-    if (m[3] !== undefined) out.push(m[3].replace(/\$\{[^}]*\}/g, '{}'));
-    else out.push(m[1] ?? m[2]);
-  }
-  return out;
+  return readLiterals(text).map((s) => s.value);
 }
 
 /** One path's comparable shape: no origin, query or slashes at the ends, variables as *, lower case. */

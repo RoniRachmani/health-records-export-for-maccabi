@@ -14,8 +14,15 @@ export function pathLike(s) {
   return API_MARK.test(s) && URLISH.test(s.replace(/\{\}/g, ''));
 }
 
-/** One path's comparable shape: no origin, query or slashes at the ends, variables as *, lower case. */
+/** One path's comparable shape: its segments, from the service's name on. */
 export function shape(path) {
+  return segments(path)
+    .replace(/^s?online\/(?=\w+api\/)/i, '') // the REST services sit under /sonline/
+    .replace(/^(\w+api)\/webapi\/mac(?=\/|$)/i, '$1'); // and under webapi/mac, which endpoints.json leaves out
+}
+
+/** A path as it is written, cut into segments: no origin or query, variables as *, lower case. */
+function segments(path) {
   return path
     .replace(/^https?:\/\/[^/]+/, '')
     .replace(/[?#].*$/, '')
@@ -23,8 +30,6 @@ export function shape(path) {
     .map((s) => (/^(\{[^}]*\}|<[^>]*>|\d+|\*|:\w+)$/.test(s) ? '*' : s.replace(/\{\}/g, '')))
     .join('/')
     .replace(/^[/*]+|[/*]+$/g, '')
-    .replace(/^s?online\/(?=\w+api\/)/i, '') // the REST services sit under /sonline/
-    .replace(/^(\w+api)\/webapi\/mac(?=\/|$)/i, '$1') // and under webapi/mac, which endpoints.json leaves out
     .toLowerCase();
 }
 
@@ -171,6 +176,7 @@ export function builtString(src) {
     literal = true;
     out += q === '`' ? templateText(part.slice(1, end - 1)) : unescape(part.slice(1, end - 1));
     let rest = part.slice(end);
+    if (/^\s*[!=]==?/.test(rest)) return null; // "Case"===r is a test, not an address
     while (rest.startsWith('.concat(')) {
       const close = skipGroup(rest, 7, rest.length);
       const args = close < 0 ? null : splitTop(rest.slice(8, close - 1), ',');
@@ -213,15 +219,41 @@ function firstArgOfCall(src) {
   return undefined;
 }
 
+/** `src` as [test, then, else] when it is a conditional at its top level, or null. */
+function splitConditional(src) {
+  let mark = -1;
+  let nested = 0;
+  for (let j = 0; j < src.length; j++) {
+    const c = src[j];
+    if (c === '"' || c === "'" || c === '`') j = skipQuoted(src, j, src.length) - 1;
+    else if (c === '(' || c === '[' || c === '{') j = skipGroup(src, j, src.length) - 1;
+    else if (c === '?' && (src[j + 1] === '?' || (src[j + 1] === '.' && !/\d/.test(src[j + 2] || '')))) j++; // ?? and ?.
+    else if (c === '?') {
+      if (mark < 0) mark = j;
+      else nested++;
+    } else if (c === ':' && mark >= 0) {
+      if (!nested) return [src.slice(0, mark).trim(), src.slice(mark + 1, j).trim(), src.slice(j + 1).trim()];
+      nested--;
+    }
+    if (j < 0) return null;
+  }
+  return null;
+}
+
 /**
- * The string an argument stands for at `offset`: written out, or a name given a string just before (a local
- * `let s=fmt("v1/members/{0}/{1}/visits",…)`, or the file's `ed="/sonline/VisitsAPI/webapi/mac/"`), or a
- * formatting call around one. Minified code reuses its names, so the nearest value above is the one meant.
+ * The strings an argument can stand for at `offset`: written out, or a name given a string just before (a
+ * local `let s=fmt("v1/members/{0}/{1}/visits",…)`, or the file's `ed="/sonline/VisitsAPI/webapi/mac/"`), or a
+ * formatting call around one. A conditional gives one for each side: the site picks an address's version that
+ * way, fmt(e.isV2?"v2/members/{0}/{1}/drugs":"v1/members/{0}/{1}/drugs",…). Minified code reuses its names,
+ * so the nearest value above is the one meant. Empty when nothing of it is written out.
  */
-function valueAt(text, src, offset, depth = 0) {
+function valuesAt(text, src, offset, depth = 0) {
+  while (/^\([^]*\)$/.test(src) && skipGroup(src, 0, src.length) === src.length) src = src.slice(1, -1).trim();
+  const sides = splitConditional(src);
+  if (sides) return [...new Set([...valuesAt(text, sides[1], offset, depth), ...valuesAt(text, sides[2], offset, depth)])];
   const direct = builtString(src);
-  if (direct !== null && direct !== '{}') return direct;
-  if (depth > 2) return null;
+  if (direct !== null && direct !== '{}') return [direct];
+  if (depth > 2) return [];
   if (/^[\w$]+$/.test(src)) {
     const name = new RegExp('(?<![\\w$.])' + src.replace(/\$/g, '\\$') + '=(?!=)', 'g');
     let at = -1;
@@ -229,7 +261,7 @@ function valueAt(text, src, offset, depth = 0) {
     for (const m of text.slice(from, offset).matchAll(name)) at = from + m.index + m[0].length;
     if (at < 0) {
       const up = text.lastIndexOf(src + '="', offset);
-      if (up < 0 || /[\w$.]/.test(text[up - 1] || '')) return null;
+      if (up < 0 || /[\w$.]/.test(text[up - 1] || '')) return [];
       at = up + src.length + 1;
     }
     // The value runs to the first , ; or closing bracket outside its own strings and brackets.
@@ -240,12 +272,12 @@ function valueAt(text, src, offset, depth = 0) {
       else if (c === '(' || c === '[' || c === '{') end = skipGroup(text, end, text.length);
       else if (c === ',' || c === ';' || c === ')' || c === ']' || c === '}' || c === '\n') break;
       else end++;
-      if (end < 0) return null;
+      if (end < 0) return [];
     }
-    return valueAt(text, text.slice(at, end).trim(), at, depth + 1);
+    return valuesAt(text, text.slice(at, end).trim(), at, depth + 1);
   }
   const inner = firstArgOfCall(src);
-  return inner === undefined ? null : valueAt(text, inner, offset, depth + 1);
+  return inner === undefined ? [] : valuesAt(text, inner, offset, depth + 1);
 }
 
 /** A service's base, which the site's client takes before the path: rest.get(base, path, options). */
@@ -289,26 +321,85 @@ export function readCalls(text) {
       }
     }
     if (url === undefined || !method) continue;
-    let path = valueAt(text, url, m.index);
-    // The site's client: the service's base first, then the path.
-    if (path !== null && VERB.test(name) && args.length > 1 && BASE.test(path)) {
-      const rest = valueAt(text, args[1], m.index);
-      if (rest === null) continue;
-      path += rest.replace(/^\//, '');
+    for (const path of valuesAt(text, url, m.index)) {
+      // The site's client: the service's base first, then the path.
+      const rests = VERB.test(name) && args.length > 1 && BASE.test(path) ? valuesAt(text, args[1], m.index) : [''];
+      for (const rest of rests) {
+        calls.push({ path: path + rest.replace(/^\//, ''), method: method.toUpperCase(), offset: m.index + (m[2] ? 1 : 0), via: name });
+      }
     }
-    if (path !== null) calls.push({ path, method: method.toUpperCase(), offset: m.index + (m[2] ? 1 : 0), via: name });
   }
   return calls;
 }
 
-/** String literals in a script; a template literal's ${...} becomes {}. */
+/** What a / follows when it opens a regular expression and not a division. */
+const BEFORE_REGEX = /[(,=:[!&|?{};*%<>~^+-]/;
+const WORD_BEFORE_REGEX = /(?<![\w$.])(?:return|typeof|case|in|of|void|delete|throw|new|else|do|instanceof)$/;
+
+/** The index after the regular expression that opens at `i`, or -1 if it does not close on its line. */
+function skipRegex(text, i, end) {
+  let inClass = false;
+  for (let j = i + 1; j < end; j++) {
+    const c = text[j];
+    if (c === '\\') j++;
+    else if (c === '\n') return -1;
+    else if (c === '[') inClass = true;
+    else if (c === ']') inClass = false;
+    else if (c === '/' && !inClass) return j + 1;
+  }
+  return -1;
+}
+
+/**
+ * String literals in a script, each with where it opens; a template literal's ${...} becomes {}, and the
+ * strings inside one are given too. Every string is walked to its end whatever its length, and comments and
+ * regular expressions are stepped over, so a quote always opens what it opens: a reader that gives up on ""
+ * or on a long string takes that string's closing quote for the next one's opening, and from there on
+ * reads the code between the strings in place of the strings. Only then are the ones too short or too long
+ * to be an address (under 2 characters, over 300, 600 for a template) left out.
+ */
 export function literals(text) {
   const out = [];
-  const re = /"((?:[^"\\\n]|\\.){2,300})"|'((?:[^'\\\n]|\\.){2,300})'|`((?:[^`\\]|\\.){2,600})`/g;
-  for (const m of text.matchAll(re)) {
-    out.push({ value: m[3] !== undefined ? templateText(m[3]) : unescape(m[1] ?? m[2]), offset: m.index });
-  }
-  return out;
+  const read = (from, end) => {
+    let prev = '';
+    for (let i = from; i < end; i++) {
+      const c = text[i];
+      if (c === '/' && text[i + 1] === '/') {
+        const stop = text.indexOf('\n', i);
+        i = stop < 0 || stop > end ? end : stop;
+      } else if (c === '/' && text[i + 1] === '*') {
+        const stop = text.indexOf('*/', i + 2);
+        i = stop < 0 || stop > end ? end : stop + 1;
+      } else if (c === '/') {
+        const opens = !prev || (BEFORE_REGEX.test(prev) && !/(\+\+|--)\s*$/.test(text.slice(Math.max(from, i - 4), i)))
+          || (/[\w$]/.test(prev) && WORD_BEFORE_REGEX.test(text.slice(Math.max(from, i - 16), i).trimEnd()));
+        const after = opens ? skipRegex(text, i, end) : -1;
+        if (after > 0) i = after - 1;
+        prev = after > 0 ? ')' : c;
+      } else if (c === '"' || c === "'" || c === '`') {
+        const after = skipQuoted(text, i, end);
+        prev = c;
+        if (after < 0) continue; // a lone quote: an apostrophe in what is not code
+        const body = text.slice(i + 1, after - 1);
+        if (body.length >= 2 && body.length <= (c === '`' ? 600 : 300)) out.push({ value: c === '`' ? templateText(body) : unescape(body), offset: i });
+        if (c === '`') {
+          for (let j = i + 1; j < after - 1; j++) {
+            if (text[j] === '\\') j++;
+            else if (text[j] === '$' && text[j + 1] === '{') {
+              const close = skipGroup(text, j + 1, after - 1);
+              if (close < 0) break;
+              read(j + 2, close - 1);
+              j = close - 1;
+            }
+          }
+        }
+        i = after - 1;
+      } else if (c === '\\') i++; // only a regular expression taken for a division has one: its \/ is no comment
+      else if (!/\s/.test(c)) prev = c;
+    }
+  };
+  read(0, text.length);
+  return out.sort((a, b) => a.offset - b.offset);
 }
 
 /** Turns an offset into `line:column`, both from 1, as an editor counts them. */
@@ -441,30 +532,39 @@ export function candidates(files, evidence, known) {
   };
 
   const called = new Set();
+  const calledAsWritten = new Set();
   for (const e of evidence.endpoints) {
     const verb = e.call.split('.').pop();
     // The method of a fetch or an open is in its arguments, which the call reader below reads; and a service's
     // base alone is the first argument of the site's client, whose path that reader joins to it.
     if (!VERB.test(verb) || BASE.test(e.path)) continue;
     called.add(shape(e.path));
+    calledAsWritten.add(segments(e.path));
     add(e.path, verb.toUpperCase(), 'ast', `${e.file}:${e.line}:${e.column}`);
   }
   for (const [file, text] of files) {
     const where = locator(text);
     for (const c of readCalls(text)) {
       called.add(shape(c.path));
+      calledAsWritten.add(segments(c.path));
       // A literal address that rea's parse also found at a call is proven by it.
       const parsed = !c.path.includes('{}') && evidence.endpoints.some((e) => e.file === file && e.path === c.path);
       add(c.path, c.method, parsed ? 'ast' : 'call', `${file}:${where.at(c.offset)}`);
     }
   }
-  // A string that is whole segments of a call's address is a piece that call was built from.
-  const calledShapes = [...called].map((c) => '/' + c + '/');
-  const partOfCall = (s) => !s || calledShapes.some((c) => c.includes('/' + s + '/'));
+  // A string that is whole segments of a call's address is a piece that call was built from: by its shape, or
+  // as it is written, for a piece cut where a shape is not ("/sonline/XAPI/webapi/" before "mac/v1/…").
+  const within = (set) => {
+    const all = [...set].map((c) => '/' + c + '/');
+    return (s) => !s || all.some((c) => c.includes('/' + s + '/'));
+  };
+  const inShape = within(called);
+  const asWritten = within(calledAsWritten);
+  const partOfCall = (path) => inShape(shape(path)) || asWritten(segments(path));
   for (const [file, text] of files) {
     const where = locator(text);
     for (const s of literals(text)) {
-      if (pathLike(s.value) && !partOfCall(shape(s.value))) add(s.value, null, 'named', `${file}:${where.at(s.offset)}`);
+      if (pathLike(s.value) && !partOfCall(s.value)) add(s.value, null, 'named', `${file}:${where.at(s.offset)}`);
     }
   }
   return [...byKey.values()].sort((a, b) => shape(a.path).localeCompare(shape(b.path)) || String(a.method).localeCompare(String(b.method)));

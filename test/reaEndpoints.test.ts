@@ -3,8 +3,9 @@
 // result shaped as rea 6.4.0 writes one.
 import { describe, expect, it } from 'vitest';
 import {
-  batches, builtString, candidates, chunkFiles, chunkUrl, isKnown, knownFrom, locator, readCalls, readEvidence,
+  batches, builtString, candidates, chunkFiles, chunkUrl, isKnown, knownFrom, literals, locator, readCalls, readEvidence,
 } from '../scripts/rea-endpoints-lib.mjs';
+import { scan } from '../scripts/find-endpoints.mjs';
 
 const known = knownFrom({ steps: [{ url: 'LabsAPI/v1/members/{mid}/labtests' }, { url: '/online/Ajax/GetVisits.ashx' }] });
 
@@ -19,6 +20,31 @@ describe('builtString', () => {
   it('is null for an address written somewhere else', () => {
     expect(builtString('url')).toBeNull();
     expect(builtString('e.url+t')).toBeNull();
+  });
+
+  it('is null for a test of a string', () => {
+    expect(builtString('"Case"===r')).toBeNull();
+  });
+});
+
+describe('literals', () => {
+  const values = (text: string) => literals(text).map((s) => s.value);
+
+  it('keeps its place after a string too short or too long to be an address', () => {
+    expect(values('x="";get("v1/banks/{0}/{1}",e)')).toEqual(['v1/banks/{0}/{1}']);
+    expect(values('x="a";y=\'\';get("v1/banks/{0}/{1}",e)')).toEqual(['v1/banks/{0}/{1}']);
+    expect(values(`x="${'z'.repeat(301)}";get("v1/banks/{0}/{1}",e)`)).toEqual(['v1/banks/{0}/{1}']);
+    expect(scan('x="";get("v1/banks/{0}/{1}",e)').paths).toEqual(new Set(['v1/banks/{0}/{1}']));
+  });
+
+  it('gives a template with {} for its parts, and the strings inside them', () => {
+    expect(values('a=`v1/members/${f("v1/inner")}/x`')).toEqual(['v1/members/{}/x', 'v1/inner']);
+  });
+
+  it('steps over comments and regular expressions, whose quotes open nothing', () => {
+    expect(values('// don\'t\nx.replace(/"/g,"&quot;");/* it\'s */get("v1/a/b")')).toEqual(['&quot;', 'v1/a/b']);
+    expect(values('a=b/2;c="v1/a/b";d=e/f')).toEqual(['v1/a/b']);
+    expect(values('if(/^https?:\\/\\//.test(u))get("v1/a/b")')).toEqual(['v1/a/b']);
   });
 });
 
@@ -44,6 +70,25 @@ describe('readCalls', () => {
       'GET /sonline/VisitsAPI/webapi/mac/v1/members/{0}/{1}/visits',
       'PATCH /sonline/VisitsAPI/webapi/mac/v1/members/{0}/{1}/visits/{2}/read',
       'POST /sonline/VisitsAPI/webapi/mac/v1/logs/client_error',
+    ]);
+  });
+
+  it('reads a call once for each side of a conditional address', () => {
+    const text = 'let b="/sonline/DocAPI/webapi/mac/";function a(e){let s=eu()((null==e?void 0:e.isV2)?"v2/members/{0}/{1}/drugs":"v1/members/{0}/{1}/drugs",e.c,e.i);return r.get(b,s,{})}'
+      + 'function p(e,i){let a=i?"v3/members/{0}/{1}?checksum={2}":"v2/members/{0}/{1}?checksum={2}",s=eu()(a,e.c,e.i,e.k);return r.post(b,s,{})}';
+    expect(methods(text)).toEqual([
+      'GET /sonline/DocAPI/webapi/mac/v2/members/{0}/{1}/drugs',
+      'GET /sonline/DocAPI/webapi/mac/v1/members/{0}/{1}/drugs',
+      'POST /sonline/DocAPI/webapi/mac/v3/members/{0}/{1}?checksum={2}',
+      'POST /sonline/DocAPI/webapi/mac/v2/members/{0}/{1}?checksum={2}',
+    ]);
+  });
+
+  it('does not take the string a conditional tests for its value', () => {
+    const text = 'function a(r,s,t,n){let i="";i="Case"===r?I()("v1/members/{0}/{1}/cases/{2}",s,t,n):I()("v1/members/{0}/{1}/service_requests/{2}",s,t,n),eB.put("/sonline/ReqAPI/webapi/mac/",i,{})}';
+    expect(methods(text)).toEqual([
+      'PUT /sonline/ReqAPI/webapi/mac/v1/members/{0}/{1}/cases/{2}',
+      'PUT /sonline/ReqAPI/webapi/mac/v1/members/{0}/{1}/service_requests/{2}',
     ]);
   });
 
@@ -127,6 +172,12 @@ describe('candidates', () => {
     expect(line('cell')).toBeUndefined();
     expect(line('/sonline/LabsAPI/webapi/mac/')).toBeUndefined();
     expect(line('LabsAPI/v1/members/')).toBeUndefined();
+  });
+
+  it('leaves out a piece cut inside the service base', () => {
+    const cut = 'let b="/sonline/TestsAPI/webapi/";function a(e){let s=f()("mac/v1/members/{0}/{1}/followed",e.c,e.i);return r.get(b,s,{})}';
+    const found = candidates(new Map([['a.js', cut]]), readEvidence({}), known).map((c) => `${c.proof} ${c.path}`);
+    expect(found).toEqual(['call /sonline/TestsAPI/webapi/mac/v1/members/{0}/{1}/followed']);
   });
 });
 

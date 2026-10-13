@@ -534,7 +534,8 @@ line and column of the call, and how it was found: `[ast]` when rea parsed the c
 Nearly everything comes from that reader, not from rea. The site formats a path into a variable
 (`"v1/members/{0}/{1}/visits"`) and hands it to its client after the service's base, `rest.get(base, path)`, and rea
 records a call only when its address is a literal at the call: its own limits say string-built endpoints stay unknown.
-On a run of October 2026 the reader found 193 calls with their methods, and rea five, each a service's base with
+Where the site picks an address by a condition (`isV2 ? "v2/…" : "v1/…"`), the reader gives the call once for each side.
+On a run of October 2026 the reader found 199 calls with their methods, and rea five, each a service's base with
 no path; what rea adds is the app's page routes, the source maps declared, and a parser's word on how far each file
 could be read.
 
