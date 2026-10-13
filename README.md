@@ -525,12 +525,18 @@ service (`.asmx`, `.ashx`) whose call could not be read is marked too, as method
 
 It reads the map the other way as well: of the requests `endpoints.json` writes out, how many the code still makes
 as calls, how many it only names (the documents the site opens in a tab), and which are not in it at all. One that
-drops out of the code is the first sign that the site moved something the export asks for. Six are absent every time,
-the services and popups of the uploads, hospital-stays and purchased-drugs pages, because the scan opens only the
-legacy summary page, as the extension does (any legacy page registers the session, so the export asks those services
-from there); so is the recommendations page, which the code names without `/online/`. `--legacy-pages` opens those three
-pages for their script files, which the extension never does: it is what a member's click on the menu does, and each
-page then loads its own data, so it is not the default. `--all` gives the same account of `other-endpoints.json` and
+drops out of the code is the first sign that the site moved something the export asks for. Eight are absent every time.
+Six are the services and popups of the uploads, hospital-stays and purchased-drugs pages, because the scan opens only
+the legacy summary page, as the extension does (any legacy page registers the session, so the export asks those
+services from there). `--legacy-pages` opens those three pages for their script files, which the extension never does:
+it is what a member's click on the menu does, and each page then loads its own data, so it is not the default. On
+13 October 2026 it found all six (the four services as `POST`s, the two popups as addresses a window opens), and
+some twenty more calls of those pages, their writes among them (`WsPHRManager.asmx/DeleteFile`, `SaveFile`). The
+legacy scripts keep a service's address at their top and add the method's name at each call
+(`ajaxUrl + "GetAllPurchasedPrescription"`), and the Angular pages go through a client of their own,
+`webApi.Call(controller, action, …)`: the scan reads both. The other two stay absent: `/online/handlers/ajax.ashx`,
+the default address of a wrapper in a file that only a `/// <reference>` comment names, which the scan does not
+fetch, and the recommendations page, which the code names without `/online/`. `--all` gives the same account of `other-endpoints.json` and
 `MedDream-endpoints.json`, whose requests to other sites (the imaging viewer, the public directory) are counted apart:
 this scan reads the portal's code alone.
 
@@ -545,7 +551,7 @@ npm run endpoints -- --legacy-pages      # also the scripts of three legacy page
 ```
 
 A healthy scan reads about a hundred files and fails on a handful, in about a minute and a half, nearly all of it the
-sign-in and the pause between files; the reading itself takes a second. On the runs of 13 October 2026 it gave 242
+sign-in and the pause between files; the reading itself takes a second. On the runs of 13 October 2026 it gave 241
 entries, 203 of them calls with a method (102 `GET`, 73 `POST`, 17 `PATCH`, 11 `PUT`), and 190 that the map lacks. When
 many files "would not load", the site has changed how it names its chunks: the summary prints a few of the failed
 addresses, and `--save` keeps the scripts to read the naming from (site code, not records; still, keep it out of the

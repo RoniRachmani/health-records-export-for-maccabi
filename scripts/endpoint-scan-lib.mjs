@@ -11,7 +11,8 @@ const URLISH = /^[\w\-./{}*:?=&%]+$/;
 
 /** Whether a string in the code reads as an address on the site, with {} for the parts built at run time. */
 export function pathLike(s) {
-  return API_MARK.test(s) && URLISH.test(s.replace(/\{\}/g, ''));
+  // An address has a / or a file's ending in it: 'WebApiData' is a name.
+  return API_MARK.test(s) && /[/.]/.test(s) && URLISH.test(s.replace(/\{\}/g, ''));
 }
 
 /** One path's comparable shape: its segments, from the service's name on. */
@@ -245,20 +246,30 @@ function splitConditional(src) {
  * local `let s=fmt("v1/members/{0}/{1}/visits",…)`, or the file's `ed="/sonline/VisitsAPI/webapi/mac/"`), or a
  * formatting call around one. A conditional gives one for each side: the site picks an address's version that
  * way, fmt(e.isV2?"v2/members/{0}/{1}/drugs":"v1/members/{0}/{1}/drugs",…). Minified code reuses its names,
- * so the nearest value above is the one meant. Empty when nothing of it is written out.
+ * so the nearest value above is the one meant, and a short name is only looked for nearby; a name a person wrote
+ * (ajaxUrl, PHR.AjaxUrl) is looked for all the way up, and a string that starts with one starts with its value:
+ * the legacy scripts keep a service's address at the top, ajaxUrl = root + '/Ajax/X.asmx/', and add the method's
+ * name at each call, ajaxUrl + "GetAll". Empty when nothing of it is written out.
  */
 function valuesAt(text, src, offset, depth = 0) {
   while (/^\([^]*\)$/.test(src) && skipGroup(src, 0, src.length) === src.length) src = src.slice(1, -1).trim();
   const sides = splitConditional(src);
   if (sides) return [...new Set([...valuesAt(text, sides[1], offset, depth), ...valuesAt(text, sides[2], offset, depth)])];
   const direct = builtString(src);
-  if (direct !== null && direct !== '{}') return [direct];
+  if (direct !== null && direct !== '{}') {
+    const parts = direct.startsWith('{}') && depth <= 2 ? splitTop(src, '+') : null;
+    if (parts && parts.length > 1 && WRITTEN_NAME.test(parts[0])) {
+      const starts = valuesAt(text, parts[0], offset, depth + 1).filter((v) => v.endsWith('/'));
+      if (starts.length) return starts.map((v) => v + direct.slice(2));
+    }
+    return [direct];
+  }
   if (depth > 2) return [];
-  if (/^[\w$]+$/.test(src)) {
+  if (/^[\w$]+$/.test(src) || WRITTEN_NAME.test(src)) {
     // Minified code writes s=…; the legacy site's own scripts, var url = …
-    const name = new RegExp('(?<![\\w$.])' + src.replace(/\$/g, '\\$') + '\\s*=(?!=)\\s*', 'g');
+    const name = new RegExp('(?<![\\w$.])' + src.replace(/[$.]/g, '\\$&') + '\\s*=(?!=)\\s*', 'g');
     let at = -1;
-    const from = Math.max(0, offset - LOCAL_REACH);
+    const from = WRITTEN_NAME.test(src) ? 0 : Math.max(0, offset - LOCAL_REACH);
     for (const m of text.slice(from, offset).matchAll(name)) at = from + m.index + m[0].length;
     if (at < 0) {
       const up = text.lastIndexOf(src + '="', offset);
@@ -281,24 +292,37 @@ function valuesAt(text, src, offset, depth = 0) {
   return inner === undefined ? [] : valuesAt(text, inner, offset, depth + 1);
 }
 
+/** A name too long for a minifier to have made, or a property of one: ajaxUrl, PHR.AjaxUrl. */
+const WRITTEN_NAME = /^(?=[\w$.]{5,}$)[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)?$/;
+
 /** A service's base, which the site's client takes before the path: rest.get(base, path, options). */
 const BASE = /(?:[A-Za-z]API|webapi)\/(?:[\w/]*\/)?$/i;
 
 const VERB = /^(get|post|put|patch|delete|head)$/i;
-const CALL = /(?<![\w$.])(fetch|axios|\$http)\s*\(|\.(get|post|put|patch|delete|head|request|ajax|open)\s*\(/g;
+const CALL = /(?<![\w$.])(fetch|axios|\$http)\s*\(|\.(get|post|put|patch|delete|head|request|ajax|open)\s*\(|(?<![\w$.])webApi\.(Call)\s*\(/g;
 
 /**
  * The requests a script writes out: fetch, an HTTP client's get/post/put/patch/delete/head/request (axios and
  * the like, and the site's own rest.get(base, path)), jQuery's ajax and XMLHttpRequest's open, each with its
  * method and the address as far as the call and the values just above it spell it. A call whose address
- * cannot be read that way is left out.
+ * cannot be read that way is left out. The legacy site's Angular pages go through a client of their own,
+ * webApi.Call(controller, action, data, …, { method }), a GET unless told otherwise, to /online/webapi/<controller>/<action>/.
  */
 export function readCalls(text) {
   const calls = [];
   for (const m of text.matchAll(CALL)) {
-    const name = (m[1] || m[2]).toLowerCase();
+    const name = (m[1] || m[2] || m[3]).toLowerCase();
     const args = argsAt(text, m.index + m[0].length - 1);
     if (!args || !args.length) continue;
+    if (m[3]) {
+      const said = builtString(args.map((a) => field(a, 'method')).find((v) => v !== undefined) ?? '');
+      for (const controller of valuesAt(text, args[0], m.index)) {
+        for (const action of args[1] ? valuesAt(text, args[1], m.index) : []) {
+          if (/^\w+$/.test(controller + action)) calls.push({ path: `/webapi/${controller}/${action}/`, method: said && VERB.test(said) ? said.toUpperCase() : 'GET', offset: m.index, via: 'webApi.Call' });
+        }
+      }
+      continue;
+    }
     let method;
     let url;
     const config = (src) => {

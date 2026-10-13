@@ -97,6 +97,19 @@ describe('readCalls', () => {
     expect(methods(text)).toEqual(['POST {}/Ajax/Summary/WsSummaryPage.asmx/OrderAjax']);
   });
 
+  it('starts an address with the service a legacy script keeps at its top', () => {
+    const far = '\n'.repeat(5000);
+    const text = `var ajaxUrl = jqe.appRoot + '/Ajax/Drugs/WsDrugs.asmx/';\nPHR.AjaxUrl = jqe.appRoot + '/Ajax/PHR/WsPHR.asmx/';${far}`
+      + 'var url = ajaxUrl + "GetAll";\njQuery.ajax({ type: "POST", url: url });\n$.ajax({ type: "POST", url: PHR.AjaxUrl + \'Search\' });';
+    expect(methods(text)).toEqual(['POST {}/Ajax/Drugs/WsDrugs.asmx/GetAll', 'POST {}/Ajax/PHR/WsPHR.asmx/Search']);
+  });
+
+  it('reads the legacy Angular pages\' own client', () => {
+    const text = "var webApiControllerName = 'Mailings';\nreturn webApi.Call(webApiControllerName, 'GetMailings', data, ok, fail,\n { useCache: c == null ? true : c, method: 'POST' });"
+      + "webApi.Call(webApiControllerName, 'GetReminders', null, ok, fail );";
+    expect(methods(text)).toEqual(['POST /webapi/Mailings/GetMailings/', 'GET /webapi/Mailings/GetReminders/']);
+  });
+
   it('leaves out what is not a request', () => {
     expect(methods('window.open("/online/Pages/P.aspx");fs.open(p,"r");a.get(url);refetch("x")')).toEqual([]);
   });
