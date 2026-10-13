@@ -228,7 +228,7 @@ Then ask what you'd ask a friend who had read everything:
 Or ask it to make something, like a chart of your cholesterol over the years or a one-page summary for a new doctor.
 
 The export's `README.md` is the assistant's instructions: it asks it to show the file and page behind each fact, leave
-your files alone, keep your name and ID out of searches, and say plainly when something needs a doctor. It advises; you
+your files alone, keep your name and ID out of searches, and say plainly when something needs a doctor. The assistant advises; you
 and your doctor decide. For urgent symptoms, call your doctor or Magen David Adom on **101**.
 
 ## Privacy and safety

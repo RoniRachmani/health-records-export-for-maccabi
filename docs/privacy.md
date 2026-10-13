@@ -104,11 +104,16 @@ extension does not change or delete anything else, mark items as read, or access
 The ZIP file is not encrypted. Anyone who can open it can read your health information. Keep it somewhere safe, and
 take care when you share it or upload it to other services.
 
+An AI assistant you open the export in, such as Claude or ChatGPT, is one of those services. Its provider receives the
+files you give it and handles them under its own privacy policy, and the extension has no part in that. Before you
+open your records in one, check what it keeps and for how long, and turn off training on your chats where you can.
+
 ## Contact
 
 For questions about this policy, open an issue at
 <https://github.com/RoniRachmani/health-records-export-for-maccabi/issues>. Issues are public: never include health
-information or your ID number in one.
+information or your ID number in one. To write privately, email
+<maccabi.a5s6c@addy.io>, and leave health information out of that too.
 
 ## Changes to this policy
 

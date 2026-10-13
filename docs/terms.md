@@ -2,7 +2,7 @@
 
 Health Records Export for Maccabi
 
-Effective 10 October 2026
+Effective 13 October 2026
 
 <!-- Keep in sync with public/terms.html, which ships in the extension at chrome-extension://<id>/terms.html. -->
 
@@ -41,6 +41,10 @@ give medical advice. An export may be incomplete or out of date: the site does n
 imaging studies, or visits older than 12 months), and some items can fail to download. Items that could not be
 exported are listed in the extension's popup when the export finishes. For medical decisions and official copies of
 your records, rely on Maccabi and your healthcare providers.
+
+If you open an export in an AI assistant, anything it explains or advises comes from that assistant, a third-party
+service you choose and use under its own terms, and not from the extension or the developer. An assistant can be wrong:
+check what it says against the record it names, and with your doctor.
 
 ## 5. Your exported files
 
@@ -87,4 +91,5 @@ These terms are governed by the laws of the State of Israel.
 
 For questions about these terms, open an issue at
 <https://github.com/RoniRachmani/health-records-export-for-maccabi/issues>. Issues are public: never include health
-information or your ID number in one.
+information or your ID number in one. To write privately, email
+<maccabi.a5s6c@addy.io>, and leave health information out of that too.

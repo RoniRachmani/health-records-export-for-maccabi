@@ -66,7 +66,7 @@ Or ask it to make something:
 • A weekly meal plan or fitness plan, fitted to what's in your file
 • A one-page summary for a new doctor
 
-Every answer names the record it came from, so you can check it. It advises; you and your doctor decide. For urgent symptoms, call a doctor or emergency services, not an assistant.
+Every answer names the record it came from, so you can check it. The assistant advises; you and your doctor decide. For urgent symptoms, call a doctor or emergency services, not an assistant.
 
 YOURS TO KEEP, AND TO GROW
 The export is yours: take it to a private doctor or one abroad, and keep it through a move or a switch of health fund. Add to it as you go, such as a private clinic's letter, a new result or notes from abroad, and tell the assistant what the records can't know, like what you take now. It keeps notes in a folder of its own, so the export becomes a health record you keep growing, not a one-time snapshot.
@@ -233,7 +233,7 @@ THINGS TO ASK
 • "What should I raise with my doctor on Thursday?"
 • "Anything in my history a new doctor should know?"
 
-Every answer names the record it came from, so you can check it. It advises; you and your doctor decide.
+Every answer names the record it came from, so you can check it. The assistant advises; you and your doctor decide.
 
 YOURS TO KEEP, AND TO GROW
 Take it to a private doctor or one abroad, keep it through a move or a switch of health fund, and add to it as you go: a private clinic's letter, a new result, notes from abroad.
