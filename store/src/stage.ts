@@ -170,6 +170,10 @@ function marquee(): HTMLElement {
 }
 
 async function main(): Promise<void> {
+  // Nothing is painted until the picture is whole. The popup's frame is sized and scaled only once the popup has
+  // loaded, and a frame Chrome painted before that left a few pixels of itself in the photograph, on some runs and
+  // not on others: the same shot came out as two or three pictures, a byte apart.
+  document.documentElement.style.visibility = 'hidden';
   const name = new URLSearchParams(location.search).get('shot') || 'start';
   if (name === 'promo' || name === 'marquee' || name === 'social') {
     document.body.className = name === 'promo' ? 'tile' : name === 'social' ? 'marquee social' : name;
@@ -186,6 +190,7 @@ async function main(): Promise<void> {
   }
   await document.fonts.ready;
   await Promise.all(Array.from(document.images).map((img) => img.decode().catch(() => undefined)));
+  document.documentElement.style.visibility = '';
   document.documentElement.dataset.ready = '1';
 }
 
