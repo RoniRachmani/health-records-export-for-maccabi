@@ -126,6 +126,13 @@ only measure this launch gives of what the other three quarters would want.
 3. Which app did you open it in, and were you already paying for it?
 4. Would you run it again? What for?
 
+In Hebrew, for the first week's messages:
+
+1. מה הדבר הראשון ששאלתם?
+2. איפה נתקעתם: בהתקנה, בייצוא או בפתיחת התיקייה?
+3. באיזו אפליקציה פתחתם את התיקייה, וכבר שילמתם עליה לפני כן?
+4. הייתם מריצים את זה שוב? בשביל מה?
+
 ## Posts
 
 Drafts. Each is in the developer's voice and is theirs to change: fill what is in square brackets, and cut anything
@@ -154,6 +161,9 @@ go in the log's *Asked for another fund*.
 After they have run an export, the questions above, and then:
 
 > If it was useful, an honest review on the store helps the next person trust it:
+> https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp/reviews?utm_source=friends
+
+> אם זה עזר לכם, ביקורת כנה בחנות של כרום תעזור למי שיגיע אחריכם להחליט אם לסמוך על התוסף:
 > https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp/reviews?utm_source=friends
 
 Ask for an honest review, from people who ran an export, and offer nothing for it: the store removes reviews that
@@ -200,10 +210,45 @@ Day 3, as a comment, answering the question that came up most. If it was about s
 > logged in with, and has no server of its own. The code is public and unminified, so anyone can read what it sends:
 > https://github.com/RoniRachmani/health-records-export-for-maccabi
 
+If it was about cost:
+
+> A few people asked what this costs. The extension is free, and nothing in it is for sale. To ask questions, you open
+> the folder in the desktop app of Claude, which needs a paid plan, or of ChatGPT, whose free plan includes Work with
+> limited usage. The export is yours either way: the PDFs in it open without any assistant, to keep or to take to
+> another doctor.
+
+If it was whether this is Maccabi's:
+
+> A few people asked whether this comes from Maccabi. It doesn't: it's unofficial, and not affiliated with or endorsed
+> by Maccabi Healthcare Services. It reads your records in the session you logged in to yourself, one request at a
+> time. The one thing it does beyond reading is order your full medical file, which Maccabi then prepares for you to
+> download.
+
+If it was about the other funds:
+
+> A few people asked about Clalit, Meuhedet and Leumit. Today it works with Maccabi Online only: I built it against
+> the one site I can log in to. I'm keeping count of who asks, so tell me which fund you're with. And if you know
+> someone with Maccabi, this is one to forward.
+
+Promise nothing for another fund in that last one: the count is what decides, and it goes in the log.
+
 ### Hebrew AI groups
 
 Attach the page's dashboard picture or `store/assets/screenshot-1-ask.png`. Write to the group's admin first, with the
-post, and post only where they agree.
+post, and post only where they agree. If an admin hasn't answered in two days, that group is a no: move to the next.
+
+The note to the admin, with the whole post under it, so they are agreeing to the words and not to a description of
+them:
+
+> שלום [שם], אני רוני, מהקבוצה. בניתי תוסף לכרום, חינמי ובקוד פתוח, ששומר את כל הרשומות ממכבי אונליין בתיקייה אחת
+> במחשב, כדי לפתוח אותה ב-Claude או ב-ChatGPT ולשאול עליה. אני לא מוכר בו כלום ואין בו פרסומות. אפשר לפרסם עליו
+> פוסט בקבוצה? זה הנוסח המלא, ואם משהו בו לא מתאים לכללי הקבוצה אשנה אותו, או אוותר:
+>
+> [הפוסט]
+>
+> הקוד פתוח, למי שרוצה לבדוק: https://github.com/RoniRachmani/health-records-export-for-maccabi
+
+The post:
 
 > **שאלתי את Claude: יש משהו שהרופאים ביקשו ממני ולא עשיתי?**
 >
@@ -256,6 +301,52 @@ Attach the page's allergy answer: the Hebrew page behind, the English answer in 
 > doctor decide.
 >
 > https://maccabi.ronirachmani.com/
+
+A Facebook group's admin gets the same question as the Hebrew groups', with the post under it:
+
+> Hi [name], I'm Roni, a member of this group and of Maccabi. I built a free, open-source Chrome extension that saves
+> a member's Maccabi Online records to a folder on their own computer, so they can ask Claude or ChatGPT about them in
+> English. Nothing in it is for sale, and it has no ads. May I post about it here? The whole post is below, and if
+> something in it doesn't fit the group's rules I'll change it, or not post.
+
+**r/Israel** gets its own version, two days after the groups, so the two can be told apart in the day's visits. Read
+the subreddit's rules on self-promotion first, and ask its moderators if they don't settle it. It is a text post with
+no picture, it says who built the thing before anyone asks, and its readers are further from Maccabi than a group of
+olim: many don't live in Israel.
+
+Title:
+
+> I'm with Maccabi, and I built a free tool to get all my records out of Maccabi Online and ask about them in English
+
+Body:
+
+> Maccabi Online keeps my records in Hebrew, one page at a time, and only so far back. I wanted all of them in one
+> place where I could ask questions, so I built a Chrome extension that does it. It's free and open source, and I'm
+> the developer, so read this as a self-post.
+>
+> You log in to Maccabi Online as usual and press one button. A few minutes later (sometimes as long as 20) there's a
+> folder on your computer: your full medical file, and the test results, visit summaries, prescriptions, referrals,
+> vaccinations and letters the site has. My medical file went back to when I was a baby.
+>
+> Then you open the folder in the Claude or ChatGPT desktop app and ask in English: "Am I allergic to any medicine?",
+> "What changed in my latest blood tests?", "What should I raise with my doctor on Thursday?". It reads the Hebrew
+> and answers in English, and the export asks it to name the record, and the page, behind each answer, so you can
+> check it.
+>
+> Before you click:
+>
+> - It's unofficial, and has nothing to do with Maccabi Healthcare Services.
+> - It installs in Chrome on a computer, not a phone.
+> - You log in yourself. The records go from Maccabi Online to your computer, and from there only where you take them.
+> - Claude's desktop app needs a paid plan. ChatGPT's free plan includes Work, with limited usage.
+> - The assistant explains and suggests. You and your doctor decide.
+> - It's Maccabi only, which I know rules out most of you. If you're with Clalit, Meuhedet or Leumit and would want
+>   one, say so: I'm counting.
+>
+> The page, with pictures (every record in them is made up): https://maccabi.ronirachmani.com/
+> The code: https://github.com/RoniRachmani/health-records-export-for-maccabi
+>
+> If you try it, I'd like to hear where you got stuck.
 
 ### Hacker News and r/ClaudeAI
 
