@@ -1,6 +1,6 @@
 # Terms of Use
 
-Health Records Export for Maccabi
+[Health Records Export for Maccabi](https://maccabi.ronirachmani.com/)
 
 Effective 13 October 2026
 
