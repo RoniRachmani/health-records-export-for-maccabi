@@ -133,16 +133,23 @@ that isn't true of their own export.
 
 ### A message to someone you know
 
-> היי, בניתי תוסף לכרום, חינמי ובקוד פתוח, ששומר את כל ההיסטוריה שלכם ממכבי אונליין בתיקייה אחת במחשב. פותחים אותה
-> ב-Claude או ב-ChatGPT ושואלים כל מה שרוצים. התיק הרפואי שלי חזר עד הינקות. אם אתם במכבי ויש לכם עשר דקות ליד
-> מחשב, אשמח שתנסו ותספרו לי איפה נתקעתם: https://maccabi.ronirachmani.com/
-> (מתקינים בכרום במחשב, לא בטלפון. לא רשמי, ולא קשור למכבי.)
+"Are you with Maccabi?" is not a question to ask before the pitch: it is the pitch's first words. One message, opening
+on the condition, so a member reads on and nobody else owes a reply. Skip the condition for people whose fund you
+know. In a group, a poll ("Which health fund are you with?") finds the members in one message, and its other answers
+go in the log's *Asked for another fund*.
 
-> I built a free, open-source Chrome extension that saves your whole Maccabi Online history to one folder on your
-> computer. You open it in Claude or ChatGPT and ask anything. My medical file went back to when I was a baby. If
-> you're with Maccabi and have ten minutes at a computer, would you try it and tell me where you got stuck?
+> אם אתם במכבי, בניתי משהו בשבילכם: תוסף לכרום, חינמי ובקוד פתוח, ששומר את כל ההיסטוריה שלכם ממכבי אונליין בתיקייה
+> אחת במחשב. פותחים אותה ב-Claude או ב-ChatGPT ושואלים כל מה שרוצים. התיק הרפואי שלי חזר עד הינקות. יש לכם עשר
+> דקות ליד מחשב? אשמח שתנסו ותספרו לי איפה נתקעתם: https://maccabi.ronirachmani.com/
+> (מתקינים בכרום במחשב, לא בטלפון. לא רשמי, ולא קשור למכבי.)
+> לא במכבי? אשמח שתעבירו למישהו שכן.
+
+> If you're with Maccabi, I built something for you: a free, open-source Chrome extension that saves your whole
+> Maccabi Online history to one folder on your computer. You open it in Claude or ChatGPT and ask anything. My medical
+> file went back to when I was a baby. Got ten minutes at a computer? Try it and tell me where you got stuck:
 > https://maccabi.ronirachmani.com/
 > (It installs in Chrome on a computer, not a phone. Unofficial, and nothing to do with Maccabi.)
+> Not with Maccabi? Pass it to someone who is.
 
 After they have run an export, the questions above, and then:
 
