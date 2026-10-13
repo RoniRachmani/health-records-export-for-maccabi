@@ -171,6 +171,17 @@ Keep the page's instructions matched to what the apps show. This was checked on 
 - **ChatGPT desktop app:** switch to **Work**, then choose the folder under **Choose project**.
 - **First message:** "Read README.md first. Then summarize my health history from my full medical file."
 
+And against each vendor's documentation on 13 October 2026, which is where these come from:
+
+- **ChatGPT's picture shows what a free plan sees:** GPT-6 Luna (GPT-6.1 Sol starts at Plus) and **Ask for approval**
+  (**Approve for me** has to be turned on in Settings first).
+- **Platforms:** Claude's folder access is on Mac and Windows. ChatGPT's desktop app is also on Linux, in preview.
+- **Memory:** a Claude project keeps its own. ChatGPT has no project-only memory, so the page says to check what a
+  project's memory shares, not that it is kept there.
+- **Deleting:** Claude archives a folder's project and deletes the copies of files it read with the chat, so the page
+  says to delete the chats and the project.
+- **Files in a chat:** Claude takes 20. Neither vendor caps a web project by count, so the page's limit is a chat's.
+
 ## Demo persona
 
 Every example uses the same made-up member, so the story holds together across the page. What "stands out" matches the
