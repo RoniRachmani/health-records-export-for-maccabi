@@ -173,6 +173,8 @@ Keep the page's instructions matched to what the apps show. This was checked on 
 
 And against each vendor's documentation on 13 October 2026, which is where these come from:
 
+- **Claude's picture** was checked against the app that day too: **Project or folder** under the box, then the
+  model and **Auto** on the right, and nothing between them.
 - **ChatGPT's picture shows what a free plan sees,** as the app drew it on a free account that day: **Chat** and
   **Work**, "What should we work on?", **Ask for approval** (**Approve for me** has to be turned on in Settings
   first), 5.6 Terra, and **Choose project**, **Files** and **Plugins** under the box. Their documentation names
