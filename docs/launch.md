@@ -11,6 +11,11 @@ customers*.
 
 ## Who it is for
 
+Maccabi has about 2.71 million members: just over a quarter of everyone insured in Israel. Fifty installs is a tiny
+share of them, so the fund's size doesn't cap this plan. What it costs is reach: in any Israeli audience, about three
+readers in four are with another fund and can't use the extension at all. The calendar and the posts allow for that
+(see [Every post](#every-post)).
+
 - **Primary:** the curious, tech-comfortable Maccabi member of positioning.md: uses Claude or ChatGPT, installs
   extensions, reads English.
 - **A test, in week 4:** English-speaking olim on Maccabi. The extension and the page are English only, and for them
@@ -21,6 +26,8 @@ customers*.
 
 ## Every post
 
+- Names Maccabi in its first line, so people with another fund pass by without clicking and the page's visits stay
+  mostly members. It ends by asking them to pass it on: nearly everyone knows someone with Maccabi.
 - Links to the landing page, `https://maccabi.ronirachmani.com/`, not to the store: the page does the persuading, and
   its visits are counted.
 - Says "on a computer, in Chrome". Most clicks from a social post are on a phone, where it cannot install; the page's
@@ -39,11 +46,11 @@ One channel in each window, because that is the only way to tell them apart (see
 | Week | What | Where | Notes | Status |
 |---|---|---|---|---|
 | 14–17 Oct | Baselines, tagged store links, this log | | Before any post | Links tagged. The baseline row still needs the dashboard's and GoatCounter's numbers |
-| 18–24 Oct | [A message](#a-message-to-someone-you-know) to 30–40 people | WhatsApp, direct messages | Aim: 10 installs, 3 reviews, 5 conversations | |
+| 18–24 Oct | [A message](#a-message-to-someone-you-know) to 30–40 Maccabi members | WhatsApp, direct messages | About one contact in four is a member, so that is some 150 people, or the groups you're in. Aim: 10 installs, 3 reviews, 5 conversations | |
 | 25–31 Oct | [The founder's post](#linkedin), and a comment on day 3 | LinkedIn | Needs nothing before it | |
 | 1–7 Nov | [*Loose ends*, in Hebrew](#hebrew-ai-groups) | 2 or 3 AI groups on Facebook, two days apart | Ask each admin first. Needs the first reviews on the listing | |
 | 8–14 Nov | [Ask in English](#english-speaking-groups) | Olim groups, r/Israel | The test above | |
-| 15–21 Nov | [Show HN](#hacker-news-and-rclaudeai), then r/ClaudeAI | Hacker News, Reddit | Be there for the comments all day | |
+| 15–21 Nov | [Show HN](#hacker-news-and-rclaudeai), then r/ClaudeAI | Hacker News, Reddit | Almost no members there: this week is for feedback and stars, not installs. Be there for the comments all day | |
 | 22–28 Nov | What the first users asked | LinkedIn, and the best channel again | Open: decide from the log | |
 
 Left out on purpose: paid ads (nothing targets Maccabi members), Product Hunt, and the press, until the extension has
@@ -97,18 +104,20 @@ and one listing view in four installs, which is a guess:
 
 ### Log
 
-Fill a row each Sunday. Visits, listing views, installs and uninstalls are totals since 14 October.
+Fill a row each Sunday. Visits, listing views, installs and uninstalls are totals since 14 October. *Asked for
+another fund* counts the people who answer "I'm with Clalit, Meuhedet or Leumit: is there one for us?", which is the
+only measure this launch gives of what the other three quarters would want.
 
-| Date | Posted that week | Visits | Listing views: site / github / untagged | Installs | Uninstalls | Users | Reviews | Stars | Notes |
-|---|---|---|---|---|---|---|---|---|---|
-| 14 Oct | Nothing yet | | | | | 3 | 0 | 1 | Baseline. GitHub: 115 views from 18 people in the 14 days before |
-| 18 Oct | | | | | | | | | |
-| 25 Oct | | | | | | | | | |
-| 1 Nov | | | | | | | | | |
-| 8 Nov | | | | | | | | | |
-| 15 Nov | | | | | | | | | |
-| 22 Nov | | | | | | | | | |
-| 29 Nov | | | | | | | | | |
+| Date | Posted that week | Visits | Listing views: site / github / untagged | Installs | Uninstalls | Users | Reviews | Stars | Asked for another fund | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 14 Oct | Nothing yet | | | | | 3 | 0 | 1 | 0 | Baseline. GitHub: 115 views from 18 people in the 14 days before |
+| 18 Oct | | | | | | | | | | |
+| 25 Oct | | | | | | | | | | |
+| 1 Nov | | | | | | | | | | |
+| 8 Nov | | | | | | | | | | |
+| 15 Nov | | | | | | | | | | |
+| 22 Nov | | | | | | | | | | |
+| 29 Nov | | | | | | | | | | |
 
 ### What to ask a user
 
@@ -171,7 +180,8 @@ the page's link in the first comment.
 > Maccabi Online to your computer, and from there only where you take them.
 >
 > If you're a Maccabi member, try it on a computer (it's a Chrome extension, so not on a phone) and tell me what it
-> found, or where you got stuck. The link is in the first comment.
+> found, or where you got stuck. The link is in the first comment. Not with Maccabi? About one Israeli in four is, so
+> you know someone to send it to.
 >
 > Unofficial: not affiliated with Maccabi Healthcare Services.
 
@@ -212,7 +222,7 @@ post, and post only where they agree.
 >
 > https://maccabi.ronirachmani.com/
 >
-> אשמח לשמוע מה שאלתם ומה קיבלתם.
+> אשמח לשמוע מה שאלתם ומה קיבלתם. לא במכבי? בטח יש לכם מישהו שכן: שלחו לו.
 
 ### English-speaking groups
 
