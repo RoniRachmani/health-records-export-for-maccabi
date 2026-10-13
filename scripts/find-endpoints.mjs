@@ -70,9 +70,20 @@ export function scan(text) {
     if (/^[\w.\-/]+\.m?js$/.test(s) && !s.includes('//')) files.add(s);
   }
   for (const m of text.matchAll(/\bpath\s*:\s*["'`]([\w\-/:]*)["'`]/g)) if (m[1]) routes.add(m[1]);
-  // webpack's runtime names lazy chunks from an id-to-hash map: ""+id+"."+{12:"9f3a…",…}[id]+".js"
+  // webpack's and Rspack's runtimes name lazy chunks from an id-to-hash map, after a folder from the site's
+  // public path and, sometimes, a map of names: "static/js/async/"+({12:"name"}[id]||id)+"."+{12:"9f3a…"}[id]+".js".
+  // A chunk with a folder is written "@public:<folder><file>", for readScripts to place under the public path.
   for (const m of text.matchAll(/\{((?:\s*["']?\w+["']?\s*:\s*["'][0-9a-f]{6,}["']\s*,?)+)\}\[\w+\]\s*\+\s*["'](\.?[\w.]*js)["']/g)) {
-    for (const p of m[1].matchAll(/["']?(\w+)["']?\s*:\s*["']([0-9a-f]+)["']/g)) files.add(`${p[1]}.${p[2]}${m[2].startsWith('.') ? m[2] : '.' + m[2]}`);
+    const before = text.slice(Math.max(0, m.index - 20_000), m.index);
+    const lead = before.match(/(?:["']([\w./-]*)["']\s*\+\s*)?(?:\(\s*\{([^{}]*)\}\[\w+\]\s*\|\|\s*\w+\s*\)|\w+)\s*\+\s*["']\.["']\s*\+\s*$/);
+    const folderPart = lead?.[1] || '';
+    const names = {};
+    for (const n of (lead?.[2] || '').matchAll(/["']?(\w+)["']?\s*:\s*["']([\w.-]+)["']/g)) names[n[1]] = n[2];
+    const suffix = m[2].startsWith('.') ? m[2] : '.' + m[2];
+    for (const p of m[1].matchAll(/["']?(\w+)["']?\s*:\s*["']([0-9a-f]+)["']/g)) {
+      const file = `${names[p[1]] || p[1]}.${p[2]}${suffix}`;
+      files.add(folderPart ? '@public:' + folderPart + file : file);
+    }
   }
   const services = new Set([...text.matchAll(/\b([A-Z][A-Za-z]+API)\b/g)].map((m) => m[1]));
   return { paths, services, routes, files };
@@ -172,6 +183,21 @@ const ours = (url) => {
   }
 };
 
+/**
+ * A file the code names, as an address. One the runtime places under the public path ("@public:static/js/async/…")
+ * goes where the script that named it sits above its own first folder: /sonline/static/js/x.js names
+ * /sonline/static/js/async/….
+ */
+export function chunkUrl(f, from) {
+  if (!f.startsWith('@public:')) return new URL(f, from).href;
+  const rel = f.slice('@public:'.length);
+  const u = new URL(from);
+  const top = rel.split('/')[0];
+  const at = top && rel.includes('/') ? u.pathname.indexOf('/' + top + '/') : -1;
+  const base = at >= 0 ? u.pathname.slice(0, at + 1) : u.pathname.replace(/[^/]*$/, '');
+  return new URL(base + rel, u.origin).href;
+}
+
 export async function readScripts(page, start, found) {
   const queue = [...start];
   let redirects = 0;
@@ -197,7 +223,7 @@ export async function readScripts(page, start, found) {
     seen.services.forEach((x) => found.services.add(x));
     seen.routes.forEach((r) => found.routes.add(r));
     for (const f of seen.files) {
-      const next = new URL(f, url).href;
+      const next = chunkUrl(f, url);
       if (!found.read.has(next) && !found.failed.has(next) && !queue.includes(next)) queue.push(next);
     }
     if (found.read.size % 10 === 0) console.log(`  ${found.read.size} read, ${found.failed.size} would not load, ${queue.length} to go`);
@@ -254,6 +280,11 @@ async function main() {
   const whyText = Object.entries(why).map(([r, n]) => `${n} ${r}`).join(', ');
   console.log(`\nRead ${found.read.size} script files` + (found.failed.size ? `; ${found.failed.size} would not load (${whyText})` : '')
     + (found.capped ? `; stopped at ${MAX_FILES}, so some were left unread` : '') + '.');
+  // A few of the addresses that failed, by reason: what to look at when the scan builds a chunk's address wrong.
+  for (const r of Object.keys(why)) {
+    const some = [...found.failed].filter(([, w]) => w === r).slice(0, 3).map(([u]) => new URL(u).pathname);
+    console.log(`  ${r}: ${some.join('  ')}`);
+  }
   show(services, 'Services', (s) => s.name);
   show(paths, 'API calls in the code', (p) => `${p.path}    (${p.file})`);
   show(pages, 'Legacy pages and popups in the code', (p) => `${p.path}    (${p.file})`);
