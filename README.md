@@ -13,7 +13,7 @@ where an assistant can read all of it.
 > Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare Services.
 
 <p align="center">
-  <a href="https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp">
+  <a href="https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp?utm_source=github&amp;utm_medium=readme">
     <img src="docs/images/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="206">
   </a>
 </p>
@@ -55,7 +55,7 @@ where an assistant can read all of it.
 
 You need Chrome 120 or newer.
 
-**[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp)**, and
+**[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp?utm_source=github&utm_medium=readme)**, and
 Chrome keeps it up to date. However you install it, the build isn't minified, so you can read exactly the code that
 runs.
 
