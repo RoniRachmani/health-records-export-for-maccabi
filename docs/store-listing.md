@@ -1,6 +1,6 @@
 # Chrome Web Store listing
 
-What to enter on the Chrome Web Store developer dashboard for each tab. The text below matches version 0.8.8. When
+What to enter on the Chrome Web Store developer dashboard for each tab. The text below matches version 0.8.9. When
 the extension changes, update this file along with it (see [Keeping it true](#keeping-it-true)).
 
 ## Before each upload
@@ -402,6 +402,7 @@ of this page:
 | A section is added, renamed or dropped | Description list, `FOLDERS` in `store/src/parts.ts`, README |
 | A permission is added or removed | Permission justifications here, the manifest, `docs/privacy.md`, `public/privacy.html`, README |
 | A new kind of data or request | Data usage here, the privacy policy, `docs/endpoints.json` |
+| A link the popup or a notification opens on the web | The privacy policy's line on the links the extension opens (`docs/privacy.md`, `public/privacy.html`) |
 | The manifest's `description` | Summary here (132 characters at most) |
 | What the export's README asks of the assistant (`shared/readme.ts`) | The description's "What the assistant is asked to do" and "Yours to keep, and to grow", the README's *Hand it to an AI assistant*, and the answers in `STANDS_OUT` and `ONE_THING` (`store/src/parts.ts`), which screenshots 1 and 3 and the video draw |
 | The questions to start with, or the Ask and Build use cases in [positioning.md](positioning.md) | The description's "A friend who's read it all", YouTube's "Things to ask", the README's list, and `FOLLOW_UPS` and `BUILDS` in `store/src/parts.ts` |
