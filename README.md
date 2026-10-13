@@ -524,6 +524,29 @@ A healthy scan reads about a hundred files and fails on a handful. When many "wo
 how it names its chunks: the summary prints a few of the failed addresses, and `--save` keeps the scripts to read the
 naming from (site code, not records; still, keep it out of the repository).
 
+`npm run endpoints:rea` is the same scan with a parser under it:
+[REA](https://github.com/morluto/rea) (Reverse Engineer Anything) parses each script without running it, and the scan
+reads the calls themselves instead of the strings near them. So each candidate comes with its HTTP method, the file,
+line and column of the call, and how it was found: `[ast]` when rea parsed the call and its address is a literal,
+`[call]` when the address is built from parts (written with `{}` for each, which is nearly all of them on a site that
+puts the member id in every path, and what rea's own limits leave unknown), `[named]` for a string that reads as an
+address with no call seen. A call that is not a `GET` is marked, since it may change something. rea also says what the
+scan missed: the chunks the code loads that were never read, per section, and the files it could not parse.
+
+```sh
+npm run endpoints:rea                        # the services and API calls endpoints.json does not have
+npm run endpoints:rea -- --all               # the mapped ones too, marked, and the app's page routes as rea read them
+npm run endpoints:rea -- --save ~/scripts    # also the scripts it read, laid out as on the site
+npm run endpoints:rea -- --from ~/scripts    # analyze a saved folder again: no browser, no sign-in
+npm run endpoints:rea -- --no-rea            # seconds instead of minutes: this scan's own reader alone, nothing parsed
+npm run endpoints:rea -- --out ~/scan.json   # also everything found, as JSON; --jobs N, --keep
+```
+
+rea runs on this machine, on the script files alone, and is not a dependency of the repository: the first run fetches
+`rea-agents` from npm at the version the script names (`REA_BIN` points at an installed one). It takes some minutes
+for the whole app, a few groups of files at a time. `scripts/rea-endpoints-lib.mjs` holds what the scan decides, and
+`test/reaEndpoints.test.ts` runs it on made-up scripts.
+
 To see what a candidate returns, open its section in Maccabi Online yourself with DevTools' Network panel recording,
 and read the requests the site sent. A saved capture (`.har`) holds that section's records, the member id and the
 session token in the clear: keep it on your machine and delete it when done. `.gitignore` blocks `*.har`.

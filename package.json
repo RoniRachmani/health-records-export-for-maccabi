@@ -25,6 +25,7 @@
     "live": "vite build --mode development && node scripts/live-run.mjs",
     "export": "node scripts/headless-export.mjs",
     "endpoints": "node scripts/find-endpoints.mjs",
+    "endpoints:rea": "node scripts/rea-endpoints.mjs",
     "store-assets": "node scripts/store-assets.mjs",
     "store-video": "node scripts/store-video.mjs",
     "site-check": "node scripts/site-check.mjs",

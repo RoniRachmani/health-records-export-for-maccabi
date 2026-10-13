@@ -1,0 +1,462 @@
+// What scripts/rea-endpoints.mjs decides, apart from the browser and the rea process: how a script names
+// its lazy chunks, what its calls are, what rea's analysis says of it, and which of all that
+// docs/endpoints.json already maps. Pure, so test/reaEndpoints.test.ts runs it on made-up scripts.
+
+// ---- paths ---------------------------------------------------------------------------------------
+
+/** A string that names a service call: a REST service, a versioned route, or a legacy handler or page. */
+// The /sonline/ app writes its routes from the version on (v1/members/...), apart from the service's base.
+const API_MARK = /[A-Za-z]API\/|webapi|(?:^|\/)v\d+\/|(?:^|\/)members\/|\.asmx|\.ashx|\.aspx|\/s?online\//i;
+const URLISH = /^[\w\-./{}*:?=&%]+$/;
+
+/** Whether a string in the code reads as an address on the site, with {} for the parts built at run time. */
+export function pathLike(s) {
+  return API_MARK.test(s) && URLISH.test(s.replace(/\{\}/g, ''));
+}
+
+/** One path's comparable shape: no origin, query or slashes at the ends, variables as *, lower case. */
+export function shape(path) {
+  return path
+    .replace(/^https?:\/\/[^/]+/, '')
+    .replace(/[?#].*$/, '')
+    .split('/')
+    .map((s) => (/^(\{[^}]*\}|<[^>]*>|\d+|\*|:\w+)$/.test(s) ? '*' : s.replace(/\{\}/g, '')))
+    .join('/')
+    .replace(/^[/*]+|[/*]+$/g, '')
+    .replace(/^s?online\/(?=\w+api\/)/i, '') // the REST services sit under /sonline/
+    .replace(/^(\w+api)\/webapi\/mac(?=\/|$)/i, '$1') // and under webapi/mac, which endpoints.json leaves out
+    .toLowerCase();
+}
+
+/**
+ * What a path in the code is: 'api' (a call that returns data), 'page' (a web page or popup of the legacy
+ * site), 'app' (a page of the /sonline/ app, or one of its service bases), or 'noise' (static files, other
+ * sites, a developer's localhost).
+ */
+export function kind(path) {
+  if (/^https?:\/\/(?!online\.maccabi4u\.co\.il\/)/i.test(path)) return 'noise';
+  const p = path.replace(/^https?:\/\/[^/]+/, '').replace(/[?#].*$/, '');
+  if (/\.(m?js|css|ico|png|svg|gif|jpe?g|woff2?|map)$/i.test(p) || /^\/?(retail|sonline\/scripts|sonline\/static)\//i.test(p)) return 'noise';
+  if (/\.aspx$/i.test(p) && !/webapi/i.test(p)) return 'page';
+  if (/[A-Za-z]API\/|webapi|\.asmx|\.ashx|(?:^|\/)v\d+\/|(?:^|\/)members\//i.test(p)) {
+    return /^\/?(sonline\/)?\w+\/webapi\/mac\/?$/i.test(p) ? 'app' : 'api';
+  }
+  return /^\/?sonline\//i.test(p) ? 'app' : 'page';
+}
+
+/** Every path and service docs/endpoints.json names, wherever in it they are written. */
+export function knownFrom(endpoints) {
+  const paths = new Set();
+  const services = new Set();
+  const walk = (x) => {
+    if (typeof x === 'string') {
+      for (const m of x.matchAll(/[\w/{}<>.\-]*(?:[A-Za-z]API\/|webapi|\.asmx|\.ashx|\.aspx|\/online\/)[\w/{}<>.\-]*/g)) paths.add(shape(m[0]));
+      for (const m of x.matchAll(/\b([A-Z][A-Za-z]+API)\b/g)) services.add(m[1]);
+    } else if (x && typeof x === 'object') Object.values(x).forEach(walk);
+  };
+  walk(endpoints);
+  // Only shapes with a route in them: the bases' templates (<Service>/.../...) and lone names say nothing.
+  return { paths: [...paths].filter((p) => p.includes('/') && !p.includes('...')), services };
+}
+
+/**
+ * A path is known when its shape is whole segments of one endpoints.json maps: code often builds a path in
+ * pieces, so a piece of a mapped path is that path.
+ */
+export function isKnown(path, known) {
+  // Legacy services and popups are written from /online/ down (/Ajax/..., /Pages/...); endpoints.json writes them whole.
+  const s = shape(/^\/(ajax|handlers|pages|webapi)\//i.test(path) ? '/online' + path : path);
+  if (!s || /^(v\d+|members|webapi|online|sonline)$/.test(s)) return true; // a piece too small to say anything
+  return known.paths.some((k) => ('/' + k + '/').includes('/' + s + '/'));
+}
+
+// ---- reading a script's text ---------------------------------------------------------------------
+
+/** How far one call's arguments are read before it is given up as something else. */
+const ARGS_LIMIT = 6000;
+
+/** The index after the string or template that opens at `i`, or -1. */
+function skipQuoted(text, i, end) {
+  const q = text[i];
+  for (let j = i + 1; j < end; j++) {
+    const c = text[j];
+    if (c === '\\') j++;
+    else if (c === q) return j + 1;
+    else if (q === '`' && c === '$' && text[j + 1] === '{') {
+      j = skipGroup(text, j + 1, end) - 1;
+      if (j < 0) return -1;
+    } else if (q !== '`' && c === '\n') return -1;
+  }
+  return -1;
+}
+
+/** The index after the bracket group that opens at `i`, or -1. */
+function skipGroup(text, i, end) {
+  let depth = 0;
+  for (let j = i; j < end; j++) {
+    const c = text[j];
+    if (c === '"' || c === "'" || c === '`') {
+      j = skipQuoted(text, j, end) - 1;
+      if (j < 0) return -1;
+    } else if (c === '(' || c === '[' || c === '{') depth++;
+    else if (c === ')' || c === ']' || c === '}') {
+      if (--depth === 0) return j + 1;
+    }
+  }
+  return -1;
+}
+
+/** `src` cut at each `sep` that is outside every string and bracket, or null if it does not balance. */
+function splitTop(src, sep) {
+  const out = [];
+  let from = 0;
+  for (let j = 0; j < src.length; j++) {
+    const c = src[j];
+    if (c === '"' || c === "'" || c === '`') j = skipQuoted(src, j, src.length) - 1;
+    else if (c === '(' || c === '[' || c === '{') j = skipGroup(src, j, src.length) - 1;
+    else if (c === sep) {
+      out.push(src.slice(from, j).trim());
+      from = j + 1;
+    }
+    if (j < 0) return null;
+  }
+  out.push(src.slice(from).trim());
+  return out;
+}
+
+/** The arguments of the call whose parenthesis opens at `open`, each as its source text. */
+function argsAt(text, open) {
+  const end = skipGroup(text, open, Math.min(text.length, open + ARGS_LIMIT));
+  if (end < 0) return null;
+  const inner = text.slice(open + 1, end - 1);
+  return inner.trim() ? splitTop(inner, ',') : [];
+}
+
+const unescape = (s) => s.replace(/\\u\{?([0-9a-fA-F]{4,6})\}?|\\x([0-9a-fA-F]{2})|\\(.)/g, (m, u, x, c) =>
+  (u || x ? String.fromCodePoint(parseInt(u || x, 16)) : c));
+
+/** A template's text, each ${...} as {}. */
+function templateText(body) {
+  let out = '';
+  for (let j = 0; j < body.length; j++) {
+    if (body[j] === '\\') out += body[j] + (body[++j] ?? '');
+    else if (body[j] === '$' && body[j + 1] === '{') {
+      const end = skipGroup(body, j + 1, body.length);
+      if (end < 0) return out + '{}';
+      out += '{}';
+      j = end - 1;
+    } else out += body[j];
+  }
+  return unescape(out);
+}
+
+/**
+ * The string an expression builds, with {} for each part only known at run time: literals, templates,
+ * `+` and `"…".concat(…)` (what a template becomes when it is compiled down). Null when no part of it
+ * is written out, which is an address built somewhere else.
+ */
+export function builtString(src) {
+  const parts = splitTop(src, '+');
+  if (!parts) return null;
+  let literal = false;
+  let out = '';
+  for (let part of parts) {
+    while (/^\([^]*\)$/.test(part) && skipGroup(part, 0, part.length) === part.length) part = part.slice(1, -1).trim();
+    const q = part[0];
+    const end = q === '"' || q === "'" || q === '`' ? skipQuoted(part, 0, part.length) : -1;
+    if (end < 0) {
+      out += '{}';
+      continue;
+    }
+    literal = true;
+    out += q === '`' ? templateText(part.slice(1, end - 1)) : unescape(part.slice(1, end - 1));
+    let rest = part.slice(end);
+    while (rest.startsWith('.concat(')) {
+      const close = skipGroup(rest, 7, rest.length);
+      const args = close < 0 ? null : splitTop(rest.slice(8, close - 1), ',');
+      if (!args) break;
+      for (const a of args) out += builtString(a) ?? '{}';
+      rest = rest.slice(close);
+    }
+    if (rest.trim()) out += '{}';
+  }
+  return literal ? out.replace(/(\{\})+/g, '{}') : null;
+}
+
+/** The value source of `key` in an object literal's source, or undefined. */
+function field(objectSrc, key) {
+  if (!/^\{[^]*\}$/.test(objectSrc)) return undefined;
+  for (const entry of splitTop(objectSrc.slice(1, -1), ',') || []) {
+    const m = entry.match(/^["']?(\w+)["']?\s*:\s*([^]+)$/);
+    if (m && m[1] === key) return m[2];
+  }
+  return undefined;
+}
+
+const VERB = /^(get|post|put|patch|delete|head)$/i;
+const CALL = /(?<![\w$.])(fetch|axios|\$http)\s*\(|\.(get|post|put|patch|delete|head|request|ajax|open)\s*\(/g;
+
+/**
+ * The requests a script writes out: fetch, an HTTP client's get/post/put/patch/delete/head/request (axios and
+ * the like), jQuery's ajax and XMLHttpRequest's open, each with its method and the address as far as the call
+ * itself spells it. A call whose address is not written at the call at all (a variable, a helper) is left out.
+ */
+export function readCalls(text) {
+  const calls = [];
+  for (const m of text.matchAll(CALL)) {
+    const name = (m[1] || m[2]).toLowerCase();
+    const args = argsAt(text, m.index + m[0].length - 1);
+    if (!args || !args.length) continue;
+    let method;
+    let url;
+    const config = (src) => {
+      url = field(src, 'url');
+      const said = builtString(field(src, 'method') ?? field(src, 'type') ?? '');
+      method = said && VERB.test(said) ? said : url === undefined ? undefined : 'GET';
+    };
+    if (name === 'open') {
+      method = builtString(args[0]);
+      if (!method || !VERB.test(method)) continue; // window.open, a file's open
+      url = args[1];
+    } else if (args[0].startsWith('{')) {
+      config(args[0]);
+    } else {
+      url = args[0];
+      method = VERB.test(name) ? name : 'GET';
+      // fetch(url, { method }), $.ajax(url, { type })
+      if (!VERB.test(name) && args[1]?.startsWith('{')) {
+        const said = builtString(field(args[1], 'method') ?? field(args[1], 'type') ?? '');
+        if (said && VERB.test(said)) method = said;
+      }
+    }
+    if (url === undefined || !method) continue;
+    const path = builtString(url);
+    if (path !== null) calls.push({ path, method: method.toUpperCase(), offset: m.index + (m[2] ? 1 : 0), via: name });
+  }
+  return calls;
+}
+
+/** String literals in a script; a template literal's ${...} becomes {}. */
+export function literals(text) {
+  const out = [];
+  const re = /"((?:[^"\\\n]|\\.){2,300})"|'((?:[^'\\\n]|\\.){2,300})'|`((?:[^`\\]|\\.){2,600})`/g;
+  for (const m of text.matchAll(re)) {
+    out.push({ value: m[3] !== undefined ? templateText(m[3]) : unescape(m[1] ?? m[2]), offset: m.index });
+  }
+  return out;
+}
+
+/** Turns an offset into `line:column`, both from 1, as an editor counts them. */
+export function locator(text) {
+  const starts = [0];
+  for (const m of text.matchAll(/\r\n|[\n\r\u2028\u2029]/g)) starts.push(m.index + m[0].length);
+  return {
+    at(offset) {
+      let lo = 0;
+      let hi = starts.length - 1;
+      while (lo < hi) {
+        const mid = (lo + hi + 1) >> 1;
+        if (starts[mid] <= offset) lo = mid;
+        else hi = mid - 1;
+      }
+      return `${lo + 1}:${offset - starts[lo] + 1}`;
+    },
+  };
+}
+
+// ---- the chunks a script names -------------------------------------------------------------------
+
+/**
+ * The other script files one script names. webpack's and Rspack's runtimes name lazy chunks from an
+ * id-to-hash map, after a folder and, for some, a name in place of the id:
+ * "static/js/async/"+(({354:"lib-axios"})[e]||e)+"."+({337:"1343e675"})[e]+".js", or ("354"===e?"lib-axios":e)
+ * for the name. They load them from the public path the same script sets (.p="/sonline/medicalFile/"): each
+ * section of the app is a build of its own, under its own folder. Without one, a chunk with a folder is
+ * written "@public:<folder><file>", for chunkUrl to place.
+ */
+export function chunkFiles(text) {
+  const files = new Set();
+  for (const { value: s } of literals(text)) {
+    // A script file by name; "./x.js" and node_modules are a bundle's module ids, not files the server has.
+    if (/^[\w.\-/]+\.m?js$/.test(s) && !s.includes('//') && !/^\.\/|node_modules\//.test(s)) files.add(s);
+  }
+  const publicPath = text.match(/\.p\s*=\s*["'](\/[\w./-]*\/)["']/)?.[1];
+  for (const m of text.matchAll(/\(?\{((?:\s*["']?\w+["']?\s*:\s*["'][0-9a-f]{6,}["']\s*,?)+)\}\)?\[\w+\]\s*\+\s*["'](\.?[\w.]*js)["']/g)) {
+    // The expression the map ends: from the function's arrow or return to the map.
+    const before = text.slice(Math.max(0, m.index - 20_000), m.index);
+    const expr = before.slice(Math.max(before.lastIndexOf('=>'), before.lastIndexOf('return')));
+    const folder = expr.match(/^(?:=>|return)\s*["']([\w./-]*\/)["']\s*\+/)?.[1] || '';
+    const names = {};
+    for (const n of expr.matchAll(/["']?(\w+)["']?\s*:\s*["']([\w.-]+)["']/g)) names[n[1]] = n[2];
+    for (const n of expr.matchAll(/["'](\w+)["']\s*===?\s*\w+\s*\?\s*["']([\w.-]+)["']/g)) names[n[1]] = n[2];
+    const suffix = m[2].startsWith('.') ? m[2] : '.' + m[2];
+    for (const p of m[1].matchAll(/["']?(\w+)["']?\s*:\s*["']([0-9a-f]+)["']/g)) {
+      const file = `${names[p[1]] || p[1]}.${p[2]}${suffix}`;
+      files.add(publicPath ? publicPath + folder + file : folder ? '@public:' + folder + file : file);
+    }
+  }
+  return files;
+}
+
+/**
+ * A file the code names, as an address. One the runtime places under the public path ("@public:static/js/async/…")
+ * goes where the script that named it sits above its own first folder: /sonline/static/js/x.js names
+ * /sonline/static/js/async/….
+ */
+export function chunkUrl(f, from) {
+  if (!f.startsWith('@public:')) return new URL(f, from).href;
+  const rel = f.slice('@public:'.length);
+  const u = new URL(from);
+  const top = rel.split('/')[0];
+  const at = top && rel.includes('/') ? u.pathname.indexOf('/' + top + '/') : -1;
+  const base = at >= 0 ? u.pathname.slice(0, at + 1) : u.pathname.replace(/[^/]*$/, '');
+  return new URL(base + rel, u.origin).href;
+}
+
+// ---- rea's analysis ------------------------------------------------------------------------------
+
+/** The part of rea's result this scan reads; the rest (the semantic graph) is megabytes per script. */
+export const REA_FILTER = 'normalized_result.graph.nodes,normalized_result.graph.edges,normalized_result.statistics';
+
+/** A build's folder: where a script's own first `static` folder hangs, since chunk ids are per build. */
+const buildOf = (file) => (file.includes('/static/') ? file.slice(0, file.indexOf('/static/')) : file.replace(/[^/]*$/, ''));
+
+/**
+ * What one `rea analyze-javascript-application --format json` result says of the scripts it was given
+ * (paths as rea reports them, relative to the folder analyzed): the requests whose address is a literal,
+ * with the call that makes each; the app's page routes; each chunk's ids and the chunk ids the code loads;
+ * the source maps declared; and the files it could not parse.
+ */
+export function readEvidence(result) {
+  const graph = result?.normalized_result?.graph;
+  const found = { endpoints: [], routes: new Set(), chunks: [], loads: [], sourceMaps: [], unparsed: [], parsed: 0 };
+  if (!graph) return found;
+  for (const node of graph.nodes || []) {
+    for (const o of node.observations || []) {
+      const p = o.properties || {};
+      const at = o.evidence?.location?.available ? o.evidence.location.value : null;
+      if (node.kind === 'endpoint' && p.endpoint_kind === 'route') found.routes.add(p.value);
+      else if (node.kind === 'endpoint' && p.endpoint_kind === 'network' && at) {
+        const call = String(p.mechanism || '').replace(/^call:/, '');
+        found.endpoints.push({ path: p.value, call, file: at.source, line: at.start.line, column: at.start.column + 1 });
+      } else if (node.kind === 'javascript-chunk') {
+        // A chunk the code loads and rea did not find among the files it was given has a node too, with no path.
+        if (p.path) found.chunks.push({ file: p.path, keys: p.chunk_keys || [] });
+      }
+      else if (node.kind === 'source-map') found.sourceMaps.push({ file: at?.source ?? null, url: p.declared_url });
+      else if (node.kind === 'javascript-asset' && p.file_kind === 'javascript') {
+        if (p.parse_status === 'complete') found.parsed++;
+        else found.unparsed.push(p.path);
+      }
+    }
+  }
+  for (const edge of graph.edges || []) {
+    const p = edge.properties || {};
+    const file = edge.evidence?.location?.value?.source;
+    if (edge.relation === 'imports' && p.kind === 'dynamic-import' && /^chunk:/.test(p.specifier || '') && file) {
+      found.loads.push({ file, key: p.specifier.slice('chunk:'.length) });
+    }
+  }
+  return found;
+}
+
+/**
+ * The chunks the code loads that were never read, per build: a section whose scripts the scan did not
+ * reach, which is where its calls would be. Only what rea could tell: a chunk loaded by a computed id is
+ * not counted either way.
+ */
+export function missingChunks(evidence) {
+  const have = new Map();
+  for (const c of evidence.chunks) {
+    const b = buildOf(c.file);
+    if (!have.has(b)) have.set(b, new Set());
+    c.keys.forEach((k) => have.get(b).add(String(k)));
+  }
+  const missing = new Map();
+  for (const l of evidence.loads) {
+    const b = buildOf(l.file);
+    if (have.get(b)?.has(l.key)) continue;
+    if (!missing.has(b)) missing.set(b, new Set());
+    missing.get(b).add(l.key);
+  }
+  return [...missing].map(([build, keys]) => ({ build, keys: [...keys].sort() })).sort((a, b) => a.build.localeCompare(b.build));
+}
+
+// ---- putting it together -------------------------------------------------------------------------
+
+/** How sure a candidate is, best first. */
+export const PROOF = ['ast', 'call', 'named'];
+
+/**
+ * Every address the scripts name, once per shape and method: `files` is path-to-text, `evidence` what rea
+ * said of them (readEvidence, merged), `known` from knownFrom. Each has how it was found: 'ast' (rea parsed
+ * the call and its address is a literal), 'call' (a call this scan read, its address built from parts) or
+ * 'named' (a string that reads as an address, with no call seen: a table of paths, or a call rea and this
+ * scan both missed).
+ */
+export function candidates(files, evidence, known) {
+  const byKey = new Map();
+  const add = (path, method, proof, where) => {
+    if (!pathLike(path)) return;
+    const k = kind(path);
+    if (k === 'noise') return;
+    const key = shape(path) + '\0' + (k === 'api' ? method || '' : '');
+    const had = byKey.get(key);
+    if (!had) {
+      byKey.set(key, { path, method: k === 'api' ? method : null, proof, where, kind: k, known: isKnown(path, known) });
+    } else if (PROOF.indexOf(proof) < PROOF.indexOf(had.proof)) Object.assign(had, { path, proof, where });
+  };
+
+  const called = new Set();
+  for (const e of evidence.endpoints) {
+    const verb = e.call.split('.').pop();
+    // The method of a fetch or an open is in its arguments, which the call reader below reads.
+    if (!VERB.test(verb)) continue;
+    called.add(shape(e.path));
+    add(e.path, verb.toUpperCase(), 'ast', `${e.file}:${e.line}:${e.column}`);
+  }
+  for (const [file, text] of files) {
+    const where = locator(text);
+    for (const c of readCalls(text)) {
+      called.add(shape(c.path));
+      // A literal address that rea's parse also found at a call is proven by it.
+      const parsed = !c.path.includes('{}') && evidence.endpoints.some((e) => e.file === file && e.path === c.path);
+      add(c.path, c.method, parsed ? 'ast' : 'call', `${file}:${where.at(c.offset)}`);
+    }
+  }
+  // A string that is whole segments of a call's address is a piece that call was built from.
+  const calledShapes = [...called].map((c) => '/' + c + '/');
+  const partOfCall = (s) => !s || calledShapes.some((c) => c.includes('/' + s + '/'));
+  for (const [file, text] of files) {
+    const where = locator(text);
+    for (const s of literals(text)) {
+      if (pathLike(s.value) && !partOfCall(shape(s.value))) add(s.value, null, 'named', `${file}:${where.at(s.offset)}`);
+    }
+  }
+  return [...byKey.values()].sort((a, b) => shape(a.path).localeCompare(shape(b.path)) || String(a.method).localeCompare(String(b.method)));
+}
+
+/** The service names (…API) the scripts mention. */
+export function servicesIn(files, known) {
+  const names = new Set();
+  for (const text of files.values()) for (const m of text.matchAll(/\b([A-Z][A-Za-z]+API)\b/g)) names.add(m[1]);
+  return [...names].sort().map((name) => ({ name, known: known.services.has(name) }));
+}
+
+/** Files in groups rea analyzes one at a time: a group's result has to stay within rea's own budget. */
+export function batches(sizes, maxBytes = 1_500_000, maxFiles = 30) {
+  const out = [];
+  let cur = [];
+  let bytes = 0;
+  for (const [file, size] of [...sizes].sort((a, b) => a[0].localeCompare(b[0]))) {
+    if (cur.length && (bytes + size > maxBytes || cur.length >= maxFiles)) {
+      out.push(cur);
+      cur = [];
+      bytes = 0;
+    }
+    cur.push(file);
+    bytes += size;
+  }
+  if (cur.length) out.push(cur);
+  return out;
+}
