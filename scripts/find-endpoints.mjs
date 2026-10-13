@@ -25,6 +25,8 @@ import { root, sleep } from './stage.mjs';
 const PACE_MS = 300;
 /** Enough for any bundle split; a scan that reaches it says so. */
 const MAX_FILES = 600;
+/** How long each of the two pages' scripts may take to read. */
+const READ_MS = 5 * 60_000;
 const LEGACY_PAGE = ORIGIN + '/online/medicalfile/summary/';
 /** How long a page is left to load its scripts before they are listed. */
 const SETTLE_MS = 5000;
@@ -130,13 +132,19 @@ function pageLinks(origin) {
   return [...out];
 }
 
-/** In the page: one static file's text, or null. */
+/**
+ * In the page: one static file's text, or why not. A redirect is not followed: Maccabi's gateway answers an
+ * address it does not serve, or an ended session, by sending the page to its logout address.
+ */
 async function fetchText(url) {
   try {
-    const r = await fetch(url, { credentials: 'same-origin' });
-    return r.ok ? await r.text() : null;
-  } catch {
-    return null;
+    const r = await fetch(url, { credentials: 'same-origin', redirect: 'manual' });
+    if (r.type === 'opaqueredirect' || (r.status >= 300 && r.status < 400)) return { failed: 'redirect' };
+    if (!r.ok) return { failed: String(r.status) };
+    const text = await r.text();
+    return /^\s*</.test(text) ? { failed: 'a web page, not a script' } : { text };
+  } catch (e) {
+    return { failed: String(e && e.message || e) };
   }
 }
 
@@ -149,28 +157,47 @@ const ours = (url) => {
   }
 };
 
-async function readScripts(page, start, found) {
+/** Script folders: a file the code names is read only from a folder the page loaded a script from. */
+const folder = (url) => url.replace(/[?#].*$/, '').replace(/[^/]*$/, '');
+
+export async function readScripts(page, start, found) {
   const queue = [...start];
+  const folders = new Set(start.filter(ours).map(folder));
+  const until = Date.now() + READ_MS;
+  let redirects = 0;
   while (queue.length && found.read.size + found.failed.size < MAX_FILES) {
+    if (Date.now() > until) {
+      found.capped = true;
+      console.log(`  Stopped after ${READ_MS / 60_000} minutes of reading.`);
+      return;
+    }
     const url = queue.shift();
     if (found.read.has(url) || found.failed.has(url) || !ours(url)) continue;
-    const text = await page.evaluate(call(fetchText, url), 60_000);
+    const got = await page.evaluate(call(fetchText, url), 60_000);
     await sleep(PACE_MS);
-    if (text == null) {
-      found.failed.add(url);
+    const name = new URL(url).pathname.split('/').pop();
+    if (got.failed) {
+      found.failed.set(url, got.failed);
+      redirects = got.failed === 'redirect' ? redirects + 1 : 0;
+      if (redirects >= 3) {
+        console.log('  Three files in a row were redirected: the session may have ended. Stopped reading.');
+        return;
+      }
       continue;
     }
+    redirects = 0;
     found.read.add(url);
-    const name = new URL(url).pathname.split('/').pop();
-    const got = scan(text);
-    for (const p of got.paths) if (!found.paths.has(p)) found.paths.set(p, name);
-    got.services.forEach((s) => found.services.add(s));
-    got.routes.forEach((r) => found.routes.add(r));
-    for (const f of got.files) {
+    const seen = scan(got.text);
+    for (const p of seen.paths) if (!found.paths.has(p)) found.paths.set(p, name);
+    seen.services.forEach((x) => found.services.add(x));
+    seen.routes.forEach((r) => found.routes.add(r));
+    for (const f of seen.files) {
       const next = new URL(f, url).href;
-      if (!found.read.has(next) && !found.failed.has(next)) queue.push(next);
+      if (folders.has(folder(next)) && !found.read.has(next) && !found.failed.has(next) && !queue.includes(next)) queue.push(next);
     }
+    if (found.read.size % 10 === 0) console.log(`  ${found.read.size} read, ${found.failed.size} would not load, ${queue.length} to go`);
   }
+  console.log(`  Done: ${found.read.size} read, ${found.failed.size} would not load.`);
   if (queue.some((u) => ours(u) && !found.read.has(u) && !found.failed.has(u))) found.capped = true;
 }
 
@@ -188,8 +215,10 @@ async function main() {
   console.log('Signed in. Reading the /sonline/ app\'s scripts (no API is called).');
   await sleep(SETTLE_MS);
 
-  const found = { read: new Set(), failed: new Set(), paths: new Map(), services: new Set(), routes: new Set(), legacyPages: [], capped: false };
-  await readScripts(page, await page.evaluate(call(loadedScripts)), found);
+  const found = { read: new Set(), failed: new Map(), paths: new Map(), services: new Set(), routes: new Set(), legacyPages: [], capped: false };
+  const scripts = await page.evaluate(call(loadedScripts));
+  console.log(`  The page loaded ${scripts.filter(ours).length} script files from Maccabi's own servers.`);
+  await readScripts(page, scripts, found);
 
   console.log('Reading the legacy summary page\'s scripts and links.');
   await page.navigate(LEGACY_PAGE);
@@ -211,7 +240,10 @@ async function main() {
     console.log(`\n${label}: ${list.filter((x) => !x.known).length} not in endpoints.json, of ${list.length}`);
     for (const x of shown) console.log('  ' + (ALL ? (x.known ? '  known ' : '  NEW   ') : '') + line(x));
   };
-  console.log(`\nRead ${found.read.size} script files` + (found.failed.size ? `; ${found.failed.size} would not load` : '')
+  const why = {};
+  for (const r of found.failed.values()) why[r] = (why[r] || 0) + 1;
+  const whyText = Object.entries(why).map(([r, n]) => `${n} ${r}`).join(', ');
+  console.log(`\nRead ${found.read.size} script files` + (found.failed.size ? `; ${found.failed.size} would not load (${whyText})` : '')
     + (found.capped ? `; stopped at ${MAX_FILES}, so some were left unread` : '') + '.');
   show(services, 'Services', (s) => s.name);
   show(paths, 'API paths in the code', (p) => `${p.path}    (${p.file})`);
@@ -224,6 +256,7 @@ async function main() {
     writeFileSync(file, JSON.stringify({
       scanned: new Date().toISOString(),
       files: [...found.read].map((u) => new URL(u).pathname),
+      failed: [...found.failed].map(([u, why]) => ({ file: new URL(u).pathname, why })),
       services, paths, legacyPages: legacy, routes: [...found.routes].sort(),
     }, null, 2) + '\n');
     console.log('Wrote ' + file);
