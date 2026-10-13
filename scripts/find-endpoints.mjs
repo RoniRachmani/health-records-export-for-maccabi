@@ -6,6 +6,7 @@
 //   npm run endpoints -- --all            the ones it has too, marked, and the app's own page routes
 //   npm run endpoints -- --out FILE       also writes everything found to FILE as JSON
 //   npm run endpoints -- --keep           leave the browser open at the end
+//   npm run endpoints -- --save DIR       also keeps each script file read, in DIR, to see how one names its chunks
 //
 // It opens the browser and signs in as `npm run export` does (scripts/maccabi-browser.mjs), then reads only
 // static files: the scripts the /sonline/ app loads, the chunks they name, and the scripts of the legacy
@@ -14,7 +15,7 @@
 // call may change something on the account (see "Read-only" in CLAUDE.md). Script files hold no member's
 // data, and links are kept without their query strings, so what it prints and writes is the site's code,
 // not the account's.
-import { writeFileSync, readFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { call } from './in-page.mjs';
@@ -57,6 +58,7 @@ export function shape(path) {
     .join('/')
     .replace(/^[/*]+|[/*]+$/g, '')
     .replace(/^s?online\/(?=\w+api\/)/i, '') // the REST services sit under /sonline/
+    .replace(/^(\w+api)\/webapi\/mac(?=\/|$)/i, '$1') // and under webapi/mac, which endpoints.json leaves out
     .toLowerCase();
 }
 
@@ -67,22 +69,28 @@ export function scan(text) {
   const files = new Set();
   for (const s of literals(text)) {
     if (API_MARK.test(s) && URLISH.test(s.replace(/\{\}/g, ''))) paths.add(s);
-    if (/^[\w.\-/]+\.m?js$/.test(s) && !s.includes('//')) files.add(s);
+    // A script file by name; "./x.js" and node_modules are a bundle's module ids, not files the server has.
+    if (/^[\w.\-/]+\.m?js$/.test(s) && !s.includes('//') && !/^\.\/|node_modules\//.test(s)) files.add(s);
   }
   for (const m of text.matchAll(/\bpath\s*:\s*["'`]([\w\-/:]*)["'`]/g)) if (m[1]) routes.add(m[1]);
-  // webpack's and Rspack's runtimes name lazy chunks from an id-to-hash map, after a folder from the site's
-  // public path and, sometimes, a map of names: "static/js/async/"+({12:"name"}[id]||id)+"."+{12:"9f3a…"}[id]+".js".
-  // A chunk with a folder is written "@public:<folder><file>", for readScripts to place under the public path.
-  for (const m of text.matchAll(/\{((?:\s*["']?\w+["']?\s*:\s*["'][0-9a-f]{6,}["']\s*,?)+)\}\[\w+\]\s*\+\s*["'](\.?[\w.]*js)["']/g)) {
+  // webpack's and Rspack's runtimes name lazy chunks from an id-to-hash map, after a folder and, for some, a
+  // name in place of the id: "static/js/async/"+(({354:"lib-axios"})[e]||e)+"."+({337:"1343e675"})[e]+".js", or
+  // ("354"===e?"lib-axios":e) for the name. They load them from the public path the same script sets
+  // (.p="/sonline/medicalFile/"): each section of the app is a build of its own, under its own folder. Without
+  // one, a chunk with a folder is written "@public:<folder><file>", for chunkUrl to place.
+  const publicPath = text.match(/\.p\s*=\s*["'](\/[\w./-]*\/)["']/)?.[1];
+  for (const m of text.matchAll(/\(?\{((?:\s*["']?\w+["']?\s*:\s*["'][0-9a-f]{6,}["']\s*,?)+)\}\)?\[\w+\]\s*\+\s*["'](\.?[\w.]*js)["']/g)) {
+    // The expression the map ends: from the function's arrow or return to the map.
     const before = text.slice(Math.max(0, m.index - 20_000), m.index);
-    const lead = before.match(/(?:["']([\w./-]*)["']\s*\+\s*)?(?:\(\s*\{([^{}]*)\}\[\w+\]\s*\|\|\s*\w+\s*\)|\w+)\s*\+\s*["']\.["']\s*\+\s*$/);
-    const folderPart = lead?.[1] || '';
+    const expr = before.slice(Math.max(before.lastIndexOf('=>'), before.lastIndexOf('return')));
+    const folderPart = expr.match(/^(?:=>|return)\s*["']([\w./-]*\/)["']\s*\+/)?.[1] || '';
     const names = {};
-    for (const n of (lead?.[2] || '').matchAll(/["']?(\w+)["']?\s*:\s*["']([\w.-]+)["']/g)) names[n[1]] = n[2];
+    for (const n of expr.matchAll(/["']?(\w+)["']?\s*:\s*["']([\w.-]+)["']/g)) names[n[1]] = n[2];
+    for (const n of expr.matchAll(/["'](\w+)["']\s*===?\s*\w+\s*\?\s*["']([\w.-]+)["']/g)) names[n[1]] = n[2];
     const suffix = m[2].startsWith('.') ? m[2] : '.' + m[2];
     for (const p of m[1].matchAll(/["']?(\w+)["']?\s*:\s*["']([0-9a-f]+)["']/g)) {
       const file = `${names[p[1]] || p[1]}.${p[2]}${suffix}`;
-      files.add(folderPart ? '@public:' + folderPart + file : file);
+      files.add(publicPath ? publicPath + folderPart + file : folderPart ? '@public:' + folderPart + file : file);
     }
   }
   const services = new Set([...text.matchAll(/\b([A-Z][A-Za-z]+API)\b/g)].map((m) => m[1]));
@@ -218,6 +226,7 @@ export async function readScripts(page, start, found) {
     }
     redirects = 0;
     found.read.add(url);
+    if (found.save) writeFileSync(join(found.save, new URL(url).pathname.replace(/^\/+/, '').replace(/[^\w.@-]+/g, '_')), got.text);
     const seen = scan(got.text);
     for (const p of seen.paths) if (!found.paths.has(p)) found.paths.set(p, name);
     seen.services.forEach((x) => found.services.add(x));
@@ -240,13 +249,18 @@ async function main() {
   const OUT = outAt >= 0 ? args[outAt + 1] : undefined;
   if (outAt >= 0 && (!OUT || OUT.startsWith('--'))) throw new Error('--out takes a file: --out ~/endpoint-scan.json');
 
+  const saveAt = args.indexOf('--save');
+  const SAVE = saveAt >= 0 ? args[saveAt + 1] : undefined;
+  if (saveAt >= 0 && (!SAVE || SAVE.startsWith('--'))) throw new Error('--save takes a folder: --save ~/maccabi-scripts');
+  if (SAVE) mkdirSync(resolve(SAVE), { recursive: true });
+
   const known = knownFrom(JSON.parse(readFileSync(join(root, 'docs/endpoints.json'), 'utf8')));
   const page = await openBrowser({ startUrl: START, keep: KEEP });
   await signIn(page);
   console.log('Signed in. Reading the /sonline/ app\'s scripts (no API is called).');
   await sleep(SETTLE_MS);
 
-  const found = { read: new Set(), failed: new Map(), paths: new Map(), services: new Set(), routes: new Set(), legacyPages: [], capped: false };
+  const found = { read: new Set(), failed: new Map(), paths: new Map(), services: new Set(), routes: new Set(), legacyPages: [], capped: false, save: SAVE && resolve(SAVE) };
   const scripts = await page.evaluate(call(loadedScripts));
   console.log(`  The page loaded ${scripts.filter(ours).length} script files from Maccabi's own servers.`);
   await readScripts(page, scripts, found);

@@ -508,7 +508,8 @@ the fake site.
 `npm run endpoints` lists what Maccabi Online's own front-end code can call that `docs/endpoints.json` does not map.
 It signs in the same way (the profile, `.env` and 1Password references above), then reads only static files: the
 scripts the `/sonline/` app loads and the chunks they name, and the scripts of the legacy summary page with the
-addresses it links to. It prints the API services and paths those files name that the map lacks, each with the file it
+addresses it links to. Each section of the app is a build of its own (`/sonline/MedicalFile/remoteEntry.js` and its
+chunks under `/sonline/medicalFile/static/js/async/`), so most of what it finds comes from those. It prints the API services and paths those files name that the map lacks, each with the file it
 was found in. It calls no API: an unknown call may change something on the account, so a path it prints is a
 candidate to look at in the site by hand, not something to try.
 
@@ -516,7 +517,12 @@ candidate to look at in the site by hand, not something to try.
 npm run endpoints                       # the services, API paths and legacy pages endpoints.json does not have
 npm run endpoints -- --all              # the mapped ones too, marked, and the app's own page routes
 npm run endpoints -- --out ~/scan.json  # also everything found, as JSON; --keep leaves the browser open
+npm run endpoints -- --save ~/scripts   # also each script file it read, to see how one names its chunks
 ```
+
+A healthy scan reads about a hundred files and fails on a handful. When many "would not load", the site has changed
+how it names its chunks: the summary prints a few of the failed addresses, and `--save` keeps the scripts to read the
+naming from (site code, not records; still, keep it out of the repository).
 
 To see what a candidate returns, open its section in Maccabi Online yourself with DevTools' Network panel recording,
 and read the requests the site sent. A saved capture (`.har`) holds that section's records, the member id and the
