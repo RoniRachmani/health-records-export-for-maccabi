@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-// The repo's first rule: every request the collector makes is listed in docs/endpoints.json with the
+// The repo's first rule: every request the collector makes is listed in docs/endpoints/endpoints.json with the
 // file it produces. The privacy policy and the store review rely on that map being complete, and a
 // request added to a section is easy to forget there, so the gate checks it rather than trusting us.
 //
@@ -44,9 +44,9 @@ function documented(value: unknown, found: Set<string> = new Set()): Set<string>
   return found;
 }
 
-describe('docs/endpoints.json', () => {
+describe('docs/endpoints/endpoints.json', () => {
   it('lists every request path in src/core', () => {
-    const map = JSON.parse(readFileSync('docs/endpoints.json', 'utf8'));
+    const map = JSON.parse(readFileSync('docs/endpoints/endpoints.json', 'utf8'));
     const known = [...documented(map)];
     // One is a prefix of the other when the source builds a path the map spells out in full, or the
     // other way round; either way the request is documented.
@@ -58,6 +58,6 @@ describe('docs/endpoints.json', () => {
 
   it('finds paths on both sides, so the check cannot pass by reading nothing', () => {
     expect(sourcePaths('src/core').size).toBeGreaterThan(30);
-    expect(documented(JSON.parse(readFileSync('docs/endpoints.json', 'utf8'))).size).toBeGreaterThan(30);
+    expect(documented(JSON.parse(readFileSync('docs/endpoints/endpoints.json', 'utf8'))).size).toBeGreaterThan(30);
   });
 });

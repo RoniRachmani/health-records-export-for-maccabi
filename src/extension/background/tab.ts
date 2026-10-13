@@ -439,7 +439,7 @@ export interface Routes {
   online: Route;
 }
 
-/** Checked 2026-09-17 (docs/endpoints.json auth.extension): the REST API works from the extension; ajax.ashx answers the page differently. */
+/** Checked 2026-09-17 (docs/endpoints/endpoints.json auth.extension): the REST API works from the extension; ajax.ashx answers the page differently. */
 export const DEFAULT_ROUTES: Routes = { sonline: 'extension', online: 'tab' };
 
 /** The routes a run takes: DEFAULT_ROUTES, unless the development build's dev:routes stored others. */

@@ -213,7 +213,7 @@ Two exceptions: `medications-and-prescriptions/purchased-history.html` is the si
 (windows-1255; the site has no JSON version of it), and the two report files leave out the base64 PDF, which is saved
 in `files/` instead — those say so in their own `omitted` field.
 
-[docs/endpoints.json](docs/endpoints.json) maps every request to the file it produces.
+[docs/endpoints/endpoints.json](docs/endpoints/endpoints.json) maps every request to the file it produces.
 
 ### Not included
 
@@ -267,7 +267,7 @@ and your doctor decide. For urgent symptoms, call your doctor or Magen David Ado
 - Collected files are staged in the extension's IndexedDB and deleted as soon as the ZIP is saved, or when you stop
   the export.
 - Apart from the medical file order, it only reads. Requests go one at a time, 300 ms apart — a few hundred over an
-  export, more for a long history — and all of them are listed in [docs/endpoints.json](docs/endpoints.json). It never
+  export, more for a long history — and all of them are listed in [docs/endpoints/endpoints.json](docs/endpoints/endpoints.json). It never
   calls anything that changes or deletes data, marks items as read, returns session credentials, or touches payment
   details.
 - If Maccabi Healthcare Services answers 429, the extension waits exactly as long as the response asks and tries once more. If Maccabi Healthcare Services
@@ -505,7 +505,7 @@ the fake site.
 
 ### Finding what the export could add
 
-`npm run endpoints` lists what Maccabi Online's own front-end code can call that `docs/endpoints.json` does not map.
+`npm run endpoints` lists what Maccabi Online's own front-end code can call that `docs/endpoints/endpoints.json` does not map.
 It signs in the same way (the profile, `.env` and 1Password references above), then reads only static files: the
 scripts the `/sonline/` app loads and the chunks they name, and the scripts of the legacy summary page with the
 addresses it links to. Each section of the app is a build of its own (`/sonline/MedicalFile/remoteEntry.js` and its
@@ -598,7 +598,7 @@ film, drawn by the same page: `npm run store-assets -- poster`.
 
 - **Never commit real data.** No responses, exports, PDFs or anything else taken from a real account. Test fixtures are
   synthetic.
-- **List every request in [docs/endpoints.json](docs/endpoints.json).** The privacy policy and the store review rely on
+- **List every request in [docs/endpoints/endpoints.json](docs/endpoints/endpoints.json).** The privacy policy and the store review rely on
   it being complete.
 - **Keep the policies in sync.** `docs/privacy.md` goes with `public/privacy.html`, and `docs/terms.md` with
   `public/terms.html`. Change the effective date when you change either. For a material change, also set

@@ -1,6 +1,6 @@
 // What scripts/rea-endpoints.mjs decides, apart from the browser and the rea process: how a script names
 // its lazy chunks, what its calls are, what rea's analysis says of it, and which of all that
-// docs/endpoints.json already maps. Pure, so test/reaEndpoints.test.ts runs it on made-up scripts.
+// docs/endpoints/endpoints.json already maps. Pure, so test/reaEndpoints.test.ts runs it on made-up scripts.
 
 // ---- paths ---------------------------------------------------------------------------------------
 
@@ -49,7 +49,7 @@ export function kind(path) {
   return /^\/?sonline\//i.test(p) ? 'app' : 'page';
 }
 
-/** Every path and service docs/endpoints.json names, wherever in it they are written. */
+/** Every path and service docs/endpoints/endpoints.json names, wherever in it they are written. */
 export function knownFrom(endpoints) {
   const paths = new Set();
   const services = new Set();

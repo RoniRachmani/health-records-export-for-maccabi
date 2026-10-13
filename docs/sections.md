@@ -10,7 +10,7 @@ line to the run steps behind it, the parts of a step it stands for, and what tho
   the step before its first report. The part also picks the description the panel shows for the current line
   (`DESCRIPTIONS`), and it keys the files the part writes, which the line counts once it is done.
 - **Writes**: paths inside the ZIP, from `src/core/sections/`. A folder exists only when the site returned
-  something. `docs/endpoints.json` lists every request with the file it produces.
+  something. `docs/endpoints/endpoints.json` lists every request with the file it produces.
 
 | # | Line | Step | Parts | Writes |
 |---|---|---|---|---|

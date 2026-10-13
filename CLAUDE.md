@@ -19,7 +19,7 @@ npm run package                   # build + release/<name>-<version>.zip (refuse
 npm run live                      # a live export on your own account, never ordering, no ZIP (1Password refs in .env)
 npm run export                    # an export with no extension: test results into ./maccabi-export-<today>/ (same .env)
 npm run export -- --all           # every section, nothing ordered; --steps a,b for some; --out DIR; --keep
-npm run endpoints                 # what the site's own scripts can call that docs/endpoints.json lacks (same .env; calls no API)
+npm run endpoints                 # what the site's own scripts can call that docs/endpoints/endpoints.json lacks (same .env; calls no API)
 npm run endpoints:rea             # the same through REA's parser: each call's method and place in the code (--from DIR: no sign-in)
 npm run clean                     # remove dist/, dist-dev/, dist-store/, dist-cli/, release/
 npm run release:zip               # clean, test, build:dev, package
@@ -204,7 +204,7 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
 - **Read-only, except one call.** The medical-file order (`core/sections/letters.ts` `placeOrder`) is the
   only request that changes anything. Don't add another, and don't call anything that marks items read,
   returns credentials or touches payments. Requests are paced `PACE_MS` (300 ms) apart, one at a time.
-- **Every request goes in `docs/endpoints.json`** with the file it produces — the privacy policy and the
+- **Every request goes in `docs/endpoints/endpoints.json`** with the file it produces — the privacy policy and the
   store review depend on it being complete. `test/endpoints.test.ts` fails if a path in `src/core` isn't there.
 - **Never write the member id into a path or a stored `endpoint` string**; `Collector.rec` keeps `{mid}`
   as a placeholder.

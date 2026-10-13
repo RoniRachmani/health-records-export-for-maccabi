@@ -1,4 +1,4 @@
-// Lists what Maccabi Online's own front-end code can call that docs/endpoints.json does not map, with the
+// Lists what Maccabi Online's own front-end code can call that docs/endpoints/endpoints.json does not map, with the
 // HTTP method of each call and the place in the code that makes it. For finding records the export could
 // add, and for seeing what moved after the site changes.
 //
@@ -235,7 +235,7 @@ async function main() {
   const JOBS = Math.max(1, Number(option(args, '--jobs', 'a number: --jobs 2') ?? 3) || 3);
   if (FROM && SAVE) throw new Error('--from reads a folder --save kept; it has nothing to save.');
 
-  const known = knownFrom(JSON.parse(readFileSync(join(root, 'docs/endpoints.json'), 'utf8')));
+  const known = knownFrom(JSON.parse(readFileSync(join(root, 'docs/endpoints/endpoints.json'), 'utf8')));
   const dir = FROM ? resolve(FROM) : SAVE ? resolve(SAVE) : mkdtempSync(join(tmpdir(), 'maccabi-scripts-'));
   const found = { read: new Set(), failed: new Map(), legacyPages: [], capped: false };
 

@@ -389,7 +389,7 @@ Works only for Maccabi Healthcare Services (Israel) members logged in to https:/
 
 Without a login, the popup shows "How the export works" and reads nothing until you press "Agree and continue". Then it shows "Log in to Maccabi Online".
 
-Source: https://github.com/RoniRachmani/health-records-export-for-maccabi (docs/endpoints.json lists every request). The package isn't minified.
+Source: https://github.com/RoniRachmani/health-records-export-for-maccabi (docs/endpoints/endpoints.json lists every request). The package isn't minified.
 ```
 
 The store allows 500 characters here. This text has 491.
@@ -404,7 +404,7 @@ of this page:
 | Popup layout or wording | Run `npm run store-assets` and `npm run store-video`. Check the description and the test instructions. |
 | A section is added, renamed or dropped | Description list, `FOLDERS` in `store/src/parts.ts`, README |
 | A permission is added or removed | Permission justifications here, the manifest, `docs/privacy.md`, `public/privacy.html`, README |
-| A new kind of data or request | Data usage here, the privacy policy, `docs/endpoints.json` |
+| A new kind of data or request | Data usage here, the privacy policy, `docs/endpoints/endpoints.json` |
 | A link the popup or a notification opens on the web | The privacy policy's line on the links the extension opens (`docs/privacy.md`, `public/privacy.html`) |
 | The manifest's `description` | Summary here (132 characters at most) |
 | What the export's README asks of the assistant (`shared/readme.ts`) | The description's "What the assistant is asked to do" and "Yours to keep, and to grow", the README's *Hand it to an AI assistant*, and the answers in `STANDS_OUT` and `ONE_THING` (`store/src/parts.ts`), which screenshots 1 and 3 and the video draw |

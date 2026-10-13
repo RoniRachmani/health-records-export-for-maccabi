@@ -1,4 +1,4 @@
-// Lists what Maccabi Online's own front-end code can call that docs/endpoints.json does not map: the API
+// Lists what Maccabi Online's own front-end code can call that docs/endpoints/endpoints.json does not map: the API
 // services and paths named in the site's script files, and the legacy pages its menus link to. For finding
 // records the export could add, and for seeing what moved after the site changes.
 //
@@ -92,7 +92,7 @@ export function scan(text) {
   return { paths, services, routes, files };
 }
 
-/** Every path and service docs/endpoints.json names, wherever in it they are written. */
+/** Every path and service docs/endpoints/endpoints.json names, wherever in it they are written. */
 export function knownFrom(endpoints) {
   const strings = [];
   const walk = (x) => {
@@ -249,7 +249,7 @@ async function main() {
   if (saveAt >= 0 && (!SAVE || SAVE.startsWith('--'))) throw new Error('--save takes a folder: --save ~/maccabi-scripts');
   if (SAVE) mkdirSync(resolve(SAVE), { recursive: true });
 
-  const known = knownFrom(JSON.parse(readFileSync(join(root, 'docs/endpoints.json'), 'utf8')));
+  const known = knownFrom(JSON.parse(readFileSync(join(root, 'docs/endpoints/endpoints.json'), 'utf8')));
   const page = await openBrowser({ startUrl: START, keep: KEEP });
   await signIn(page);
   console.log('Signed in. Reading the /sonline/ app\'s scripts (no API is called).');
