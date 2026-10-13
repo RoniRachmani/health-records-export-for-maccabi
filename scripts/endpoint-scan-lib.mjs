@@ -453,7 +453,10 @@ export function locator(text) {
  * "static/js/async/"+(({354:"lib-axios"})[e]||e)+"."+({337:"1343e675"})[e]+".js", or ("354"===e?"lib-axios":e)
  * for the name. They load them from the public path the same script sets (.p="/sonline/medicalFile/"): each
  * section of the app is a build of its own, under its own folder. Without one, a chunk with a folder is
- * written "@public:<folder><file>", for chunkUrl to place.
+ * written "@public:<folder><file>", for chunkUrl to place. The legacy scripts name the files they lean on in
+ * comments, /// <reference path="Documentation/General.js" />, and one of those holds the address of a service
+ * the export asks (jqe.ajaxUrl), so those are the one thing read out of a comment; some name files the server
+ * no longer has, which answer 404.
  */
 export function chunkFiles(text) {
   const files = new Set();
@@ -461,6 +464,7 @@ export function chunkFiles(text) {
     // A script file by name; "./x.js" and node_modules are a bundle's module ids, not files the server has.
     if (/^[\w.\-/]+\.m?js$/.test(s) && !s.includes('//') && !/^\.\/|node_modules\//.test(s)) files.add(s);
   }
+  for (const m of text.matchAll(/^\s*\/\/\/\s*<reference\s+path\s*=\s*["']([\w.\-/]+\.js)["']/gm)) files.add(m[1]);
   const publicPath = text.match(/\.p\s*=\s*["'](\/[\w./-]*\/)["']/)?.[1];
   for (const m of text.matchAll(/\(?\{((?:\s*["']?\w+["']?\s*:\s*["'][0-9a-f]{6,}["']\s*,?)+)\}\)?\[\w+\]\s*\+\s*["'](\.?[\w.]*js)["']/g)) {
     // The expression the map ends: from the function's arrow or return to the map.

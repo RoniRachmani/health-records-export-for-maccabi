@@ -1,0 +1,21 @@
+{
+  "_note": "For `npm run endpoints`: the mapped requests a default scan does not find in the site's code, by map, each as '<METHOD> <path>' the way the scan prints it. The scan reports a request that is absent and not listed here as NEW, which is the sign that the site moved something. The six legacy ones belong to the uploads, hospital-stays and purchased-drugs pages, which the scan opens only with --legacy-pages (it then finds them); the recommendations page is named in the code without /online/. Edit by hand when a map or the site changes.",
+  "endpoints.json": [
+    "POST /online/Ajax/DrugsManager/WsPurchasedDrugsManager.asmx/GetAllPurchasedPrescription",
+    "POST /online/Ajax/PHR/WsPHRManager.asmx/SearchByDate",
+    "POST /online/Ajax/PHR/WsPHRManager.asmx/GetFileDetails",
+    "GET /online/Pages/Popups/PHR/PHRDownloadDocument.aspx",
+    "POST /online/webapi/MailingsFromHospitals/GetMailingsFromHospitals/",
+    "GET /online/Pages/Popups/MailingsFromHospitals/MailingsFromHospitals.aspx",
+    "GET /online/medicalfile/personalrecommendations/"
+  ],
+  "other-endpoints.json": [
+    "GET /online/webapi/PersonalRemindersESB/GetReminders/",
+    "GET /online/directorship/debitsandcredits/",
+    "POST /online/Ajax/DebitsAndCredits/WcDebitsAndCreditsManager.asmx/GetQuarterlyReport",
+    "POST /online/Ajax/DebitsAndCredits/WcDebitsAndCreditsManager.asmx/GetLTCReport",
+    "POST /online/Ajax/DebitsAndCredits/WcDebitsAndCreditsManager.asmx/GetDocFromArchive",
+    "GET /online/Pages/Popups/DebitsAndCredits/DebitsAndCreditsPdfReport.aspx",
+    "GET /online/medicalfile/mailingsfromhospitals/"
+  ]
+}

@@ -22,7 +22,8 @@
 // It reads the map the other way too: which of the requests the three maps in docs/endpoints/ write out the
 // code still makes. One that is gone from the code is the first sign that the site moved something the
 // export asks for. A request that was never in the files read (the service of a legacy page the scan does
-// not open, another site's) is absent every time, so what to watch is that list changing.
+// not open) is absent every time: docs/endpoints/scan-baseline.json lists those, and the scan says which of
+// the absent ones are new.
 //
 // --rea puts a parser beside it. REA (Reverse Engineer Anything, github.com/morluto/rea) parses each script
 // without running it and reports what an AST can prove: the calls whose address is a literal and the method
@@ -44,7 +45,7 @@
 // this machine, on those files alone; its first run downloads it from npm (REA_VERSION below; REA_BIN names
 // an installed one).
 import { spawn } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { call } from './in-page.mjs';
@@ -263,6 +264,8 @@ async function main() {
   const JOBS = Math.max(1, Number(option(args, '--jobs', 'a number: --jobs 2') ?? 3) || 3);
   if (FROM && MORE) throw new Error('--legacy-pages opens pages in the browser; --from has none.');
   if (FROM && SAVE) throw new Error('--from reads a folder --save kept; it has nothing to save.');
+  // What an earlier save left would be read as this run's: a file the site has since dropped, or renamed.
+  if (SAVE && existsSync(resolve(SAVE)) && readdirSync(resolve(SAVE)).length) throw new Error(`--save takes a new or empty folder: ${resolve(SAVE)} has files in it.`);
 
   const map = (name) => JSON.parse(readFileSync(join(root, 'docs/endpoints', name), 'utf8'));
   const known = knownFrom(map('endpoints.json'));
@@ -325,13 +328,21 @@ async function main() {
   const callLine = (p) => `${(p.method || '?').padEnd(6)} ${p.path}    [${p.proof}] ${p.where}`
     + (p.method && p.method !== 'GET' ? '    not a GET' : !p.method && /\.as[mh]x/i.test(p.path) ? '    method not read: may not be a GET' : '');
   const mapped = Object.fromEntries(['endpoints.json', ...OTHER_MAPS].map((name) => [name, coverage(mappedRequests(map(name)), all)]));
+  // The requests a default run never finds, by map: what is absent beyond them is what changed.
+  const baseline = map('scan-baseline.json');
+  for (const [name, list] of Object.entries(mapped)) {
+    for (const r of list) if (r.status === 'absent') r.expected = (baseline[name] || []).includes(`${r.method} ${r.path}`);
+  }
   const showMapped = (name, list) => {
     const n = (status) => list.filter((r) => r.status === status).length;
+    const fresh = list.filter((r) => r.status === 'absent' && !r.expected).length;
     console.log(`\n${name} maps ${list.length} requests: ${n('call')} are calls in the code, ${n('named')} an address with no call seen`
       + (n('method') ? `, ${n('method')} a call with another method` : '') + `, ${n('absent')} not in it`
+      + (!n('absent') ? '' : !fresh ? ' (as scan-baseline.json expects)' : ` (${fresh} of them NEW: not in scan-baseline.json)`)
       + (n('elsewhere') ? `, ${n('elsewhere')} another site's` : '') + '.');
     for (const r of list) {
-      if (r.status === 'absent') console.log(`  not in the code   ${r.method.padEnd(6)} ${r.path}    (${r.where})`);
+      if (r.status === 'absent' && !r.expected) console.log(`  NEW: not in the code   ${r.method.padEnd(6)} ${r.path}    (${r.where})`);
+      else if (ALL && r.status === 'absent') console.log(`  not in the code   ${r.method.padEnd(6)} ${r.path}    (${r.where})`);
       else if (r.status === 'method') console.log(`  another method    ${r.method.padEnd(6)} ${r.path}    (${r.where}): ${r.calledAs} at ${r.at}`);
       else if (ALL && r.status === 'named') console.log(`  address only      ${r.method.padEnd(6)} ${r.path}    (${r.where}): ${r.at}`);
     }

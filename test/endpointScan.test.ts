@@ -1,6 +1,7 @@
 // scripts/endpoint-scan.mjs lists what the site's own scripts can call. What it decides, apart from the
 // browser and the rea process, is in endpoint-scan-lib.mjs: these run it on made-up scripts, and on a
 // result shaped as rea 6.4.0 writes one.
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   batches, builtString, candidates, chunkFiles, chunkUrl, coverage, isKnown, knownFrom, literals, locator, mappedRequests, pathLike, readCalls, readEvidence,
@@ -124,6 +125,11 @@ describe('chunkFiles', () => {
     ]);
   });
 
+  it('names the files a legacy script\'s reference comments lean on, and nothing else in a comment', () => {
+    const text = '/// <reference path="jquery-1.9.1.min.js" />\n/// <reference path="../Documentation/General.js" />\n// see "other.js"\nvar a = 1;';
+    expect([...chunkFiles(text)]).toEqual(['jquery-1.9.1.min.js', '../Documentation/General.js']);
+  });
+
   it('places a chunk with no public path beside the script that named it', () => {
     const [file] = chunkFiles('r.u=e=>"static/js/async/"+e+"."+({337:"9a8b7c6d"})[e]+".js"');
     expect(chunkUrl(file, 'https://online.maccabi4u.co.il/sonline/static/js/index.js')).toBe(
@@ -227,6 +233,18 @@ describe('coverage', () => {
     expect(coverage(requests, found).map((r) => `${r.status} ${r.calledAs ?? ''}`.trim())).toEqual([
       'method GET', 'named', 'call POST', 'absent', 'absent', 'absent', 'elsewhere',
     ]);
+  });
+});
+
+describe('docs/endpoints/scan-baseline.json', () => {
+  it('names only requests its maps write out, as the scan prints them', () => {
+    const read = (name: string) => JSON.parse(readFileSync(`docs/endpoints/${name}`, 'utf8'));
+    const { _note, ...byMap } = read('scan-baseline.json') as Record<string, string[]>;
+    expect(_note).toBeTruthy();
+    for (const [name, expected] of Object.entries(byMap)) {
+      const written = mappedRequests(read(name)).map((r) => `${r.method} ${r.path}`);
+      expect(expected.filter((e) => !written.includes(e))).toEqual([]);
+    }
   });
 });
 
