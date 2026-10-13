@@ -8,6 +8,7 @@
 //   npm run endpoints -- --save DIR      also keeps the script files read, in DIR, laid out as on the site
 //   npm run endpoints -- --from DIR      analyzes scripts a --save kept, with no browser and no sign-in
 //   npm run endpoints -- --rea           also runs rea on the files: about four minutes more
+//   npm run endpoints -- --legacy-pages  also opens three more legacy pages, for their scripts (see LEGACY_MORE)
 //   npm run endpoints -- --jobs N        how many rea processes run at once (default 3); --keep leaves the browser open
 //
 // The reader is here (endpoint-scan-lib.mjs). The site formats a path into a variable
@@ -15,8 +16,13 @@
 // so the reader takes each fetch, client call, ajax and XHR open, follows the address to the value just
 // above it, and writes {} for the parts made at run time. What it saw no call for but reads as an address
 // is listed last, as named only (most are documents the site opens in a tab, which no call fetches). On
-// the runs of 13 October 2026 it found 199 calls with their methods, in a second or so once the files are
+// the runs of 13 October 2026 it found 203 calls with their methods, in a second or so once the files are
 // read.
+//
+// It reads the map the other way too: which of the requests the three maps in docs/endpoints/ write out the
+// code still makes. One that is gone from the code is the first sign that the site moved something the
+// export asks for. A request that was never in the files read (the service of a legacy page the scan does
+// not open, another site's) is absent every time, so what to watch is that list changing.
 //
 // --rea puts a parser beside it. REA (Reverse Engineer Anything, github.com/morluto/rea) parses each script
 // without running it and reports what an AST can prove: the calls whose address is a literal and the method
@@ -29,7 +35,8 @@
 //
 // It opens the browser and signs in as `npm run export` does (scripts/maccabi-browser.mjs), then reads only
 // static files: the scripts the /sonline/ app loads, the chunks they name, and the scripts of the legacy
-// summary page the extension itself opens, plus the addresses that page links to. It calls no API, so a
+// summary page the extension itself opens, plus the addresses that page links to. With --legacy-pages it
+// opens three more legacy pages, which the extension never does. It calls no API, so a
 // call it prints is a candidate to look at by hand, in the site, never something to try from here: an
 // unknown call may change something on the account (see "Read-only" in CLAUDE.md), and one that is not a
 // GET is marked for that. Script files hold no member's data, and links are kept without their query
@@ -42,7 +49,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { call } from './in-page.mjs';
 import { ORIGIN, START, openBrowser, signIn } from './maccabi-browser.mjs';
-import { REA_FILTER, batches, candidates, chunkFiles, chunkUrl, readEvidence, routesIn, servicesIn, knownFrom, isKnown } from './endpoint-scan-lib.mjs';
+import { REA_FILTER, batches, candidates, chunkFiles, chunkUrl, coverage, mappedRequests, readEvidence, routesIn, servicesIn, knownFrom, isKnown } from './endpoint-scan-lib.mjs';
 import { root, sleep } from './stage.mjs';
 
 /** The rea release this was written against: its result's shape is what readEvidence reads. */
@@ -52,6 +59,16 @@ const PACE_MS = 300;
 /** Enough for any bundle split; a scan that reaches it says so. */
 const MAX_FILES = 600;
 const LEGACY_PAGE = ORIGIN + '/online/medicalfile/summary/';
+/**
+ * The pages of the three legacy sections the export reads through their services (purchased drugs, uploads,
+ * hospital stays). The extension opens none of them: any legacy page registers the session, so it asks those
+ * services from the summary page. Opening one is what a member's click on its menu entry does, and the page
+ * then loads its own data, which is why they are only opened when asked for. Only script files are read from
+ * them: a page's inline scripts can hold the member's details, and nothing of those is kept.
+ */
+const LEGACY_MORE = ['/online/medicalfile/patientdrugs/', '/online/medicalfile/documentsandmedicalrecords/', '/online/medicalfile/mailingsfromhospitals/'];
+/** The maps beside endpoints.json: requests other clients make, which the export does not. */
+const OTHER_MAPS = ['other-endpoints.json', 'MedDream-endpoints.json'];
 /** How long a page is left to load its scripts before they are listed. */
 const SETTLE_MS = 5000;
 
@@ -239,13 +256,16 @@ async function main() {
   const ALL = args.includes('--all');
   const KEEP = args.includes('--keep');
   const REA = args.includes('--rea');
+  const MORE = args.includes('--legacy-pages');
   const OUT = option(args, '--out', 'a file: --out ~/endpoint-scan.json');
   const SAVE = option(args, '--save', 'a folder: --save ~/maccabi-scripts');
   const FROM = option(args, '--from', 'a folder a --save kept: --from ~/maccabi-scripts');
   const JOBS = Math.max(1, Number(option(args, '--jobs', 'a number: --jobs 2') ?? 3) || 3);
+  if (FROM && MORE) throw new Error('--legacy-pages opens pages in the browser; --from has none.');
   if (FROM && SAVE) throw new Error('--from reads a folder --save kept; it has nothing to save.');
 
-  const known = knownFrom(JSON.parse(readFileSync(join(root, 'docs/endpoints/endpoints.json'), 'utf8')));
+  const map = (name) => JSON.parse(readFileSync(join(root, 'docs/endpoints', name), 'utf8'));
+  const known = knownFrom(map('endpoints.json'));
   const dir = FROM ? resolve(FROM) : SAVE ? resolve(SAVE) : mkdtempSync(join(tmpdir(), 'maccabi-scripts-'));
   const found = { read: new Set(), failed: new Map(), legacyPages: [], capped: false };
 
@@ -267,6 +287,14 @@ async function main() {
       await readScripts(page, await page.probe(call(loadedScripts), []), dir, found);
     } else {
       console.log('  The legacy page did not open (logged out?); its part is left out.');
+    }
+    for (const path of MORE ? LEGACY_MORE : []) {
+      console.log(`Reading the scripts of ${path}.`);
+      await page.navigate(ORIGIN + path);
+      await sleep(SETTLE_MS);
+      const at = (await page.probe('location.pathname', '')).toLowerCase();
+      if (at.startsWith(path)) await readScripts(page, await page.probe(call(loadedScripts), []), dir, found);
+      else console.log(`  It did not open (the site went to ${at || 'no page'}); left out.`);
     }
   }
 
@@ -293,7 +321,21 @@ async function main() {
     for (const x of shown) console.log('  ' + (ALL ? (x.known ? '  known ' : '  NEW   ') : '') + line(x));
   };
   // A call that is not a GET may change something: the one thing the export must never do by accident.
-  const callLine = (p) => `${(p.method || '?').padEnd(6)} ${p.path}    [${p.proof}] ${p.where}` + (p.method && p.method !== 'GET' ? '    not a GET' : '');
+  // A legacy service whose call was not read is not known to be one: most of them are POSTs.
+  const callLine = (p) => `${(p.method || '?').padEnd(6)} ${p.path}    [${p.proof}] ${p.where}`
+    + (p.method && p.method !== 'GET' ? '    not a GET' : !p.method && /\.as[mh]x/i.test(p.path) ? '    method not read: may not be a GET' : '');
+  const mapped = Object.fromEntries(['endpoints.json', ...OTHER_MAPS].map((name) => [name, coverage(mappedRequests(map(name)), all)]));
+  const showMapped = (name, list) => {
+    const n = (status) => list.filter((r) => r.status === status).length;
+    console.log(`\n${name} maps ${list.length} requests: ${n('call')} are calls in the code, ${n('named')} an address with no call seen`
+      + (n('method') ? `, ${n('method')} a call with another method` : '') + `, ${n('absent')} not in it`
+      + (n('elsewhere') ? `, ${n('elsewhere')} another site's` : '') + '.');
+    for (const r of list) {
+      if (r.status === 'absent') console.log(`  not in the code   ${r.method.padEnd(6)} ${r.path}    (${r.where})`);
+      else if (r.status === 'method') console.log(`  another method    ${r.method.padEnd(6)} ${r.path}    (${r.where}): ${r.calledAs} at ${r.at}`);
+      else if (ALL && r.status === 'named') console.log(`  address only      ${r.method.padEnd(6)} ${r.path}    (${r.where}): ${r.at}`);
+    }
+  };
 
   if (!FROM) {
     const why = {};
@@ -317,6 +359,8 @@ async function main() {
   show(calls, 'API calls in the code', callLine);
   show(pages, 'Legacy pages and popups in the code', (p) => `${p.path}    [${p.proof}] ${p.where}`);
   show(legacy, 'Legacy pages linked from the summary page', (p) => p.path);
+  showMapped('endpoints.json', mapped['endpoints.json']);
+  if (ALL) OTHER_MAPS.forEach((name) => showMapped(name, mapped[name]));
   if (ALL) {
     console.log(`\nThe app's own pages and service bases (${app.length}): ${app.map((p) => p.path).join('  ')}`);
     console.log(`\nThe app's page routes (${routes.size}${REA ? '' : '; --rea also follows the ones built in code'}): ${[...routes].sort().join('  ')}`);
@@ -333,7 +377,7 @@ async function main() {
       rea: REA ? REA_VERSION : null,
       files: [...files.keys()],
       failed: [...found.failed].map(([u, why]) => ({ file: new URL(u).pathname, why })),
-      services, calls, pages, app, legacyPages: legacy, routes: [...routes].sort(),
+      services, calls, pages, app, legacyPages: legacy, routes: [...routes].sort(), mapped,
       sourceMaps: evidence.sourceMaps, parsedInPart: evidence.partial, unparsed: evidence.unparsed, notAnalyzed: evidence.failed,
     }, null, 2) + '\n');
     console.log('Wrote ' + file);

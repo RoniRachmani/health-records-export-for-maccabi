@@ -255,7 +255,8 @@ function valuesAt(text, src, offset, depth = 0) {
   if (direct !== null && direct !== '{}') return [direct];
   if (depth > 2) return [];
   if (/^[\w$]+$/.test(src)) {
-    const name = new RegExp('(?<![\\w$.])' + src.replace(/\$/g, '\\$') + '=(?!=)', 'g');
+    // Minified code writes s=…; the legacy site's own scripts, var url = …
+    const name = new RegExp('(?<![\\w$.])' + src.replace(/\$/g, '\\$') + '\\s*=(?!=)\\s*', 'g');
     let at = -1;
     const from = Math.max(0, offset - LOCAL_REACH);
     for (const m of text.slice(from, offset).matchAll(name)) at = from + m.index + m[0].length;
@@ -568,6 +569,61 @@ export function candidates(files, evidence, known) {
     }
   }
   return [...byKey.values()].sort((a, b) => shape(a.path).localeCompare(shape(b.path)) || String(a.method).localeCompare(String(b.method)));
+}
+
+/**
+ * The requests a map in docs/endpoints/ writes out, once per method and shape: each entry's `method` and `url`
+ * (and a second request after "then" in one), each `request` sentence, and what `manual_not_fetched` says.
+ * `where` is the part of the map it is in; `elsewhere` marks a request to another site than the portal,
+ * whose code this scan does not read.
+ */
+export function mappedRequests(map) {
+  const out = new Map();
+  const read = (text, where) => {
+    for (const m of text.matchAll(/\b(GET|POST|PUT|PATCH|DELETE)\s+(https?:\/\/[^\s,]+|\/?[A-Za-z][\w.]*\/[^\s,]*)/g)) {
+      const path = m[2].split('?')[0].replace(/[).;:'"]+$/, '');
+      if (/\.m?js$/.test(path)) continue; // a script file a note names, not a request
+      const key = m[1] + ' ' + mappedShape(path);
+      if (!out.has(key)) out.set(key, { method: m[1], path, where, elsewhere: /^https?:\/\/(?!online\.maccabi4u\.co\.il\/)/i.test(path) });
+    }
+  };
+  const walk = (x, where, depth) => {
+    if (Array.isArray(x)) x.forEach((v) => walk(v, where, depth));
+    else if (x && typeof x === 'object') {
+      if (typeof x.method === 'string' && typeof x.url === 'string') read(`${x.method} ${x.url}`, where);
+      if (typeof x.request === 'string') read(x.request, where);
+      for (const [key, v] of Object.entries(x)) {
+        if (typeof v === 'string' && where === 'manual_not_fetched') read(v, where);
+        else walk(v, depth < 2 ? (where ? where + '.' : '') + key : where, depth + 1);
+      }
+    }
+  };
+  walk(map, '', 0);
+  return [...out.values()];
+}
+
+/** A shape to compare a mapped request with one read in the code: a legacy path whole, no {0} left inside a segment. */
+function mappedShape(path) {
+  return shape(/^(\{\}|\{\d+\})?\/(ajax|handlers|pages|webapi)\//i.test(path) ? '/online' + path.replace(/^\{\d*\}/, '') : path).replace(/\{\d*\}/g, '');
+}
+
+/**
+ * Where each mapped request is in the code (`found` from candidates): 'call' (a call with its method), 'method'
+ * (a call, with another method), 'named' (its address, no call seen), 'absent', or 'elsewhere' (another site's).
+ * The code writes many paths from the version on, with no service before them, so an address that ends a mapped
+ * one is that one, when it says more than a version and "members".
+ */
+export function coverage(requests, found) {
+  const shapes = found.map((c) => ({ c, s: mappedShape(c.path) }));
+  const says = (s) => s.split('/').some((seg) => !/^(v\d+|members|\*|s?online|webapi|mac|)$/.test(seg));
+  return requests.map((r) => {
+    if (r.elsewhere) return { ...r, status: 'elsewhere' };
+    const s = mappedShape(r.path);
+    const hits = shapes.filter((x) => x.s === s || (says(x.s) && s.endsWith('/' + x.s))).map((x) => x.c);
+    const same = hits.find((c) => c.method === r.method);
+    const hit = same || hits.find((c) => c.method) || hits[0];
+    return { ...r, status: !hit ? 'absent' : same ? 'call' : hit.method ? 'method' : 'named', ...(hit ? { as: hit.path, at: hit.where, calledAs: hit.method } : {}) };
+  });
 }
 
 /** The app's page routes a script declares: each `path: "…"` of a router's table. */

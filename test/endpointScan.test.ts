@@ -3,7 +3,8 @@
 // result shaped as rea 6.4.0 writes one.
 import { describe, expect, it } from 'vitest';
 import {
-  batches, builtString, candidates, chunkFiles, chunkUrl, isKnown, knownFrom, literals, locator, pathLike, readCalls, readEvidence, routesIn,
+  batches, builtString, candidates, chunkFiles, chunkUrl, coverage, isKnown, knownFrom, literals, locator, mappedRequests, pathLike, readCalls, readEvidence,
+  routesIn,
 } from '../scripts/endpoint-scan-lib.mjs';
 
 const known = knownFrom({ steps: [{ url: 'LabsAPI/v1/members/{mid}/labtests' }, { url: '/online/Ajax/GetVisits.ashx' }] });
@@ -89,6 +90,11 @@ describe('readCalls', () => {
       'PUT /sonline/ReqAPI/webapi/mac/v1/members/{0}/{1}/cases/{2}',
       'PUT /sonline/ReqAPI/webapi/mac/v1/members/{0}/{1}/service_requests/{2}',
     ]);
+  });
+
+  it('follows an address a hand-written script puts in a variable, with spaces', () => {
+    const text = "var url = jqe.appRoot + '/Ajax/Summary/WsSummaryPage.asmx/OrderAjax';\n\njQuery.ajax({\n  type: \"POST\",\n  url: url,\n  data: d\n});";
+    expect(methods(text)).toEqual(['POST {}/Ajax/Summary/WsSummaryPage.asmx/OrderAjax']);
   });
 
   it('leaves out what is not a request', () => {
@@ -177,6 +183,37 @@ describe('candidates', () => {
     const cut = 'let b="/sonline/TestsAPI/webapi/";function a(e){let s=f()("mac/v1/members/{0}/{1}/followed",e.c,e.i);return r.get(b,s,{})}';
     const found = candidates(new Map([['a.js', cut]]), readEvidence({}), known).map((c) => `${c.proof} ${c.path}`);
     expect(found).toEqual(['call /sonline/TestsAPI/webapi/mac/v1/members/{0}/{1}/followed']);
+  });
+});
+
+describe('coverage', () => {
+  const map = {
+    sections: {
+      labs: [{ method: 'POST', url: 'LabsAPI/v1/members/0/{mid}/labtests' }, { method: 'GET', url: 'LabsAPI/v1/members/0/{mid}/pdf?path=<link>&hash' }],
+      letters: [{ method: 'POST', url: '/online/Ajax/Summary/WsSummaryPage.asmx/OrderAjax' }, { method: 'POST', url: '/online/Ajax/PHR/Ws.asmx/Search, then GET /online/Pages/P.aspx?id=<id>' }],
+    },
+    manual_not_fetched: { 'images/*.zip': 'Viewer handoff GET LabsAPI/pdf/members/0/{mid}/token/<uid>?checksum= works only in a tab.' },
+    read_not_collected: { other: { request: 'GET https://viewer.maccabi4u.co.il/studies/<uid>/structure', reason: 'GET LabsAPI/v1/never is prose' } },
+  };
+  const requests = mappedRequests(map);
+
+  it('reads the requests a map writes out, and where each is', () => {
+    expect(requests.map((r) => `${r.method} ${r.path} ${r.where}`)).toEqual([
+      'POST LabsAPI/v1/members/0/{mid}/labtests sections.labs', 'GET LabsAPI/v1/members/0/{mid}/pdf sections.labs',
+      'POST /online/Ajax/Summary/WsSummaryPage.asmx/OrderAjax sections.letters', 'POST /online/Ajax/PHR/Ws.asmx/Search sections.letters',
+      'GET /online/Pages/P.aspx sections.letters', 'GET LabsAPI/pdf/members/0/{mid}/token/<uid> manual_not_fetched',
+      'GET https://viewer.maccabi4u.co.il/studies/<uid>/structure read_not_collected.other',
+    ]);
+  });
+
+  it('says which of them the code still makes', () => {
+    const text = 'let b="/sonline/LabsAPI/webapi/mac/";function a(e){let s=f()("v1/members/{0}/{1}/labtests",e.c,e.i);return r.get(b,s,{})}'
+      + 'open(f()("v1/members/{0}/{1}/pdf?path={2}&hash={3}",a,b,c,d));'
+      + "var url = root + '/Ajax/Summary/WsSummaryPage.asmx/OrderAjax';$.ajax({type:\"POST\",url:url});";
+    const found = candidates(new Map([['a.js', text]]), readEvidence({}), known);
+    expect(coverage(requests, found).map((r) => `${r.status} ${r.calledAs ?? ''}`.trim())).toEqual([
+      'method GET', 'named', 'call POST', 'absent', 'absent', 'absent', 'elsewhere',
+    ]);
   });
 });
 

@@ -520,7 +520,19 @@ its base. Each candidate comes with its HTTP method, the file, line and column o
 `[call]` for a call the scan followed, `[named]` for a string that reads as an address with no call seen (most are
 documents the site opens in a tab). A call that is not a `GET` is marked, since it may change something. Where the
 site picks an address by a condition (`isV2 ? "v2/…" : "v1/…"`), the call is given once for each side. A call is found
-whatever its path looks like: `DirectorshipAPI`'s `eligibilities` has no version and no `members/` in it.
+whatever its path looks like: `DirectorshipAPI`'s `eligibilities` has no version and no `members/` in it. A legacy
+service (`.asmx`, `.ashx`) whose call could not be read is marked too, as method not read: most of those are `POST`s.
+
+It reads the map the other way as well: of the requests `endpoints.json` writes out, how many the code still makes
+as calls, how many it only names (the documents the site opens in a tab), and which are not in it at all. One that
+drops out of the code is the first sign that the site moved something the export asks for. Six are absent every time,
+the services and popups of the uploads, hospital-stays and purchased-drugs pages, because the scan opens only the
+legacy summary page, as the extension does (any legacy page registers the session, so the export asks those services
+from there); so is the recommendations page, which the code names without `/online/`. `--legacy-pages` opens those three
+pages for their script files, which the extension never does: it is what a member's click on the menu does, and each
+page then loads its own data, so it is not the default. `--all` gives the same account of `other-endpoints.json` and
+`MedDream-endpoints.json`, whose requests to other sites (the imaging viewer, the public directory) are counted apart:
+this scan reads the portal's code alone.
 
 ```sh
 npm run endpoints                        # the services, API calls and legacy pages endpoints.json does not have
@@ -529,11 +541,12 @@ npm run endpoints -- --save ~/scripts    # also the scripts it read, laid out as
 npm run endpoints -- --from ~/scripts    # analyze a saved folder again: no browser, no sign-in, a second
 npm run endpoints -- --out ~/scan.json   # also everything found, as JSON; --keep leaves the browser open
 npm run endpoints -- --rea               # also REA's parser on the files: about four minutes more; --jobs N
+npm run endpoints -- --legacy-pages      # also the scripts of three legacy pages the extension never opens
 ```
 
 A healthy scan reads about a hundred files and fails on a handful, in about a minute and a half, nearly all of it the
 sign-in and the pause between files; the reading itself takes a second. On the runs of 13 October 2026 it gave 242
-entries, 199 of them calls with a method (102 `GET`, 69 `POST`, 17 `PATCH`, 11 `PUT`), and 190 that the map lacks. When
+entries, 203 of them calls with a method (102 `GET`, 73 `POST`, 17 `PATCH`, 11 `PUT`), and 190 that the map lacks. When
 many files "would not load", the site has changed how it names its chunks: the summary prints a few of the failed
 addresses, and `--save` keeps the scripts to read the naming from (site code, not records; still, keep it out of the
 repository).

@@ -19,7 +19,7 @@ npm run package                   # build + release/<name>-<version>.zip (refuse
 npm run live                      # a live export on your own account, never ordering, no ZIP (1Password refs in .env)
 npm run export                    # an export with no extension: test results into ./maccabi-export-<today>/ (same .env)
 npm run export -- --all           # every section, nothing ordered; --steps a,b for some; --out DIR; --keep
-npm run endpoints                 # the calls the site's own scripts make that docs/endpoints/endpoints.json lacks, each with its method and place (same .env; calls no API)
+npm run endpoints                 # the calls the site's own scripts make that docs/endpoints/endpoints.json lacks, each with its method and place, and the mapped ones the code no longer has (same .env; calls no API)
 npm run endpoints -- --from DIR   # the same on scripts a --save DIR kept: no sign-in, a second; --rea adds REA's parser (about four minutes)
 npm run clean                     # remove dist/, dist-dev/, dist-store/, dist-cli/, release/
 npm run release:zip               # clean, test, build:dev, package
