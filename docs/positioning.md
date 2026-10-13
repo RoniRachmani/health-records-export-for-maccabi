@@ -42,6 +42,11 @@ read your whole file**.
    why they come.
 7. **Getting the export into an assistant needs the assistant's desktop app,** and for Claude a paid plan. Our page
    shouldn't hide that step; it should make it look easy.
+8. **Asked for a dashboard, an assistant leads with loose ends.** On 12 October 2026 an assistant built one from a real
+   export, with nothing but the export's README to guide it. Its top line was a count of things needing attention, and
+   its first table was what the records asked for and whether it happened. That is not the app's list of open referrals
+   (point 3): each row joined a referral, a visit note or a prescription's end date to the results, visits and
+   purchases dated after it. Loose ends is connecting, and it was the most useful thing on the page.
 
 ## Value, in order
 
@@ -72,7 +77,7 @@ what to do next.
 | Pillar | Proof point |
 |---|---|
 | Everything, in one place | The full medical file, plus every result, visit, prescription, referral, vaccination and letter the site has |
-| A friend who's read it all | Every answer names the record it came from, so you can check it |
+| A friend who's read it all | Every answer names the record it came from, so you can check it. The 12 October dashboard did: each row named its file, and its page of the medical file |
 | It's yours | Saved on your computer, to keep, share or add to |
 | It reads the Hebrew | Answers in plain English, from records written in Hebrew |
 
@@ -140,12 +145,18 @@ artifact.
 | **Health in ChatGPT, Claude's health connectors** | They connect medical records from U.S. providers only, so they can't reach Maccabi. |
 | **Uploading files to a chat** | A chat takes a few dozen files at most, and an export has hundreds. The assistant needs the whole folder. |
 | **Ordering the medical file by hand** | Only from July 2020, one PDF, and nothing else from the rest of the site. |
+| **Giving an assistant live access** ([maccabi-health](https://github.com/orenyomtov/maccabi-health): a command-line tool and connector) | The assistant logs in as you and fetches records as it needs them. It takes a terminal or a coding agent to set up, your ID number and SMS code pass through the conversation, and Maccabi ends each login after an hour, so every sitting starts with a new code. It reads what it asks for, not the whole history, and it doesn't order the medical file. Nothing is saved to keep. |
+
+The last row is the closest alternative, and it serves a different person: someone at home in a terminal who wants today's
+records on demand. Ours is for a member who installs an extension, presses one button and keeps the folder. Checked on
+13 October 2026, at its version 0.1.6.
 
 ## Objections and answers
 
 | Objection | Answer (one line, plain) |
 |---|---|
 | "Is my health data safe?" | It goes from Maccabi Online to your computer and nowhere else. You choose which assistant, if any, reads it. |
+| "Does the AI log in to my Maccabi account?" | No. You log in yourself, in your own browser. The assistant only reads the folder on your computer, and never sees your ID number, a login code or the site. |
 | "Is this official?" | No. It's unofficial and says so everywhere. It uses your own logged-in session, like you would. |
 | "Will the AI give me medical advice?" | It explains and suggests, and names the record behind every answer. You and your doctor decide. |
 | "Do I need to pay for an AI?" | The extension is free. Opening the folder takes the desktop app of Claude, on a paid plan, or of ChatGPT, whose free plan includes Work with lower usage limits. |
@@ -212,7 +223,8 @@ Nothing shown comes from a real account.
 - **Warm and confident, not hyped.** A genius friend, not a miracle.
 - **Don't mention that other AI health tools are U.S.-only.** That gap explains our positioning (see *Alternatives the
   customer has*), but customer-facing copy doesn't name it: not on the landing page, in the store listing or in the
-  video. Say what the extension does, not what other products can't do.
+  video. Say what the extension does, not what other products can't do. The same goes for tools that give an assistant
+  live access: say that you log in yourself and the assistant reads a folder, and don't name them.
 
 ## Creative direction
 
@@ -221,7 +233,10 @@ Nothing shown comes from a real account.
 - **The Ask use cases live on the landing page only.** The AI assistant page is the step-by-step guide to opening an
   export, and links to them rather than repeating them.
 - **Hero picture:** a "your health at a glance" dashboard the assistant built for the demo persona. It shows the years
-  covered, what stands out, one trend, and a source under each item.
+  covered, what stands out, one trend, and a source under each item. It leads with what needs attention, as the real
+  one did (see *What we learned*, point 8): "3 things need attention", and the most pressing with its date. The three
+  are the persona's loose ends, and the count is all the hero says of the other two; *Coming up* holds only what is
+  ahead. Chosen as option A of Round 8 of the mockups, on 13 October 2026.
 - **Footage:** real clips of the extension and an assistant at work, cropped to the app window, looping silently.
 - **Look:** navy headings, one blue for actions, magenta for links, and the mark's pale pink in the soft panels. Never
   Maccabi's logo or brand assets, and the *Unofficial* label is always visible.
@@ -232,14 +247,20 @@ Nothing shown comes from a real account.
 - **"Back before 2020":** the export orders the medical file for your whole history, wider than the site's form allows.
   A real export confirmed it: its medical file began in infancy, decades before July 2020. The page can say the file
   goes back to the start of your records.
+- **"Names the record behind every answer":** the 12 October dashboard gave a file, and a page of the medical file, for
+  every row, and carried the README's cautions onto the page unprompted: that neither prescriptions nor purchases show
+  what you take today, and that something missing doesn't mean it never happened. One gap: weights and blood pressures
+  read off the medical file lost their page numbers. The README has asked for them since 13 October 2026.
 
 **Not yet:**
 - **"HealthOS" or a "living dashboard":** promise a dashboard you grow by adding files, not more, until the product
-  does more.
+  does more. The 12 October dashboard shows the gap. The assistant named it HealthOS itself, but it is a snapshot:
+  "due soon" was worked out on the day it was built and stays that way, and a new export means building it again.
 
 ## To validate with customers
 
-- Which of the nine Ask use cases people try first, and which they come back for.
+- Which of the nine Ask use cases people try first, and which they come back for. One data point so far: the 12
+  October dashboard led with *Loose ends*, then *Explain a result*.
 - Whether the first reaction is "I finally understand it", "I found something my doctor missed", or "I finally have
   everything". The answer tells us which pillar leads.
 - How many visitors already have a paid Claude or ChatGPT desktop app. If few do, the "yours to keep" value needs more

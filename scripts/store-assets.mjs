@@ -32,7 +32,7 @@ const IMAGES = [
       '.hero { display: flex !important; flex-direction: column; align-items: center; justify-content: center; gap: 22px; width: 1200px; height: 630px; margin: 0 !important; padding: 0 !important; max-width: none !important; }' +
       '.hero-text, .dash-stage { margin: 0 !important; padding: 0 !important; width: auto !important; min-height: 0 !important; }' +
       '.eyebrow { margin: 0 !important; }' +
-      '.dash-stage { zoom: 1.05; }' +
+      '.dash-stage { zoom: 0.93; }' +
       '.anim, .anim * { animation: none !important; }' +
       '</style>')`,
   },
