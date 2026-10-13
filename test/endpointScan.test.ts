@@ -111,6 +111,11 @@ describe('readCalls', () => {
     expect(methods(text)).toEqual(['POST /webapi/Mailings/GetMailings/', 'GET /webapi/Mailings/GetReminders/']);
   });
 
+  it('leaves out a call the site has commented out, and keeps its place in the file', () => {
+    const text = '/*\n$.ajax({ type: "POST", url: "/Ajax/Old.asmx/Gone" });\n*/\n// a.get("v1/members/old")\nx.replace(/\\/\\*/g, "");a.get("v1/members/now")';
+    expect(readCalls(text).map((c) => `${c.method} ${c.path} ${locator(text).at(c.offset)}`)).toEqual(['GET v1/members/now 5:26']);
+  });
+
   it('leaves out what is not a request', () => {
     expect(methods('window.open("/online/Pages/P.aspx");fs.open(p,"r");a.get(url);refetch("x")')).toEqual([]);
   });
@@ -230,9 +235,11 @@ describe('coverage', () => {
       + 'open(f()("v1/members/{0}/{1}/pdf?path={2}&hash={3}",a,b,c,d));'
       + "var url = root + '/Ajax/Summary/WsSummaryPage.asmx/OrderAjax';$.ajax({type:\"POST\",url:url});";
     const found = candidates(new Map([['a.js', text]]), readEvidence({}), known);
-    expect(coverage(requests, found).map((r) => `${r.status} ${r.calledAs ?? ''}`.trim())).toEqual([
+    const where = coverage(requests, found, ['GET /online/Pages/P.aspx']);
+    expect(where.map((r) => `${r.status} ${r.calledAs ?? ''}`.trim())).toEqual([
       'method GET', 'named', 'call POST', 'absent', 'absent', 'absent', 'elsewhere',
     ]);
+    expect(where.filter((r) => r.status === 'absent').map((r) => r.expected)).toEqual([false, true, false]);
   });
 });
 

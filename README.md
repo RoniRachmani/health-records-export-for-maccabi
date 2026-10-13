@@ -523,28 +523,31 @@ site picks an address by a condition (`isV2 ? "v2/…" : "v1/…"`), the call is
 whatever its path looks like: `DirectorshipAPI`'s `eligibilities` has no version and no `members/` in it. A legacy
 service (`.asmx`, `.ashx`) whose call could not be read is marked too, as method not read: most of those are `POST`s.
 
+The legacy site's scripts are written by hand, and the scan reads their habits too: a service's address kept at the
+top with the method's name added at each call (`ajaxUrl + "GetAllPurchasedPrescription"`), the Angular pages' own
+client (`webApi.Call(controller, action, …)`), and the files a `/// <reference path="…">` comment names, one of which
+holds `/online/handlers/ajax.ashx`, the default address of a wrapper no page loads. A call the site has commented out
+is not read.
+
 It reads the map the other way as well: of the requests `endpoints.json` writes out, how many the code still makes
 as calls, how many it only names (the documents the site opens in a tab), and which are not in it at all. One that
-drops out of the code is the first sign that the site moved something the export asks for. Seven are absent every time,
-and `docs/endpoints/scan-baseline.json` lists them, so the scan can say `NEW` beside one that is not expected. Six are the services and popups of the uploads, hospital-stays and purchased-drugs pages, because the scan opens only
-the legacy summary page, as the extension does (any legacy page registers the session, so the export asks those
+drops out of the code is the first sign that the site moved something the export asks for.
+`docs/endpoints/scan-baseline.json` lists the seven a default run never finds, and the scan marks any other absent one
+`NEW`. `--all` gives the same account of `other-endpoints.json` and `MedDream-endpoints.json`, whose requests to other
+sites (the imaging viewer, the public directory) are counted apart: this scan reads the portal's code alone.
+
+Six of the seven are the services and popups of the uploads, hospital-stays and purchased-drugs pages. The scan opens
+only the legacy summary page, as the extension does (any legacy page registers the session, so the export asks those
 services from there). `--legacy-pages` opens those three pages for their script files, which the extension never does:
-it is what a member's click on the menu does, and each page then loads its own data, so it is not the default. On
-13 October 2026 it found all six (the four services as `POST`s, the two popups as addresses a window opens), and
-some twenty more calls of those pages, their writes among them (`WsPHRManager.asmx/DeleteFile`, `SaveFile`). The
-legacy scripts keep a service's address at their top and add the method's name at each call
-(`ajaxUrl + "GetAllPurchasedPrescription"`), and the Angular pages go through a client of their own,
-`webApi.Call(controller, action, …)`: the scan reads both. The seventh is the recommendations page, which the code
-names without `/online/`. `/online/handlers/ajax.ashx` is found only because the scan fetches the files a legacy
-script's `/// <reference path="…">` comments name: it is the default address of a wrapper in one of those, which no
-page loads. `--all` gives the same account of `other-endpoints.json` and
-`MedDream-endpoints.json`, whose requests to other sites (the imaging viewer, the public directory) are counted apart:
-this scan reads the portal's code alone.
+it is what a member's click on the menu does, and each page then loads its own data, so it is not the default. It
+finds five of the six, and those pages' other calls, their writes among them (`WsPHRManager.asmx/DeleteFile`,
+`SaveFile`); the sixth, `GetFileDetails`, is only in a block the site has commented out. The seventh is the
+recommendations page, which the code names without `/online/`.
 
 ```sh
 npm run endpoints                        # the services, API calls and legacy pages endpoints.json does not have
 npm run endpoints -- --all               # the mapped ones too, marked, and the app's page routes and service bases
-npm run endpoints -- --save ~/scripts    # also the scripts it read, laid out as on the site (a new or empty folder)
+npm run endpoints -- --save ~/scripts    # also the scripts it read, laid out as on the site (a new folder, outside the repository)
 npm run endpoints -- --from ~/scripts    # analyze a saved folder again: no browser, no sign-in, a second
 npm run endpoints -- --out ~/scan.json   # also everything found, as JSON; --keep leaves the browser open
 npm run endpoints -- --rea               # also REA's parser on the files: about four minutes more; --jobs N
@@ -566,8 +569,7 @@ with their wildcards, such as `/medicalFile/**`, for the 12 a router's table spe
 parser's word on how far each file could be read (all of them, 12 around a syntax error), and the source maps declared
 (none). It runs on this machine, on the script files alone, and is not a dependency of the repository: the first run
 fetches `rea-agents` from npm at the version the script names (`REA_BIN` points at an installed one). It takes about
-four minutes for the whole app (107 files, 53 MB, three groups of them at a time on an 8-core Apple M2: 4 min 0 s, and
-4 min 34 s with the machine busy).
+four minutes for the whole app: 107 files, 53 MB, three groups at a time (`--jobs`) on an 8-core Apple M2.
 
 `scripts/endpoint-scan.mjs` is the run, `scripts/endpoint-scan-lib.mjs` holds what the scan decides, and
 `test/endpointScan.test.ts` runs that on made-up scripts.

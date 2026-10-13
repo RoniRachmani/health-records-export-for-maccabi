@@ -30,12 +30,16 @@ export interface Candidate {
   known: boolean;
 }
 
+export interface Mapped {
+  method: string;
+  path: string;
+  where: string;
+  elsewhere: boolean;
+}
+
 export const REA_FILTER: string;
-export const PROOF: string[];
 
 export function pathLike(s: string): boolean;
-export function shape(path: string): string;
-export function kind(path: string): 'api' | 'page' | 'app' | 'noise';
 export function knownFrom(endpoints: unknown): Known;
 export function isKnown(path: string, known: Known): boolean;
 export function builtString(src: string): string | null;
@@ -46,15 +50,10 @@ export function chunkFiles(text: string): Set<string>;
 export function chunkUrl(file: string, from: string): string;
 export function readEvidence(result: unknown): Evidence;
 export function candidates(files: Map<string, string>, evidence: Evidence, known: Known): Candidate[];
-export interface Mapped {
-  method: string;
-  path: string;
-  where: string;
-  elsewhere: boolean;
-}
 export function mappedRequests(map: unknown): Mapped[];
-export function coverage(requests: Mapped[], found: Candidate[]): (Mapped & {
+export function coverage(requests: Mapped[], found: Candidate[], expected?: string[]): (Mapped & {
   status: 'call' | 'method' | 'named' | 'absent' | 'elsewhere';
+  expected?: boolean;
   as?: string;
   at?: string;
   calledAs?: string | null;

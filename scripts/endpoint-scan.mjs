@@ -1,6 +1,8 @@
 // Lists what Maccabi Online's own front-end code can call that docs/endpoints/endpoints.json does not map, with the
-// HTTP method of each call and the place in the code that makes it. For finding records the export could
-// add, and for seeing what moved after the site changes.
+// HTTP method of each call and the place in the code that makes it, and which of the requests the maps write
+// out the code no longer makes. For finding records the export could add, and for seeing what moved after the
+// site changes. How it reads the code, what a run finds and how long one takes are in the README, under
+// "Finding what the export could add"; what it decides is in endpoint-scan-lib.mjs.
 //
 //   npm run endpoints                    the services and API calls that endpoints.json does not have
 //   npm run endpoints -- --all           the ones it has too, marked, and the app's own page routes
@@ -10,29 +12,6 @@
 //   npm run endpoints -- --rea           also runs rea on the files: about four minutes more
 //   npm run endpoints -- --legacy-pages  also opens three more legacy pages, for their scripts (see LEGACY_MORE)
 //   npm run endpoints -- --jobs N        how many rea processes run at once (default 3); --keep leaves the browser open
-//
-// The reader is here (endpoint-scan-lib.mjs). The site formats a path into a variable
-// ("v1/members/{0}/{1}/visits") and hands it to its client after the service's base, rest.get(base, path),
-// so the reader takes each fetch, client call, ajax and XHR open, follows the address to the value just
-// above it, and writes {} for the parts made at run time. What it saw no call for but reads as an address
-// is listed last, as named only (most are documents the site opens in a tab, which no call fetches). On
-// the runs of 13 October 2026 it found 203 calls with their methods, in a second or so once the files are
-// read.
-//
-// It reads the map the other way too: which of the requests the three maps in docs/endpoints/ write out the
-// code still makes. One that is gone from the code is the first sign that the site moved something the
-// export asks for. A request that was never in the files read (the service of a legacy page the scan does
-// not open) is absent every time: docs/endpoints/scan-baseline.json lists those, and the scan says which of
-// the absent ones are new.
-//
-// --rea puts a parser beside it. REA (Reverse Engineer Anything, github.com/morluto/rea) parses each script
-// without running it and reports what an AST can prove: the calls whose address is a literal and the method
-// of the call that makes each, the app's page routes, the source maps declared, and how far it parsed each
-// file. Its own limits say what it leaves out ("string-built routes and endpoints may remain unknown"), and
-// this site builds nearly all of them: on those runs rea added no call to the reader's. What it added was
-// the page routes built in code (21 for the 12 a router's table spells out), a parser's word on each file
-// (all parsed, 12 of them around a syntax error) and the source maps declared (none), for about four
-// minutes: 4 min 0 s for 107 files at 3 jobs on an 8-core Apple M2, 4 min 34 s with the machine busy.
 //
 // It opens the browser and signs in as `npm run export` does (scripts/maccabi-browser.mjs), then reads only
 // static files: the scripts the /sonline/ app loads, the chunks they name, and the scripts of the legacy
@@ -198,7 +177,7 @@ async function analyze(dir, files, jobs) {
   const sizes = new Map([...files].map(([file, text]) => [file, Buffer.byteLength(text)]));
   const groups = batches(sizes);
   const merged = { endpoints: [], routes: new Set(), sourceMaps: [], partial: [], unparsed: [], parsed: 0, failed: [] };
-  const work = mkdtempSync(join(tmpdir(), 'rea-endpoints-'));
+  const work = mkdtempSync(join(tmpdir(), 'endpoint-scan-rea-'));
   let next = 0;
   let finished = 0;
   const worker = async () => {
@@ -265,6 +244,7 @@ async function main() {
   if (FROM && MORE) throw new Error('--legacy-pages opens pages in the browser; --from has none.');
   if (FROM && SAVE) throw new Error('--from reads a folder --save kept; it has nothing to save.');
   // What an earlier save left would be read as this run's: a file the site has since dropped, or renamed.
+  if (SAVE && (resolve(SAVE) + sep).startsWith(resolve(root) + sep)) throw new Error('--save takes a folder outside the repository: the site\'s scripts are not ours to commit.');
   if (SAVE && existsSync(resolve(SAVE)) && readdirSync(resolve(SAVE)).length) throw new Error(`--save takes a new or empty folder: ${resolve(SAVE)} has files in it.`);
 
   const map = (name) => JSON.parse(readFileSync(join(root, 'docs/endpoints', name), 'utf8'));
@@ -303,7 +283,7 @@ async function main() {
 
   const files = scriptsIn(dir);
   if (!files.size) throw new Error(`No script files in ${dir}.`);
-  let evidence = { endpoints: [], routes: new Set(), sourceMaps: [], partial: [], unparsed: [], parsed: 0, failed: [...files.keys()] };
+  let evidence = { endpoints: [], routes: new Set(), sourceMaps: [], partial: [], unparsed: [], parsed: 0, failed: [] };
   if (REA) {
     console.log(`Analyzing ${files.size} script files with rea ${REA_VERSION} (parsed, never run; about four minutes for the whole app).`);
     evidence = await analyze(dir, files, JOBS);
@@ -327,12 +307,9 @@ async function main() {
   // A legacy service whose call was not read is not known to be one: most of them are POSTs.
   const callLine = (p) => `${(p.method || '?').padEnd(6)} ${p.path}    [${p.proof}] ${p.where}`
     + (p.method && p.method !== 'GET' ? '    not a GET' : !p.method && /\.as[mh]x/i.test(p.path) ? '    method not read: may not be a GET' : '');
-  const mapped = Object.fromEntries(['endpoints.json', ...OTHER_MAPS].map((name) => [name, coverage(mappedRequests(map(name)), all)]));
   // The requests a default run never finds, by map: what is absent beyond them is what changed.
   const baseline = map('scan-baseline.json');
-  for (const [name, list] of Object.entries(mapped)) {
-    for (const r of list) if (r.status === 'absent') r.expected = (baseline[name] || []).includes(`${r.method} ${r.path}`);
-  }
+  const mapped = Object.fromEntries(['endpoints.json', ...OTHER_MAPS].map((name) => [name, coverage(mappedRequests(map(name)), all, baseline[name])]));
   const showMapped = (name, list) => {
     const n = (status) => list.filter((r) => r.status === status).length;
     const fresh = list.filter((r) => r.status === 'absent' && !r.expected).length;
@@ -358,7 +335,7 @@ async function main() {
       console.log(`  ${r}: ${[...found.failed].filter(([, w]) => w === r).slice(0, 3).map(([u]) => new URL(u).pathname).join('  ')}`);
     }
   }
-  if (evidence.failed.length < files.size) {
+  if (REA) {
     console.log(`\nrea parsed ${evidence.parsed + evidence.partial.length} of ${files.size} files`
       + (evidence.partial.length ? `, ${evidence.partial.length} of them around a syntax error (${evidence.partial.slice(0, 3).join('  ')})` : '')
       + (evidence.failed.length ? `; ${evidence.failed.length} it failed on, read by this scan alone` : '')

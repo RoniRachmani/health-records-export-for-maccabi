@@ -16,7 +16,7 @@ export function pathLike(s) {
 }
 
 /** One path's comparable shape: its segments, from the service's name on. */
-export function shape(path) {
+function shape(path) {
   return segments(path)
     .replace(/^s?online\/(?=\w+api\/)/i, '') // the REST services sit under /sonline/
     .replace(/^(\w+api)\/webapi\/mac(?=\/|$)/i, '$1'); // and under webapi/mac, which endpoints.json leaves out
@@ -39,7 +39,7 @@ function segments(path) {
  * site), 'app' (a page of the /sonline/ app, or one of its service bases), or 'noise' (static files, other
  * sites, a developer's localhost).
  */
-export function kind(path) {
+function kind(path) {
   if (/^https?:\/\/(?!online\.maccabi4u\.co\.il\/)/i.test(path)) return 'noise';
   const p = path.replace(/^https?:\/\/[^/]+/, '').replace(/[?#].*$/, '');
   if (/\.(m?js|css|ico|png|svg|gif|jpe?g|woff2?|map)$/i.test(p) || /^\/?(retail|sonline\/scripts|sonline\/static)\//i.test(p)) return 'noise';
@@ -65,13 +65,17 @@ export function knownFrom(endpoints) {
   return { paths: [...paths].filter((p) => p.includes('/') && !p.includes('...')), services };
 }
 
+/** A legacy service or popup whole: the code writes them from /online/ down (/Ajax/…, root + '/Pages/…'), the maps from /online/. */
+function legacyWhole(path) {
+  return path.replace(/^(?:\{\d*\})?(?=\/(?:ajax|handlers|pages|webapi)\/)/i, '/online');
+}
+
 /**
  * A path is known when its shape is whole segments of one endpoints.json maps: code often builds a path in
  * pieces, so a piece of a mapped path is that path.
  */
 export function isKnown(path, known) {
-  // Legacy services and popups are written from /online/ down (/Ajax/..., /Pages/...); endpoints.json writes them whole.
-  const s = shape(/^\/(ajax|handlers|pages|webapi)\//i.test(path) ? '/online' + path : path);
+  const s = shape(legacyWhole(path));
   if (!s || /^(v\d+|members|webapi|online|sonline)$/.test(s)) return true; // a piece too small to say anything
   return known.paths.some((k) => ('/' + k + '/').includes('/' + s + '/'));
 }
@@ -307,8 +311,10 @@ const CALL = /(?<![\w$.])(fetch|axios|\$http)\s*\(|\.(get|post|put|patch|delete|
  * method and the address as far as the call and the values just above it spell it. A call whose address
  * cannot be read that way is left out. The legacy site's Angular pages go through a client of their own,
  * webApi.Call(controller, action, data, …, { method }), a GET unless told otherwise, to /online/webapi/<controller>/<action>/.
+ * A call in a comment is one the site no longer makes, and is not read.
  */
-export function readCalls(text) {
+export function readCalls(source) {
+  const text = withoutComments(source);
   const calls = [];
   for (const m of text.matchAll(CALL)) {
     const name = (m[1] || m[2] || m[3]).toLowerCase();
@@ -385,16 +391,37 @@ function skipRegex(text, i, end) {
  */
 export function literals(text) {
   const out = [];
+  walk(text, (value, offset) => out.push({ value, offset }));
+  return out.sort((a, b) => a.offset - b.offset);
+}
+
+/** A script with each comment blanked out, so that every offset in it stays where it was. */
+function withoutComments(text) {
+  const parts = [];
+  let from = 0;
+  walk(text, null, (start, end) => {
+    parts.push(text.slice(from, start), text.slice(start, end).replace(/[^\n\r]/g, ' '));
+    from = end;
+  });
+  return from ? parts.join('') + text.slice(from) : text;
+}
+
+/** Walks a script's strings and comments: onString(value, offset) for each string of an address's length, onComment(start, end). */
+function walk(text, onString, onComment) {
   const read = (from, end) => {
     let prev = '';
     for (let i = from; i < end; i++) {
       const c = text[i];
       if (c === '/' && text[i + 1] === '/') {
         const stop = text.indexOf('\n', i);
-        i = stop < 0 || stop > end ? end : stop;
+        const to = stop < 0 || stop > end ? end : stop;
+        onComment?.(i, to);
+        i = to;
       } else if (c === '/' && text[i + 1] === '*') {
         const stop = text.indexOf('*/', i + 2);
-        i = stop < 0 || stop > end ? end : stop + 1;
+        const to = stop < 0 || stop > end ? end : stop + 2;
+        onComment?.(i, to);
+        i = to - 1;
       } else if (c === '/') {
         const opens = !prev || (BEFORE_REGEX.test(prev) && !/(\+\+|--)\s*$/.test(text.slice(Math.max(from, i - 4), i)))
           || (/[\w$]/.test(prev) && WORD_BEFORE_REGEX.test(text.slice(Math.max(from, i - 16), i).trimEnd()));
@@ -406,7 +433,7 @@ export function literals(text) {
         prev = c;
         if (after < 0) continue; // a lone quote: an apostrophe in what is not code
         const body = text.slice(i + 1, after - 1);
-        if (body.length >= 2 && body.length <= (c === '`' ? 600 : 300)) out.push({ value: c === '`' ? templateText(body) : unescape(body), offset: i });
+        if (onString && body.length >= 2 && body.length <= (c === '`' ? 600 : 300)) onString(c === '`' ? templateText(body) : unescape(body), i);
         if (c === '`') {
           for (let j = i + 1; j < after - 1; j++) {
             if (text[j] === '\\') j++;
@@ -424,7 +451,6 @@ export function literals(text) {
     }
   };
   read(0, text.length);
-  return out.sort((a, b) => a.offset - b.offset);
 }
 
 /** Turns an offset into `line:column`, both from 1, as an editor counts them. */
@@ -537,7 +563,7 @@ export function readEvidence(result) {
 // ---- putting it together -------------------------------------------------------------------------
 
 /** How sure a candidate is, best first. */
-export const PROOF = ['ast', 'call', 'named'];
+const PROOF = ['ast', 'call', 'named'];
 
 /**
  * Every address the scripts name, once per shape and method: `files` is path-to-text, `evidence` what rea
@@ -632,16 +658,17 @@ export function mappedRequests(map) {
 
 /** A shape to compare a mapped request with one read in the code: a legacy path whole, no {0} left inside a segment. */
 function mappedShape(path) {
-  return shape(/^(\{\}|\{\d+\})?\/(ajax|handlers|pages|webapi)\//i.test(path) ? '/online' + path.replace(/^\{\d*\}/, '') : path).replace(/\{\d*\}/g, '');
+  return shape(legacyWhole(path)).replace(/\{\d*\}/g, '');
 }
 
 /**
  * Where each mapped request is in the code (`found` from candidates): 'call' (a call with its method), 'method'
  * (a call, with another method), 'named' (its address, no call seen), 'absent', or 'elsewhere' (another site's).
  * The code writes many paths from the version on, with no service before them, so an address that ends a mapped
- * one is that one, when it says more than a version and "members".
+ * one is that one, when it says more than a version and "members". `expected` is the absent ones a scan never
+ * finds, each as '<METHOD> <path>' (docs/endpoints/scan-baseline.json): an absent request says whether it is one.
  */
-export function coverage(requests, found) {
+export function coverage(requests, found, expected = []) {
   const shapes = found.map((c) => ({ c, s: mappedShape(c.path) }));
   const says = (s) => s.split('/').some((seg) => !/^(v\d+|members|\*|s?online|webapi|mac|)$/.test(seg));
   return requests.map((r) => {
@@ -650,7 +677,8 @@ export function coverage(requests, found) {
     const hits = shapes.filter((x) => x.s === s || (says(x.s) && s.endsWith('/' + x.s))).map((x) => x.c);
     const same = hits.find((c) => c.method === r.method);
     const hit = same || hits.find((c) => c.method) || hits[0];
-    return { ...r, status: !hit ? 'absent' : same ? 'call' : hit.method ? 'method' : 'named', ...(hit ? { as: hit.path, at: hit.where, calledAs: hit.method } : {}) };
+    if (!hit) return { ...r, status: 'absent', expected: expected.includes(`${r.method} ${r.path}`) };
+    return { ...r, status: same ? 'call' : hit.method ? 'method' : 'named', as: hit.path, at: hit.where, calledAs: hit.method };
   });
 }
 
