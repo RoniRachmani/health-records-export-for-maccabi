@@ -34,7 +34,8 @@ const SETTLE_MS = 5000;
 // ---- reading the code (pure: what the tests and a dry run can call) -------------------------------
 
 /** A string that names a service call: a REST service, a versioned route, or a legacy handler or page. */
-const API_MARK = /[A-Za-z]API\/|webapi|\/v\d+\/|\.asmx|\.ashx|\.aspx|\/s?online\//i;
+// The /sonline/ app writes its routes from the version on (v1/members/...), apart from the service's base.
+const API_MARK = /[A-Za-z]API\/|webapi|(?:^|\/)v\d+\/|(?:^|\/)members\/|\.asmx|\.ashx|\.aspx|\/s?online\//i;
 const URLISH = /^[\w\-./{}*:?=&%]+$/;
 
 /** String literals in a script; a template literal's ${...} becomes {}. */
@@ -95,6 +96,22 @@ export function knownFrom(endpoints) {
   }
   // Only shapes with a route in them: the bases' templates (<Service>/.../...) and lone names say nothing.
   return { paths: [...paths].filter((p) => p.includes('/') && !p.includes('...')), services };
+}
+
+/**
+ * What a path in the code is: 'api' (a call that returns data), 'page' (a web page or popup of the legacy
+ * site), 'app' (a page of the /sonline/ app, or one of its service bases), or 'noise' (static files, other
+ * sites, a developer's localhost).
+ */
+export function kind(path) {
+  if (/^https?:\/\/(?!online\.maccabi4u\.co\.il\/)/i.test(path)) return 'noise';
+  const p = path.replace(/^https?:\/\/[^/]+/, '').replace(/[?#].*$/, '');
+  if (/\.(m?js|css|ico|png|svg|gif|jpe?g|woff2?|map)$/i.test(p) || /^\/?(retail|sonline\/scripts|sonline\/static)\//i.test(p)) return 'noise';
+  if (/\.aspx$/i.test(p) && !/webapi/i.test(p)) return 'page';
+  if (/[A-Za-z]API\/|webapi|\.asmx|\.ashx|(?:^|\/)v\d+\/|(?:^|\/)members\//i.test(p)) {
+    return /^\/?(sonline\/)?\w+\/webapi\/mac\/?$/i.test(p) ? 'app' : 'api';
+  }
+  return /^\/?sonline\//i.test(p) ? 'app' : 'page';
 }
 
 /**
@@ -230,8 +247,12 @@ async function main() {
     console.log('  The legacy page did not open (logged out?); its part is left out.');
   }
 
-  const paths = [...found.paths].map(([path, file]) => ({ path, file, known: isKnown(path, known) }))
+  // Legacy services and popups are written from /online/ down (/Ajax/..., /Pages/...); endpoints.json writes them whole.
+  const legacyAt = (p) => (/^\/(ajax|handlers|pages|webapi)\//i.test(p) ? '/online' + p : p);
+  const all = [...found.paths].map(([path, file]) => ({ path, file, kind: kind(path), known: isKnown(legacyAt(path), known) }))
     .sort((a, b) => shape(a.path).localeCompare(shape(b.path)));
+  const paths = all.filter((p) => p.kind === 'api');
+  const pages = all.filter((p) => p.kind === 'page');
   const services = [...found.services].sort().map((name) => ({ name, known: known.services.has(name) }));
   const legacy = found.legacyPages.map((path) => ({ path, known: isKnown(path, known) }));
 
@@ -246,9 +267,14 @@ async function main() {
   console.log(`\nRead ${found.read.size} script files` + (found.failed.size ? `; ${found.failed.size} would not load (${whyText})` : '')
     + (found.capped ? `; stopped at ${MAX_FILES}, so some were left unread` : '') + '.');
   show(services, 'Services', (s) => s.name);
-  show(paths, 'API paths in the code', (p) => `${p.path}    (${p.file})`);
+  show(paths, 'API calls in the code', (p) => `${p.path}    (${p.file})`);
+  show(pages, 'Legacy pages and popups in the code', (p) => `${p.path}    (${p.file})`);
   show(legacy, 'Legacy pages linked from the summary page', (p) => p.path);
-  if (ALL) console.log(`\nThe app's page routes (${found.routes.size}): ${[...found.routes].sort().join('  ')}`);
+  if (ALL) {
+    const app = all.filter((p) => p.kind === 'app').map((p) => p.path);
+    console.log(`\nThe app's own pages and service bases (${app.length}): ${app.join('  ')}`);
+    console.log(`\nThe app's page routes (${found.routes.size}): ${[...found.routes].sort().join('  ')}`);
+  }
   console.log('\nThese are candidates, not calls to try: open the matching section in the site and record its traffic.');
 
   if (OUT) {
@@ -257,7 +283,7 @@ async function main() {
       scanned: new Date().toISOString(),
       files: [...found.read].map((u) => new URL(u).pathname),
       failed: [...found.failed].map(([u, why]) => ({ file: new URL(u).pathname, why })),
-      services, paths, legacyPages: legacy, routes: [...found.routes].sort(),
+      services, paths, pages, app: all.filter((p) => p.kind === 'app'), legacyPages: legacy, routes: [...found.routes].sort(),
     }, null, 2) + '\n');
     console.log('Wrote ' + file);
   }
