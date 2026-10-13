@@ -79,7 +79,9 @@ and terms pages need (`public/` is copied verbatim, so it cannot import them). `
 Pages whenever it changes on `main`, so the policies can be read before installing. The same
 workflow puts the landing page, `site/`, at the site's root: it is for the web only, so it is kept out of `public/`.
 It adds `site/ai-assistant.css` and `site/site.css` for its wider, picture-led layout: its pictures are HTML and inline
-SVG with made-up records, and it runs no script (the tabs of its Ask section are radio buttons). Its last sections are
+SVG with made-up records, and it runs no script (the tabs of its Ask section are radio buttons). Its footer loads one image from
+GoatCounter, a cookieless visit counter and the page's only request to another host; the footer and the Privacy Policy
+say so. Its last sections are
 the guide to opening an export in an AI assistant, which the popup and every export's README link to; the guide's old
 address, `ai-assistant.html`, is a redirect there. `popup.css` and `pages.css` both pin `color-scheme: light` —
 there is no dark theme, and pinning it keeps Chrome's auto-dark-mode from repainting controls and scrollbars

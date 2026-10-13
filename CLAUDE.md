@@ -224,7 +224,9 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
 - **The landing page lives in `site/`, not `public/`**: `public/` ships inside the extension verbatim, and the landing
   page is for the web only. The Pages workflow copies `site/` over `public/`, so `site/index.html` links the shipped
   `pages.css` and adds `site/ai-assistant.css` and `site/site.css`. It follows the same house rules: no script, no fetched
-  font, no Maccabi brand asset, made-up records only, WCAG AA, and no sideways scroll at 375px. Its run clip is a
+  font, no Maccabi brand asset, made-up records only, WCAG AA, and no sideways scroll at 375px. Its one request to
+  another host is the visit counter, a cookieless GoatCounter image in the footer of `site/index.html` only, which the
+  footer and the Privacy Policy both name: add nothing else that calls out, and never put it on a page in `public/`. Its run clip is a
   slice of the promo film that the workflow renders and crops (see the workflow's header), so a change to the film's
   timing or layout has to be matched in the `clip` line there. The opened folder beside it is drawn in HTML
   (`.fw-list`), from the film's `FOLDERS` in `store/src/parts.ts`: keep the two lists in step, and its open

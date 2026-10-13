@@ -490,6 +490,15 @@ code {
 .foot p {
   margin: 0 0 6px;
 }
+/* The visit counter: one image from GoatCounter, the page's only request to another host. It draws nothing and takes
+   no room, so the footer is the same with it blocked. */
+.foot .count {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
 
 /* ---- narrow screens ---- */
 @media (max-width: 860px) {

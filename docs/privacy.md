@@ -67,7 +67,10 @@ Removing the extension from Chrome deletes everything it stores. It does not del
 - A few links in the extension open web pages in your browser, and only when you click them: its guide to opening an
   export in an AI assistant, on the extension's website at `maccabi.ronirachmani.com`, and its issue tracker on GitHub.
   The extension sends these pages nothing. Your browser loads them like any page you visit, so their host, GitHub for
-  both, sees the visit, including your IP address, and handles it under its own privacy policy.
+  both, sees the visit, including your IP address, and handles it under its own privacy policy. The website's home page
+  also loads one image from GoatCounter (`goatcounter.com`), which counts visits to that page without cookies or
+  scripts. GoatCounter sees that visit too, including your IP address and browser, and handles it under its own
+  privacy policy. The pages inside the extension load no such image.
 - Your information is not sold, not shared with third parties, and not used for advertising, analytics,
   creditworthiness or lending.
 - The extension contains no remote code. Everything it runs is in the package you installed.
