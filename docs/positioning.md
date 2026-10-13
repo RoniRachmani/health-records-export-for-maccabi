@@ -159,7 +159,7 @@ records on demand. Ours is for a member who installs an extension, presses one b
 | "Does the AI log in to my Maccabi account?" | No. You log in yourself, in your own browser. The assistant only reads the folder on your computer, and never sees your ID number, a login code or the site. |
 | "Is this official?" | No. It's unofficial and says so everywhere. It uses your own logged-in session, like you would. |
 | "Will the AI give me medical advice?" | It explains and suggests, and names the record behind every answer. You and your doctor decide. |
-| "Do I need to pay for an AI?" | The extension is free. Opening the folder takes the desktop app of Claude, on a paid plan, or of ChatGPT, whose free plan includes Work with lower usage limits. |
+| "Do I need to pay for an AI?" | The extension is free. Opening the folder takes the desktop app of Claude, on a paid plan, or of ChatGPT, whose free plan includes Work with limited usage. |
 | "Is it complicated?" | Log in, press Start export, and open the folder in your assistant. The page shows each step as it looks. |
 
 ## Getting started, as the customer sees it
@@ -173,8 +173,15 @@ Keep the page's instructions matched to what the apps show. This was checked on 
 
 And against each vendor's documentation on 13 October 2026, which is where these come from:
 
-- **ChatGPT's picture shows what a free plan sees:** GPT-6 Luna (GPT-6.1 Sol starts at Plus) and **Ask for approval**
-  (**Approve for me** has to be turned on in Settings first).
+- **ChatGPT's picture shows what a free plan sees,** as the app drew it on a free account that day: **Chat** and
+  **Work**, "What should we work on?", **Ask for approval** (**Approve for me** has to be turned on in Settings
+  first), 5.6 Terra, and **Choose project**, **Files** and **Plugins** under the box. Their documentation names
+  other models for the free plan (GPT-6 Luna, with GPT-6.1 Sol from Plus), "subject to rollout", so the picture
+  follows the app.
+- **Free plan's limits:** OpenAI says Work and Codex share usage limits and publishes none for the free plan, so the
+  page says its usage is limited, not that it is lower.
+- **Training:** both let a personal account turn it off. ChatGPT: Settings, Data controls, "Improve the model for
+  everyone" (their help center). Claude: the model improvement setting under Privacy.
 - **Platforms:** Claude's folder access is on Mac and Windows. ChatGPT's desktop app is also on Linux, in preview.
 - **Memory:** a Claude project keeps its own. ChatGPT has no project-only memory, so the page says to check what a
   project's memory shares, not that it is kept there.
