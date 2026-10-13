@@ -25,8 +25,6 @@ import { root, sleep } from './stage.mjs';
 const PACE_MS = 300;
 /** Enough for any bundle split; a scan that reaches it says so. */
 const MAX_FILES = 600;
-/** How long each of the two pages' scripts may take to read. */
-const READ_MS = 5 * 60_000;
 const LEGACY_PAGE = ORIGIN + '/online/medicalfile/summary/';
 /** How long a page is left to load its scripts before they are listed. */
 const SETTLE_MS = 5000;
@@ -174,20 +172,10 @@ const ours = (url) => {
   }
 };
 
-/** Script folders: a file the code names is read only from a folder the page loaded a script from. */
-const folder = (url) => url.replace(/[?#].*$/, '').replace(/[^/]*$/, '');
-
 export async function readScripts(page, start, found) {
   const queue = [...start];
-  const folders = new Set(start.filter(ours).map(folder));
-  const until = Date.now() + READ_MS;
   let redirects = 0;
   while (queue.length && found.read.size + found.failed.size < MAX_FILES) {
-    if (Date.now() > until) {
-      found.capped = true;
-      console.log(`  Stopped after ${READ_MS / 60_000} minutes of reading.`);
-      return;
-    }
     const url = queue.shift();
     if (found.read.has(url) || found.failed.has(url) || !ours(url)) continue;
     const got = await page.evaluate(call(fetchText, url), 60_000);
@@ -210,7 +198,7 @@ export async function readScripts(page, start, found) {
     seen.routes.forEach((r) => found.routes.add(r));
     for (const f of seen.files) {
       const next = new URL(f, url).href;
-      if (folders.has(folder(next)) && !found.read.has(next) && !found.failed.has(next) && !queue.includes(next)) queue.push(next);
+      if (!found.read.has(next) && !found.failed.has(next) && !queue.includes(next)) queue.push(next);
     }
     if (found.read.size % 10 === 0) console.log(`  ${found.read.size} read, ${found.failed.size} would not load, ${queue.length} to go`);
   }
