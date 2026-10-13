@@ -227,7 +227,7 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   `test-results/` (a result's `details/` JSON beside its `files/` PDF of the same name, the film's earlier drill) in step
   with the export. Its copy follows `docs/positioning.md`, and must agree
   with the README's opening and its *Hand it to an AI assistant* on the facts they share.
-- **The landing page's motion is CSS, and it ends where the still page is.** The hero loops; the rest plays as it comes
+- **The landing page's motion is CSS, and it ends where the still page is.** The hero plays once as the page opens, from a clean slate to the finished dashboard, and stops there; the rest plays as it comes
   into view, on scroll timelines (`animation-timeline: view()`), so a picture's progress is its place on the screen.
   Every animation moves only opacity, transform, clip-path or colour; its last frame is exactly the page with no motion,
   which is what `prefers-reduced-motion` (under which nothing moves) and a browser without scroll timelines (each
