@@ -1,6 +1,6 @@
 // A live test run against your own Maccabi Online account: opens a browser with the development
 // build loaded, signs in with the username and password from 1Password if the session has ended,
-// and drives an export through the dev bridge (see *Driving a run from the console* in the README).
+// and drives an export through the dev bridge (see *Driving a run from the console* in CONTRIBUTING.md).
 // It skips orderMedicalFile (dev:skipOrder), the one request that changes anything, so a test never orders the
 // medical file or makes Maccabi send an SMS, and it stops before save, so no ZIP is downloaded; what it reports is
 // what was collected. With --export it starts nothing: the member presses Start in the popup, and that export is a

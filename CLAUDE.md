@@ -3,8 +3,9 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 Chrome MV3 extension (TypeScript, Vite, no framework) that exports a member's Maccabi Online medical
-records as one ZIP. `README.md` is the user- and contributor-facing document and is kept current: read
-its *How it works* section before changing the run, and update it when behaviour changes.
+records as one ZIP. `README.md` is the user-facing document and `CONTRIBUTING.md` the contributor-facing one, and
+both are kept current: read `CONTRIBUTING.md`'s *How a run works* before changing the run, and update them when
+behaviour changes. `docs/endpoints/README.md` describes the endpoint scan.
 
 ## Commands
 
@@ -42,7 +43,7 @@ There is no linter or formatter configured; `typecheck` and `test` are the whole
 here. GitHub adds one more: CodeQL default setup scans pull requests and runs weekly, and it has no
 workflow file in the repo — it is configured in the repository's settings. Load `dist-dev/`
 (or `dist/`) unpacked at `chrome://extensions` to run it; the dev build is named "… (dev)" and can be
-driven from the Maccabi page's console (see *Driving a run from the console* in the README).
+driven from the Maccabi page's console (see *Driving a run from the console* in `CONTRIBUTING.md`).
 
 Before `store-assets` or `store-video`, install Roboto on the machine (`fonts-roboto` on Debian/Ubuntu,
 then `fc-cache -f`) and check `fc-list | grep -i roboto`: the renders photograph the popup, and without

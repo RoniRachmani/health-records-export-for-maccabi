@@ -19,4 +19,4 @@ npm run store-video -- --remux  # new soundtrack only, fast
 
 Before pushing: `npm run release:zip`.
 
-The full list, with every option, is in [CLAUDE.md](../CLAUDE.md#commands) and the README's *Development* section.
+The full list, with every option, is in [CLAUDE.md](../CLAUDE.md#commands) and [CONTRIBUTING.md](../CONTRIBUTING.md).

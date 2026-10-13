@@ -19,17 +19,13 @@ where an assistant can read all of it.
 </p>
 
 <p align="center">
-  Website: <a href="https://maccabi.ronirachmani.com/">maccabi.ronirachmani.com</a>
-</p>
-
-<p align="center">
   <a href="https://maccabi.ronirachmani.com/#ask">
     <img src="store/assets/screenshot-1-ask.png" alt="Your whole Maccabi history, and a genius friend who’s read all of it: an AI assistant opened on an export, saying what stands out in a made-up member’s records and naming the file behind the answer" width="720">
   </a>
 </p>
 
 <p align="center">
-  <a href="https://maccabi.ronirachmani.com/#ask">What to ask your AI assistant</a>, and <a href="https://maccabi.ronirachmani.com/#where">where to open your export</a> · every record in the picture is made up
+  <a href="https://maccabi.ronirachmani.com/">maccabi.ronirachmani.com</a>: <a href="https://maccabi.ronirachmani.com/#ask">what to ask your AI assistant</a>, and <a href="https://maccabi.ronirachmani.com/#where">where to open your export</a> · every record in the picture is made up
 </p>
 
 - **Everything, in one place.** Your full medical file, ordered for the widest range Maccabi allows, plus every result,
@@ -52,11 +48,6 @@ where an assistant can read all of it.
   ▶︎ <a href="https://youtu.be/0-K1rAA4uMM">Watch an export, start to finish</a> · 1 minute, narrated
 </p>
 
-Under the hood, each record is the site's own JSON, exactly as it was sent, beside its PDF and named so you can read it:
-`<date>_<id>_<title>`. If your session ends partway through, log in again and press **Resume**: files collected so far
-are kept. The extension talks only to `online.maccabi4u.co.il`, has no servers or analytics, and never sees your
-password.
-
 [Install](#install) · [Export your records](#export-your-records) · [What's in the ZIP](#whats-in-the-zip) ·
 [Privacy and safety](#privacy-and-safety) · [Development](#development)
 
@@ -68,7 +59,8 @@ You need Chrome 120 or newer.
 Chrome keeps it up to date. However you install it, the build isn't minified, so you can read exactly the code that
 runs.
 
-### Load it unpacked instead
+<details>
+<summary>Load it unpacked, or build it from source</summary>
 
 1. Download `health-records-export-for-maccabi-<version>.zip` from the
    [latest release](https://github.com/RoniRachmani/health-records-export-for-maccabi/releases/latest) and unzip it.
@@ -79,9 +71,7 @@ runs.
 Chrome doesn't update an unpacked extension. To move to a newer one, download it again over the same folder and press
 the reload arrow on `chrome://extensions`. Finish or stop an export first: a reload ends it.
 
-### Build from source
-
-You need Node.js 22 or newer.
+To build it yourself, you need Node.js 22 or newer:
 
 ```sh
 git clone https://github.com/RoniRachmani/health-records-export-for-maccabi.git
@@ -91,6 +81,8 @@ npm run build
 ```
 
 Then load the `dist/` folder the same way.
+
+</details>
 
 ## Export your records
 
@@ -118,16 +110,14 @@ Then load the `dist/` folder the same way.
   export waits until you come back.
 - **Don't log in to Maccabi Online anywhere else while it runs.** Maccabi keeps one session per member, so logging in
   from another browser or computer ends the one the export is using.
-- **Your session is kept awake.** Maccabi Healthcare Services logs you out after five and a half to six minutes without a click or a keypress on the page,
-  and an export asks nothing of you for far longer than that, so while it runs the extension signals activity in that
-  tab every few minutes, in the form each of the site's pages listens for. If the export pauses because you switched away, it also sends the site's own keep-alive request every few
-  minutes, since the site ends a session after 6 to 8 minutes without one. It stops as soon as the export does.
+- **Your session is kept awake.** Maccabi Online logs you out after about six minutes without a click, so while an
+  export runs the extension signals activity in that tab every few minutes. It stops as soon as the export does.
 
 ### If something goes wrong
 
 | The popup says | What to do |
 |---|---|
-| **Export paused** | Your session ended. Logging in to Maccabi Online anywhere else (another browser or computer) does this: Maccabi keeps one session per member. Log in to Maccabi Online again, click the icon on that tab and press **Resume**. (The extension first tries to reconnect by itself.) Also shown after Chrome restarts mid-export. |
+| **Export paused** | Your session ended, and the extension couldn't reconnect by itself. Log in to Maccabi Online again, click the icon on that tab and press **Resume**. Also shown after Chrome restarts mid-export. |
 | **Waiting for the Maccabi Online tab** | Bring the tab back to the front. The export continues on its own. |
 | **Export stopped** | Press **Try again** on the Maccabi Online tab. It continues from the step that failed. |
 | **The ZIP was not saved** | Press **Save again**. Also shown when Chrome closed while the ZIP was downloading. |
@@ -182,20 +172,12 @@ Each document is saved once. A form attached to an inquiry is often the very fil
 and a document can be uploaded twice: the copy isn't written again, and the record it belongs to says where the
 file is instead (`files[]`, with `same_as`).
 
-> Hebrew names are flagged UTF-8 in the ZIP, so Finder, Windows Explorer and 7-Zip read them correctly. macOS's
-> bundled `unzip` command is Info-ZIP 6.00, which predates that flag and garbles them — use `ditto -x -k <zip> <dir>`
-> there instead.
+Finder, Windows Explorer and 7-Zip read the Hebrew file names correctly. macOS's `unzip` command garbles them: use
+`ditto -x -k <zip> <dir>` there.
 
-`README.md` is written for whoever reads the export next, most often an AI assistant (see
-[Hand it to an AI assistant](#hand-it-to-an-ai-assistant)). A single line addressed to you comes first, linking the
-website's section on opening the folder in an assistant. Then it says how to work with the records, points
-at your full medical file PDF as the one document to start from, then says what the export doesn't contain — no DICOM images, no visit
-data over 12 months — so a reader doesn't take an omission for an absence in your history. It then goes folder by
-folder, and through the values that mislead: a lab `result` of 0 that is really a text answer, placeholder dates,
-and fields that change on every request. It shares a reader's context with the records themselves, so it is kept
-to what the files don't say for themselves, and the field names are left to the JSON. Its first line names the
-extension version and file layout that made the export, so two exports made by different versions can be told apart,
-and a missing folder is said to have failed or to have had nothing on record, from `export-errors.json`.
+`README.md` is written for whoever reads the export next, most often an AI assistant. It says what the files can't
+say for themselves: where to start, what the export doesn't contain, so an omission isn't taken for an absence in your
+history, and which values mislead, such as a lab `result` of 0 that is really a text answer.
 
 Each JSON file is the site's response as sent, wrapped with where it came from. Your member ID is never written into
 file paths or `endpoint` values:
@@ -213,8 +195,6 @@ Two exceptions: `medications-and-prescriptions/purchased-history.html` is the si
 (windows-1255; the site has no JSON version of it), and the two report files leave out the base64 PDF, which is saved
 in `files/` instead — those say so in their own `omitted` field.
 
-[docs/endpoints/endpoints.json](docs/endpoints/endpoints.json) maps every request to the file it produces.
-
 ### Not included
 
 - **Imaging studies (DICOM).** The site only opens them in its viewer. Export them by hand from there.
@@ -223,10 +203,8 @@ in `files/` instead — those say so in their own `omitted` field.
 
 ### Hand it to an AI assistant
 
-Open your export in an AI assistant, and it becomes a genius friend who's read your whole file. It reads the Hebrew,
-answers in plain English, and names the record behind every answer. **[See what to ask, with
-pictures](https://maccabi.ronirachmani.com/#ask)**, and
-[how to open it, step by step](https://maccabi.ronirachmani.com/#where), which the popup opens.
+The website has the full guide: **[what to ask, with pictures](https://maccabi.ronirachmani.com/#ask)**, and
+[how to open your export, step by step](https://maccabi.ronirachmani.com/#where). In short:
 
 Unzip the export and open the whole folder in an assistant's desktop app. A chat takes a few dozen files, and an export
 has hundreds:
@@ -244,15 +222,10 @@ usage is limited, and a large export may need more. Then start with:
 Then ask what you'd ask a friend who had read everything:
 
 - *What stands out in my records?*
-- *What's one thing I should do today to improve my health?*
-- *What might I be due for?*
 - *What changed in my latest blood test?*
 - *What should I raise with my doctor on Thursday?*
-- *Anything in my history a new doctor should know?*
 
-Or ask it to make something: a chart of your cholesterol, blood sugar or blood pressure over the years, a weekly meal
-or fitness plan fitted to what's in your file, or a one-page summary for a new doctor. Tell it what the records can't
-know, like what you take now: it keeps its notes in a folder of its own, beside the files you add.
+Or ask it to make something, like a chart of your cholesterol over the years or a one-page summary for a new doctor.
 
 The export's `README.md` is the assistant's instructions: it asks it to show the file and page behind each fact, leave
 your files alone, keep your name and ID out of searches, and say plainly when something needs a doctor. It advises; you
@@ -266,13 +239,11 @@ and your doctor decide. For urgent symptoms, call your doctor or Magen David Ado
   The session token is kept in Chrome's in-memory session storage and never written to disk.
 - Collected files are staged in the extension's IndexedDB and deleted as soon as the ZIP is saved, or when you stop
   the export.
-- Apart from the medical file order, it only reads. Requests go one at a time, 300 ms apart — a few hundred over an
-  export, more for a long history — and all of them are listed in [docs/endpoints/endpoints.json](docs/endpoints/endpoints.json). It never
-  calls anything that changes or deletes data, marks items as read, returns session credentials, or touches payment
-  details.
-- If Maccabi Healthcare Services answers 429, the extension waits exactly as long as the response asks and tries once more. If Maccabi Healthcare Services
-  asks again, or asks for a wait longer than two minutes, the export stops rather than keep knocking. Files collected
-  so far are kept, so you can try again later.
+- Apart from the medical file order, it only reads. Requests go one at a time, 300 ms apart, and every one is listed
+  in [docs/endpoints/endpoints.json](docs/endpoints/endpoints.json) with the file it produces. It never calls anything
+  that changes or deletes data, marks items as read, returns session credentials, or touches payment details.
+- If Maccabi Online asks it to slow down, it waits as long as it's asked and tries once more, then stops rather than
+  keep asking. Files collected so far are kept, so you can try again later.
 
 > [!WARNING]
 > The ZIP isn't encrypted. Anyone who can open it can read your health information. Keep it somewhere safe, and take
@@ -312,8 +283,7 @@ npm run dev            # development build in dist-dev/, rebuilt on change
 npm run build          # store build in dist/
 ```
 
-Load `dist-dev/` at `chrome://extensions` the same way as `dist/`. It shows up as
-"Health Records Export for Maccabi (dev)".
+Load `dist-dev/` unpacked at `chrome://extensions`. It shows up as "Health Records Export for Maccabi (dev)".
 
 ### How it works
 
@@ -329,38 +299,9 @@ flowchart LR
   sw -- chrome.downloads --> zip[ZIP in Downloads]
 ```
 
-The service worker walks a fixed plan (`PLAN` in `src/extension/shared/state.ts`): one crossing to the old site to
-order the medical file and collect purchases, hospital stays and uploads (with the member's details and prescriptions,
-which the REST API answers from any page), back to `/sonline/` for the other REST API sections, and the medical file collected last, by which time Maccabi Healthcare Services has had the whole run to build it. Each finished step is
-checkpointed in `chrome.storage.local`, so a paused run, or a restarted service worker, continues from there. The
-medical file is ordered at most once per run: once the order has gone out, a resume or a reconnect that comes back
-through that step skips it, even when Maccabi Healthcare Services' answer was lost, and only a plain refusal is tried again.
-
-A step that continues is run again from its start, so every step is safe to repeat: JSON is rewritten only when
-its content changed, and a document already staged is not asked for again. Staging also keeps a SHA-256 index of the
-documents it holds: `Collector.pdfOnce` saves a form, an upload or a linked visit's summary only when no staged file
-has its bytes, and otherwise records it as a copy of that file, so a repeat makes no request for it either. Each staged
-file also keeps the step, and the part of it, that first wrote it: the popup counts the files each finished section
-collected from those, so a resumed run's sections still show what they hold. A run
-paused before an update that renames files (`FILE_LAYOUT`) can't be continued, only discarded, or it would stage the
-same records twice under two names.
-
-A request that fails inside a step is filed as a problem under that step (and cleared when the step runs again), with
-the member id written as `{mid}`. Every section writes its folder whenever the site answers, and files a problem when
-it doesn't, so when the ZIP is written the problems become `export-errors.json`, each put against the folder it is
-about (`STEP_FOLDERS` in `src/extension/shared/readme.ts`), and the export's `README.md` says of each missing folder
-whether it failed or had nothing on record. A test walks every record a fake run writes and checks that each file it
-names (`file`, `same_as`, `visit`, `linked_from`) is in the export, with and without failures, and across a resume.
-
-The tab visits a single legacy page, `/online/medicalfile/summary/`. The legacy services answer only after some
-`/online/` page has been loaded in the session, and the medical file order has to be sent from that one, so the four
-steps that need the old site share it. The run returns to `/sonline/` before waiting for the medical file: the site
-renews the session token only there, and the wait is the longest part of the run.
-
-REST API requests (`/sonline/`) go from the service worker, with the session token read from the tab. Legacy requests
-(`/online/`) and the medical file order go from inside the Maccabi Online tab, where the site requires them to originate.
-Like the service worker's own requests, a download from the tab gives up only after 60 s with nothing arriving, so a large
-upload on a slow line still finishes; a file over 32 MB, more than the tab can hand back, is filed as a problem instead.
+The service worker walks a fixed plan of steps and checkpoints each one, so a paused run continues where it stopped.
+REST API requests go from the service worker; the legacy pages' requests, and the medical file order, go from inside
+the Maccabi Online tab, where the site requires them to originate.
 
 | Path | Contents |
 |---|---|
@@ -378,260 +319,9 @@ upload on a slow line still finishes; a file over 32 MB, more than the tab can h
 | `scripts/` | Build scripts (icons, store images and video, the release ZIP), the live run, the export from the terminal, the endpoint scan, and the check of the landing page's motion (`npm run site-check`) |
 | `.github/` | The CI workflow that runs the gate, the workflows that publish a release, publish the website and re-render the store images, the issue forms, the security policy, and Dependabot |
 
-### The look
-
-The popup and the pages that ship with it share one design system: navy headings over white, one bright blue
-for actions and progress, magenta for links, pale-blue cards at a 20px radius, pill buttons, and a soft
-navy-tinted shadow. The register is meant to feel at home next to Maccabi Online rather than foreign to it, while
-staying plainly the extension's own — there is no Maccabi Healthcare Services logo or wordmark anywhere, and the header says
-*Unofficial* on every screen, in a chip beside the name whose tooltip, and what a screen reader reads, is the whole
-disclaimer: "Not affiliated with Maccabi Healthcare Services".
-
-The stylesheets ask for Roboto first and fall back to the system face. That is a local lookup only: the extension
-ships no fonts and downloads none.
-
-The tokens live at the top of `src/extension/popup/popup.css`, with `public/pages.css` repeating the ones the privacy
-and terms pages need (`public/` is copied verbatim, so it cannot import them). `.github/workflows/pages.yml` publishes `public/` on GitHub
-Pages whenever it changes on `main`, so the policies can be read before installing. The same
-workflow puts the landing page, `site/`, at the site's root: it is for the web only, so it is kept out of `public/`.
-It adds `site/ai-assistant.css` and `site/site.css` for its wider, picture-led layout: its pictures are HTML and inline
-SVG with made-up records, and it runs no script (the tabs of its Ask section are radio buttons). Its last sections are
-the guide to opening an export in an AI assistant, which the popup and every export's README link to; the guide's old
-address, `ai-assistant.html`, is a redirect there. `popup.css` and `pages.css` both pin `color-scheme: light` —
-there is no dark theme, and pinning it keeps Chrome's auto-dark-mode from repainting controls and scrollbars
-against a light page. Every text colour meets WCAG AA on the surface it sits on. Chrome caps a popup at 600px
-tall, so keep the states that are not disclosures under it; `npm run store-assets` re-renders the store images.
-
-### Driving a run from the console
-
-The development build adds a bridge content script, so you can run and inspect an export from the Maccabi Healthcare Services page's
-DevTools console:
-
-```js
-const dev = (msg) => new Promise((ok) => { const id = Math.random(); addEventListener('message', function f(e) { if (e.data?.__hremDev === 'res' && e.data.id === id) { removeEventListener('message', f); ok(e.data.res); } }); postMessage({ __hremDev: 'req', id, msg }, '*'); });
-
-await dev({ type: 'dev:state' });
-await dev({ type: 'dev:skipOrder', on: true });                  // test a full run without ordering
-```
-
-| Command | Does |
-|---|---|
-| `dev:state` | Run state, staged files per folder, token status |
-| `dev:start`, `dev:resume`, `dev:cancel`, `dev:dismiss`, `dev:retrySave` | What the popup's buttons do |
-| `dev:problems` | Items that failed so far |
-| `dev:rootFiles` | Write the ZIP's root files as `save` does, without the ZIP, and reply with the README's version line, its failed-to-collect section and `export-errors.json` |
-| `dev:titleFields` | Which response fields hold a display string, and in which language. Field names only. |
-| `dev:names` | Every staged file's path, sorted, to check how files are named |
-| `dev:stopBefore` `{step}` | Pause before a plan step. Without `step`, clears it. |
-| `dev:skipOrder` `{on}` | `orderMedicalFile` does nothing while on, and `waitMedicalFile` keeps the file Maccabi already has. Stays set until turned off. |
-| `dev:reorder` `{on}` | `orderMedicalFile` orders even when a file from today over the same range is already ready (normally it uses that one), so a real order can be timed again the same day. Stays set until turned off. |
-| `dev:breakSession` | Invalidate the stored token, to test reconnecting |
-| `dev:rawDump` `{on}` | Stage every response of the next run under `_raw/` in the ZIP, byte for byte, beside the export. Set it before `dev:start`. |
-| `dev:routes` `{routes}` | Choose whether `/sonline/` and `/online/` requests go from the extension or the tab |
-| `dev:spike` `{url, method, route, auth}` | Send one request and report its status and shape |
-| `dev:reload` | Reload the extension |
-
-Replies carry statuses, sizes and counts, never record contents; file paths (`dev:names`, and the problems' places)
-carry records' titles. None of this is in the store build.
-
-### A live run from the terminal
-
-`npm run live` builds the development build and runs an export against your own account: it opens a browser
-(Chrome, Chromium or Edge; `CHROME_PATH` picks one) with `dist-dev/` loaded, signs in if the session has ended,
-and drives the run through the commands above, printing the step, file count and problems as it goes. It always
-turns on `dev:skipOrder` first, and will not start unless the extension confirms it, so a test never orders the
-medical file or makes Maccabi send an SMS; the script itself never orders, with or without `--export` below. It stops before `save`, prints the
-files collected per folder and the time and requests of each step and part (the run's `timings`, which
-`docs/sections.md` tabulates), and discards the run, so nothing is downloaded. `npm run live -- --export` starts
-nothing: it turns both test switches off and waits for you to press Start in the popup, then follows that export,
-which is a real one (it orders the medical file, so Maccabi sends an SMS, and downloads the ZIP), and prints its
-timings with what the order did (placed, or skipped because today's file was already ready), the time from the
-order to the file being ready, and the ZIP's size. With `--reorder` beside it, that
-export orders even when today's file is already ready, to time a real order again the same day (`dev:reorder`, turned
-off again at the end). `npm run live -- --keep` leaves the
-browser and the paused run in place, to look at them. `npm run live -- --root-files` also writes the ZIP's root
-files before discarding the run (`dev:rootFiles`), and prints the README's version line, what it says failed, and
-`export-errors.json` beside the popup's problem count. `npm run live -- --names` prints every staged file's path
-(`dev:names`), to check how files are named. `npm run live -- --screenshots` photographs the popup
-before the start and at every step, into `.cache/live-screenshots/` (gitignored, since the problems it lists come
-from your records): it opens the toolbar popup itself, photographs it and closes it, so leave the browser window
-in front while it runs.
-
-The username and password come from 1Password through its CLI (`brew install 1password-cli`, then
-*Settings > Developer > Integrate with 1Password CLI* in the app), and only when the page asks for them. Put
-their secret references in `.env` (gitignored), so the file says where the credentials are and never holds them:
-
-```sh
-MACCABI_USERNAME=op://<vault>/<item>/username
-MACCABI_PASSWORD=op://<vault>/<item>/password
-```
-
-(`op item get <item> --format json` lists each field's `reference`; IDs in place of names survive a rename).
-Without them, the item named by `MACCABI_OP_ITEM` (default `Maccabi`) is used. The script walks Maccabi's three sign-in pages itself:
-the ID number, then *sign in with password* (never the SMS or voice-call code), then the password. They are filled once and never re-submitted, since a
-script retrying a wrong password is how an account gets locked. The browser profile lives outside the repo
-(`~/.hrem-live-profile`, or `LIVE_PROFILE`) and is kept between runs, so a session that is still alive is
-reused: every new sign-in ends your other sessions. Branded Chrome ignores `--load-extension`; there, load
-`dist-dev/` by hand once in that profile, and the script says so when it finds no extension answering.
-
-### An export from the terminal, without the extension
-
-`npm run export` makes an export with no extension installed: it opens the same browser and signs in the same way as
-`npm run live` (the profile, `.env` and 1Password references above), then runs the collector in Node — `src/core/`
-bundled for it into `dist-cli/` — with the requests sent from inside the Maccabi Online page, as the extension sends
-them from the tab (by the same functions: the script evaluates the source of `fetchInPage` and the others in `tab.ts`),
-and writes the folder the ZIP would hold into `./maccabi-export-<today>/`, root files included: the `README.md`,
-`CLAUDE.md`, `AGENTS.md` and `export-errors.json` of a popup export. A run of only some sections says so in its
-`README.md`: the sections it left out were not collected, which is not the site having nothing on record for them.
-
-```sh
-npm run export                          # test results and lab histories: about a minute, and nothing on the account changes
-npm run export -- --all                 # every section the extension collects
-npm run export -- --steps visits,referrals   # just those (the names in STEPS, src/core/steps.ts), in the run's order
-npm run export -- --out ~/health        # the folder goes under that directory; --keep leaves the browser open
-```
-
-It never orders the medical file — the one request that changes anything, and what makes Maccabi send an SMS — so
-`--all` takes the medical file already on the site, if there is one. A step that reads from another brings it along
-(`STEP_NEEDS`: the vaccination details need the birth date in the member record). A rerun into the same folder
-rewrites only the JSON that changed and asks for no document it already has, which is what Resume does for a popup
-run; the documents it found to be copies of another are remembered in `.export-state.json`, the one file in the
-folder that is the script's and not the export's. A run that is stopped (an ended session, a 429, a page that will not
-open) keeps what it collected and still writes the root files, with the stop filed against the step it happened in.
-Like the popup, it ends the member's other Maccabi sessions when it has to sign in, and a wrong password is never
-resubmitted. It is a tool for working on the collector, and for an export without the popup; the popup remains the
-way to export for everyone else. `scripts/headless-lib.mjs` holds the two seams it puts under the collector, the page
-as `Transport` and a folder as `Sink`, and `test/headless.test.ts` runs the test-results step through them against
-the fake site.
-
-### Finding what the export could add
-
-`npm run endpoints` lists what Maccabi Online's own front-end code can call that `docs/endpoints/endpoints.json` does not map.
-It signs in the same way (the profile, `.env` and 1Password references above), then reads only static files: the
-scripts the `/sonline/` app loads and the chunks they name, and the scripts of the legacy summary page with the
-addresses it links to. Each section of the app is a build of its own (`/sonline/MedicalFile/remoteEntry.js` and its
-chunks under `/sonline/medicalFile/static/js/async/`), so most of what it finds comes from those. It calls no API: an
-unknown call may change something on the account, so a call it prints is a candidate to look at in the site by hand,
-not something to try.
-
-It reads the calls themselves, not the strings near them. The site formats a path into a variable
-(`"v1/members/{0}/{1}/visits"`) and hands it to its client after the service's base, `rest.get(base, path)`, so the
-scan takes each fetch, client call, ajax and XHR open, follows the address to the value just above it, and joins it to
-its base. Each candidate comes with its HTTP method, the file, line and column of the call, and how it was found:
-`[call]` for a call the scan followed, `[named]` for a string that reads as an address with no call seen (most are
-documents the site opens in a tab). A call that is not a `GET` is marked, since it may change something. Where the
-site picks an address by a condition (`isV2 ? "v2/…" : "v1/…"`), the call is given once for each side. A call is found
-whatever its path looks like: `DirectorshipAPI`'s `eligibilities` has no version and no `members/` in it. A legacy
-service (`.asmx`, `.ashx`) whose call could not be read is marked too, as method not read: most of those are `POST`s.
-
-The legacy site's scripts are written by hand, and the scan reads their habits too: a service's address kept at the
-top with the method's name added at each call (`ajaxUrl + "GetAllPurchasedPrescription"`), the Angular pages' own
-client (`webApi.Call(controller, action, …)`), and the files a `/// <reference path="…">` comment names, one of which
-holds `/online/handlers/ajax.ashx`, the default address of a wrapper no page loads. A call the site has commented out
-is not read.
-
-It reads the map the other way as well: of the requests `endpoints.json` writes out, how many the code still makes
-as calls, how many it only names (the documents the site opens in a tab), and which are not in it at all. One that
-drops out of the code is the first sign that the site moved something the export asks for.
-`docs/endpoints/scan-baseline.json` lists the seven a default run never finds, and the scan marks any other absent one
-`NEW`. `--all` gives the same account of `other-endpoints.json` and `MedDream-endpoints.json`, whose requests to other
-sites (the imaging viewer, the public directory) are counted apart: this scan reads the portal's code alone.
-
-Six of the seven are the services and popups of the uploads, hospital-stays and purchased-drugs pages. The scan opens
-only the legacy summary page, as the extension does (any legacy page registers the session, so the export asks those
-services from there). `--legacy-pages` opens those three pages for their script files, which the extension never does:
-it is what a member's click on the menu does, and each page then loads its own data, so it is not the default. It
-finds five of the six, and those pages' other calls, their writes among them (`WsPHRManager.asmx/DeleteFile`,
-`SaveFile`); the sixth, `GetFileDetails`, is only in a block the site has commented out. The seventh is the
-recommendations page, which the code names without `/online/`.
-
-```sh
-npm run endpoints                        # the services, API calls and legacy pages endpoints.json does not have
-npm run endpoints -- --all               # the mapped ones too, marked, and the app's page routes and service bases
-npm run endpoints -- --save ~/scripts    # also the scripts it read, laid out as on the site (a new folder, outside the repository)
-npm run endpoints -- --from ~/scripts    # analyze a saved folder again: no browser, no sign-in, a second
-npm run endpoints -- --out ~/scan.json   # also everything found, as JSON; --keep leaves the browser open
-npm run endpoints -- --rea               # also REA's parser on the files: about four minutes more; --jobs N
-npm run endpoints -- --legacy-pages      # also the scripts of three legacy pages the extension never opens
-```
-
-A healthy scan reads about a hundred files and fails on a handful, in about a minute and a half, nearly all of it the
-sign-in and the pause between files; the reading itself takes a second. On the runs of 13 October 2026 it gave 242
-entries, 203 of them calls with a method (102 `GET`, 73 `POST`, 17 `PATCH`, 11 `PUT`), and 190 that the map lacks. When
-many files "would not load", the site has changed how it names its chunks: the summary prints a few of the failed
-addresses, and `--save` keeps the scripts to read the naming from (site code, not records; still, keep it out of the
-repository).
-
-`--rea` puts a parser beside the scan's own reader: [REA](https://github.com/morluto/rea) (Reverse Engineer Anything)
-parses each script without running it, and a call it parsed with a literal address is marked `[ast]`. It records a
-call only when its address is a literal at the call (its own limits say string-built endpoints stay unknown), and this
-site builds nearly all of them, so on those runs it added no call. What it adds is the page routes built in code (21
-with their wildcards, such as `/medicalFile/**`, for the 12 a router's table spells out and the scan reads itself), a
-parser's word on how far each file could be read (all of them, 12 around a syntax error), and the source maps declared
-(none). It runs on this machine, on the script files alone, and is not a dependency of the repository: the first run
-fetches `rea-agents` from npm at the version the script names (`REA_BIN` points at an installed one). It takes about
-four minutes for the whole app: 107 files, 53 MB, three groups at a time (`--jobs`) on an 8-core Apple M2.
-
-`scripts/endpoint-scan.mjs` is the run, `scripts/endpoint-scan-lib.mjs` holds what the scan decides, and
-`test/endpointScan.test.ts` runs that on made-up scripts.
-
-To see what a candidate returns, open its section in Maccabi Online yourself with DevTools' Network panel recording,
-and read the requests the site sent. A saved capture (`.har`) holds that section's records, the member id and the
-session token in the clear: keep it on your machine and delete it when done. `.gitignore` blocks `*.har`.
-
-### Releasing
-
-```sh
-npm run release        # all of it from clean: tests, dist-dev/, the release ZIP, the store images and the video
-npm run release:zip    # the same without the store images and the video
-npm run clean          # remove dist/, dist-dev/, dist-store/, dist-cli/ and release/
-npm run package        # release/health-records-export-for-maccabi-<version>.zip for the Chrome Web Store and GitHub release
-npm run store-assets   # store/assets/ screenshots, promo tiles, the video's poster and the web page's link preview (needs Chrome, Chromium or Edge; set CHROME_PATH if not found)
-npm run store-video    # store/assets/promo-video.mp4, the promo video (same browser; ffmpeg if you have it)
-npm run icons          # public/icons/ and store/assets/icon-128.png
-```
-
-`package` builds `dist/` first, and refuses a development build. The store images and the video show the real
-popup with made-up states, and they need Roboto on the machine that draws them. Without it, run the *Store images*
-workflow from the Actions tab (or `gh workflow run store-assets.yml`, with `-f shots="start open"` for only some): it
-renders them on Linux with Roboto and commits the ones that changed. [docs/store-listing.md](docs/store-listing.md)
-has everything to fill in on the store dashboard.
-
-The video is drawn frame by frame in the same headless browser (`store/src/video.ts`), so nothing depends on the
-speed of the machine rendering it: the export it plays is the real popup, driven through a whole run by states
-built from the real plan and its weights. It comes out in 4K at 60 fps — the 1920×1080 stage drawn at twice its
-size — and each frame is piped straight into the encoder: `ffmpeg` when that is on `PATH`, and otherwise, on
-macOS, `scripts/encode-mp4.swift`, compiled on the spot. A full render takes about 20 minutes; give two times in
-seconds to render one part of it while working on it, e.g. `npm run store-video -- 8 12`.
-
-Its soundtrack is scored from the same timeline by `scripts/soundtrack.mjs`: music and effects synthesized there,
-from oscillators and noise, and narration spoken by ElevenLabs (`scripts/narration.mjs`). The voice comes from one
-take of the whole script, made in ElevenLabs with the text `--script` prints and brought in with
-`--import <take>`, which cuts it into lines at the pauses; or, with `ELEVENLABS_API_KEY` in the environment or a
-gitignored `.env`, line by line over the API. `ELEVENLABS_MODEL` picks the model (Eleven v4, `eleven_v4`, unless
-set; set it for `--script` and `--import` too). Spoken lines are cached in `.cache/narration/` by voice, model and
-words, so only a changed line costs anything. `--audio-only` writes the soundtrack alone, to listen to; `--remux` puts a changed soundtrack
-on the last render's picture in seconds, without drawing it again; `--no-narration` leaves the voice out, and
-`--silent` the sound. The MP4 is not committed — the store's video
-field takes a YouTube link, so upload it there and paste the link on the dashboard. The poster above it is one frame of the same
-film, drawn by the same page: `npm run store-assets -- poster`.
-
-### Ground rules
-
-- **Never commit real data.** No responses, exports, PDFs or anything else taken from a real account. Test fixtures are
-  synthetic.
-- **List every request in [docs/endpoints/endpoints.json](docs/endpoints/endpoints.json).** The privacy policy and the store review rely on
-  it being complete.
-- **Keep the policies in sync.** `docs/privacy.md` goes with `public/privacy.html`, and `docs/terms.md` with
-  `public/terms.html`. Change the effective date when you change either. For a material change, also set
-  `TERMS_EFFECTIVE` in `src/extension/shared/state.ts` to the new date, so the popup asks users to accept again.
-  The landing page's guide to opening an export (`site/index.html`, from `#where`), which the popup's "How to ask an
-  AI" opens, must agree with *Hand it to an AI assistant* above on the facts that section keeps: the apps, the first
-  message and the safeguards. The Privacy Policy lists the links the extension opens: add to it before adding another.
-- **Keep [public/third-party-notices.txt](public/third-party-notices.txt) current.** It carries the licenses of
-  third-party code bundled into the package (fflate, and Vite's module preload polyfill). Update it when a runtime
-  dependency is added or upgraded.
-- **Regenerate the store images** with `npm run store-assets` when the popup changes.
+[CONTRIBUTING.md](CONTRIBUTING.md) has the rest: how a run is checkpointed and resumed, the design system, driving a
+run from the console or the terminal, releasing, and the ground rules. [docs/endpoints/README.md](docs/endpoints/README.md)
+covers the scan for requests the site makes that the export doesn't.
 
 ## Issues
 

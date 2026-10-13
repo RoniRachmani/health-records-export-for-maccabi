@@ -1,8 +1,8 @@
 // Lists what Maccabi Online's own front-end code can call that docs/endpoints/endpoints.json does not map, with the
 // HTTP method of each call and the place in the code that makes it, and which of the requests the maps write
 // out the code no longer makes. For finding records the export could add, and for seeing what moved after the
-// site changes. How it reads the code, what a run finds and how long one takes are in the README, under
-// "Finding what the export could add"; what it decides is in endpoint-scan-lib.mjs.
+// site changes. How it reads the code and how long a run takes are in docs/endpoints/README.md; what it
+// decides is in endpoint-scan-lib.mjs.
 //
 //   npm run endpoints                    the services and API calls that endpoints.json does not have
 //   npm run endpoints -- --all           the ones it has too, marked, and the app's own page routes
