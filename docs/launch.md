@@ -46,7 +46,7 @@ One channel in each window, because that is the only way to tell them apart (see
 | Week | What | Where | Notes | Status |
 |---|---|---|---|---|
 | 14–17 Oct | Baselines, tagged store links, this log | | Before any post | Links tagged. The baseline row still needs the dashboard's and GoatCounter's numbers |
-| 18–24 Oct | [A message](#a-message-to-someone-you-know) to 30–40 Maccabi members | WhatsApp, direct messages | About one contact in four is a member, so that is some 150 people, or the groups you're in. Aim: 10 installs, 3 reviews, 5 conversations | |
+| 18–24 Oct | [A message](#a-message-to-someone-you-know) to 30–40 Maccabi members | WhatsApp, direct messages | About one contact in four is a member, so that is some 150 people, or the groups you're in. Aim: 10 installs, 3 reviews, 5 conversations, and a word with 5 who stopped | |
 | 25–31 Oct | [The founder's post](#linkedin), and a comment on day 3 | LinkedIn | Needs nothing before it | |
 | 1–7 Nov | [*Loose ends*, in Hebrew](#hebrew-ai-groups) | 2 or 3 AI groups on Facebook, two days apart | Ask each admin first. Needs the first reviews on the listing | |
 | 8–14 Nov | [Ask in English](#english-speaking-groups) | Olim groups, r/Israel | The test above | |
@@ -121,17 +121,62 @@ only measure this launch gives of what the other three quarters would want.
 
 ### What to ask a user
 
-1. What was the first thing you asked it?
-2. Where did you get stuck: installing, the export, or opening the folder?
-3. Which app did you open it in, and were you already paying for it?
-4. Would you run it again? What for?
+Ten conversations of about 15 minutes, by voice, each answering positioning.md's *To validate with customers*. Five
+come from the first week, two or three from the English-speaking week (the test of point 6), and the rest from whoever
+answers a post. People you know will be kind, so every question asks what they did, not what they think of it.
 
-In Hebrew, for the first week's messages:
+Open with this, and if someone shares their screen, they stop before opening the folder:
 
-1. מה הדבר הראשון ששאלתם?
-2. איפה נתקעתם: בהתקנה, בייצוא או בפתיחת התיקייה?
-3. באיזו אפליקציה פתחתם את התיקייה, וכבר שילמתם עליה לפני כן?
-4. הייתם מריצים את זה שוב? בשביל מה?
+> I won't ask what is in your records, and you don't need to tell me.
+
+> לא אשאל מה כתוב ברשומות שלכם, ואין צורך לספר לי.
+
+| Part | Ask | In Hebrew |
+|---|---|---|
+| Before | When did you last look something up in Maccabi Online? What was it? | מתי בפעם האחרונה חיפשתם משהו במכבי אונליין? מה זה היה? |
+| | Which AI apps do you use, and where: phone, browser, desktop app? Do you pay for any? | באילו אפליקציות AI אתם משתמשים, ואיפה: בטלפון, בדפדפן או באפליקציית דסקטופ? אתם משלמים על אחת מהן? |
+| The run | Walk me through what happened from when you opened the link. | ספרו לי מה קרה מהרגע שפתחתם את הקישור. |
+| First question | What was the first thing you typed? And after that? | מה הדבר הראשון שכתבתם לו? ומה אחר כך? |
+| | Did you check any answer against the record it named? | בדקתם תשובה כלשהי מול הרשומה שהוא ציין? |
+| Reaction | Did you tell anyone about it? What did you say? | סיפרתם על זה למישהו? מה אמרתם? |
+| Keeping | Where is the folder now? Have you opened it since? | איפה התיקייה עכשיו? פתחתם אותה מאז? |
+
+In *The run*, follow up on what they leave out: phone or computer, what they expected **Start export** to do, what they
+did during the wait, and what they did with the ZIP. In *Reaction*, don't offer the three answers positioning.md lists:
+how they retold it to someone else is the pillar, in their own words.
+
+**The people who stopped.** Whether a member already has a paid desktop app can't be learned from those who ran an
+export: the ones without it never got that far. So in the first week, the only one where you know who they are, also
+ask five members who got the message and didn't install, or didn't export:
+
+> How far did you get? And which AI apps do you have on your computer?
+
+> עד איזה שלב הגעתם? ואילו אפליקציות AI מותקנות לכם במחשב?
+
+**Fourteen days later**, one message to each person you talked to. "Would you run it again?" is a guess about the
+future, and this is what they did:
+
+> Have you opened the folder again since we spoke? What for?
+
+> פתחתם את התיקייה שוב מאז שדיברנו? בשביל מה?
+
+**What to write down**, one row a person, and **not in this repo**: these are notes about real people. No names and
+nothing from a record. Only the counts come back here, in the log's *Notes*.
+
+- The assistant apps they had before, and whether they paid.
+- How far they got (installed, exported, opened the folder, asked), and where they stuck.
+- Their first question, as one of the nine Ask tabs or "other".
+- How they retold it, word for word, and which it is: "I finally understand it", "I found something", "I finally have
+  everything", or none of them.
+- Whether they kept the folder.
+- Day 14: whether they opened it again, and what for.
+
+**What decides.** Ten people give a direction, not a share, so the thresholds are set before the first call:
+
+- If one reaction accounts for six or more of the ten, that pillar leads the headline. Otherwise *Wholeness* stays.
+- If fewer than half of everyone asked, the people who stopped included, already had a desktop app, *yours to keep*
+  gets its picture back on the page (see positioning.md, the end of *Use cases: Ask*).
+- The Ask tabs are reordered only if the first questions gather on a tab that isn't among the first three.
 
 ## Posts
 
@@ -158,7 +203,7 @@ go in the log's *Asked for another fund*.
 > (It installs in Chrome on a computer, not a phone. Unofficial, and nothing to do with Maccabi.)
 > Not with Maccabi? Pass it to someone who is.
 
-After they have run an export, the questions above, and then:
+After they have run an export, [the conversation above](#what-to-ask-a-user), and then:
 
 > If it was useful, an honest review on the store helps the next person trust it:
 > https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp/reviews?utm_source=friends

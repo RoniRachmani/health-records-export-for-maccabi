@@ -295,6 +295,8 @@ Nothing shown comes from a real account.
 
 ## To validate with customers
 
+The questions that answer these, and what each answer decides, are in [launch.md](launch.md#what-to-ask-a-user).
+
 - Which of the nine Ask use cases people try first, and which they come back for. One data point so far: the 12
   October dashboard led with *Loose ends*, then *Explain a result*.
 - Whether the first reaction is "I finally understand it", "I found something my doctor missed", or "I finally have
