@@ -26,7 +26,7 @@ coverage/
 store/assets/*.mp4
 store/assets/*.wav
 /.cache/
-# The link previews of the AI assistant page and the landing page, and the repository's social preview:
+# The link previews of the landing page, and the repository's social preview:
 # rendered by the Pages workflow on each deploy.
 store/assets/og-*.png
 store/assets/social-*.png

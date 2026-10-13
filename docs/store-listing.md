@@ -288,7 +288,7 @@ Saves the signed-in member's own medical records from Maccabi Online (online.mac
 **Host permission** (`https://online.maccabi4u.co.il/*`):
 
 ```
-Reads the signed-in member's records and their PDFs from Maccabi Online, using the session the member is already logged in with. Each export also orders the member's full medical file, which the member is told about before starting. The extension accesses no other site. activeTab isn't enough: its access ends when the tab navigates, and an export moves the tab between the site's pages and runs for 5 to 20 minutes.
+Reads the signed-in member's records and their PDFs from Maccabi Online, using the session the member is already logged in with. Each export also orders the member's full medical file, which the member is told about before starting. The extension accesses no other site. activeTab isn't enough: its access ends when the tab navigates, and an export moves the tab between the site's pages and can run for up to 20 minutes.
 ```
 
 **scripting:**
@@ -297,7 +297,7 @@ Reads the signed-in member's records and their PDFs from Maccabi Online, using t
 Runs short functions in the Maccabi Online tab the member is logged in on, and only there. The functions do three things:
 1. Read the site's session token so the extension can make requests as the logged-in member. When the token is stale, they clear it so that the site issues a new one.
 2. Send the few requests that the site accepts only from its own pages: the legacy medical-file services and the medical file order.
-3. While an export runs, dispatch a mousedown event on the page every 4 minutes. Maccabi Healthcare Services logs members out after 6 minutes without a click or keypress, and an export runs for 5 to 20 minutes without user input. The member is told about this before the first export, and it stops as soon as the export ends.
+3. While an export runs, dispatch a mousedown event on the page every 4 minutes. Maccabi Healthcare Services logs members out after 6 minutes without a click or keypress, and an export can run for up to 20 minutes without user input. The member is told about this before the first export, and it stops as soon as the export ends.
 ```
 
 **downloads:**
@@ -389,10 +389,10 @@ Works only for Maccabi Healthcare Services (Israel) members logged in to https:/
 
 Without a login, the popup shows "How the export works" and reads nothing until you press "Agree and continue". Then it shows "Log in to Maccabi Online".
 
-Source: https://github.com/RoniRachmani/health-records-export-for-maccabi (docs/endpoints/endpoints.json lists every request). The package isn't minified.
+Source: https://github.com/RoniRachmani/health-records-export-for-maccabi (docs/endpoints/ lists every request). The package isn't minified.
 ```
 
-The store allows 500 characters here. This text has 491.
+The store allows 500 characters here. This text has 487.
 
 ## Keeping it true
 

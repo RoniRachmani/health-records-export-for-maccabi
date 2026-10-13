@@ -5,7 +5,7 @@
 npm test                        # tests
 npm run typecheck               # types
 npm run dev                     # dev build, rebuilds on change → dist-dev/
-npm run live                    # test export on your account (stops before ordering)
+npm run live                    # test export on your account (never orders, no ZIP)
 
 # Ship
 npm run release:zip             # clean, test, build, release ZIP

@@ -146,4 +146,4 @@ weights above, the bar was within about 2 points of the elapsed time throughout:
 A live test without `--export` never orders (`dev:skipOrder`) and stops before `save`: its line 1 is only the page
 change, and its line 16 collects whatever medical file Maccabi already has.
 
-Twenty lines is what fits under Chrome's 600px popup cap; there are seventeen. Keep this table in step with `STAGES` and the collectors.
+Nineteen lines is what fits under Chrome's 600px popup cap; there are seventeen. Keep this table in step with `STAGES` and the collectors.
