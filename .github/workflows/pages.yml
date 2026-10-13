@@ -9,6 +9,7 @@
 #               slice of the film rendered at 4K and cropped to the popup, so it is sharp at twice the size the page
 #               shows it. It is kept in a cache keyed on what the film is drawn from, since rendering it takes about
 #               eight minutes. (The export's folder, opened, is drawn by the page itself: site/index.html's .fw-list.)
+#   sitemap.xml gets each page's <lastmod>: the day its own files last changed on main.
 name: Pages
 
 on:
@@ -33,6 +34,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          # The whole history, for the sitemap's dates.
+          fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
           node-version: 22
@@ -57,7 +61,7 @@ jobs:
           # Only what the film is drawn from: its own code, the popup it photographs, the icons, and the version the
           # popup prints. The pages in public/ and site/ are not, so changing them deploys without a render. The number
           # after "clips-" stands for the clip lines below: raise it when their times, crops or encoding change.
-          key: clips-3-${{ hashFiles('store/src/**', 'src/extension/**', 'public/icons/**', 'scripts/stage.mjs', 'scripts/store-video.mjs', 'vite.store.config.ts', 'package.json', 'package-lock.json') }}
+          key: clips-4-${{ hashFiles('store/src/**', 'src/extension/**', 'public/icons/**', 'scripts/stage.mjs', 'scripts/store-video.mjs', 'vite.store.config.ts', 'package.json', 'package-lock.json') }}
       - name: Render the clips
         if: steps.clips.outputs.cache-hit != 'true'
         run: |
@@ -76,7 +80,9 @@ jobs:
               -map "[v]" -c:v libx264 -preset slow -crf 23 -tune animation -pix_fmt yuv420p \
               -colorspace bt709 -color_primaries bt709 -color_trc bt709 -color_range tv \
               -movflags +faststart "_clips/$1.mp4"
-            ffmpeg -y -loglevel error -i "_clips/$1.mp4" -frames:v 1 "_clips/$1.png"
+            # The poster, which is also the picture under reduced motion. WebP: a PNG of an H.264 frame is nearly the
+            # clip's own size.
+            ffmpeg -y -loglevel error -i "_clips/$1.mp4" -frames:v 1 -c:v libwebp -quality 90 "_clips/$1.webp"
           }
           clip run 19.6 29.6 1134:1785:2457:216 756:1190
           ls -l _clips
@@ -90,6 +96,15 @@ jobs:
           mkdir -p _site/images
           cp docs/images/chrome-web-store-badge.png _site/images/
           cp -R _clips _site/clips
+          # stamp <address> <the files the page is made of>
+          stamp() {
+            local day=$(git log -1 --format=%cs -- "${@:2}")
+            if [ -n "$day" ]; then sed -i "s|<loc>$1</loc>|<loc>$1</loc><lastmod>$day</lastmod>|" _site/sitemap.xml; fi
+          }
+          stamp https://maccabi.ronirachmani.com/ site/index.html site/site.css site/ai-assistant.css public/pages.css
+          stamp https://maccabi.ronirachmani.com/privacy.html public/privacy.html
+          stamp https://maccabi.ronirachmani.com/terms.html public/terms.html
+          cat _site/sitemap.xml
       - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
