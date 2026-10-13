@@ -143,6 +143,9 @@ The store's video field takes a **YouTube link**, not a file. The one to paste i
 and description [below](#on-youtube). `npm run store-video` renders the video to `store/assets/promo-video.mp4`
 (3840×2160, 60 fps, 64 seconds, with narration). YouTube can't swap the file under a link, so a re-render is a
 new upload with a new link: paste it on the dashboard and put it in the README, in place of the one above.
+Upload `store/assets/promo-captions.srt` with it as the video's English subtitles (YouTube Studio → Subtitles →
+Upload file → With timing): it is the narration, line by line, at the seconds it is spoken, written by
+`npm run store-video -- --captions`. Write it again whenever the narration or its timing changes.
 
 It is not committed — it is rebuilt from `store/src/video.ts`, which draws it a frame at a time in headless
 Chrome. Like the screenshots, it shows the real popup fed made-up states (`store/src/mock-chrome.ts`), driven

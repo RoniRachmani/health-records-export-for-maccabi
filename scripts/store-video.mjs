@@ -10,6 +10,8 @@
 //   --no-narration  music and effects only
 //   --silent        no soundtrack at all
 //   --script        print the narration as one take's text, to paste into ElevenLabs, and stop
+//   --captions      write the narration as subtitles, to store/assets/promo-captions.srt, and stop: each
+//                   line from the second it is spoken to the second it ends, to upload beside the film
 //   --import <file> cut such a take into its lines for the narration (see narration.mjs), then go on
 //   --remux         keep the picture of the last render and give it this soundtrack: seconds, not a
 //                   render, for trying a sound
@@ -22,7 +24,7 @@
 // compiled on the spot. The store takes a YouTube link rather than a file, so the MP4 this writes
 // is what you upload to YouTube (see docs/store-listing.md).
 import { spawn, spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, renameSync, rmSync, statSync } from 'node:fs';
+import { existsSync, mkdtempSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { importTake, script, speak } from './narration.mjs';
@@ -46,7 +48,7 @@ const importAt = args.indexOf('--import');
 const take = importAt < 0 ? null : args.splice(importAt, 2)[1];
 if (take === undefined || take?.startsWith('--')) throw new Error('--import needs the take: --import <file>');
 const flags = new Set(args.filter((a) => a.startsWith('--')));
-const OPTIONS = ['--audio-only', '--no-narration', '--silent', '--script', '--remux'];
+const OPTIONS = ['--audio-only', '--no-narration', '--silent', '--script', '--captions', '--remux'];
 for (const f of flags) if (!OPTIONS.includes(f)) throw new Error('Unknown option ' + f);
 const [from, to] = args.filter((a) => !a.startsWith('--')).map(Number);
 if (flags.has('--remux') && (Number.isFinite(from) || Number.isFinite(to))) throw new Error('--remux takes the whole film; leave out the times');
@@ -137,6 +139,20 @@ function remux(wav, seconds) {
   console.log('wrote ' + OUT.slice(root.length) + ' (' + seconds + 's, the last render\'s picture with this soundtrack)');
 }
 
+/** The narration as SubRip subtitles: one cue per line, for as long as its clip is spoken. */
+function captions(clips) {
+  const stamp = (t) => {
+    const ms = Math.round(t * 1000);
+    const part = (n, width = 2) => String(n).padStart(width, '0');
+    return part(Math.floor(ms / 3_600_000)) + ':' + part(Math.floor(ms / 60_000) % 60) + ':' + part(Math.floor(ms / 1000) % 60) + ',' + part(ms % 1000, 3);
+  };
+  return clips.map((c, i) => {
+    // Held a moment after the last word, but never into the next line.
+    const ends = Math.min(c.at + c.samples.length / c.rate + 0.3, (clips[i + 1]?.at ?? Infinity) - 0.05);
+    return (i + 1) + '\n' + stamp(c.at) + ' --> ' + stamp(ends) + '\n' + c.text + '\n';
+  }).join('\n');
+}
+
 /** Scores the film, then draws it frame by frame into the encoder. */
 async function render() {
   let page = await stage.open('/store/src/video.html', WIDTH, HEIGHT, SCALE);
@@ -153,6 +169,12 @@ async function render() {
     return;
   }
   if (take) importTake(take, soundtrack.narration);
+  if (flags.has('--captions')) {
+    writeFileSync(join(root, 'store', 'assets', 'promo-captions.srt'), captions(await speak(soundtrack.narration)));
+    console.log('wrote store/assets/promo-captions.srt');
+    await page.close();
+    return;
+  }
 
   let wav = null;
   if (!flags.has('--silent')) {
