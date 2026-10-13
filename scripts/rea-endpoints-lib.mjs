@@ -193,13 +193,72 @@ function field(objectSrc, key) {
   return undefined;
 }
 
+/** How far back a local variable's value is looked for; a constant of the file is looked for all the way up. */
+const LOCAL_REACH = 4000;
+
+/** The first argument of the last call in `src` (`fmt("v1/…/{0}", id)`, `n()("v1/…/{0}", id)`), or undefined. */
+function firstArgOfCall(src) {
+  if (!src.endsWith(')')) return undefined;
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i];
+    if (c === '"' || c === "'" || c === '`') i = skipQuoted(src, i, src.length) - 1;
+    else if (c === '[' || c === '{') i = skipGroup(src, i, src.length) - 1;
+    else if (c === '(') {
+      const end = skipGroup(src, i, src.length);
+      if (end === src.length) return (splitTop(src.slice(i + 1, -1), ',') || [])[0];
+      i = end - 1;
+    }
+    if (i < 0) return undefined;
+  }
+  return undefined;
+}
+
+/**
+ * The string an argument stands for at `offset`: written out, or a name given a string just before (a local
+ * `let s=fmt("v1/members/{0}/{1}/visits",…)`, or the file's `ed="/sonline/VisitsAPI/webapi/mac/"`), or a
+ * formatting call around one. Minified code reuses its names, so the nearest value above is the one meant.
+ */
+function valueAt(text, src, offset, depth = 0) {
+  const direct = builtString(src);
+  if (direct !== null && direct !== '{}') return direct;
+  if (depth > 2) return null;
+  if (/^[\w$]+$/.test(src)) {
+    const name = new RegExp('(?<![\\w$.])' + src.replace(/\$/g, '\\$') + '=(?!=)', 'g');
+    let at = -1;
+    const from = Math.max(0, offset - LOCAL_REACH);
+    for (const m of text.slice(from, offset).matchAll(name)) at = from + m.index + m[0].length;
+    if (at < 0) {
+      const up = text.lastIndexOf(src + '="', offset);
+      if (up < 0 || /[\w$.]/.test(text[up - 1] || '')) return null;
+      at = up + src.length + 1;
+    }
+    // The value runs to the first , ; or closing bracket outside its own strings and brackets.
+    let end = at;
+    while (end < text.length && end < at + ARGS_LIMIT) {
+      const c = text[end];
+      if (c === '"' || c === "'" || c === '`') end = skipQuoted(text, end, text.length);
+      else if (c === '(' || c === '[' || c === '{') end = skipGroup(text, end, text.length);
+      else if (c === ',' || c === ';' || c === ')' || c === ']' || c === '}' || c === '\n') break;
+      else end++;
+      if (end < 0) return null;
+    }
+    return valueAt(text, text.slice(at, end).trim(), at, depth + 1);
+  }
+  const inner = firstArgOfCall(src);
+  return inner === undefined ? null : valueAt(text, inner, offset, depth + 1);
+}
+
+/** A service's base, which the site's client takes before the path: rest.get(base, path, options). */
+const BASE = /(?:[A-Za-z]API|webapi)\/(?:[\w/]*\/)?$/i;
+
 const VERB = /^(get|post|put|patch|delete|head)$/i;
 const CALL = /(?<![\w$.])(fetch|axios|\$http)\s*\(|\.(get|post|put|patch|delete|head|request|ajax|open)\s*\(/g;
 
 /**
  * The requests a script writes out: fetch, an HTTP client's get/post/put/patch/delete/head/request (axios and
- * the like), jQuery's ajax and XMLHttpRequest's open, each with its method and the address as far as the call
- * itself spells it. A call whose address is not written at the call at all (a variable, a helper) is left out.
+ * the like, and the site's own rest.get(base, path)), jQuery's ajax and XMLHttpRequest's open, each with its
+ * method and the address as far as the call and the values just above it spell it. A call whose address
+ * cannot be read that way is left out.
  */
 export function readCalls(text) {
   const calls = [];
@@ -230,7 +289,13 @@ export function readCalls(text) {
       }
     }
     if (url === undefined || !method) continue;
-    const path = builtString(url);
+    let path = valueAt(text, url, m.index);
+    // The site's client: the service's base first, then the path.
+    if (path !== null && VERB.test(name) && args.length > 1 && BASE.test(path)) {
+      const rest = valueAt(text, args[1], m.index);
+      if (rest === null) continue;
+      path += rest.replace(/^\//, '');
+    }
     if (path !== null) calls.push({ path, method: method.toUpperCase(), offset: m.index + (m[2] ? 1 : 0), via: name });
   }
   return calls;
@@ -316,20 +381,18 @@ export function chunkUrl(f, from) {
 // ---- rea's analysis ------------------------------------------------------------------------------
 
 /** The part of rea's result this scan reads; the rest (the semantic graph) is megabytes per script. */
-export const REA_FILTER = 'normalized_result.graph.nodes,normalized_result.graph.edges,normalized_result.statistics';
-
-/** A build's folder: where a script's own first `static` folder hangs, since chunk ids are per build. */
-const buildOf = (file) => (file.includes('/static/') ? file.slice(0, file.indexOf('/static/')) : file.replace(/[^/]*$/, ''));
+export const REA_FILTER = 'normalized_result.graph.nodes';
 
 /**
  * What one `rea analyze-javascript-application --format json` result says of the scripts it was given
  * (paths as rea reports them, relative to the folder analyzed): the requests whose address is a literal,
- * with the call that makes each; the app's page routes; each chunk's ids and the chunk ids the code loads;
- * the source maps declared; and the files it could not parse.
+ * with the call that makes each; the app's page routes; the source maps declared; and how far it parsed each
+ * file. (It also reports chunks and what loads them, but drops those for a file of a megabyte or more, which
+ * is where this site keeps its code, so nothing here leans on them.)
  */
 export function readEvidence(result) {
   const graph = result?.normalized_result?.graph;
-  const found = { endpoints: [], routes: new Set(), chunks: [], loads: [], sourceMaps: [], unparsed: [], parsed: 0 };
+  const found = { endpoints: [], routes: new Set(), sourceMaps: [], partial: [], unparsed: [], parsed: 0 };
   if (!graph) return found;
   for (const node of graph.nodes || []) {
     for (const o of node.observations || []) {
@@ -339,47 +402,16 @@ export function readEvidence(result) {
       else if (node.kind === 'endpoint' && p.endpoint_kind === 'network' && at) {
         const call = String(p.mechanism || '').replace(/^call:/, '');
         found.endpoints.push({ path: p.value, call, file: at.source, line: at.start.line, column: at.start.column + 1 });
-      } else if (node.kind === 'javascript-chunk') {
-        // A chunk the code loads and rea did not find among the files it was given has a node too, with no path.
-        if (p.path) found.chunks.push({ file: p.path, keys: p.chunk_keys || [] });
-      }
-      else if (node.kind === 'source-map') found.sourceMaps.push({ file: at?.source ?? null, url: p.declared_url });
+      } else if (node.kind === 'source-map') found.sourceMaps.push({ file: at?.source ?? null, url: p.declared_url });
       else if (node.kind === 'javascript-asset' && p.file_kind === 'javascript') {
+        // 'partial' is a parse that recovered from a syntax error: the rest of the file was still read.
         if (p.parse_status === 'complete') found.parsed++;
+        else if (p.parse_status === 'partial') found.partial.push(p.path);
         else found.unparsed.push(p.path);
       }
     }
   }
-  for (const edge of graph.edges || []) {
-    const p = edge.properties || {};
-    const file = edge.evidence?.location?.value?.source;
-    if (edge.relation === 'imports' && p.kind === 'dynamic-import' && /^chunk:/.test(p.specifier || '') && file) {
-      found.loads.push({ file, key: p.specifier.slice('chunk:'.length) });
-    }
-  }
   return found;
-}
-
-/**
- * The chunks the code loads that were never read, per build: a section whose scripts the scan did not
- * reach, which is where its calls would be. Only what rea could tell: a chunk loaded by a computed id is
- * not counted either way.
- */
-export function missingChunks(evidence) {
-  const have = new Map();
-  for (const c of evidence.chunks) {
-    const b = buildOf(c.file);
-    if (!have.has(b)) have.set(b, new Set());
-    c.keys.forEach((k) => have.get(b).add(String(k)));
-  }
-  const missing = new Map();
-  for (const l of evidence.loads) {
-    const b = buildOf(l.file);
-    if (have.get(b)?.has(l.key)) continue;
-    if (!missing.has(b)) missing.set(b, new Set());
-    missing.get(b).add(l.key);
-  }
-  return [...missing].map(([build, keys]) => ({ build, keys: [...keys].sort() })).sort((a, b) => a.build.localeCompare(b.build));
 }
 
 // ---- putting it together -------------------------------------------------------------------------
@@ -390,7 +422,8 @@ export const PROOF = ['ast', 'call', 'named'];
 /**
  * Every address the scripts name, once per shape and method: `files` is path-to-text, `evidence` what rea
  * said of them (readEvidence, merged), `known` from knownFrom. Each has how it was found: 'ast' (rea parsed
- * the call and its address is a literal), 'call' (a call this scan read, its address built from parts) or
+ * the call and its address is a literal), 'call' (a call this scan read, its address built from parts or
+ * taken from a value just above it) or
  * 'named' (a string that reads as an address, with no call seen: a table of paths, or a call rea and this
  * scan both missed).
  */
@@ -410,8 +443,9 @@ export function candidates(files, evidence, known) {
   const called = new Set();
   for (const e of evidence.endpoints) {
     const verb = e.call.split('.').pop();
-    // The method of a fetch or an open is in its arguments, which the call reader below reads.
-    if (!VERB.test(verb)) continue;
+    // The method of a fetch or an open is in its arguments, which the call reader below reads; and a service's
+    // base alone is the first argument of the site's client, whose path that reader joins to it.
+    if (!VERB.test(verb) || BASE.test(e.path)) continue;
     called.add(shape(e.path));
     add(e.path, verb.toUpperCase(), 'ast', `${e.file}:${e.line}:${e.column}`);
   }

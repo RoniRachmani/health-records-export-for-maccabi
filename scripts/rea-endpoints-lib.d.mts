@@ -15,9 +15,8 @@ export interface Call {
 export interface Evidence {
   endpoints: { path: string; call: string; file: string; line: number; column: number }[];
   routes: Set<string>;
-  chunks: { file: string; keys: string[] }[];
-  loads: { file: string; key: string }[];
   sourceMaps: { file: string | null; url: string }[];
+  partial: string[];
   unparsed: string[];
   parsed: number;
 }
@@ -46,7 +45,6 @@ export function locator(text: string): { at(offset: number): string };
 export function chunkFiles(text: string): Set<string>;
 export function chunkUrl(file: string, from: string): string;
 export function readEvidence(result: unknown): Evidence;
-export function missingChunks(evidence: Pick<Evidence, 'chunks' | 'loads'>): { build: string; keys: string[] }[];
 export function candidates(files: Map<string, string>, evidence: Evidence, known: Known): Candidate[];
 export function servicesIn(files: Map<string, string>, known: Known): { name: string; known: boolean }[];
 export function batches(sizes: Map<string, number>, maxBytes?: number, maxFiles?: number): string[][];

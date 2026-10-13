@@ -3,7 +3,7 @@
 // result shaped as rea 6.4.0 writes one.
 import { describe, expect, it } from 'vitest';
 import {
-  batches, builtString, candidates, chunkFiles, chunkUrl, isKnown, knownFrom, locator, missingChunks, readCalls, readEvidence,
+  batches, builtString, candidates, chunkFiles, chunkUrl, isKnown, knownFrom, locator, readCalls, readEvidence,
 } from '../scripts/rea-endpoints-lib.mjs';
 
 const known = knownFrom({ steps: [{ url: 'LabsAPI/v1/members/{mid}/labtests' }, { url: '/online/Ajax/GetVisits.ashx' }] });
@@ -34,6 +34,17 @@ describe('readCalls', () => {
     expect(methods('$.ajax({type:"POST",url:"/Ajax/Save.ashx",data:{a:[1,2]}})')).toEqual(['POST /Ajax/Save.ashx']);
     expect(methods('api.request({url:`v2/members/${m}/r`,method:"put"})')).toEqual(['PUT v2/members/{}/r']);
     expect(methods('x.open("POST","/online/Handlers/A.ashx?b="+c)')).toEqual(['POST /online/Handlers/A.ashx?b={}']);
+  });
+
+  it('follows a path formatted into a variable, after the service base the site\'s client takes first', () => {
+    const text = 'let{rest:e_}=T.A,ed="/sonline/VisitsAPI/webapi/mac/";function a(e){let s=eu()("v1/members/{0}/{1}/visits",e.c,e.i);return e_.get(ed,s,{})}'
+      + 'function b(e){let t={data:{a:1}},s=eu()("v1/members/{0}/{1}/visits/{2}/read",e.c,e.i,e.v);return e_.patch(ed,s,t)}'
+      + 'function c(e){return e_.post(ed,"v1/logs/client_error",{})}function d(e){return e_.get(ed,e.path,{})}';
+    expect(methods(text)).toEqual([
+      'GET /sonline/VisitsAPI/webapi/mac/v1/members/{0}/{1}/visits',
+      'PATCH /sonline/VisitsAPI/webapi/mac/v1/members/{0}/{1}/visits/{2}/read',
+      'POST /sonline/VisitsAPI/webapi/mac/v1/logs/client_error',
+    ]);
   });
 
   it('leaves out what is not a request', () => {
@@ -70,16 +81,11 @@ const result = {
         node('endpoint', { endpoint_kind: 'network', value: 'v1/members/settings', mechanism: 'call:n.post' }, 'app/static/js/a.js', 1, 4),
         node('endpoint', { endpoint_kind: 'network', value: 'cell', mechanism: 'call:m.get' }),
         node('endpoint', { endpoint_kind: 'route', value: 'labs/:id', mechanism: 'property:path' }),
-        node('javascript-chunk', { path: 'app/static/js/a.js', chunk_keys: ['1'] }),
-        node('javascript-chunk', { chunk_key: '9', resolution_status: 'not-found' }),
+        node('endpoint', { endpoint_kind: 'network', value: '/sonline/LabsAPI/webapi/mac/', mechanism: 'call:r.get' }),
         node('javascript-asset', { path: 'app/static/js/a.js', file_kind: 'javascript', parse_status: 'complete' }),
         node('javascript-asset', { path: 'app/static/js/b.js', file_kind: 'javascript', parse_status: 'failed' }),
+        node('javascript-asset', { path: 'app/static/js/c.js', file_kind: 'javascript', parse_status: 'partial' }),
         node('source-map', { declared_url: 'a.js.map' }),
-      ],
-      edges: [
-        { relation: 'imports', properties: { kind: 'dynamic-import', specifier: 'chunk:1' }, evidence: { location: { value: { source: 'app/static/js/a.js' } } } },
-        { relation: 'imports', properties: { kind: 'dynamic-import', specifier: 'chunk:9' }, evidence: { location: { value: { source: 'app/static/js/a.js' } } } },
-        { relation: 'imports', properties: { kind: 'require', specifier: '2' }, evidence: { location: { value: { source: 'app/static/js/a.js' } } } },
       ],
     },
   },
@@ -88,18 +94,16 @@ const result = {
 describe('readEvidence', () => {
   const evidence = readEvidence(result);
 
-  it('takes the calls, routes, chunks and coverage out of a rea result', () => {
+  it('takes the calls, routes and coverage out of a rea result', () => {
     expect(evidence.endpoints.map((e) => `${e.call} ${e.path} ${e.file}:${e.line}:${e.column}`)).toEqual([
       'n.post v1/members/settings app/static/js/a.js:1:5', 'm.get cell app/static/js/a.js:1:1',
+      'r.get /sonline/LabsAPI/webapi/mac/ app/static/js/a.js:1:1',
     ]);
     expect([...evidence.routes]).toEqual(['labs/:id']);
     expect(evidence.parsed).toBe(1);
     expect(evidence.unparsed).toEqual(['app/static/js/b.js']);
+    expect(evidence.partial).toEqual(['app/static/js/c.js']);
     expect(evidence.sourceMaps.map((m) => m.url)).toEqual(['a.js.map']);
-  });
-
-  it('finds the chunks the code loads that were not read', () => {
-    expect(missingChunks(evidence)).toEqual([{ build: 'app', keys: ['9'] }]);
   });
 
   it('is empty for a result with no graph', () => {
@@ -119,8 +123,9 @@ describe('candidates', () => {
     expect(line('PharmacyAPI/webapi/mac/v1/orders')).toMatchObject({ method: null, proof: 'named', known: false });
   });
 
-  it('leaves out a map key, and a string that is a piece of a call', () => {
+  it('leaves out a map key, a service base alone, and a string that is a piece of a call', () => {
     expect(line('cell')).toBeUndefined();
+    expect(line('/sonline/LabsAPI/webapi/mac/')).toBeUndefined();
     expect(line('LabsAPI/v1/members/')).toBeUndefined();
   });
 });

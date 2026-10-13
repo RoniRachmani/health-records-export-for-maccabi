@@ -12,12 +12,15 @@
 //
 // Two readers go over the same files. REA (Reverse Engineer Anything, github.com/morluto/rea) parses each
 // script without running it and reports what an AST can prove: the calls whose address is a literal and the
-// method of the call that makes each, the app's page routes, the chunks each file holds and the chunk ids
-// the code loads, the source maps declared, and the files it could not parse. Its own limits say what it
-// leaves out ("string-built routes and endpoints may remain unknown"), and a site that writes the member id
-// into every path builds nearly all of them, so a reader here (rea-endpoints-lib.mjs) takes those: it reads
-// each fetch, client call, ajax and XHR open, and writes the address with {} for the parts made at run time.
-// What neither saw called but reads as an address is listed last, as named only.
+// method of the call that makes each, the app's page routes, the source maps declared, and how far it parsed
+// each file. Its own limits say what it leaves out ("string-built routes and endpoints may remain unknown"),
+// and this site builds nearly all of them: a path is formatted into a variable ("v1/members/{0}/{1}/visits")
+// and handed to the site's client after the service's base, rest.get(base, path). So a reader here
+// (rea-endpoints-lib.mjs) takes those: it reads each fetch, client call, ajax and XHR open, follows the
+// address to the value just above it, and writes {} for the parts made at run time. On a run of October
+// 2026 that reader found 193 calls with their methods, and rea five, each a service's base with no path, at
+// a quarter of an hour for rea and a second without it: --no-rea is the quick look. What neither saw called but reads as an address is listed
+// last, as named only (most are documents the site opens in a tab, which no call fetches).
 //
 // It opens the browser and signs in as `npm run export` does (scripts/maccabi-browser.mjs), then reads only
 // static files: the scripts the /sonline/ app loads, the chunks they name, and the scripts of the legacy
@@ -33,7 +36,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { call } from './in-page.mjs';
 import { ORIGIN, START, openBrowser, signIn } from './maccabi-browser.mjs';
-import { REA_FILTER, batches, candidates, chunkFiles, chunkUrl, missingChunks, readEvidence, servicesIn, knownFrom, isKnown } from './rea-endpoints-lib.mjs';
+import { REA_FILTER, batches, candidates, chunkFiles, chunkUrl, readEvidence, servicesIn, knownFrom, isKnown } from './rea-endpoints-lib.mjs';
 import { root, sleep } from './stage.mjs';
 
 /** The rea release this was written against: its result's shape is what readEvidence reads. */
@@ -167,7 +170,7 @@ function rea(dir) {
 async function analyze(dir, files, jobs) {
   const sizes = new Map([...files].map(([file, text]) => [file, Buffer.byteLength(text)]));
   const groups = batches(sizes);
-  const merged = { endpoints: [], routes: new Set(), chunks: [], loads: [], sourceMaps: [], unparsed: [], parsed: 0, failed: [] };
+  const merged = { endpoints: [], routes: new Set(), sourceMaps: [], partial: [], unparsed: [], parsed: 0, failed: [] };
   const work = mkdtempSync(join(tmpdir(), 'rea-endpoints-'));
   let next = 0;
   let finished = 0;
@@ -178,7 +181,7 @@ async function analyze(dir, files, jobs) {
       for (const file of groups[i]) cpSync(join(dir, file), join(batch, file), { recursive: true });
       try {
         const found = readEvidence(await rea(batch));
-        for (const key of ['endpoints', 'chunks', 'loads', 'sourceMaps', 'unparsed']) merged[key].push(...found[key]);
+        for (const key of ['endpoints', 'sourceMaps', 'partial', 'unparsed']) merged[key].push(...found[key]);
         found.routes.forEach((r) => merged.routes.add(r));
         merged.parsed += found.parsed;
       } catch (e) {
@@ -259,9 +262,9 @@ async function main() {
 
   const files = scriptsIn(dir);
   if (!files.size) throw new Error(`No script files in ${dir}.`);
-  let evidence = { endpoints: [], routes: new Set(), chunks: [], loads: [], sourceMaps: [], unparsed: [], parsed: 0, failed: [...files.keys()] };
+  let evidence = { endpoints: [], routes: new Set(), sourceMaps: [], partial: [], unparsed: [], parsed: 0, failed: [...files.keys()] };
   if (!args.includes('--no-rea')) {
-    console.log(`Analyzing ${files.size} script files with rea ${REA_VERSION} (parsed, never run; some minutes for the whole app).`);
+    console.log(`Analyzing ${files.size} script files with rea ${REA_VERSION} (parsed, never run; a quarter of an hour for the whole app, and --no-rea skips it).`);
     evidence = await analyze(dir, files, JOBS);
   }
   const all = candidates(files, evidence, known);
@@ -270,7 +273,6 @@ async function main() {
   const app = all.filter((p) => p.kind === 'app');
   const services = servicesIn(files, known);
   const legacy = found.legacyPages.map((path) => ({ path, known: isKnown(path, known) }));
-  const missing = missingChunks(evidence);
 
   const show = (list, label, line) => {
     const shown = ALL ? list : list.filter((x) => !x.known);
@@ -290,12 +292,11 @@ async function main() {
       console.log(`  ${r}: ${[...found.failed].filter(([, w]) => w === r).slice(0, 3).map(([u]) => new URL(u).pathname).join('  ')}`);
     }
   }
-  console.log(`\nrea parsed ${evidence.parsed} of ${files.size} files`
-    + (evidence.failed.length ? `; ${evidence.failed.length} it was not run on or failed on, read by this scan alone` : '')
-    + (evidence.unparsed.length ? `; ${evidence.unparsed.length} it could not parse (${evidence.unparsed.slice(0, 3).join('  ')})` : '') + '.');
-  if (missing.length) {
-    console.log('Chunks the code loads that were not read, so their calls are not below:');
-    for (const m of missing) console.log(`  ${m.build || '/'}: ${m.keys.length} (${m.keys.slice(0, 8).join(', ')}${m.keys.length > 8 ? ', …' : ''})`);
+  if (evidence.failed.length < files.size) {
+    console.log(`\nrea parsed ${evidence.parsed + evidence.partial.length} of ${files.size} files`
+      + (evidence.partial.length ? `, ${evidence.partial.length} of them around a syntax error (${evidence.partial.slice(0, 3).join('  ')})` : '')
+      + (evidence.failed.length ? `; ${evidence.failed.length} it failed on, read by this scan alone` : '')
+      + (evidence.unparsed.length ? `; ${evidence.unparsed.length} it could not parse (${evidence.unparsed.slice(0, 3).join('  ')})` : '') + '.');
   }
   if (evidence.sourceMaps.length) console.log(`${evidence.sourceMaps.length} files declare a source map (the code as it was written): ${evidence.sourceMaps.slice(0, 3).map((m) => m.url).join('  ')}`);
 
@@ -305,9 +306,10 @@ async function main() {
   show(legacy, 'Legacy pages linked from the summary page', (p) => p.path);
   if (ALL) {
     console.log(`\nThe app's own pages and service bases (${app.length}): ${app.map((p) => p.path).join('  ')}`);
-    console.log(`\nThe app's page routes, as rea read them (${evidence.routes.size}): ${[...evidence.routes].sort().join('  ')}`);
+    if (evidence.routes.size) console.log(`\nThe app's page routes, as rea read them (${evidence.routes.size}): ${[...evidence.routes].sort().join('  ')}`);
   }
-  console.log('\n[ast] rea parsed the call, its address a literal; [call] a call read here, its address built from parts ({});'
+  console.log('\n[ast] rea parsed the call, its address a literal; [call] a call read here, its address built from parts ({})'
+    + '\nor taken from the value just above it;'
     + '\n[named] a string that reads as an address, no call seen: a table of paths, or the address of a call that takes it'
     + '\nfrom a variable. These are candidates, not calls to try: open the matching section in the site and record its traffic.');
 
@@ -319,7 +321,7 @@ async function main() {
       files: [...files.keys()],
       failed: [...found.failed].map(([u, why]) => ({ file: new URL(u).pathname, why })),
       services, calls, pages, app, legacyPages: legacy, routes: [...evidence.routes].sort(),
-      missingChunks: missing, sourceMaps: evidence.sourceMaps, unparsed: evidence.unparsed, notAnalyzed: evidence.failed,
+      sourceMaps: evidence.sourceMaps, parsedInPart: evidence.partial, unparsed: evidence.unparsed, notAnalyzed: evidence.failed,
     }, null, 2) + '\n');
     console.log('Wrote ' + file);
   }
