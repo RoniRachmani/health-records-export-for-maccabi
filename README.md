@@ -3,7 +3,7 @@
 **Your whole Maccabi history, and a genius friend who's read all of it.**
 
 Save everything from [Maccabi Online](https://online.maccabi4u.co.il) to your computer, then ask anything: what
-changed, what stands out, what to do next. This Chrome extension saves every record the site has, and every PDF, as one
+changed, what stands out, what to do next. This Chrome extension saves your records and their PDFs as one
 ZIP, and you open the folder in the Claude or ChatGPT desktop app. It's free, and your records stay on your computer.
 
 Maccabi Online shows your records one page at a time, within date limits. The export puts every record in one place,

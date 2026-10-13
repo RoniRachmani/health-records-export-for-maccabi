@@ -91,17 +91,17 @@ on several areas of the export, not one metric. They're ordered as a new user re
 |---|---|---|---|
 | **What stands out?** | "What stands out in my records?" | Six tiles: cholesterol at 142 and rising, vitamin D low again, asthma quiet since 2019, blood pressure creeping from 118 to 131 across 31 visit notes, no eye exam since 2014, and a heart murmur noted once, at age six | **The big picture in a minute.** Years of records you never read end to end, turned into the things worth knowing. The first "wow". |
 | **One thing today** | "What's one thing I should do today to improve my health?" | A 20-minute walk after dinner, over four tiles: cholesterol above healthy since 2024, blood sugar at the top of normal, weight up 9 kg since the knee operation in 2016, and blood pressure from 118 to 131 since 2004 | **Advice about you, not the internet's average person.** Small, doable, and tied to your own numbers. |
-| **Explain a result** | "What changed in my latest blood test?" | Each value against its range, marked new, better or same, then a red callout: "Repeat test. Due April, not taken" | **Calm instead of worry.** A new number next to all your old ones, and the follow-up nobody chased. |
+| **Explain a result** | "What changed in my latest blood tests?" | Each value against its range, marked higher, better or same, then a red callout: "Repeat test. Due April, not taken" | **Calm instead of worry.** A new number next to all your old ones, and the follow-up nobody chased. |
 | **Did it work?** | "My vitamin D was low. Did the treatment help?" | The three results against the healthy range, over four lanes on the same dates: what the visits said ("tired", "better", "tired again"), what was prescribed, what was bought, and the doctor's message | **Whether a treatment helped.** Tests, visits, prescriptions, purchases and messages sit on separate screens of the site; here they're one picture. |
 | **Loose ends** | "Anything my doctors asked me to do that I haven't?" | One bar per request, from asked to due, with Done, Overdue, Lapsed, Open or Upcoming. Eight rows: tests, referrals, an approval that runs out on 15 November, and vaccines | **Nothing falls through the cracks.** It catches what's due before a referral lapses. |
 | **Quiet changes** | "Is anything moving, even though it's still normal?" | Ten small lines in three groups: five blood tests, weight and blood pressure from visit notes, and visits, sick days and medicines bought each year. Six are drifting, four are steady | **What no single test flags.** A ten-year drift only shows when the years are read together. |
-| **Is there a pattern?** | "Do my asthma flares have a season?" | Four counts by month of the year, with spring picked out: inhalers bought, asthma visits, antibiotic courses and sick notes | **Patterns across decades.** Four kinds of record peaking in the same months is invisible one record at a time. |
+| **Is there a pattern?** | "Do my asthma flares have a season?" | Four counts by month of the year, with spring picked out: inhalers prescribed, asthma visits, antibiotic courses and sick notes | **Patterns across decades.** Four kinds of record peaking in the same months is invisible one record at a time. |
 | **Before a visit** | "What should I raise with my doctor on Thursday?" | Three questions to ask, and a one-page summary for the visit | **Walk in prepared.** Short visits go further, and a new doctor gets your history in a page. |
 | **What I spent** | "Chart what I've spent on medicines, and what insurance covered" | ₪4,120 paid and ₪3,270 covered, as columns by year from 2008 | **Every receipt, added up.** Nineteen years of pharmacy purchases in one chart. |
 
 Under the hero, before the tabs, a slim strip shows the whole history as a feature highlight: "612 records, over 45
 years, back to your first check-up" beside five flat lanes of dots, one dot for each year that holds a record of each
-kind. A pale panel sits over the years the site shows, and the only caption is *Your full medical file*. The strip has
+kind. A pale panel sits over the years the site's own form orders the medical file for, and the only caption is *Your full medical file*. The strip has
 no milestones, lane names or paragraph.
 
 **Left out on purpose:**
@@ -201,13 +201,13 @@ And against each vendor's documentation on 13 October 2026, which is where these
 
 Every example uses the same made-up member, so the story holds together across the page. What "stands out" matches the
 "one thing today", and every tab agrees with the others. They are in their mid-40s, with:
-- cholesterol creeping up;
+- cholesterol creeping up at every test since 2021, from 118 to 142, and above healthy since 2024;
 - blood sugar at the top of normal;
-- asthma since childhood, quiet since 2019: 41 inhaler purchases from 1990 to 2018, 27 of them in spring;
+- asthma since childhood, quiet since 2019: first noted in 1988, 41 inhaler prescriptions from 1990 to 2018 (purchases only go back to 2008), 27 of them in spring;
 - a penicillin rash in March 2011, on page 14 of the medical file: the one answer the page shows with its source,
   under "Built so you can check every answer";
 - their tonsils out in 1989, and a knee operation in 2016, their only hospital stays;
-- blood pressure written in 31 visit notes since 2004 and never charted, creeping from 118 to 131;
+- blood pressure written in 31 visit notes since 2004 and never charted, creeping from 118 to 131, and at 122 by 2016;
 - eye exams in 2010, 2012 and 2014, and none since;
 - a heart murmur noted at age six, in 1987, and never mentioned again;
 - their last tetanus shot in 2017;
@@ -220,7 +220,7 @@ Every example uses the same made-up member, so the story holds together across t
   referral;
 - weight written in visit notes, up from 78 to 87 kg since the knee operation;
 - visits a year up from 4 to 9 since 2016, while sick days and medicines bought stay level;
-- asthma visits, antibiotic courses and sick notes that peak in spring, as the inhaler purchases do;
+- asthma visits, antibiotic courses and sick notes that peak in spring, as the inhaler prescriptions do;
 - visit notes around the vitamin D tests that say "tired", then "better", then "tired again", and a doctor's message
   after the last result;
 - ₪4,120 spent on medicines since 2008, with insurance covering another ₪3,270;
@@ -242,7 +242,8 @@ Nothing shown comes from a real account.
   can't say: a suggestion, a question to ask, a total. Don't add a closing sentence that repeats the picture, or a
   line listing its sources.
 - **Many records, many areas.** An example shouldn't lean on one metric. Draw it from several areas of the export at
-  once: tests, visit notes, purchases, referrals, approvals, messages, sick notes.
+  once: tests, visit notes, purchases, referrals, approvals, messages, sick notes. *What I spent* is the exception:
+  one area, linked only to the knee operation.
 - **Say "insurance covered", not "Maccabi covered".**
 - **Advise, never decide.** Advice ends in "worth raising with your doctor", and plans say to check before big
   changes. Nothing reads as a diagnosis, and every insight shows its source.
