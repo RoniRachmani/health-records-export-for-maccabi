@@ -87,9 +87,9 @@ chrome.notifications.onClicked.addListener((id) => {
   void chrome.notifications.clear(id);
 });
 chrome.notifications.onButtonClicked.addListener((id, index) => {
-  const page = noticeKind(id) === 'ready' && READY_BUTTONS[index]?.page;
-  if (!page) return;
-  void chrome.tabs.create({ url: chrome.runtime.getURL(page) });
+  const url = noticeKind(id) === 'ready' && READY_BUTTONS[index]?.url;
+  if (!url) return;
+  void chrome.tabs.create({ url });
   void chrome.notifications.clear(id);
 });
 chrome.alarms.onAlarm.addListener((a) => {

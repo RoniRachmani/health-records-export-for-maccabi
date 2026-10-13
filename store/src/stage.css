@@ -195,54 +195,9 @@ body.marquee.social {
   right: 60px;
   width: 540px;
 }
-.mq .chat-foot,
-.og .chat-foot {
+.mq .chat-foot {
   display: none;
 }
-.mq .chat-body,
-.og .chat-body {
+.mq .chat-body {
   padding-bottom: 30px;
-}
-
-/* ---- the AI assistant page's link preview (1200x630) ---- */
-body.og {
-  width: 1200px;
-  height: 630px;
-  overflow: hidden;
-  color: #ffffff;
-  background:
-    radial-gradient(560px 560px at 600px 380px, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 70%),
-    linear-gradient(135deg, #052658 0%, #083f92 55%, #296bed 100%);
-}
-.og {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-.og .eyebrow {
-  align-self: center;
-  gap: 11px;
-  padding: 6px 18px 6px 6px;
-  font-size: 17px;
-}
-.og .eyebrow img {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-}
-/* Narrow enough that a square thumbnail, cut from the middle, keeps the whole answer, and zoomed so it still reads
-   small. */
-.og .window {
-  position: relative;
-  top: auto;
-  right: auto;
-  width: 500px;
-  height: auto;
-  margin-top: 30px;
-  zoom: 1.2;
-}
-.og .chat-note {
-  display: none;
 }

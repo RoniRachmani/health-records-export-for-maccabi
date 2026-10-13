@@ -14,12 +14,12 @@ beforeEach(() => {
 });
 
 describe('notify', () => {
-  it('offers the AI assistant page on the finished export, and nothing on a call for attention', async () => {
+  it('offers how to open it in an AI assistant on the finished export, and nothing on a call for attention', async () => {
     await notify('ready', 'Export ready', 'maccabi-export-2026-09-29.zip: 812 files.');
     await notify('attention', 'Export paused', 'Log in again.');
     expect(created.map((c) => noticeKind(c.id))).toEqual(['ready', 'attention']);
     expect(created[0].options.buttons).toEqual([{ title: 'See how to open it in your AI assistant' }]);
-    expect(READY_BUTTONS[0].page).toBe('ai-assistant.html');
+    expect(READY_BUTTONS[0].url).toBe('https://maccabi.ronirachmani.com/#where');
     expect(created[1].options.buttons).toBeUndefined();
   });
 });

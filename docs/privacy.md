@@ -2,7 +2,7 @@
 
 Health Records Export for Maccabi
 
-Effective 12 October 2026
+Effective 13 October 2026
 
 <!-- Keep in sync with public/privacy.html, which ships in the extension at chrome-extension://<id>/privacy.html. -->
 
@@ -64,6 +64,10 @@ Removing the extension from Chrome deletes everything it stores. It does not del
   you. The requests carry your login session, so Maccabi Healthcare Services links them to
   your account, and handles them under its own privacy policy.
 - Nothing is sent to the developer. The developer runs no server that could receive it.
+- A few links in the extension open web pages in your browser, and only when you click them: its guide to opening an
+  export in an AI assistant, on the extension's website at `maccabi.ronirachmani.com`, and its issue tracker on GitHub.
+  The extension sends these pages nothing. Your browser loads them like any page you visit, so their host, GitHub for
+  both, sees the visit, including your IP address, and handles it under its own privacy policy.
 - Your information is not sold, not shared with third parties, and not used for advertising, analytics,
   creditworthiness or lending.
 - The extension contains no remote code. Everything it runs is in the package you installed.

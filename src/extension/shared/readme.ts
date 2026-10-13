@@ -10,7 +10,7 @@
    join keys -- and leaves the field names to the JSON, which carries them already. Before adding a
    line, ask whether a record would be read wrongly without it; if not, leave it out. */
 import { israelToday } from '../../core/util';
-import type { PlanStep } from './state';
+import { SITE_OPEN, type PlanStep } from './state';
 
 interface Folder {
   name: string;
@@ -278,10 +278,10 @@ scrambled — a letter per line, or words reversed: then read the pages as image
 }
 
 /**
- * The published AI assistant page, for the one line addressed to the member: whoever opens the export months later
- * has no popup to ask, only this file.
+ * The website's section on opening an export, for the one line addressed to the member: whoever opens the export
+ * months later has no popup to ask, only this file.
  */
-const AI_PAGE = 'https://maccabi.ronirachmani.com/ai-assistant.html';
+const AI_PAGE = SITE_OPEN;
 
 /**
  * The README for one export. present is the folders this export actually has, with how many files

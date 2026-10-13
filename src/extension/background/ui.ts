@@ -1,4 +1,4 @@
-import type { RunState } from '../shared/state';
+import { SITE_OPEN, type RunState } from '../shared/state';
 
 export async function updateBadge(run: RunState | null): Promise<void> {
   let text = '';
@@ -52,9 +52,10 @@ export function noticeKind(notificationId: string): NoticeKind | null {
 
 /**
  * The finished export's next step, for whoever sees the notification rather than the popup (which has closed by then):
- * the AI assistant page, as the popup's "See how" opens it. On macOS, Chrome puts the buttons under "Options".
+ * the website's section on opening it, as the popup's "See how" opens it. On macOS, Chrome puts the buttons under
+ * "Options".
  */
-export const READY_BUTTONS = [{ title: 'See how to open it in your AI assistant', page: 'ai-assistant.html' }];
+export const READY_BUTTONS = [{ title: 'See how to open it in your AI assistant', url: SITE_OPEN }];
 
 export async function notify(kind: NoticeKind, title: string, message: string): Promise<void> {
   try {

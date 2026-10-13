@@ -85,7 +85,7 @@ describe('popup', () => {
     // What the ZIP is for, before the first export as after it.
     const then = [...document.querySelectorAll('.note')].find((n) => n.textContent?.startsWith('Then:'));
     expect(then?.textContent).toBe('Then: ask an AI assistant about your records. See how');
-    expect([then?.querySelector('a')?.getAttribute('href'), then?.querySelector('a')?.getAttribute('target')]).toEqual(['/ai-assistant.html', '_blank']);
+    expect([then?.querySelector('a')?.getAttribute('href'), then?.querySelector('a')?.getAttribute('target')]).toEqual(['https://maccabi.ronirachmani.com/#where', '_blank']);
   });
 
   it('has a one-line header with the Unofficial chip, and a footer grouped by purpose', () => {
@@ -162,7 +162,7 @@ describe('popup', () => {
     expect(document.querySelector('.reminder')?.classList.contains('waiting')).toBe(true);
     // In a window of its own, so the Maccabi Online tab stays in front of its own.
     (document.querySelector('.reminder a') as HTMLAnchorElement).click();
-    expect(windows).toEqual([{ url: 'chrome-extension://id/ai-assistant.html', width: 1100, height: 860, focused: true }]);
+    expect(windows).toEqual([{ url: 'https://maccabi.ronirachmani.com/#ask', width: 1100, height: 860, focused: true }]);
     storageChange(running({ status: 'saving', next: PLAN.indexOf('save'), detail: 'Saving the ZIP' }));
     expect(document.querySelector('.reminder')?.textContent).toBe('It will be in your Downloads folder in a moment.');
     expect(document.querySelector('.reminder')?.classList.contains('waiting')).toBe(false);

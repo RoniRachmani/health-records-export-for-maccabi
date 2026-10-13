@@ -138,8 +138,8 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   `offscreenClient.ts`.
 - **The export's `README.md`** (`shared/readme.ts`) is written for an AI assistant: the ZIP is made to be
   opened in the Claude desktop app (formerly Claude Cowork), Claude Code, ChatGPT Work or Codex, with the README as the assistant's saved
-  instructions and the records as its project files. After one line for the member (the published AI assistant
-  page, for whoever opens the export with no popup at hand), it opens with how to work with the records, then is
+  instructions and the records as its project files. After one line for the member (the website's section on opening an
+  export, for whoever opens the export with no popup at hand), it opens with how to work with the records, then is
   their data dictionary, and it is kept short because it shares the assistant's context with them.
   `INSTRUCTION_POINTERS` writes a `CLAUDE.md` (which imports it) and an `AGENTS.md` (which points to it) beside
   it, because those tools load those names and never a README.
@@ -153,8 +153,8 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   brand asset. The header says *Unofficial* in a chip on every screen, with the full disclaimer as its tooltip and
   its accessible description. The font stacks ask for `Roboto` first and fall back to the system face — a local lookup
   only: never ship or fetch a font here. Tokens are at the top of `popup.css`; `public/pages.css` repeats
-  the ones the shipped pages need, since `public/` is copied verbatim; `public/ai-assistant.css` adds that page's
-  picture-led layout (made-up records only, and no script) and the radio-button tabs the landing page's Ask section uses. There is no dark theme:
+  the ones the shipped pages need, since `public/` is copied verbatim; `site/ai-assistant.css` adds the landing page's
+  picture-led base (made-up records only, and no script) and the radio-button tabs its Ask section uses. There is no dark theme:
   `popup.css` and `pages.css` `color-scheme: light`, which also keeps Chrome's auto-dark-mode off them, and every text colour
   must stay at WCAG AA. Chrome caps a popup at 600px tall: keep every non-disclosure state under it
   (`notice` and open `<details>` may scroll).
@@ -164,8 +164,8 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   around the **real popup** in an iframe, fed made-up states by `mock-chrome.ts`; the video drives a whole run
   through it with `demoRun`, which fires the popup's own `storage.onChanged` listener with states built from
   `PLAN` and `WEIGHTS`. The README's poster is that page again, asked for one frame with a play badge over it
-  (`?poster=`, taken by `store-assets` as the `poster` shot). The published AI assistant page's link preview is
-  the `og` shot, which the Pages workflow renders on each deploy, with Roboto installed, and which is not committed. What all of them draw lives in
+  (`?poster=`, taken by `store-assets` as the `poster` shot). The landing page's link preview is
+  the `og-site` shot, a photograph of its hero, which the Pages workflow renders on each deploy, with Roboto installed, and which is not committed. What all of them draw lives in
   `store/src/parts.ts` and `parts.css`; `scripts/stage.mjs` builds, serves and photographs them in headless
   Chrome. The video is 4K at 60 fps (the stage at `deviceScaleFactor` 2), each frame piped as it is taken to
   `ffmpeg` if it is on `PATH`, else to `scripts/encode-mp4.swift` (macOS); the popup's own CSS animations are
@@ -207,22 +207,26 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   as a placeholder.
 - **Keep the policies in sync**: `docs/privacy.md` ↔ `public/privacy.html`, `docs/terms.md` ↔
   `public/terms.html`, and change their effective date. For a material change also bump `TERMS_EFFECTIVE`
-  in `shared/state.ts`, which makes the popup ask everyone to accept again. Likewise `public/ai-assistant.html`
-  must agree with the README's short *Hand it to an AI assistant* on the facts it keeps (the apps, the first
-  message, the safeguards); the page carries the rest. The page is the popup's "How to ask an AI", the "Export ready"
-  notification's button, and the popup's reminder while the medical file is prepared, which opens it in a window of
-  its own: a tab would hide the Maccabi one and pause the run.
-  `.github/workflows/pages.yml` publishes `public/` on GitHub Pages, so these pages are also public web pages.
+  in `shared/state.ts`, which makes the popup ask everyone to accept again. `.github/workflows/pages.yml` publishes `public/` on GitHub Pages, so these pages are also public web pages.
+- **The guide to opening an export is on the website, not in the extension**: the landing page's last sections, from
+  `#where` ("Open it in Claude or ChatGPT"). The popup's "See how" and "How to ask an AI", the "Export ready"
+  notification's button and every export's README link there (`SITE_OPEN` in `shared/state.ts`), and the popup's
+  reminder while the medical file is prepared opens `#ask` (`SITE_ASK`) in a window of its own: a tab would hide the
+  Maccabi one and pause the run. So those two ids stay, and so does `site/ai-assistant.html`, a redirect at the
+  guide's old address, which exports made before the move name. The sections must agree with the README's short
+  *Hand it to an AI assistant* on the facts it keeps (the apps, the first message, the safeguards). These links only
+  open a page in the member's browser: the extension still requests nothing but Maccabi Online, and the Privacy Policy
+  says which links there are, so add to it before adding another.
 - **The landing page lives in `site/`, not `public/`**: `public/` ships inside the extension verbatim, and the landing
   page is for the web only. The Pages workflow copies `site/` over `public/`, so `site/index.html` links the shipped
-  `pages.css` and `ai-assistant.css` and adds `site/site.css`. It follows the same house rules: no script, no fetched
+  `pages.css` and adds `site/ai-assistant.css` and `site/site.css`. It follows the same house rules: no script, no fetched
   font, no Maccabi brand asset, made-up records only, WCAG AA, and no sideways scroll at 375px. Its run clip is a
   slice of the promo film that the workflow renders and crops (see the workflow's header), so a change to the film's
   timing or layout has to be matched in the `clip` line there. The opened folder beside it is drawn in HTML
   (`.fw-list`), from the film's `FOLDERS` in `store/src/parts.ts`: keep the two lists in step, and its open
   `test-results/` (a result's `details/` JSON beside its `files/` PDF of the same name, the film's earlier drill) in step
   with the export. Its copy follows `docs/positioning.md`, and must agree
-  with the README's opening and with `public/ai-assistant.html` on the facts they share.
+  with the README's opening and its *Hand it to an AI assistant* on the facts they share.
 - **The landing page's motion is CSS, and it ends where the still page is.** The hero loops; the rest plays as it comes
   into view, on scroll timelines (`animation-timeline: view()`), so a picture's progress is its place on the screen.
   Every animation moves only opacity, transform, clip-path or colour; its last frame is exactly the page with no motion,

@@ -23,10 +23,10 @@ describe('exportReadme', () => {
   });
 
   // Whoever opens the export months later has no popup: one line, first, points them to the page.
-  it('points the member to the AI assistant page before anything else', () => {
+  it('points the member to how to open it in an AI assistant before anything else', () => {
     const md = readme();
     expect(md.split('\n')[2]).toMatch(/^> \*\*Member:\*\* to ask an AI assistant/);
-    expect(md).toContain('https://maccabi.ronirachmani.com/ai-assistant.html');
+    expect(md).toContain('https://maccabi.ronirachmani.com/#where');
   });
 
   it('says where to look for the questions people ask most', () => {

@@ -169,22 +169,11 @@ function marquee(): HTMLElement {
   );
 }
 
-// The link preview of the published AI assistant page (1200x630, not a store field): the assistant saying what stands
-// out, under the name, centred, because WhatsApp and others crop previews to a narrower box, or a square, around the
-// middle. The app showing the preview prints the page's og:title, the headline, under it, so the picture is the
-// product and does not say it again.
-function og(): HTMLElement {
-  return h('div', 'og',
-    h('div', 'eyebrow', img('/icons/icon-128.png'), 'Health Records Export for Maccabi · Unofficial'),
-    chatWindow(STANDS_OUT).el,
-  );
-}
-
 async function main(): Promise<void> {
   const name = new URLSearchParams(location.search).get('shot') || 'start';
-  if (name === 'promo' || name === 'marquee' || name === 'og' || name === 'social') {
+  if (name === 'promo' || name === 'marquee' || name === 'social') {
     document.body.className = name === 'promo' ? 'tile' : name === 'social' ? 'marquee social' : name;
-    document.body.append(name === 'promo' ? promo() : name === 'og' ? og() : marquee());
+    document.body.append(name === 'promo' ? promo() : marquee());
   } else {
     const shot = SHOTS[name];
     if (!shot) throw new Error('unknown shot ' + name);

@@ -94,6 +94,7 @@
         </figure>
       </section>
 
+      <!-- The popup's reminder opens here while an export waits for the medical file (SITE_ASK), so this id stays. -->
       <section class="band ask-band" id="ask">
         <h2>Ask what you'd ask a friend who's read everything</h2>
         <div class="tabs">
@@ -310,9 +311,12 @@
       </section>
       </div>
 
+      <!-- How to open an export: what the extension's "See how" and "How to ask an AI" open, and where every export's
+           README sends the member (src/extension/shared/state.ts's SITE_OPEN), so this id stays. The README's "Hand
+           it to an AI assistant" is its short form: keep the facts it repeats in step. -->
       <section class="band" id="where">
         <h2>Open it in Claude or ChatGPT</h2>
-        <p class="sub">Open the unzipped folder in either desktop app, and ask your first question.</p>
+        <p class="sub">Double-click the ZIP to unzip it, then open the folder in either desktop app. Keep the folder together: the assistant needs every file in it.</p>
         <div class="where">
           <article class="app-card" id="app-claude">
             <h3>Claude</h3>
@@ -327,6 +331,7 @@
             <p class="then"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 5.5A1.5 1.5 0 0 1 3.5 4h4l1.6 2H16.5A1.5 1.5 0 0 1 18 7.5v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 2 15.5z" /></svg><span>Choose <b>maccabi-export-2026-09-17</b>, the unzipped folder</span></p>
             <p>In the Claude desktop app, pick the folder under <b>Project or folder</b>, then ask. Make it a project, and what Claude learns stays in that project.</p>
             <p class="plan"><b>Needs a paid plan:</b> Pro, Max or a work plan. On Mac or Windows.</p>
+            <p class="alt">Or <b>Claude Code</b>: run <code>claude</code> in the folder. It reads <code>CLAUDE.md</code> on its own.</p>
           </article>
           <article class="app-card" id="app-chatgpt">
             <h3>ChatGPT</h3>
@@ -344,10 +349,71 @@
             </div>
             <p class="then"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 5.5A1.5 1.5 0 0 1 3.5 4h4l1.6 2H16.5A1.5 1.5 0 0 1 18 7.5v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 2 15.5z" /></svg><span>Choose <b>maccabi-export-2026-09-17</b>, the unzipped folder</span></p>
             <p>In the ChatGPT desktop app, switch to <b>Work</b>, pick the folder under <b>Choose project</b>, then ask.</p>
-            <p class="plan"><b>Free plan too</b>, where Work has rolled out, with lower usage limits. On Mac or Windows.</p>
+            <p class="plan"><b>Free plan too</b>, where Work has rolled out, with lower usage limits: a large export may need more. On Mac or Windows.</p>
+            <p class="alt">Or <b>Codex</b>: run it in the folder. It reads <code>AGENTS.md</code> on its own.</p>
           </article>
         </div>
-        <p style="margin-top:24px"><a class="pill" href="ai-assistant.html">Step by step, with what to ask first</a></p>
+        <div class="after-open">
+          <div class="first" id="first-message">
+            <p class="first-label">Your first message <span class="first-hint">Select it to copy it.</span></p>
+            <p class="first-msg" title="Click to select it, then copy">Read README.md first. Then summarize my health history from my full medical file.</p>
+            <p class="first-why"><code>README.md</code> is the assistant's instructions: where to start, what the export lacks, and which values mislead.</p>
+          </div>
+          <aside class="why-not">
+            <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 12h20v28H14z M18 6h20v28" /><path d="M20 20h8M20 26h8M20 32h5" /></svg>
+            <div>
+              <h3>Why not drop it into a chat?</h3>
+              <p>A chat or a web project takes a few dozen files at most. Your export has hundreds, and the assistant finds its way through them with the folder's own layout and <code>README.md</code>. The desktop apps read the folder as it is.</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- What the export's README asks of the assistant, beside one answer that shows it: the Hebrew page behind,
+           the answer in English in front, and the page it came from under it. -->
+      <section class="band" id="check">
+        <div class="feature check">
+          <figure class="hero-art" id="check-picture" aria-label="An example from a made-up export: asked about allergies, the assistant answers from a Hebrew page of the medical file and names the page">
+            <div class="doc he" dir="rtl" lang="he" aria-hidden="true">
+              <p class="doc-title">תיק רפואי · רגישות לתרופות</p>
+              <p>פניצילין: פריחה לאחר נטילה, מרץ 2011.</p>
+              <p>לא ידועות רגישויות נוספות.</p>
+            </div>
+            <div class="chat">
+              <p class="msg you">Am I allergic to any medicine?</p>
+              <div class="msg bot">
+                <p>Yes: penicillin. Your file records a rash after you took it in March 2011. No other allergy is listed.</p>
+                <p class="src"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5l3 3v10H4z M9 1.5v3h3" /></svg>2026-09-17_medical-file.pdf · page 14</p>
+              </div>
+            </div>
+          </figure>
+          <div>
+            <h2>Built so you can check every answer</h2>
+            <p class="sub">The export's README asks the assistant to:</p>
+            <ul class="guards">
+              <li>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l4 4v14H7z M14 3v4h4 M10 12h5M10 16h5" /></svg>
+                <h3>Show its source</h3>
+                <p>The file, the page of a PDF and the date behind each fact, so you can open it and look.</p>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11h14v10H5z M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+                <h3>Leave your export alone</h3>
+                <p>Its notes, and what you tell it, go in a folder of its own: point it to that folder when you export again. It never edits, renames or deletes your files.</p>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6" /><path d="M20 20l-4.5-4.5 M8 11h6" /></svg>
+                <h3>Keep you out of searches</h3>
+                <p>Your name, ID number and contact details stay out of web searches and other tools unless you ask.</p>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 16H3z M12 10v4 M12 17v.5" /></svg>
+                <h3>Say when it matters</h3>
+                <p>It explains rather than diagnoses, and says plainly when a record suggests seeing a doctor soon.</p>
+              </li>
+            </ul>
+          </div>
+        </div>
       </section>
 
       <section class="band tinted private-strip" id="private">
@@ -359,6 +425,17 @@
           <li class="hop maybe"><span class="hop-label">You open it, if you choose</span><span class="line"></span></li>
           <li class="stop"><span class="where-k">Claude or ChatGPT</span><span class="what">The assistant you pick</span></li>
         </ol>
+        <div class="before" id="before">
+          <div class="before-text">
+            <h3>Before an assistant reads them</h3>
+            <p>The service you open them in can read them. Check what it keeps and for how long, and where it lets you:</p>
+          </div>
+          <ul>
+            <li><b>Turn off training</b> on your chats.</li>
+            <li><b>Give each person a project</b> of their own, with memory kept to that project.</li>
+            <li><b>Delete the project</b> when you're done with it.</li>
+          </ul>
+        </div>
         <div class="oss" id="open-source">
           <span class="oss-mark"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z" /></svg></span>
           <div class="oss-text">

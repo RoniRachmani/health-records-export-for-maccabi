@@ -1,9 +1,8 @@
 # Publishes the extension's website at https://maccabi.ronirachmani.com/: the landing
-# page (site/), and the pages the extension ships (public/: the AI assistant page, the Privacy Policy and the Terms of
+# page (site/), and the pages the extension ships (public/: the Privacy Policy and the Terms of
 # Use), so they can be read before installing. public/ goes up as it ships, and site/ on top of it, plus what is made
 # here, with Roboto installed:
-#   og.png      the AI assistant page's link preview, by `store-assets -- og`;
-#   og-site.png the landing page's, a photograph of its own hero, by `store-assets -- og-site`;
+#   og-site.png the landing page's link preview, a photograph of its own hero, by `store-assets -- og-site`;
 #   social.png  the marquee at 1280x640 for the repository's social preview, which GitHub takes only as an upload in
 #               its settings;
 #   clips/      the landing page's silent loop, cut from the promo film: the popup working through an export. It is a
@@ -50,7 +49,7 @@ jobs:
       - name: Check the landing page's motion
         run: npm run site-check
       - name: Render the link preview
-        run: npm run store-assets -- og og-site social
+        run: npm run store-assets -- og-site social
       - id: clips
         uses: actions/cache@v6
         with:
@@ -85,7 +84,6 @@ jobs:
       - name: Assemble the site
         run: |
           cp -R public _site
-          cp store/assets/og-1200x630.png _site/og.png
           cp store/assets/og-site-1200x630.png _site/og-site.png
           cp store/assets/social-1280x640.png _site/social.png
           cp -R site/. _site/

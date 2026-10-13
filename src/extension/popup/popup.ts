@@ -1,4 +1,4 @@
-import { PLAN, type Request, type RunState, type StateReply } from '../shared/state';
+import { PLAN, SITE_ASK, SITE_OPEN, type Request, type RunState, type StateReply } from '../shared/state';
 import {
   countOf, countText, currentStage, formatBytes, formatDuration, groupProblems, hintText, problemText, STAGES, stageFileCounts, stageSpan, stageStates, statsText,
   waitingForFile,
@@ -244,7 +244,7 @@ function idleView(st: StateReply): Child[] {
     note('', h('strong', {}, 'Maccabi will text you:'), ' this orders a fresh copy of your medical file.'),
     // What the ZIP is for, as the finished view's "Next:" says it. Nothing runs yet, so the page may take a tab.
     note('', h('strong', {}, 'Then:'), ' ask an AI assistant about your records. ',
-      h('a', { href: AI_HELP, target: '_blank' }, 'See how')),
+      h('a', { href: SITE_OPEN, target: '_blank' }, 'See how')),
     includedDetails(),
   ];
 }
@@ -317,18 +317,15 @@ const ZIP_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" st
 /** The footer's Report a problem, for the error view. */
 const REPORT = 'https://github.com/RoniRachmani/health-records-export-for-maccabi/issues/new/choose';
 
-/** The shipped page on opening the export in an AI assistant (the README's section of the same name). */
-const AI_HELP = '/ai-assistant.html';
-
 /**
- * The same page while the export runs, in a window of its own: a tab beside Maccabi Online's would put that one in
- * the background, and the run waits for it to come back to the front.
+ * The website's nine questions while the export runs, in a window of its own: a tab beside Maccabi Online's would put
+ * that one in the background, and the run waits for it to come back to the front.
  */
 function askLink(): HTMLElement {
-  const a = h('a', { href: AI_HELP, target: '_blank', title: 'Opens in a new window' }, 'what to ask your AI assistant');
+  const a = h('a', { href: SITE_ASK, target: '_blank', title: 'Opens in a new window' }, 'what to ask your AI assistant');
   a.addEventListener('click', (e) => {
     e.preventDefault();
-    void chrome.windows.create({ url: chrome.runtime.getURL(AI_HELP), width: 1100, height: 860, focused: true });
+    void chrome.windows.create({ url: SITE_ASK, width: 1100, height: 860, focused: true });
   });
   return a;
 }
@@ -363,7 +360,7 @@ function doneView(run: RunState): Child[] {
       count > shown.length && h('p', { class: 'small' }, 'Showing the first ' + shown.length + '.')),
     // What the ZIP is for comes first, and its way in is one of the pair: finding the file, then asking about it.
     note('', h('strong', {}, 'Next: '), 'unzip it and open the folder in your AI assistant, then ask about your records.'),
-    actions(actionButton('Show in folder', { type: 'showFile' }, 'primary'), button('How to ask an AI', () => void window.open(AI_HELP, '_blank'))),
+    actions(actionButton('Show in folder', { type: 'showFile' }, 'primary'), button('How to ask an AI', () => void window.open(SITE_OPEN, '_blank'))),
     clear,
     caution,
   ];

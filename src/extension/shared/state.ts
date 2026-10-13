@@ -8,6 +8,13 @@ export const MACCABI_ORIGIN = 'https://online.maccabi4u.co.il';
  * date at the top of both documents) when either changes materially: the popup then asks everyone to accept again.
  */
 export const TERMS_EFFECTIVE = '2026-09-17';
+/**
+ * The extension's website, at its section on opening an export in an AI assistant, and at the one on what to ask. The
+ * popup, the "Export ready" notification and every export's README link to them, and a link opens in the member's own
+ * browser: the extension requests nothing from the site. The section ids are site/index.html's, and stay.
+ */
+export const SITE_OPEN = 'https://maccabi.ronirachmani.com/#where';
+export const SITE_ASK = 'https://maccabi.ronirachmani.com/#ask';
 /** Any page of the new site; stays at /sonline/ and issues the SPA token. */
 export const SONLINE_PAGE = MACCABI_ORIGIN + '/sonline/';
 /**

@@ -178,7 +178,8 @@ Every example uses the same made-up member, so the story holds together across t
 - cholesterol creeping up;
 - blood sugar at the top of normal;
 - asthma since childhood, quiet since 2019: 41 inhaler purchases from 1990 to 2018, 27 of them in spring;
-- a penicillin rash in 2011;
+- a penicillin rash in March 2011, on page 14 of the medical file: the one answer the page shows with its source,
+  under "Built so you can check every answer";
 - their tonsils out in 1989, and a knee operation in 2016, their only hospital stays;
 - blood pressure written in 31 visit notes since 2004 and never charted, creeping from 118 to 131;
 - eye exams in 2010, 2012 and 2014, and none since;
@@ -219,7 +220,8 @@ Nothing shown comes from a real account.
 - **Say "insurance covered", not "Maccabi covered".**
 - **Advise, never decide.** Advice ends in "worth raising with your doctor", and plans say to check before big
   changes. Nothing reads as a diagnosis, and every insight shows its source.
-- **Privacy in one line.** The details belong in the Privacy Policy, not the pitch.
+- **Privacy in one line.** The details belong in the Privacy Policy, not the pitch. The one addition is advice, not
+  detail: three settings to change in the assistant before it reads the records.
 - **Warm and confident, not hyped.** A genius friend, not a miracle.
 - **Don't mention that other AI health tools are U.S.-only.** That gap explains our positioning (see *Alternatives the
   customer has*), but customer-facing copy doesn't name it: not on the landing page, in the store listing or in the
@@ -230,8 +232,13 @@ Nothing shown comes from a real account.
 
 - **Model:** OpenAI's Health launch pages. The benefit is in the headline, followed by a demo, then use cases as pill
   tabs over a soft panel, how it works with real footage, and privacy near the end.
-- **The Ask use cases live on the landing page only.** The AI assistant page is the step-by-step guide to opening an
-  export, and links to them rather than repeating them.
+- **One page.** The guide to opening an export was a page of its own, shipped in the extension, and since 13 October
+  2026 it is the landing page's last three sections (Round 9 of the mockups). "Open it in Claude or ChatGPT" carries
+  the first message, to copy, and why a folder and not an upload. "Built so you can check every answer" carries the
+  four things the export's README asks of the assistant, beside one answer with its source. Privacy carries the three
+  settings to change in the assistant. The extension's links and every export's README open the page at "Open it".
+  Each fact is said once: the guide's hero, its example questions and its privacy diagram were dropped for the
+  landing page's own.
 - **Hero picture:** a "your health at a glance" dashboard the assistant built for the demo persona. It shows the years
   covered, what stands out, one trend, and a source under each item. It leads with what needs attention, as the real
   one did (see *What we learned*, point 8): "3 things need attention", and the most pressing with its date. The three

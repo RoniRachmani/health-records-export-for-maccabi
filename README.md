@@ -29,7 +29,7 @@ where an assistant can read all of it.
 </p>
 
 <p align="center">
-  <a href="https://maccabi.ronirachmani.com/#ask">What to ask your AI assistant</a>, and <a href="https://maccabi.ronirachmani.com/ai-assistant.html">where to open your export</a> · every record in the picture is made up
+  <a href="https://maccabi.ronirachmani.com/#ask">What to ask your AI assistant</a>, and <a href="https://maccabi.ronirachmani.com/#where">where to open your export</a> · every record in the picture is made up
 </p>
 
 - **Everything, in one place.** Your full medical file, ordered for the widest range Maccabi allows, plus every result,
@@ -188,7 +188,7 @@ file is instead (`files[]`, with `same_as`).
 
 `README.md` is written for whoever reads the export next, most often an AI assistant (see
 [Hand it to an AI assistant](#hand-it-to-an-ai-assistant)). A single line addressed to you comes first, linking the
-page on opening the folder in an assistant. Then it says how to work with the records, points
+website's section on opening the folder in an assistant. Then it says how to work with the records, points
 at your full medical file PDF as the one document to start from, then says what the export doesn't contain — no DICOM images, no visit
 data over 12 months — so a reader doesn't take an omission for an absence in your history. It then goes folder by
 folder, and through the values that mislead: a lab `result` of 0 that is really a text answer, placeholder dates,
@@ -226,7 +226,7 @@ in `files/` instead — those say so in their own `omitted` field.
 Open your export in an AI assistant, and it becomes a genius friend who's read your whole file. It reads the Hebrew,
 answers in plain English, and names the record behind every answer. **[See what to ask, with
 pictures](https://maccabi.ronirachmani.com/#ask)**, and
-[how to open it, step by step](https://maccabi.ronirachmani.com/ai-assistant.html), the page the popup opens.
+[how to open it, step by step](https://maccabi.ronirachmani.com/#where), which the popup opens.
 
 Unzip the export and open the whole folder in an assistant's desktop app. A chat takes a few dozen files, and an export
 has hundreds:
@@ -389,12 +389,14 @@ disclaimer: "Not affiliated with Maccabi Healthcare Services".
 The stylesheets ask for Roboto first and fall back to the system face. That is a local lookup only: the extension
 ships no fonts and downloads none.
 
-The tokens live at the top of `src/extension/popup/popup.css`, with `public/pages.css` repeating the ones the privacy,
-terms and AI assistant pages need (`public/` is copied verbatim, so it cannot import them). The AI assistant page adds
-`public/ai-assistant.css` for its wider, picture-led layout: its pictures are HTML and inline SVG with made-up records,
-and it runs no script; the stylesheet also holds the tabs the landing page's Ask section uses, which are radio buttons. `.github/workflows/pages.yml` publishes `public/` on GitHub
-Pages whenever it changes on `main`, so the AI assistant page and the policies can be read before installing. The same
-workflow puts the landing page, `site/`, at the site's root: it is for the web only, so it is kept out of `public/`. `popup.css` and `pages.css` both pin `color-scheme: light` —
+The tokens live at the top of `src/extension/popup/popup.css`, with `public/pages.css` repeating the ones the privacy
+and terms pages need (`public/` is copied verbatim, so it cannot import them). `.github/workflows/pages.yml` publishes `public/` on GitHub
+Pages whenever it changes on `main`, so the policies can be read before installing. The same
+workflow puts the landing page, `site/`, at the site's root: it is for the web only, so it is kept out of `public/`.
+It adds `site/ai-assistant.css` and `site/site.css` for its wider, picture-led layout: its pictures are HTML and inline
+SVG with made-up records, and it runs no script (the tabs of its Ask section are radio buttons). Its last sections are
+the guide to opening an export in an AI assistant, which the popup and every export's README link to; the guide's old
+address, `ai-assistant.html`, is a redirect there. `popup.css` and `pages.css` both pin `color-scheme: light` —
 there is no dark theme, and pinning it keeps Chrome's auto-dark-mode from repainting controls and scrollbars
 against a light page. Every text colour meets WCAG AA on the surface it sits on. Chrome caps a popup at 600px
 tall, so keep the states that are not disclosures under it; `npm run store-assets` re-renders the store images.
@@ -547,8 +549,9 @@ film, drawn by the same page: `npm run store-assets -- poster`.
 - **Keep the policies in sync.** `docs/privacy.md` goes with `public/privacy.html`, and `docs/terms.md` with
   `public/terms.html`. Change the effective date when you change either. For a material change, also set
   `TERMS_EFFECTIVE` in `src/extension/shared/state.ts` to the new date, so the popup asks users to accept again.
-  `public/ai-assistant.html`, the page the popup's "How to ask an AI" opens and GitHub Pages publishes, must agree with
-  *Hand it to an AI assistant* above on the facts that section keeps: the apps, the first message and the safeguards.
+  The landing page's guide to opening an export (`site/index.html`, from `#where`), which the popup's "How to ask an
+  AI" opens, must agree with *Hand it to an AI assistant* above on the facts that section keeps: the apps, the first
+  message and the safeguards. The Privacy Policy lists the links the extension opens: add to it before adding another.
 - **Keep [public/third-party-notices.txt](public/third-party-notices.txt) current.** It carries the licenses of
   third-party code bundled into the package (fflate, and Vite's module preload polyfill). Update it when a runtime
   dependency is added or upgraded.
