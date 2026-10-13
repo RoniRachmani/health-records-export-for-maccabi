@@ -3225,6 +3225,22 @@ h2 {
   font-size: 14px;
   color: var(--muted);
 }
+/* The questions: two columns of them, one on a phone. Nothing here moves. */
+.faq {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px 48px;
+  margin-top: 24px;
+}
+.faq p {
+  margin: 0;
+}
+@media (max-width: 720px) {
+  .faq {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+  }
+}
 /* The page ends on the way in: the store badge again, as a card under the open-source one. */
 .get {
   display: flex;

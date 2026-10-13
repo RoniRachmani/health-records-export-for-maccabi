@@ -4,10 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light" />
-    <title>Export your Maccabi Online medical records for Claude or ChatGPT</title>
-    <meta name="description" content="Save everything from Maccabi Online to your computer, then ask an AI assistant anything about it: what changed, what stands out, what to do next. Unofficial." />
+    <title>Export your Maccabi medical records for Claude or ChatGPT</title>
+    <meta name="description" content="Free Chrome extension: save everything from Maccabi Online to your computer, then ask Claude or ChatGPT what changed and what stands out. Unofficial." />
     <link rel="canonical" href="https://maccabi.ronirachmani.com/" />
-    <link rel="icon" href="icons/icon-32.png" type="image/png" />
+    <link rel="icon" href="icons/icon-32.png" type="image/png" sizes="32x32" />
+    <!-- Search results draw the icon at a multiple of 48px. -->
+    <link rel="icon" href="icons/icon-48.png" type="image/png" sizes="48x48" />
     <meta property="og:type" content="website" />
     <!-- The site's name, which search results print above the page's title. -->
     <meta property="og:site_name" content="Health Records Export for Maccabi" />
@@ -26,14 +28,24 @@
     <link rel="stylesheet" href="ai-assistant.css" />
     <link rel="stylesheet" href="site.css" />
   </head>
-  <body class="ai">
-    <header class="hero" id="hero">
+  <!-- What the page is, for search engines, as attributes on what it already says (microdata): structured data is
+       usually a script, and the page has none. The site, the extension (the hero) and the questions (#faq). -->
+  <body class="ai" itemscope itemtype="https://schema.org/WebSite">
+    <meta itemprop="name" content="Health Records Export for Maccabi" />
+    <link itemprop="url" href="https://maccabi.ronirachmani.com/" />
+    <header class="hero" id="hero" itemscope itemtype="https://schema.org/SoftwareApplication">
       <div class="hero-text">
-        <p class="eyebrow"><svg viewBox="0 0 24 24" width="40" height="40" aria-hidden="true"><g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M2.75 7A2.75 2.75 0 0 1 5.5 4.25L9.031 4.25A0.8 0.8 0 0 1 9.64 4.53L11.51 6.72A0.8 0.8 0 0 0 12.119 7L18.5 7A2.75 2.75 0 0 1 21.25 9.75L21.25 18.25A2.75 2.75 0 0 1 18.5 21L5.5 21A2.75 2.75 0 0 1 2.75 18.25Z" transform="translate(-1.1 -1.1)" stroke="#f1c1cd" stroke-width="2.55" /><path d="M2.75 7A2.75 2.75 0 0 1 5.5 4.25L9.031 4.25A0.8 0.8 0 0 1 9.64 4.53L11.51 6.72A0.8 0.8 0 0 0 12.119 7L18.5 7A2.75 2.75 0 0 1 21.25 9.75L21.25 18.25A2.75 2.75 0 0 1 18.5 21L5.5 21A2.75 2.75 0 0 1 2.75 18.25Z" fill="#ffffff" stroke="#083f92" stroke-width="1.6" /><path d="M12 11.25v5.5M9.4 14.15L12 16.75l2.6-2.6" stroke="#083f92" stroke-width="1.6" /></g></svg> Health Records Export for Maccabi <span class="chip">Unofficial</span></p>
+        <p class="eyebrow"><svg viewBox="0 0 24 24" width="40" height="40" aria-hidden="true"><g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M2.75 7A2.75 2.75 0 0 1 5.5 4.25L9.031 4.25A0.8 0.8 0 0 1 9.64 4.53L11.51 6.72A0.8 0.8 0 0 0 12.119 7L18.5 7A2.75 2.75 0 0 1 21.25 9.75L21.25 18.25A2.75 2.75 0 0 1 18.5 21L5.5 21A2.75 2.75 0 0 1 2.75 18.25Z" transform="translate(-1.1 -1.1)" stroke="#f1c1cd" stroke-width="2.55" /><path d="M2.75 7A2.75 2.75 0 0 1 5.5 4.25L9.031 4.25A0.8 0.8 0 0 1 9.64 4.53L11.51 6.72A0.8 0.8 0 0 0 12.119 7L18.5 7A2.75 2.75 0 0 1 21.25 9.75L21.25 18.25A2.75 2.75 0 0 1 18.5 21L5.5 21A2.75 2.75 0 0 1 2.75 18.25Z" fill="#ffffff" stroke="#083f92" stroke-width="1.6" /><path d="M12 11.25v5.5M9.4 14.15L12 16.75l2.6-2.6" stroke="#083f92" stroke-width="1.6" /></g></svg> <span itemprop="name">Health Records Export for Maccabi</span> <span class="chip">Unofficial</span></p>
         <h1>Your whole Maccabi history, and <em>a genius friend who's read all of it</em></h1>
-        <p class="lede">Save everything from Maccabi Online to your computer, then ask anything: what changed, what stands out, what to do next.</p>
-        <div class="cta"><a class="badge-link" href="https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp?utm_source=site&amp;utm_medium=landing&amp;utm_campaign=hero"><img src="images/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="206" height="58" /></a><a class="watch" href="https://youtu.be/0-K1rAA4uMM"><span class="play"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 1l11 6-11 6z" /></svg></span><span>Watch an export<small>1 minute, narrated</small></span></a></div>
+        <p class="lede" itemprop="description">Save everything from Maccabi Online to your computer, then ask anything: what changed, what stands out, what to do next.</p>
+        <div class="cta"><a class="badge-link" itemprop="installUrl" href="https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp?utm_source=site&amp;utm_medium=landing&amp;utm_campaign=hero"><img src="images/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="206" height="58" /></a><a class="watch" href="https://youtu.be/0-K1rAA4uMM"><span class="play"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 1l11 6-11 6z" /></svg></span><span>Watch an export<small>1 minute, narrated</small></span></a></div>
         <p class="cta-note">It installs in Chrome on a computer, not on a phone. <a class="send-self" href="mailto:?subject=Health%20Records%20Export%20for%20Maccabi&amp;body=Open%20this%20on%20your%20computer%2C%20in%20Chrome%3A%20https%3A%2F%2Fmaccabi.ronirachmani.com%2F">Email yourself the link</a></p>
+        <meta itemprop="applicationCategory" content="BrowserApplication" />
+        <meta itemprop="operatingSystem" content="Chrome" />
+        <link itemprop="url" href="https://maccabi.ronirachmani.com/" />
+        <link itemprop="image" href="https://maccabi.ronirachmani.com/icons/icon-128.png" />
+        <link itemprop="sameAs" href="https://github.com/RoniRachmani/health-records-export-for-maccabi" />
+        <div itemprop="offers" itemscope itemtype="https://schema.org/Offer"><meta itemprop="price" content="0" /><meta itemprop="priceCurrency" content="ILS" /></div>
       </div>
       <figure class="dash-stage anim" id="hero-picture" aria-label="A health dashboard an AI assistant made from a made-up export">
         <p class="asked">Make me a dashboard of my health</p>
@@ -606,6 +618,46 @@
                 <p>It's asked to explain rather than diagnose, and to say plainly when a record suggests seeing a doctor soon.</p>
               </li>
             </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- The questions asked before installing, each answered in a line or two. They repeat facts from the sections
+           above and from the README's "Before you start" and "Privacy and safety": keep them in step. -->
+      <section class="band" id="faq" itemscope itemtype="https://schema.org/FAQPage">
+        <h2>Questions about exporting your Maccabi medical records</h2>
+        <div class="faq">
+          <div class="faq-item" itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+            <h3 itemprop="name">Is this an official Maccabi tool?</h3>
+            <div itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><p itemprop="text">No. It is unofficial: not affiliated with, endorsed by or sponsored by Maccabi Healthcare Services. It is open source, and it works in the session you are already logged in with. It never sees your password or your one-time codes.</p></div>
+          </div>
+          <div class="faq-item" itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+            <h3 itemprop="name">Is it free?</h3>
+            <div itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><p itemprop="text">The extension is free. The assistant is its own product: Claude needs a paid plan to open a folder, and ChatGPT opens one on its free plan where Work has rolled out.</p></div>
+          </div>
+          <div class="faq-item" itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+            <h3 itemprop="name">Where do my medical records go?</h3>
+            <div itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><p itemprop="text">From Maccabi Online to your own computer, as one ZIP file. The extension talks only to Maccabi Online and has no server of its own, so nothing is sent to its developer. An AI assistant reads them only if you open the folder in one.</p></div>
+          </div>
+          <div class="faq-item" itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+            <h3 itemprop="name">Does it change anything in my Maccabi account?</h3>
+            <div itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><p itemprop="text">One thing: each export orders a fresh copy of your full medical file, so Maccabi texts you as it starts. Everything else only reads.</p></div>
+          </div>
+          <div class="faq-item" itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+            <h3 itemprop="name">How far back do the records go?</h3>
+            <div itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><p itemprop="text">The site's own form orders the medical file from July 2020 at the earliest. The export asks for your whole history, the widest range Maccabi allows. Each other section holds what Maccabi Online has in it.</p></div>
+          </div>
+          <div class="faq-item" itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+            <h3 itemprop="name">Does it work on a phone, or in another browser?</h3>
+            <div itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><p itemprop="text">It installs in Chrome on a computer, version 120 or newer. There is no phone version.</p></div>
+          </div>
+          <div class="faq-item" itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+            <h3 itemprop="name">Does it work with Clalit, Meuhedet or Leumit?</h3>
+            <div itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><p itemprop="text">No. It reads Maccabi Online only.</p></div>
+          </div>
+          <div class="faq-item" itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+            <h3 itemprop="name">My records are in Hebrew. Can I ask in English?</h3>
+            <div itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><p itemprop="text">Yes. The assistant reads the Hebrew and answers in plain English, and it names the record behind each answer, so you can check it.</p></div>
           </div>
         </div>
       </section>
