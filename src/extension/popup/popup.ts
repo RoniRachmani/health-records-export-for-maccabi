@@ -110,7 +110,10 @@ function stickyActions(...children: Child[]): HTMLElement {
   return h('div', { class: 'actions sticky' }, ...children);
 }
 
-/** The small status pill above a view's heading; kind colours it. */
+/**
+ * The small status pill above a view's heading; kind colours it. Only where it says what the heading doesn't (how far a
+ * run is, that the notice comes first): a pill that repeats its heading says the state twice.
+ */
 function status(text: string, kind: '' | 'ok' | 'warn' | 'err' = ''): HTMLElement {
   return h('p', { class: 'status' + (kind ? ' ' + kind : '') }, text);
 }
@@ -162,6 +165,8 @@ function progressBar(percent: number, active: boolean, withBand = false): { bar:
 
 /** A speech bubble, for the reminder while the medical file is prepared. */
 const ASK_ICON = '<svg class="ask-icon" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2.5 3h11v7.6H8l-3.2 2.6v-2.6H2.5z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+/** A box with an arrow leaving it: the button opens a page outside the popup. */
+const OPENS_ICON = '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M5 2.5H3a.5.5 0 0 0-.5.5v6a.5.5 0 0 0 .5.5h6a.5.5 0 0 0 .5-.5V7M7 2.5h2.5V5M9.5 2.5 5.75 6.25" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const TAB_ICON = '<svg class="tab-icon" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="1.5" y="2.5" width="13" height="11" rx="1.8" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M1.5 6h13" stroke="currentColor" stroke-width="1.4"/><circle cx="4" cy="4.3" r=".7" fill="currentColor"/><circle cx="6" cy="4.3" r=".7" fill="currentColor"/></svg>';
 
 // ---- views -------------------------------------------------------------
@@ -238,9 +243,9 @@ function idleView(st: StateReply): Child[] {
       !st.tab.onMaccabi && actions(actionButton('Open Maccabi Online', { type: 'openMaccabi' }, 'primary block')),
     ];
   }
+  // The account line's green dot says it is ready: no pill between it and the heading.
   return [
     accountRow(st),
-    status('Ready to export'),
     h('h2', {}, 'Your records, one ZIP'),
     h('p', { class: 'lead' }, 'Tests, visits, prescriptions, letters, your full medical file and more. Usually a few minutes; up to 20 if the medical file is slow to arrive.'),
     actions(actionButton('Start export', { type: 'start' }, 'primary block', 'Checking your login…')),
@@ -284,19 +289,23 @@ function progressView(run: RunState): Child[] {
   ];
 }
 
+/**
+ * The way back is the one full-width button; Cancel is the quiet one Running has, since it deletes what was collected
+ * and still asks first. How far the run got is said once, beside the section it stopped in.
+ */
 function pausedView(run: RunState, st: StateReply): Child[] {
   const hidden = run.status === 'paused_hidden';
   const stage = STAGES[stageStates(run).indexOf('current')]?.label;
   let primary: HTMLElement;
-  if (!hidden && st.tab.onMaccabi) primary = actionButton('Resume', { type: 'resume' }, 'primary', 'Reconnecting…');
-  else primary = actionButton('Go to the Maccabi Online tab', { type: 'focusTab' }, 'primary');
+  if (!hidden && st.tab.onMaccabi) primary = actionButton('Resume', { type: 'resume' }, 'primary block', 'Reconnecting…');
+  else primary = actionButton('Go to the Maccabi Online tab', { type: 'focusTab' }, 'primary block');
+  const done = run.percent + '% done';
   return [
-    status('Paused · ' + run.percent + '%', 'warn'),
     h('h2', {}, hidden ? 'Waiting for the Maccabi Online tab' : 'Export paused'),
-    stage && h('p', { class: 'detail' }, 'Section: ' + stage),
+    h('p', { class: 'detail' }, stage ? 'Section: ' + stage + ' · ' + done : done),
     progressBar(run.percent, false).bar,
     note('warn', run.message || (hidden ? 'Bring the Maccabi Online tab back to the front to continue.' : 'The export is paused.')),
-    ui.confirm === 'cancel' ? cancelConfirm() : actions(primary, cancelButton()),
+    ...(ui.confirm === 'cancel' ? [cancelConfirm()] : [actions(primary), h('p', { class: 'dismiss' }, cancelButton('quiet'))]),
   ];
 }
 
@@ -346,8 +355,12 @@ function doneView(run: RunState): Child[] {
   // Not one of the pair: it clears this summary and goes back to the start, which is nobody's next step. It says on its
   // face that the ZIP is not touched.
   const clear = h('p', { class: 'dismiss' }, actionButton('Clear this summary (the ZIP stays)', { type: 'dismiss' }, 'quiet'));
+  // It opens a page on the website, not an AI: the mark after its name says it leaves the popup, and a screen reader
+  // hears where to. Its name is the notification's too, so the mark is said, not the name lengthened.
+  const ai = button('Open it in an AI', () => void window.open(SITE_OPEN, '_blank'), 'opens');
+  ai.insertAdjacentHTML('beforeend', OPENS_ICON);
+  ai.append(h('span', { class: 'visually-hidden' }, ' (opens in a new tab)'));
   return [
-    status('Saved', 'ok'),
     h('h2', {}, 'Your export is ready'),
     h('div', { class: 'file-card' },
       icon,
@@ -364,39 +377,44 @@ function doneView(run: RunState): Child[] {
           h('ul', {}, ...g.items.map((p) => h('li', {}, problemText(p.what), p.where.includes('/') && h('span', { class: 'path' }, p.where))))))),
       count > shown.length && h('p', { class: 'small' }, 'Showing the first ' + shown.length + '.')),
     // The two next steps, as the pair: finding the file, then asking an AI about it, which is what the ZIP is for.
-    actions(actionButton('Show in folder', { type: 'showFile' }, 'primary'), button('Open it in an AI', () => void window.open(SITE_OPEN, '_blank'))),
+    actions(actionButton('Show in folder', { type: 'showFile' }, 'primary'), ai),
     clear,
     caution,
   ];
 }
 
+/**
+ * The card reads in order: what happened, that nothing collected is lost, then what a report needs. Trying again is the
+ * one full-width button; deleting is quiet, and asks first.
+ */
 function errorView(run: RunState, st: StateReply): Child[] {
   const atSave = run.next === PLAN.indexOf('save');
   let retry: HTMLElement;
-  if (atSave) retry = actionButton('Save again', { type: 'retrySave' }, 'primary', 'Saving…');
-  else if (st.tab.onMaccabi) retry = actionButton('Try again', { type: 'resume' }, 'primary', 'Reconnecting…');
-  else retry = actionButton('Go to the Maccabi Online tab', { type: 'focusTab' }, 'primary');
+  if (atSave) retry = actionButton('Save again', { type: 'retrySave' }, 'primary block', 'Saving…');
+  else if (st.tab.onMaccabi) retry = actionButton('Try again', { type: 'resume' }, 'primary block', 'Reconnecting…');
+  else retry = actionButton('Go to the Maccabi Online tab', { type: 'focusTab' }, 'primary block');
+  // What went wrong in the code's own words: no use to the member, and what a report needs.
+  const detail = run.errorDetail ? h('span', {}, run.errorDetail) : null;
+  const report = h('a', { href: REPORT, target: '_blank', rel: 'noreferrer' }, 'Report the problem');
   return [
-    status(atSave ? 'Not saved' : 'Stopped', 'err'),
     h('h2', {}, atSave ? 'The ZIP was not saved' : 'Export stopped'),
     note('err',
       h('div', {}, run.message || 'The export stopped unexpectedly.'),
-      // What went wrong in the code's own words: no use to the member, and what a report needs.
-      run.errorDetail && h('div', { class: 'small err-detail' }, 'Details, for a report: ', h('span', {}, run.errorDetail)),
       !atSave && h('div', { class: 'small' }, st.tab.onMaccabi
         ? 'Files collected so far are kept. Try again continues from where it stopped.'
         : 'Files collected so far are kept. To try again, click the extension’s icon on the logged-in Maccabi Online tab.'),
-      // The next step when trying again does not help, so it is here and not only in the footer.
-      !atSave && h('div', { class: 'small' }, 'Still stopping here? ', h('a', { href: REPORT, target: '_blank', rel: 'noreferrer' }, 'Report the problem'), '.')),
-    ui.confirm === 'discard'
-      ? confirmPanel('Delete the files collected so far? You will need to start a new export.', 'Delete files', { type: 'dismiss' }, 'Deleting…', 'Keep them')
-      : actions(retry, button('Delete collected files', () => askConfirm('discard'))),
+      // The next step when trying again does not help, so it is here and not only in the footer, with the detail it needs.
+      !atSave
+        ? h('div', { class: 'small err-detail' }, 'Still stopping here? ', report, ...(detail ? [' with this detail: ', detail] : ['.']))
+        : detail && h('div', { class: 'small err-detail' }, 'Details, for a report: ', detail)),
+    ...(ui.confirm === 'discard'
+      ? [confirmPanel('Delete the files collected so far? You will need to start a new export.', 'Delete files', { type: 'dismiss' }, 'Deleting…', 'Keep them')]
+      : [actions(retry), h('p', { class: 'dismiss' }, button('Delete collected files', () => askConfirm('discard'), 'quiet'))]),
   ];
 }
 
 function stoppingView(): Child[] {
   return [
-    status('Stopping'),
     h('h2', { class: 'working' }, h('span', { class: 'spinner', 'aria-hidden': 'true' }), 'Stopping the export…'),
     note('', 'The files collected so far are deleted once the current request finishes. This can take a few seconds.'),
   ];

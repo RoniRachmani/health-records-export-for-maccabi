@@ -209,6 +209,9 @@ describe('popup', () => {
     expect(caption?.className).toBe('caption');
     expect(caption?.textContent).toBe('Orders a fresh copy of your medical file. Maccabi will text you.');
     expect(document.querySelector('.note')).toBeNull();
+    // The account line's dot says it is ready: the heading follows it with no pill between.
+    expect(document.querySelector('.status')).toBeNull();
+    expect(document.querySelector('.account')?.nextElementSibling?.tagName).toBe('H2');
     expect(document.querySelector('details.more')?.hasAttribute('open')).toBe(false);
 
     buttonNamed('Start export').click();
@@ -232,15 +235,48 @@ describe('popup', () => {
     const failed = running({ status: 'error', message: 'Something unexpected stopped the export during “Referrals”.', errorDetail: 'x is not iterable' });
     await openPopup({ run: failed, tab });
     const note = document.querySelector('.note.err') as HTMLElement;
-    expect(note.firstElementChild?.textContent).toBe('Something unexpected stopped the export during “Referrals”.');
-    expect(note.querySelector('.err-detail')?.textContent).toBe('Details, for a report: x is not iterable');
+    // What happened, that nothing is lost, then the report with what it needs.
+    expect([...note.children].map((e) => e.textContent)).toEqual([
+      'Something unexpected stopped the export during “Referrals”.',
+      'Files collected so far are kept. Try again continues from where it stopped.',
+      'Still stopping here? Report the problem with this detail: x is not iterable',
+    ]);
+    expect(note.querySelector('.err-detail a')?.textContent).toBe('Report the problem');
+  });
+
+  it('gives trying again the row and keeps deleting quiet, with the state said once', async () => {
+    await openPopup({ run: running({ status: 'error', message: 'Something unexpected stopped the export.' }), tab });
+    expect(document.querySelector('.status')).toBeNull();
+    expect(document.querySelector('h2')?.textContent).toBe('Export stopped');
+    expect(buttonNamed('Try again').className).toBe('primary block');
+    expect(buttonNamed('Try again').parentElement?.querySelectorAll('button').length).toBe(1);
+    buttonNamed('Delete collected files').click();
+    await flush();
+    expect(buttonNamed('Delete files')).toBeTruthy();
+    expect(sent.map((m) => m.type)).not.toContain('dismiss');
+  });
+
+  it('pauses with Resume as the one full-width button and Cancel quiet, saying how far once', async () => {
+    const paused = running({ status: 'paused_session', percent: 55, message: 'Your Maccabi Online session ended.' });
+    await openPopup({ run: paused, tab });
+    expect(document.querySelector('.status')).toBeNull();
+    expect(document.querySelector('.detail')?.textContent).toMatch(/^Section: .+ · 55% done$/);
+    expect(buttonNamed('Resume').className).toBe('primary block');
+    expect(buttonNamed('Cancel export').className).toBe('quiet');
+    buttonNamed('Cancel export').click();
+    await flush();
+    expect(buttonNamed('Delete and stop')).toBeTruthy();
   });
 
   it('pairs the done buttons, and ends on the caution about what the ZIP holds', async () => {
     const done = running({ status: 'done', next: PLAN.length, percent: 100, fileCount: 12, zipName: 'maccabi-export-2026-09-17.zip', finishedAt: new Date().toISOString() });
     await openPopup({ run: done, tab });
     const row = buttonNamed('Show in folder').parentElement as HTMLElement;
-    expect([...row.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Show in folder', 'Open it in an AI']);
+    expect([...row.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Show in folder', 'Open it in an AI (opens in a new tab)']);
+    // The AI button opens a page: a mark says so, and a screen reader hears it.
+    expect(row.querySelector('button.opens svg')?.getAttribute('aria-hidden')).toBe('true');
+    // The heading says it is ready; no pill says it again.
+    expect(document.querySelector('.status')).toBeNull();
     // The pair are the next steps; nothing says them again.
     expect(row.previousElementSibling?.className).toBe('file-card');
     expect(buttonNamed('Clear this summary (the ZIP stays)').className).toBe('quiet');

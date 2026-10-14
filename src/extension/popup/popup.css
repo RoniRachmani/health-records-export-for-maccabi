@@ -26,6 +26,8 @@
   --brand-text: #083f92;
   --muted: #5b6785;
   --faint: #9ba8c2;
+  /* A graphic that shows state, as a pending section's ring: 3.1:1 on white, the 3:1 WCAG asks of one. */
+  --ring: #8592b0;
   /* Actions: the one blue, used for buttons and progress. */
   --primary: #296bed;
   --primary-hover: #1f5bd6;
@@ -398,6 +400,14 @@ button.danger:not([aria-disabled='true']):hover {
   background: var(--danger-hover);
   border-color: var(--danger-hover);
 }
+/* A button that opens a page outside the popup: its mark sits close after the name. 155px in Roboto, in a 160px half
+   of the row: a longer name stacks the pair. */
+button.opens {
+  gap: 6px;
+}
+button.opens svg {
+  flex: none;
+}
 button.block {
   width: 100%;
   min-height: 46px;
@@ -765,6 +775,10 @@ details.more summary:hover {
   font-size: 9px;
   font-weight: 700;
   line-height: 1;
+}
+/* Still to come: an empty ring, drawn dark enough to read as one. */
+.stages li.pending::before {
+  border-color: var(--ring);
 }
 .stages li.done {
   color: var(--fg);
