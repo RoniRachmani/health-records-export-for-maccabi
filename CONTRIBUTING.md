@@ -211,7 +211,10 @@ npm run icons          # public/icons/ and store/assets/icon-128.png
 `package` builds `dist/` first, and refuses a development build. The store images and the video show the real
 popup with made-up states, and they need Roboto on the machine that draws them. Without it, run the *Store images*
 workflow from the Actions tab (or `gh workflow run store-assets.yml`, with `-f shots="start open"` for only some): it
-renders them on Linux with Roboto and commits the ones that changed. [docs/store-listing.md](docs/store-listing.md)
+renders them on Linux with Roboto and commits the ones that changed. The *Store video* workflow
+(`gh workflow run store-video.yml`) does the same for the video's picture, kept as the run's artifact and silent:
+download it with `gh run download <run id> -n promo-video -D store/assets`, then `npm run store-video -- --remux`
+puts the soundtrack on it from your narration cache. [docs/store-listing.md](docs/store-listing.md)
 has everything to fill in on the store dashboard.
 
 The video is drawn frame by frame in the same headless browser (`store/src/video.ts`), so nothing depends on the

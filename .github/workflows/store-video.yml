@@ -1,0 +1,51 @@
+# Renders the promo video's picture (npm run store-video -- --silent) on Linux with Roboto installed, and keeps it as
+# the run's artifact: the MP4 is gitignored, since it goes to YouTube, not the repo. Run it by hand from the Actions tab
+# after the popup or the film changes.
+#
+# It renders no sound. The narration lives in a maintainer's .cache/narration/ (gitignored), cut from a take, so the
+# soundtrack is put on afterwards, in seconds, where that cache is:
+#   gh run download <run id> -n promo-video -D store/assets
+#   npm run store-video -- --remux
+# then upload store/assets/promo-video.mp4 to YouTube and re-render its poster (the Store images workflow, shot
+# "poster").
+name: Store video
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: store-video
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    # The whole film is about 20 minutes here; this leaves room for a slow runner.
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install Roboto and ffmpeg
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y --no-install-recommends fonts-roboto ffmpeg
+          fc-cache -f
+          fc-list | grep -qi roboto
+          # Ubuntu's AppArmor keeps Chrome's sandbox from starting without this.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - name: Render the picture
+        run: npm run store-video -- --silent
+      - uses: actions/upload-artifact@v7
+        with:
+          name: promo-video
+          path: store/assets/promo-video.mp4
+          # Already H.264: zipping it again saves nothing.
+          compression-level: 0
+          retention-days: 14

@@ -2,7 +2,8 @@
 # maintainer's machine may not have, and commits the ones that changed to main. Run it by hand from the Actions tab
 # after the popup's appearance changes; name shots to render only those (e.g. "start open"), or leave it empty for
 # all. The link previews (og, social) are drawn too but are gitignored: the Pages workflow publishes those.
-# The video is not rendered here: it takes 20 minutes and goes to YouTube, not the repo.
+# The video is not rendered here: it takes 20 minutes and goes to YouTube, not the repo. The Store video workflow
+# (store-video.yml) renders its picture.
 name: Store images
 
 on:

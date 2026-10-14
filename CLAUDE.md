@@ -50,7 +50,9 @@ then `fc-cache -f`) and check `fc-list | grep -i roboto`: the renders photograph
 it they draw the fallback face. That is a font for the machine taking the pictures; the extension itself
 still never ships or fetches one. Without Roboto here, run the *Store images* workflow instead
 (`gh workflow run store-assets.yml`, optionally `-f shots="start open"`): it renders on Linux with Roboto and
-commits the images that changed to `main`, so pull afterwards.
+commits the images that changed to `main`, so pull afterwards. The *Store video* workflow (`gh workflow run
+store-video.yml`) renders the video's picture there and keeps it as the run's artifact, with no sound: the narration is
+only in a maintainer's `.cache/narration/`, so download it to `store/assets/` and add the soundtrack with `--remux`.
 
 A session can push to `main` but not push tags, so a GitHub release is published by the *Release* workflow
 (`.github/workflows/release.yml`, run with the version): it needs the version bump and `docs/releases/<version>.md`
