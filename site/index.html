@@ -99,7 +99,7 @@
 
     <main>
       <section class="band hl hl-strip" id="timeline">
-        <p class="hl-stat"><b>612 records</b><span>over 45 years, back to your first check-up</span></p>
+        <p class="hl-stat"><b>Back to 1981</b><span>The site's own form starts in 2020. The export asks for all of it.</span></p>
         <figure class="tl mini flat" id="timeline-picture" role="img" aria-label="A made-up member's 612 records from 1981 to 2026: 214 visits, 72 tests, 293 medicines, 31 vaccines and 2 hospital stays. Ordered on the site, the medical file starts in July 2020.">
           <div class="tl-plot" style="--site:0.851">
             <div class="tl-lane v"><span class="tl-k">Visits<b>214</b></span><div class="tl-track"><i style="left:0.2%"></i><i class="o2" style="left:2.4%"></i><i style="left:4.6%"></i><i class="o2" style="left:6.8%"></i><i style="left:9%"></i><i class="o2" style="left:11.2%"></i><i style="left:13.4%"></i><i class="o2" style="left:15.6%"></i><i style="left:17.8%"></i><i class="o2" style="left:20%"></i><i style="left:22.2%"></i><i class="o2" style="left:24.4%"></i><i style="left:26.6%"></i><i class="o2" style="left:28.9%"></i><i style="left:31.1%"></i><i class="o2" style="left:33.3%"></i><i style="left:35.5%"></i><i class="o2" style="left:37.7%"></i><i style="left:39.9%"></i><i class="o2" style="left:42.1%"></i><i style="left:44.3%"></i><i class="o2" style="left:46.5%"></i><i style="left:48.7%"></i><i class="o2" style="left:50.9%"></i><i style="left:53.1%"></i><i class="o2" style="left:55.3%"></i><i style="left:57.5%"></i><i class="o2" style="left:59.7%"></i><i style="left:61.9%"></i><i class="o2" style="left:64.2%"></i><i style="left:66.4%"></i><i class="o2" style="left:68.6%"></i><i style="left:70.8%"></i><i class="o2" style="left:73%"></i><i style="left:75.2%"></i><i class="o2" style="left:77.4%"></i><i style="left:79.6%"></i><i class="o2" style="left:81.8%"></i><i style="left:84%"></i><i class="o2" style="left:86.2%"></i><i style="left:88.4%"></i><i class="o2" style="left:90.6%"></i><i style="left:92.8%"></i><i class="o2" style="left:95%"></i><i style="left:97.2%"></i><i class="o2" style="left:99.4%"></i></div></div>
@@ -124,9 +124,22 @@
           <input type="radio" name="uc" id="uc-labs" />
           <input type="radio" name="uc" id="uc-trend" />
           <input type="radio" name="uc" id="uc-changed" />
-          <input type="radio" name="uc" id="uc-visit" />
           <input type="radio" name="uc" id="uc-find" />
+          <input type="radio" name="uc" id="uc-visit" />
           <input type="radio" name="uc" id="uc-spend" />
+          <!-- On a phone the pills give way to a stepper: back, where you are, and the next question by name. The radios
+               above stay the control for a keyboard or a screen reader, so the stepper is hidden from one. -->
+          <div class="tab-step" aria-hidden="true">
+            <div class="s-row s-summary"><span class="s-prev off">‹</span><span class="s-count">1 of 9</span><label class="s-next" for="uc-today">One thing today <span>›</span></label></div>
+            <div class="s-row s-today"><label class="s-prev" for="uc-summary">‹</label><span class="s-count">2 of 9</span><label class="s-next" for="uc-result">Explain a result <span>›</span></label></div>
+            <div class="s-row s-result"><label class="s-prev" for="uc-today">‹</label><span class="s-count">3 of 9</span><label class="s-next" for="uc-labs">Did it work? <span>›</span></label></div>
+            <div class="s-row s-labs"><label class="s-prev" for="uc-result">‹</label><span class="s-count">4 of 9</span><label class="s-next" for="uc-trend">Loose ends <span>›</span></label></div>
+            <div class="s-row s-trend"><label class="s-prev" for="uc-labs">‹</label><span class="s-count">5 of 9</span><label class="s-next" for="uc-changed">Quiet changes <span>›</span></label></div>
+            <div class="s-row s-changed"><label class="s-prev" for="uc-trend">‹</label><span class="s-count">6 of 9</span><label class="s-next" for="uc-find">Is there a pattern? <span>›</span></label></div>
+            <div class="s-row s-find"><label class="s-prev" for="uc-changed">‹</label><span class="s-count">7 of 9</span><label class="s-next" for="uc-visit">Before a visit <span>›</span></label></div>
+            <div class="s-row s-visit"><label class="s-prev" for="uc-find">‹</label><span class="s-count">8 of 9</span><label class="s-next" for="uc-spend">What I spent <span>›</span></label></div>
+            <div class="s-row s-spend"><label class="s-prev" for="uc-visit">‹</label><span class="s-count">9 of 9</span><label class="s-next" for="uc-summary">Start again <span>↺</span></label></div>
+          </div>
           <div class="tab-list" role="presentation">
             <label for="uc-summary">What stands out?</label>
             <label for="uc-today">One thing today</label>
@@ -455,6 +468,7 @@
               <li><span><strong>Press Start export</strong>Click the extension's icon in Chrome's toolbar: it's under the puzzle piece until you pin it. Maccabi texts you, because this orders a fresh copy of your full medical file.</span></li>
               <li><span><strong>Leave the tab open</strong>Usually a few minutes, up to 20. The ZIP lands in your Downloads.</span></li>
             </ol>
+            <div class="cta film-cta"><a class="badge-link" href="https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp?utm_source=site&amp;utm_medium=landing&amp;utm_campaign=collect"><img src="images/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="206" height="58" /></a><p>Free. It installs in Chrome on a computer.</p></div>
           </div>
           <figure class="clip-col" id="collect-clip">
             <div class="browserwin" aria-hidden="false">

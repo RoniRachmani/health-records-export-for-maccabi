@@ -2554,9 +2554,11 @@ h2 {
   left: 0 !important;
   transform: none;
 }
+/* The two captions are the strip's point (the export goes back further than the site does), so they read as text. */
 .tl.mini .tl-caps {
   margin: 0;
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 /* A: a strip. */
@@ -2572,7 +2574,7 @@ h2 {
 .hl-stat {
   display: grid;
   margin: 0;
-  max-width: 190px;
+  max-width: 230px;
   color: var(--muted);
   font-size: 14px;
   line-height: 1.4;
@@ -3801,5 +3803,108 @@ h2 {
   .hos-t td,
   .hos-t th {
     padding-inline: 6px;
+  }
+}
+
+/* Round 11: the critique's three priorities. */
+/* The install button again under the three steps, where a reader has just seen what Start does. Google's bordered
+   badge is opaque white, so it holds on the navy band; the note goes under it, as the column is too narrow for both. */
+.film-cta {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 28px;
+}
+.film-cta p {
+  margin: 0;
+  font-size: 15px;
+  opacity: 0.86;
+}
+
+/* On a phone the nine pills wrapped to seven rows, a screen of them before any answer. A stepper takes one row: back,
+   where you are, and the next question by name. The last offers to start again. */
+.tab-step {
+  display: none;
+}
+@media (max-width: 640px) {
+  .ask-band .tab-list {
+    display: none;
+  }
+  .tab-step {
+    display: block;
+    grid-row: 1;
+    margin-bottom: 18px;
+  }
+  .s-row {
+    display: none;
+    align-items: center;
+    gap: 10px;
+  }
+  #uc-summary:checked ~ .tab-step .s-summary,
+  #uc-today:checked ~ .tab-step .s-today,
+  #uc-result:checked ~ .tab-step .s-result,
+  #uc-labs:checked ~ .tab-step .s-labs,
+  #uc-trend:checked ~ .tab-step .s-trend,
+  #uc-changed:checked ~ .tab-step .s-changed,
+  #uc-find:checked ~ .tab-step .s-find,
+  #uc-visit:checked ~ .tab-step .s-visit,
+  #uc-spend:checked ~ .tab-step .s-spend {
+    display: flex;
+  }
+  .s-prev {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--line-soft);
+    border-radius: 50%;
+    background: var(--bg);
+    color: var(--heading);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .s-prev.off {
+    opacity: 0.35;
+    cursor: default;
+  }
+  .s-count {
+    flex: 1;
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+  .s-next {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 16px 0 18px;
+    border-radius: var(--r-pill);
+    background: var(--heading);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .s-next span {
+    font-size: 20px;
+    line-height: 1;
+  }
+  #uc-summary:focus-visible ~ .tab-step .s-summary .s-count,
+  #uc-today:focus-visible ~ .tab-step .s-today .s-count,
+  #uc-result:focus-visible ~ .tab-step .s-result .s-count,
+  #uc-labs:focus-visible ~ .tab-step .s-labs .s-count,
+  #uc-trend:focus-visible ~ .tab-step .s-trend .s-count,
+  #uc-changed:focus-visible ~ .tab-step .s-changed .s-count,
+  #uc-find:focus-visible ~ .tab-step .s-find .s-count,
+  #uc-visit:focus-visible ~ .tab-step .s-visit .s-count,
+  #uc-spend:focus-visible ~ .tab-step .s-spend .s-count {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
   }
 }
