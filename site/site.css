@@ -24,14 +24,10 @@ h2 {
   max-width: 38rem;
 }
 
-/* ---- a clip, cut to its window: the video keeps the film's navy around the app ---- */
+/* ---- the run clip: the popup hanging from the drawn window's toolbar. The video draws its edge and shadow, over a
+   white page (store-video --clip), and is page below it, since the popup shortens as finished sections fold away ---- */
 .clip {
-  position: relative;
-  overflow: hidden;
-  border-radius: 22px;
-  background: var(--navy-2);
-  box-shadow: 0 24px 60px rgb(8 40 110 / 0.22);
-  max-width: 100%;
+  margin-top: 2px;
 }
 .clip video {
   display: block;
@@ -99,9 +95,6 @@ h2 {
 .clip-col {
   display: grid;
   justify-items: center;
-}
-.clip-col .clip.popup-cut {
-  width: min(360px, 100%);
 }
 .clip-col figcaption {
   margin-top: 12px;
@@ -720,18 +713,6 @@ h2 {
   background: rgb(255 255 255 / 0.16);
   color: #ffffff;
 }
-/* On the blue, each clip shows its app window alone: none of the film's own (lighter) ground, so no frame, glow or
-   pale rectangle. Both windows keep one size and place for their whole clip (measured frame by frame); the run clip
-   stops before "Saved", whose popup is shorter. Cuts are 1px inside the window; the corners are the window's own. */
-.film-band .clip {
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 24px 56px rgb(2 14 40 / 0.4);
-}
-/* The clip is cut when the site is built: the popup's 378px width, and 630px of height, enough for its tallest. */
-.film-band .clip.popup-cut {
-  aspect-ratio: 378 / 630;
-}
 
 /* The film, one click from the hero: a play button beside the store badge (a link to YouTube, not an embed, so the
    page loads nothing from it). */
@@ -1088,14 +1069,6 @@ h2 {
 }
 .bw-skeleton .w55 {
   width: 55%;
-}
-/* The popup hangs from the toolbar, under the icon. Its edge and shadow are in the clip, which is white below it
-   because it gets shorter as the export goes: so the box itself is page, with no edge of its own. */
-.film-band .browserwin .clip.popup-cut {
-  width: 100%;
-  margin-top: 2px;
-  border-radius: 0;
-  box-shadow: none;
 }
 @media (max-width: 640px) {
   .bw-page {
