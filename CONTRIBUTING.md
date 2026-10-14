@@ -232,7 +232,7 @@ gitignored `.env`, line by line over the API. `ELEVENLABS_MODEL` picks the model
 set; set it for `--script` and `--import` too). Spoken lines are cached in `.cache/narration/` by voice, model and
 words, so only a changed line costs anything. `--audio-only` writes the soundtrack alone, to listen to; `--remux` puts a changed soundtrack
 on the last render's picture in seconds, without drawing it again; `--no-narration` leaves the voice out, and
-`--silent` the sound. `--clip` draws the popup over a white page instead of the film's ground, which is how the Pages
+`--silent` the sound. `--clip` draws the popup over a white page instead of the film's ground, with no pointer, which is how the Pages
 workflow renders the landing page's clip. The MP4 is not committed — the store's video
 field takes a YouTube link, so upload it there and paste the link on the dashboard. The README's poster is one frame of the same
 film, drawn by the same page: `npm run store-assets -- poster`.

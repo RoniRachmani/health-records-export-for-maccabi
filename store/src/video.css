@@ -14,12 +14,15 @@ body.video {
 }
 
 /* The landing page's clip: a white page under the popup, which is cut out flush with its sides. So its shadow only
-   falls below it, and its ring is the edge it has against the page. */
+   falls below it, and its ring is the edge it has against the page. No pointer either: the clip starts as the export
+   does, while the click on Start export is still fading. */
 body.video.clip {
   background: #ffffff;
 }
 body.clip .grid,
-body.clip .glow {
+body.clip .glow,
+body.clip .cursor,
+body.clip .ripple {
   display: none;
 }
 body.clip iframe.popup {

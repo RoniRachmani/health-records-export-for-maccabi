@@ -9,7 +9,8 @@
 //   --audio-only    write the soundtrack alone, to store/assets/promo-soundtrack.wav, and stop
 //   --no-narration  music and effects only
 //   --silent        no soundtrack at all
-//   --clip          the popup over a white page instead of the film's ground, for the landing page's clip
+//   --clip          the popup over a white page instead of the film's ground, and no pointer, for the landing
+//                   page's clip
 //   --script        print the narration as one take's text, to paste into ElevenLabs, and stop
 //   --captions      write the narration as subtitles, to store/assets/promo-captions.srt, and stop: each
 //                   line from the second it is spoken to the second it ends, to upload beside the film
