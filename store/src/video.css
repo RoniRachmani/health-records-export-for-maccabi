@@ -13,6 +13,19 @@ body.video {
   background: linear-gradient(135deg, #052658 0%, #083f92 55%, #296bed 100%);
 }
 
+/* The landing page's clip: a white page under the popup, which is cut out flush with its sides. So its shadow only
+   falls below it, and its ring is the edge it has against the page. */
+body.video.clip {
+  background: #ffffff;
+}
+body.clip .grid,
+body.clip .glow {
+  display: none;
+}
+body.clip iframe.popup {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 18px 16px -14px rgba(8, 40, 110, 0.22);
+}
+
 /* ---- the ground: slow glows over a faint dot grid ---- */
 .grid {
   position: absolute;

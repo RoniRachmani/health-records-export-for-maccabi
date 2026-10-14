@@ -61,7 +61,7 @@ jobs:
           # Only what the film is drawn from: its own code, the popup it photographs, the icons, and the version the
           # popup prints. The pages in public/ and site/ are not, so changing them deploys without a render. The number
           # after "clips-" stands for the clip lines below: raise it when their times, crops or encoding change.
-          key: clips-4-${{ hashFiles('store/src/**', 'src/extension/**', 'public/icons/**', 'scripts/stage.mjs', 'scripts/store-video.mjs', 'vite.store.config.ts', 'package.json', 'package-lock.json') }}
+          key: clips-5-${{ hashFiles('store/src/**', 'src/extension/**', 'public/icons/**', 'scripts/stage.mjs', 'scripts/store-video.mjs', 'vite.store.config.ts', 'package.json', 'package-lock.json') }}
       - name: Render the clips
         if: steps.clips.outputs.cache-hit != 'true'
         run: |
@@ -69,10 +69,11 @@ jobs:
           mkdir -p _clips
           # clip <name> <from> <to> <crop, in the film's 3840x2160> <size on the page, doubled>
           # A clip loops without a jump: its last half second dissolves into its first, and it starts where the
-          # dissolve ends, so the frame after its last is its first. (The popup keeps its layout across the seam; only
-          # the progress changes.)
+          # dissolve ends, so the frame after its last is its first. It is rendered with --clip, the popup over a white
+          # page, and cut flush with the popup's sides and top: the popup shortens as finished sections fold into one
+          # line, and what it leaves is page, which the page's own white continues. The crop runs to below its tallest.
           clip() {
-            npm run store-video -- "$2" "$3" --silent
+            npm run store-video -- "$2" "$3" --silent --clip
             local seam=0.5 how=fade
             local offset=$(awk "BEGIN { print $3 - $2 - 2 * $seam }")
             ffmpeg -y -loglevel error -i store/assets/promo-video.mp4 -an \
@@ -84,7 +85,7 @@ jobs:
             # clip's own size.
             ffmpeg -y -loglevel error -i "_clips/$1.mp4" -frames:v 1 -c:v libwebp -quality 90 "_clips/$1.webp"
           }
-          clip run 19.6 29.6 1134:1785:2457:216 756:1190
+          clip run 19.6 29.6 1134:1890:2471:208 756:1260
           ls -l _clips
       - uses: actions/configure-pages@v6
       - name: Assemble the site

@@ -466,6 +466,9 @@ const SOUNDS: { at: number; kind: string; dur?: number }[] = [
 // ---- the film ----------------------------------------------------------------
 async function main(): Promise<void> {
   document.body.className = 'video';
+  // `?clip` is the landing page's clip (.github/workflows/pages.yml): the popup over a white page instead of the ground,
+  // so the room it leaves as finished sections fold away is page, as it is in Chrome.
+  if (new URLSearchParams(location.search).has('clip')) document.body.classList.add('clip');
 
   // The ground: the marquee's glows, drifting, over a faint dot grid.
   const grid = h('div', 'grid');

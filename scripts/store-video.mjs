@@ -9,6 +9,7 @@
 //   --audio-only    write the soundtrack alone, to store/assets/promo-soundtrack.wav, and stop
 //   --no-narration  music and effects only
 //   --silent        no soundtrack at all
+//   --clip          the popup over a white page instead of the film's ground, for the landing page's clip
 //   --script        print the narration as one take's text, to paste into ElevenLabs, and stop
 //   --captions      write the narration as subtitles, to store/assets/promo-captions.srt, and stop: each
 //                   line from the second it is spoken to the second it ends, to upload beside the film
@@ -48,8 +49,9 @@ const importAt = args.indexOf('--import');
 const take = importAt < 0 ? null : args.splice(importAt, 2)[1];
 if (take === undefined || take?.startsWith('--')) throw new Error('--import needs the take: --import <file>');
 const flags = new Set(args.filter((a) => a.startsWith('--')));
-const OPTIONS = ['--audio-only', '--no-narration', '--silent', '--script', '--captions', '--remux'];
+const OPTIONS = ['--audio-only', '--no-narration', '--silent', '--script', '--captions', '--remux', '--clip'];
 for (const f of flags) if (!OPTIONS.includes(f)) throw new Error('Unknown option ' + f);
+const PAGE = '/store/src/video.html' + (flags.has('--clip') ? '?clip' : '');
 const [from, to] = args.filter((a) => !a.startsWith('--')).map(Number);
 if (flags.has('--remux') && (Number.isFinite(from) || Number.isFinite(to))) throw new Error('--remux takes the whole film; leave out the times');
 if (existsSync(join(root, '.env'))) process.loadEnvFile(join(root, '.env'));
@@ -155,7 +157,7 @@ function captions(clips) {
 
 /** Scores the film, then draws it frame by frame into the encoder. */
 async function render() {
-  let page = await stage.open('/store/src/video.html', WIDTH, HEIGHT, SCALE);
+  let page = await stage.open(PAGE, WIDTH, HEIGHT, SCALE);
   const { fps, frames: total, soundtrack } = await page.evaluate(
     '({ fps: window.video.fps, frames: window.video.frames, soundtrack: window.video.soundtrack })');
   const first = Number.isFinite(from) ? Math.max(0, Math.round(from * fps)) : 0;
@@ -216,7 +218,7 @@ async function render() {
 
   const fresh = async () => {
     await stage.restart();
-    page = await stage.open('/store/src/video.html', WIDTH, HEIGHT, SCALE);
+    page = await stage.open(PAGE, WIDTH, HEIGHT, SCALE);
   };
 
   /** Draws frame n and photographs it. A browser that dies costs a restart, not the whole render. */

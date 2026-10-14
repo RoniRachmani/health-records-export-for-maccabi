@@ -728,9 +728,9 @@ h2 {
   border-radius: 12px;
   box-shadow: 0 24px 56px rgb(2 14 40 / 0.4);
 }
-/* The clip is cut to its window when the site is built: the popup at 378x595. */
+/* The clip is cut when the site is built: the popup's 378px width, and 630px of height, enough for its tallest. */
 .film-band .clip.popup-cut {
-  aspect-ratio: 378 / 595;
+  aspect-ratio: 378 / 630;
 }
 
 /* The film, one click from the hero: a play button beside the store badge (a link to YouTube, not an embed, so the
@@ -1089,12 +1089,13 @@ h2 {
 .bw-skeleton .w55 {
   width: 55%;
 }
-/* The popup hangs from the toolbar, under the icon. */
+/* The popup hangs from the toolbar, under the icon. Its edge and shadow are in the clip, which is white below it
+   because it gets shorter as the export goes: so the box itself is page, with no edge of its own. */
 .film-band .browserwin .clip.popup-cut {
   width: 100%;
   margin-top: 2px;
-  border-radius: 10px;
-  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.06), 0 10px 28px rgb(8 40 110 / 0.18);
+  border-radius: 0;
+  box-shadow: none;
 }
 @media (max-width: 640px) {
   .bw-page {
