@@ -77,7 +77,7 @@ jobs:
             npm run store-video -- "$2" "$3" --silent --clip
             ffmpeg -y -loglevel error -i store/assets/promo-video.mp4 -an \
               -vf "crop=$4,scale=$5:flags=lanczos,fps=30" \
-              -map "[v]" -c:v libx264 -preset slow -crf 23 -tune animation -pix_fmt yuv420p \
+              -c:v libx264 -preset slow -crf 23 -tune animation -pix_fmt yuv420p \
               -colorspace bt709 -color_primaries bt709 -color_trc bt709 -color_range tv \
               -movflags +faststart "_clips/$1.mp4"
             # The poster, which is also the picture under reduced motion. WebP: a PNG of an H.264 frame is nearly the
