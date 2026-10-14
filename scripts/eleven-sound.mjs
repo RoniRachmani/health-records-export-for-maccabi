@@ -31,22 +31,25 @@ const SFX_MODEL = 'eleven_text_to_sound_v2';
 const MUSIC_FORMAT = 'mp3_48000_320';
 const SFX_FORMAT = 'mp3_44100_192';
 
-// The register of the whole score: what soundtrack.mjs plays, described rather than written.
-const STYLE = ['instrumental', 'modern tech product film score', 'warm optimistic electronic pop', 'D major', '88 BPM',
-  'soft mallet and marimba plucks', 'airy synth pads', 'round sub bass', 'light crisp drums', 'clean modern production'];
-const NEVER = ['vocals', 'singing', 'choir', 'spoken word', 'lyrics', 'distorted guitar', 'aggressive drops'];
+// The register of the whole score: calm and unhurried, so it sits under the voice rather than
+// competing with it — what soundtrack.mjs plays, described rather than written, but softer.
+const STYLE = ['instrumental', 'calm ambient underscore', 'gentle warm electronic', 'D major', '76 BPM',
+  'soft felt piano and mellow marimba', 'warm airy synth pads', 'soft round bass', 'very light brushed percussion',
+  'spacious', 'intimate', 'clean modern production'];
+const NEVER = ['vocals', 'singing', 'choir', 'spoken word', 'lyrics', 'distorted guitar', 'aggressive drops',
+  'loud drums', 'risers', 'big hits', 'busy arrangement', 'EDM'];
 
-/** Each part of the film (scenes in store/src/video.ts) and how the music moves in it. */
+/** Each part of the film (scenes in store/src/video.ts) and how the music moves in it: small changes, never loud. */
 const PARTS = [
-  ['answer', '[Intro]', ['sparse', 'gentle pads and a single mallet line', 'curious', 'no drums']],
-  ['cards', '[Build]', ['plucks join', 'tension rising', 'filtered', 'building to a hit']],
-  ['title', '[Reveal]', ['bright', 'open', 'full pad chord', 'soft kick enters', 'hopeful']],
-  ['browser', '[Verse]', ['light and simple', 'steady pulse', 'mallet arpeggio', 'relaxed']],
-  ['runFrom', '[Groove]', ['driving', 'busy sixteenth-note plucks', 'full drums', 'energetic', 'forward motion']],
-  ['open', '[Lift]', ['warm', 'satisfied', 'drums ease back', 'pads swell']],
-  ['uses', '[Chorus]', ['uplifting', 'full arrangement', 'confident', 'catchy mallet hook']],
-  ['ask', '[Bridge]', ['calmer', 'thoughtful', 'half-time feel', 'reassuring']],
-  ['close', '[Outro]', ['resolving on the tonic', 'final chord rings out', 'fading to silence']],
+  ['answer', '[Intro]', ['sparse', 'a soft pad and a few felt piano notes', 'curious', 'no percussion']],
+  ['cards', '[Build]', ['a gentle marimba pulse joins', 'slowly opening up', 'still soft']],
+  ['title', '[Reveal]', ['warm', 'open pad chord', 'hopeful', 'soft bass enters']],
+  ['browser', '[Verse]', ['light and simple', 'steady gentle pulse', 'unhurried piano arpeggio', 'relaxed']],
+  ['runFrom', '[Groove]', ['quietly moving forward', 'soft flowing marimba arpeggios', 'light brushed percussion', 'calm focus']],
+  ['open', '[Lift]', ['warm', 'content', 'percussion drops out', 'pads swell gently']],
+  ['uses', '[Chorus]', ['warm and reassuring', 'fuller but still soft', 'tender piano melody']],
+  ['ask', '[Bridge]', ['calm', 'thoughtful', 'sparse piano and pad', 'reassuring']],
+  ['close', '[Outro]', ['resolving on the tonic', 'final soft chord rings out', 'fading to silence']],
 ];
 
 /** The music's composition plan: a chunk per part, each as long as that part runs. */
@@ -67,18 +70,21 @@ export function musicRequest(spec) {
   return { model_id: MUSIC_MODEL, composition_plan: { chunks }, seed: 20260917 };
 }
 
-/** What each kind of effect is asked for as: SOUNDS' kinds, which soundtrack.mjs synthesizes. */
+/** What each kind of effect is asked for as: SOUNDS' kinds, which soundtrack.mjs synthesizes. All soft and close, nothing cinematic. */
 const EFFECTS = {
-  pop: { text: 'Soft, clean UI bubble pop, a friendly app notification, short and dry', seconds: 0.5 },
-  whoosh: { text: 'Smooth airy whoosh, a clean swish for a screen transition, no impact', seconds: 1 },
-  riser: { text: 'Short rising tension swell, a reverse cymbal riser building up, clean', seconds: 1 },
-  impact: { text: 'Soft deep cinematic impact, a warm sub boom with a short tail, subtle', seconds: 1.5 },
-  suck: { text: 'Quick reverse swoosh, cards being sucked into a folder, a vacuum swoop that ends abruptly', seconds: 1 },
-  click: { text: 'A single crisp computer mouse click, close up, dry', seconds: 0.5 },
-  tick: { text: 'A tiny soft UI tick, a light glassy tap as a file lands in a list, very short', seconds: 0.5, takes: 4 },
-  chime: { text: 'Gentle bright success chime, two rising notes, download complete', seconds: 1.5 },
-  shimmer: { text: 'Magical sparkle shimmer, glittering bells swelling and fading, for an end card', seconds: 2 },
+  pop: { text: 'Very soft, muted UI bubble pop, gentle and quiet, short and dry', seconds: 0.5 },
+  whoosh: { text: 'Soft gentle air swish, a quiet breath of wind for a calm screen transition, no impact', seconds: 1 },
+  riser: { text: 'Soft gentle swell, a quiet airy pad rising slowly, calm, no cymbal', seconds: 1 },
+  impact: { text: 'Soft low warm thump, a gentle muted felt bass note with a short soft tail, quiet', seconds: 1.5 },
+  suck: { text: 'Gentle soft swoosh, paper cards sliding softly into a folder, quiet and smooth', seconds: 1 },
+  click: { text: 'A single soft quiet mouse click, close up, gentle, dry', seconds: 0.5 },
+  tick: { text: 'A tiny very soft UI tick, a quiet muted wooden tap as a file lands in a list, very short', seconds: 0.5, takes: 4 },
+  chime: { text: 'Soft gentle success chime, two warm mellow rising notes on a felt marimba, calm', seconds: 1.5 },
+  shimmer: { text: 'Soft gentle shimmer, a few quiet warm bell tones fading slowly, calm end card', seconds: 2 },
 };
+
+// The recorded effects sit this much below the synthesized ones they are matched to: calmer than the score's.
+const EFFECTS_TRIM_DB = -3;
 
 function file(request, ext) {
   const id = createHash('sha256').update(JSON.stringify(request)).digest('hex').slice(0, 24);
@@ -155,6 +161,7 @@ export async function elevenSound(spec) {
   }
   return {
     music,
+    trim: EFFECTS_TRIM_DB,
     effects: (kind, dur, n) => {
       const seconds = Math.max(0.5, Math.round((dur ?? EFFECTS[kind].seconds) * 10) / 10);
       const list = takes.get(kind + '@' + seconds);
