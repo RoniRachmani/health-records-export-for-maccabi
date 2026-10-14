@@ -772,7 +772,7 @@ export function buildSoundtrack(spec, clips, eleven = null) {
     for (const s of sounds) EFFECTS[s.kind](fx, s.at, s.dur, rand);
     fx.mix(reverb(fx, 0.8, 0.35), 0.35);
   }
-  fx.scale(dB(-4 + (eleven?.trim ?? 0)));
+  fx.scale(dB(-4));
 
   // The voice, and the music stepping back for it.
   const mix = new Stereo(length);

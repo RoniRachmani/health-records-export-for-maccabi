@@ -231,8 +231,7 @@ Its soundtrack is mixed from the same timeline by `scripts/soundtrack.mjs`: musi
 ElevenLabs Sound Effects (`scripts/eleven-sound.mjs`, below), and narration spoken by ElevenLabs (`scripts/narration.mjs`). The voice comes from one
 take of the whole script, made in ElevenLabs with the text `--script` prints and brought in with
 `--import <take>`, which cuts it into lines at the pauses; or, with `ELEVENLABS_API_KEY` in the environment or a
-gitignored `.env`, line by line over the API (with Eleven v4, through Text to Dialogue, which is given the end of the line
-before and the start of the line after, so a line re-spoken on its own still reads as part of the script). With the key, `--import` cuts on the words instead: ElevenLabs' forced
+gitignored `.env`, line by line over the API. With the key, `--import` cuts on the words instead: ElevenLabs' forced
 alignment times each word of the script in the take, so a pause that came out short doesn't matter, and each clip
 keeps its words' times, which `--captions` cues the subtitles by, a phrase at a time (without them, a line a cue). `ELEVENLABS_MODEL` picks the model (Eleven v4, `eleven_v4`, unless
 set; set it for `--script` and `--import` too). Spoken lines are cached in `.cache/narration/` by voice, model and
@@ -241,8 +240,7 @@ on the last render's picture in seconds, without drawing it again; `--no-narrati
 `--silent` the sound. The music and each effect in `SOUNDS` are either brought in by hand as
 `.cache/elevenlabs-sound/import/music.mp3` and `<kind>.mp3` (or `<kind>-1.mp3`… for several takes), made in ElevenLabs'
 app or its connector, or, with the key, asked for over the API, the music then composed to a plan with a chunk per part of
-the film, at 48 kHz and 320 kbps. Music brought in by hand follows no plan, so its changes don't land on the cuts: with the
-key, leave `music.mp3` out of `import/` and let the API compose it. Each recorded effect starts on its second and is brought to the loudness of the one `soundtrack.mjs` synthesizes
+the film. Each recorded effect starts on its second and is brought to the loudness of the one `soundtrack.mjs` synthesizes
 for it; `--synth` plays those synthesized music and effects instead, with nothing to bring in or pay for. ElevenLabs'
 paid plans license their output for commercial use, which a YouTube promo is; the free plan does not. `--clip` draws the popup over a white page instead of the film's ground, with no pointer, which is how the Pages
 workflow renders the landing page's clip. The MP4 is not committed — the store's video
