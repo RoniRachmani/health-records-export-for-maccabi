@@ -182,9 +182,10 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   fractions of a pixel, which reads as text shivering. The soundtrack is scored from the same timeline
   (`window.video.soundtrack`: the parts, `NARRATION`, `SOUNDS`) by `scripts/soundtrack.mjs`. The music is Eleven Music v2.5
   and the effects ElevenLabs Sound Effects (`scripts/eleven-sound.mjs`), brought in as `.cache/elevenlabs-sound/import/`
-  `music.mp3` and `<kind>.mp3` (or `<kind>-1.mp3`…), or asked for with the key; `--synth` plays the score and effects
+  `music.mp3` and `<kind>.mp3` (or `<kind>-1.mp3`…), or asked for with the key (the music composed to a chunk per part, so
+  it changes on the cuts: prefer that to a hand-made `music.mp3`); `--synth` plays the score and effects
   `soundtrack.mjs` synthesizes instead, which each recorded effect's loudness is matched to. The voice is ElevenLabs (`scripts/narration.mjs`): one take of the script
-  (`--script`) cut into lines by `--import <take>` (on its words, by ElevenLabs' forced alignment, when there is a key), or line by line with `ELEVENLABS_API_KEY` from `.env`, and
+  (`--script`) cut into lines by `--import <take>` (on its words, by ElevenLabs' forced alignment, when there is a key), or line by line with `ELEVENLABS_API_KEY` from `.env` (v4 through Text to Dialogue, with the lines either side for continuity), and
   cached in `.cache/narration/`. Retime a scene and the narration moves with it; a line that no longer fits stops
   the render before the first frame. The MP4 is gitignored, because the store's video field takes a YouTube link.
 - **The mark** is a folder with a download arrow, drawn in Maccabi Online's own illustration register:

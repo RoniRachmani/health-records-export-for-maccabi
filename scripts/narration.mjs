@@ -32,11 +32,13 @@ const API = 'https://api.elevenlabs.io/v1';
 const VOICE = process.env.ELEVENLABS_VOICE || '9HBoEQ8LqyvVZFYDodnr';
 const MODEL = process.env.ELEVENLABS_MODEL || 'eleven_v4';
 // v3 and v4 take their direction from the text (audio tags, punctuation) and have only stability and
-// similarity to set; they take no SSML, so a pause is an audio tag. Their docs don't list the neighbouring
-// lines or a seed either, so a line asked for over the API goes on its own.
+// similarity to set; they take no SSML, so a pause is an audio tag. ElevenLabs makes long-form v4 through
+// Text to Dialogue, which also takes the text either side (up to 100 characters each) for continuity, so
+// a line asked for over the API there is read as part of the script, not as a line on its own.
 const TAGGED = /^eleven_v[34]/.test(MODEL);
+const CONTEXT = 100;
 const SETTINGS = TAGGED
-  ? { stability: 0.5, similarity_boost: 0.75 }
+  ? { stability: 0.5, similarity: 0.75 }
   : { stability: 0.55, similarity_boost: 0.75, style: 0.1, use_speaker_boost: true };
 // Asked for so the same line comes back the same way; ElevenLabs treats it as best effort.
 const SEED = 20260917;
@@ -67,7 +69,8 @@ function clip(pcm, rate) {
 async function ask(key, request) {
   let refused = '';
   for (const [format, rate] of FORMATS) {
-    const res = await fetch(API + '/text-to-speech/' + encodeURIComponent(VOICE) + '?output_format=' + format, {
+    const path = TAGGED ? '/text-to-dialogue' : '/text-to-speech/' + encodeURIComponent(VOICE);
+    const res = await fetch(API + path + '?output_format=' + format, {
       method: 'POST',
       headers: { 'xi-api-key': key, 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
@@ -79,7 +82,7 @@ async function ask(key, request) {
       refused = format + ': ' + why;
       continue;
     }
-    throw new Error('ElevenLabs refused "' + request.text + '" (HTTP ' + res.status + '): ' + why);
+    throw new Error('ElevenLabs refused "' + (request.text ?? request.inputs[0].text) + '" (HTTP ' + res.status + '): ' + why);
   }
   throw new Error('ElevenLabs offered none of ' + FORMATS.map(([f]) => f).join(', ') + '. Last: ' + refused);
 }
@@ -100,12 +103,17 @@ export async function speak(lines) {
           '--script, then --import <take>), or put ELEVENLABS_API_KEY=… in .env (gitignored) to have it spoken ' +
           'line by line; or render without a voice: npm run store-video -- --no-narration');
       }
-      const request = {
-        text: lines[i].text,
-        model_id: MODEL,
-        voice_settings: SETTINGS,
-        ...(TAGGED ? {} : { seed: SEED, previous_text: lines[i - 1]?.text, next_text: lines[i + 1]?.text }),
-      };
+      const request = TAGGED
+        ? {
+          inputs: [{ text: lines[i].text, voice_id: VOICE }],
+          model_id: MODEL,
+          settings: SETTINGS,
+          seed: SEED,
+          previous_text: lines[i - 1]?.text.slice(-CONTEXT),
+          future_text: lines[i + 1]?.text.slice(0, CONTEXT),
+        }
+        : { text: lines[i].text, model_id: MODEL, voice_settings: SETTINGS, seed: SEED,
+          previous_text: lines[i - 1]?.text, next_text: lines[i + 1]?.text };
       const { pcm, rate } = await ask(key, request);
       keep(lines[i].text, pcm, rate, 'api');
       fetched++;

@@ -9,7 +9,8 @@
 //   - brought in: made anywhere ElevenLabs runs (its web app, or its connector for Claude, which
 //     takes a prompt and a length but no composition plan) and saved in .cache/elevenlabs-sound/import/
 //     as music.mp3 and <kind>.mp3, or <kind>-1.mp3, <kind>-2.mp3… for several takes. What is there is
-//     used as it is, whatever length SOUNDS asks for.
+//     used as it is, whatever length SOUNDS asks for. Music made without the plan doesn't change where
+//     the film cuts, so bring in music.mp3 only when there is no key to compose it with.
 //   - asked for over the API, with ELEVENLABS_API_KEY (from the environment or the gitignored .env,
 //     which store-video.mjs loads; the music API needs a paid plan), and kept in .cache/elevenlabs-sound/
 //     under a hash of the request, so a re-render asks for — and pays for — only what changed.
@@ -25,6 +26,10 @@ const IMPORT = join(CACHE, 'import');
 const API = 'https://api.elevenlabs.io/v1';
 const MUSIC_MODEL = 'music_v2_5';
 const SFX_MODEL = 'eleven_text_to_sound_v2';
+// The best each API offers this plan: Eleven Music's 48 kHz MP3 at 320 kbps, and the effects' MP3 at
+// 192 kbps (their PCM above 24 kHz needs the Pro plan).
+const MUSIC_FORMAT = 'mp3_48000_320';
+const SFX_FORMAT = 'mp3_44100_192';
 
 // The register of the whole score: what soundtrack.mjs plays, described rather than written.
 const STYLE = ['instrumental', 'modern tech product film score', 'warm optimistic electronic pop', 'D major', '88 BPM',
@@ -93,7 +98,7 @@ async function fetched(path, query, request, what) {
 }
 
 async function kept(request, path, query, what) {
-  const out = file(request, 'mp3');
+  const out = file({ ...request, query }, 'mp3');
   if (!existsSync(out)) {
     console.log('  asking ElevenLabs for ' + what);
     const body = await fetched(path, query, request, what);
@@ -121,7 +126,7 @@ function brought(name) {
 export async function elevenSound(spec) {
   const [own] = brought('music');
   if (own) console.log('  music: ' + own.slice(root.length));
-  const music = own ? readAudio(own) : await kept(musicRequest(spec), '/music', '?output_format=mp3_48000_192', 'the music (Eleven Music v2.5, ' + spec.duration.toFixed(1) + 's)');
+  const music = own ? readAudio(own) : await kept(musicRequest(spec), '/music', '?output_format=' + MUSIC_FORMAT, 'the music (Eleven Music v2.5, ' + spec.duration.toFixed(1) + 's)');
   const takes = new Map();
   for (const s of spec.sounds) {
     const kind = EFFECTS[s.kind];
@@ -138,11 +143,11 @@ export async function elevenSound(spec) {
     for (let take = 0; take < (kind.takes ?? 1); take++) {
       // `take` only tells the takes apart in the cache; it is not sent.
       const request = { text: kind.text, duration_seconds: seconds, prompt_influence: 0.6, model_id: SFX_MODEL };
-      const out = file({ ...request, take }, 'mp3');
+      const out = file({ ...request, take, format: SFX_FORMAT }, 'mp3');
       if (!existsSync(out)) {
         console.log('  asking ElevenLabs for the ' + s.kind + ' (' + seconds + 's' + (kind.takes ? ', take ' + (take + 1) : '') + ')');
         mkdirSync(CACHE, { recursive: true });
-        writeFileSync(out, await fetched('/sound-generation', '?output_format=mp3_44100_128', request, 'the ' + s.kind));
+        writeFileSync(out, await fetched('/sound-generation', '?output_format=' + SFX_FORMAT, request, 'the ' + s.kind));
       }
       list.push(readAudio(out));
     }
