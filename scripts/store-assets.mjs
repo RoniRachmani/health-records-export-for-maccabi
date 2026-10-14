@@ -31,7 +31,8 @@ const IMAGES = [
       '.hero { display: flex !important; flex-direction: column; align-items: center; justify-content: center; gap: 22px; width: 1200px; height: 630px; margin: 0 !important; padding: 0 !important; max-width: none !important; }' +
       '.hero-text, .dash-stage { margin: 0 !important; padding: 0 !important; width: auto !important; min-height: 0 !important; }' +
       '.eyebrow { margin: 0 !important; }' +
-      '.dash-stage { zoom: 0.93; }' +
+      // A definite width: .dash is a size container, so in this column it would shrink to its padding.
+      '.dash-stage { width: 760px !important; zoom: 0.93; }' +
       '.anim, .anim * { animation: none !important; }' +
       '</style>')`,
   },
