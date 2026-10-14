@@ -144,8 +144,9 @@ and description [below](#on-youtube). `npm run store-video` renders the video to
 (3840×2160, 60 fps, 64 seconds, with narration). YouTube can't swap the file under a link, so a re-render is a
 new upload with a new link: paste it on the dashboard and put it in the README, in place of the one above.
 Upload `store/assets/promo-captions.srt` with it as the video's English subtitles (YouTube Studio → Subtitles →
-Upload file → With timing): it is the narration, line by line, at the seconds it is spoken, written by
-`npm run store-video -- --captions`. Write it again whenever the narration or its timing changes.
+Upload file → With timing): it is the narration at the seconds it is spoken, written by
+`npm run store-video -- --captions`: a phrase per cue, timed by word with ElevenLabs' forced alignment when
+`ELEVENLABS_API_KEY` is in `.env`, else a whole line per cue. Write it again whenever the narration or its timing changes.
 
 It is not committed — it is rebuilt from `store/src/video.ts`, which draws it a frame at a time in headless
 Chrome. Like the screenshots, it shows the real popup fed made-up states (`store/src/mock-chrome.ts`), driven
@@ -177,7 +178,7 @@ unless the bar count changes with it. The narration is
 voice, which needs ElevenLabs' Creator plan or above to speak again. To re-record it, make one take of the text
 `npm run store-video -- --script` prints (ElevenLabs' web app, or its connector for Claude; model `eleven_v4`),
 then `npm run store-video -- --import <take.mp3>`: the take is cut into lines at the `[long pause]` the script leaves
-between them. v4 reads a line more slowly on its own than inside the whole script, so re-record a single line with the
+between them, or, with `ELEVENLABS_API_KEY` in `.env`, on its words, aligned to the script by ElevenLabs. v4 reads a line more slowly on its own than inside the whole script, so re-record a single line with the
 line before it and keep only the second half. For another model, set `ELEVENLABS_MODEL` for all three commands (for
 `eleven_multilingual_v2` the pauses become SSML breaks); clips are cached under the model that spoke them. With `ELEVENLABS_API_KEY` in
 `.env` the lines are asked for one by one instead. Either way they are cached in `.cache/narration/`. The render

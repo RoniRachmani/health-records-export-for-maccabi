@@ -12,9 +12,11 @@
 //   --clip          the popup over a white page instead of the film's ground, and no pointer, for the landing
 //                   page's clip
 //   --script        print the narration as one take's text, to paste into ElevenLabs, and stop
-//   --captions      write the narration as subtitles, to store/assets/promo-captions.srt, and stop: each
-//                   line from the second it is spoken to the second it ends, to upload beside the film
-//   --import <file> cut such a take into its lines for the narration (see narration.mjs), then go on
+//   --captions      write the narration as subtitles, to store/assets/promo-captions.srt, and stop: in
+//                   phrases timed by word (forced alignment, with ELEVENLABS_API_KEY), else a line per cue,
+//                   to upload beside the film
+//   --import <file> cut such a take into its lines for the narration (see narration.mjs): on its words with
+//                   ELEVENLABS_API_KEY, else at its pauses; then go on
 //   --remux         keep the picture of the last render and give it this soundtrack: seconds, not a
 //                   render, for trying a sound
 //
@@ -29,7 +31,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
-import { importTake, script, speak } from './narration.mjs';
+import { alignClips, importTake, script, speak } from './narration.mjs';
 import { buildSoundtrack, writeWav } from './soundtrack.mjs';
 import { isFile, openStage, root } from './stage.mjs';
 
@@ -142,17 +144,46 @@ function remux(wav, seconds) {
   console.log('wrote ' + OUT.slice(root.length) + ' (' + seconds + 's, the last render\'s picture with this soundtrack)');
 }
 
-/** The narration as SubRip subtitles: one cue per line, for as long as its clip is spoken. */
+// A caption's most characters: one line of subtitle as YouTube sets it, so a cue never wraps.
+const CUE = 42;
+
+/**
+ * A line's words in cues of at most CUE characters: a line too long for one is broken where the two
+ * halves come out most even, sooner after a comma or full stop, and each half again if it must be.
+ */
+function phrases(words) {
+  const length = (ws) => ws.map((w) => w.text).join(' ').length;
+  const split = (ws) => {
+    if (ws.length < 2 || length(ws) <= CUE) return [ws];
+    let best = 1;
+    let least = Infinity;
+    for (let i = 1; i < ws.length; i++) {
+      const longer = Math.max(length(ws.slice(0, i)), length(ws.slice(i)));
+      const cost = longer + (/[,.;:?!]$/.test(ws[i - 1].text) ? 0 : 12) + (longer > CUE ? 100 : 0);
+      if (cost < least) [best, least] = [i, cost];
+    }
+    return [...split(ws.slice(0, best)), ...split(ws.slice(best))];
+  };
+  return split(words).map((ws) => ({ text: ws.map((w) => w.text).join(' '), start: ws[0].start, end: ws.at(-1).end }));
+}
+
+/**
+ * The narration as SubRip subtitles. A line whose words are timed (alignClips) is cued phrase by
+ * phrase, each from its first word to its last; one that isn't is cued whole, for as long as its clip.
+ */
 function captions(clips) {
   const stamp = (t) => {
     const ms = Math.round(t * 1000);
     const part = (n, width = 2) => String(n).padStart(width, '0');
     return part(Math.floor(ms / 3_600_000)) + ':' + part(Math.floor(ms / 60_000) % 60) + ':' + part(Math.floor(ms / 1000) % 60) + ',' + part(ms % 1000, 3);
   };
-  return clips.map((c, i) => {
-    // Held a moment after the last word, but never into the next line.
-    const ends = Math.min(c.at + c.samples.length / c.rate + 0.3, (clips[i + 1]?.at ?? Infinity) - 0.05);
-    return (i + 1) + '\n' + stamp(c.at) + ' --> ' + stamp(ends) + '\n' + c.text + '\n';
+  const cues = clips.flatMap((c) => c.words
+    ? phrases(c.words).map((p) => ({ text: p.text, start: c.at + p.start, end: c.at + p.end }))
+    : [{ text: c.text, start: c.at, end: c.at + c.samples.length / c.rate }]);
+  return cues.map((cue, i) => {
+    // Held a moment after the last word, but never into the next cue.
+    const ends = Math.min(cue.end + 0.3, (cues[i + 1]?.start ?? Infinity) - 0.05);
+    return (i + 1) + '\n' + stamp(cue.start) + ' --> ' + stamp(ends) + '\n' + cue.text + '\n';
   }).join('\n');
 }
 
@@ -171,9 +202,9 @@ async function render() {
     await page.close();
     return;
   }
-  if (take) importTake(take, soundtrack.narration);
+  if (take) await importTake(take, soundtrack.narration);
   if (flags.has('--captions')) {
-    writeFileSync(join(root, 'store', 'assets', 'promo-captions.srt'), captions(await speak(soundtrack.narration)));
+    writeFileSync(join(root, 'store', 'assets', 'promo-captions.srt'), captions(await alignClips(await speak(soundtrack.narration))));
     console.log('wrote store/assets/promo-captions.srt');
     await page.close();
     return;
