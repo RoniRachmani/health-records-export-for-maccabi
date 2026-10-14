@@ -74,7 +74,7 @@ async function refresh(): Promise<void> {
     if (!reply || reply.error) throw new Error(reply?.error || 'no reply');
     last = reply as unknown as StateReply;
   } catch (e) {
-    ui.error = 'Could not reach the extension (' + errText(e) + ').';
+    ui.error = 'Couldn’t reach the extension. Close this popup and open it again. (' + errText(e) + ')';
   }
   render();
 }
@@ -187,7 +187,7 @@ function noticeView(): Child[] {
     // What is asked of the member.
     h('ul', { class: 'points' },
       h('li', {}, 'The ZIP holds sensitive health information.'),
-      h('li', {}, 'Only for records you may legally access.')),
+      h('li', {}, 'Use it only for records you may legally access.')),
     // Pinned with the button, in case a larger font takes the text past the popup's height: what the click
     // agrees to must be in view when it is clicked.
     stickyActions(
@@ -200,7 +200,7 @@ function noticeView(): Child[] {
 const INCLUDED = [
   'Test results', 'Lab histories', 'Visit summaries', 'Prescriptions', 'Medication purchases', 'Referrals',
   'Approvals', 'Information pages', 'Vaccinations', 'Letters', 'Full medical file', 'Messages with your doctor', 'Your uploads',
-  'Hospital stays', 'Allergies', 'Upcoming appointments', 'Requests and approvals',
+  'Hospital stays', 'Allergies', 'Upcoming appointments', 'Your requests to Maccabi',
 ];
 
 function accountRow(st: StateReply): HTMLElement {
@@ -210,7 +210,7 @@ function accountRow(st: StateReply): HTMLElement {
     // One flex item, so the gap does not split the sentence; <bdi> for Hebrew names inside it.
     on
       ? h('span', {}, st.tab.name ? 'Logged in as ' : 'Logged in to Maccabi Online', st.tab.name && h('bdi', {}, st.tab.name))
-      : h('span', {}, 'Not logged in'));
+      : h('span', {}, 'Not logged in to Maccabi Online'));
 }
 
 function includedDetails(): HTMLElement {
@@ -364,7 +364,7 @@ function doneView(run: RunState): Child[] {
           h('ul', {}, ...g.items.map((p) => h('li', {}, problemText(p.what), p.where.includes('/') && h('span', { class: 'path' }, p.where))))))),
       count > shown.length && h('p', { class: 'small' }, 'Showing the first ' + shown.length + '.')),
     // The two next steps, as the pair: finding the file, then asking an AI about it, which is what the ZIP is for.
-    actions(actionButton('Show in folder', { type: 'showFile' }, 'primary'), button('How to ask an AI', () => void window.open(SITE_OPEN, '_blank'))),
+    actions(actionButton('Show in folder', { type: 'showFile' }, 'primary'), button('Open it in an AI', () => void window.open(SITE_OPEN, '_blank'))),
     clear,
     caution,
   ];
@@ -380,17 +380,17 @@ function errorView(run: RunState, st: StateReply): Child[] {
     status(atSave ? 'Not saved' : 'Stopped', 'err'),
     h('h2', {}, atSave ? 'The ZIP was not saved' : 'Export stopped'),
     note('err',
-      h('div', {}, run.message || 'The export failed.'),
+      h('div', {}, run.message || 'The export stopped unexpectedly.'),
       // What went wrong in the code's own words: no use to the member, and what a report needs.
       run.errorDetail && h('div', { class: 'small err-detail' }, 'Details, for a report: ', h('span', {}, run.errorDetail)),
       !atSave && h('div', { class: 'small' }, st.tab.onMaccabi
         ? 'Files collected so far are kept. Try again continues from where it stopped.'
-        : 'Files collected so far are kept. To try again, open this popup on the logged-in Maccabi Online tab.'),
+        : 'Files collected so far are kept. To try again, click the extension’s icon on the logged-in Maccabi Online tab.'),
       // The next step when trying again does not help, so it is here and not only in the footer.
       !atSave && h('div', { class: 'small' }, 'Still stopping here? ', h('a', { href: REPORT, target: '_blank', rel: 'noreferrer' }, 'Report the problem'), '.')),
     ui.confirm === 'discard'
       ? confirmPanel('Delete the files collected so far? You will need to start a new export.', 'Delete files', { type: 'dismiss' }, 'Deleting…', 'Keep them')
-      : actions(retry, button('Discard collected files', () => askConfirm('discard'))),
+      : actions(retry, button('Delete collected files', () => askConfirm('discard'))),
   ];
 }
 
@@ -466,7 +466,7 @@ const ANNOUNCEMENTS: Record<string, string> = {
   paused_session: 'Export paused',
   paused_hidden: 'Export waiting for the Maccabi Online tab',
   done: 'Export saved',
-  error: 'Export failed',
+  error: 'Export stopped',
   stopping: 'Stopping the export',
 };
 

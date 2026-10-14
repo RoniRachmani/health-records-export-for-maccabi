@@ -33,15 +33,15 @@ async function handle(msg: Request & { tabId?: number }): Promise<unknown> {
       await chrome.storage.local.set({ noticeAccepted: TERMS_EFFECTIVE });
       return { ok: true };
     case 'start': {
-      if (!(await noticeAccepted())) throw new UserError('Please read and accept the notice first.');
+      if (!(await noticeAccepted())) throw new UserError('Read “How the export works” and agree to it first.');
       const tab = await activeTab(msg.tabId);
-      if (tab?.id === undefined) throw new UserError('No active tab.');
+      if (tab?.id === undefined) throw new UserError('Open the Maccabi Online tab, then click the extension’s icon.');
       await start(tab.id);
       return { ok: true };
     }
     case 'resume': {
       const tab = await activeTab(msg.tabId);
-      if (tab?.id === undefined) throw new UserError('No active tab.');
+      if (tab?.id === undefined) throw new UserError('Open the Maccabi Online tab, then click the extension’s icon.');
       await resume(tab.id);
       return { ok: true };
     }

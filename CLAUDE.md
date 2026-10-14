@@ -213,7 +213,7 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   `public/terms.html`, and change their effective date. For a material change also bump `TERMS_EFFECTIVE`
   in `shared/state.ts`, which makes the popup ask everyone to accept again. `.github/workflows/pages.yml` publishes `public/` on GitHub Pages, so these pages are also public web pages.
 - **The guide to opening an export is on the website, not in the extension**: the landing page's last sections, from
-  `#where` ("Open it in Claude or ChatGPT"). The popup's "See how" and "How to ask an AI", the "Export ready"
+  `#where` ("Open it in Claude or ChatGPT"). The popup's "See how" and "Open it in an AI", the "Export ready"
   notification's button and every export's README link there (`SITE_OPEN` in `shared/state.ts`), and the popup's
   reminder while the medical file is prepared opens `#ask` (`SITE_ASK`) in a window of its own: a tab would hide the
   Maccabi one and pause the run. So those two ids stay, and so does `site/ai-assistant.html`, a redirect at the

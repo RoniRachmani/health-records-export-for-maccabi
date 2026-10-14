@@ -28,7 +28,7 @@ export async function updateBadge(run: RunState | null): Promise<void> {
       case 'error':
         text = '×';
         color = '#c62a41';
-        title = 'Export failed';
+        title = 'Export stopped';
         break;
     }
   }
@@ -52,10 +52,10 @@ export function noticeKind(notificationId: string): NoticeKind | null {
 
 /**
  * The finished export's next step, for whoever sees the notification rather than the popup (which has closed by then):
- * the website's section on opening it, as the popup's "See how" opens it. On macOS, Chrome puts the buttons under
+ * the website's section on opening it, as the popup's "Open it in an AI" opens it. On macOS, Chrome puts the buttons under
  * "Options".
  */
-export const READY_BUTTONS = [{ title: 'See how to open it in your AI assistant', url: SITE_OPEN }];
+export const READY_BUTTONS = [{ title: 'Open it in an AI', url: SITE_OPEN }];
 
 export async function notify(kind: NoticeKind, title: string, message: string): Promise<void> {
   try {

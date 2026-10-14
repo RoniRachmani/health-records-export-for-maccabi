@@ -191,9 +191,9 @@ export const DESCRIPTIONS: Record<PlanStep, Record<string, string>> = {
   referrals: { '': 'Reading your referrals', referrals: 'Downloading each referral as a PDF' },
   approvals: { '': 'Reading your approvals', approvals: 'Downloading each approval as a PDF' },
   infoPages: { '': 'Reading your information pages', 'information pages': 'Downloading each page as a PDF' },
-  vaccinations: { '': 'Reading your vaccinations', vaccinations: 'Reading vaccines and the booklet' },
+  vaccinations: { '': 'Reading your vaccinations', vaccinations: 'Reading vaccines and the vaccine booklet' },
   letters: { '': 'Reading your letters', letters: 'Downloading your letters as PDFs' },
-  doctorCommunications: { '': 'Reading your messages to your doctor', 'doctor inquiries': 'Downloading messages and forms' },
+  doctorCommunications: { '': 'Reading your messages with your doctor', 'doctor inquiries': 'Downloading messages and forms' },
   emptySections: {
     '': 'Checking for allergies and sensitivities',
     allergies: 'Checking for allergies and sensitivities',
@@ -208,12 +208,12 @@ export const DESCRIPTIONS: Record<PlanStep, Record<string, string>> = {
   },
   savedDocuments: { '': 'Reading the documents you uploaded', 'saved documents': 'Downloading your uploads' },
   hospitalStays: { '': 'Reading your hospital stays', 'hospital stays': 'Reading your hospital stays', 'hospital letters': 'Downloading hospital discharge letters' },
-  orderMedicalFile: { '': 'Ordering a fresh copy (you’ll get an SMS)' },
+  orderMedicalFile: { '': 'Ordering a fresh copy (Maccabi texts you)' },
   returnToSonline: { '': 'Taking your tab back to the main site' },
   waitMedicalFile: {
     '': 'Checking whether your file is ready',
     'waiting for the medical file to appear': 'Waiting for the new file to be listed',
-    'medical file status': 'Being prepared: usually minutes, 15 at most',
+    'medical file status': 'Maccabi is preparing it: up to 15 min',
     letters: 'Downloading your medical file',
   },
   save: { '': 'Packing all files into one ZIP' },
@@ -249,8 +249,8 @@ const FOLDER_LABELS: Record<string, string> = {
   uploads: 'Your uploads',
   'hospital-stays': 'Hospital stays',
   'allergies-sensitivity': 'Allergies',
-  appointments: 'Appointments',
-  'requests-approvals': 'Requests and approvals',
+  appointments: 'Upcoming appointments',
+  'requests-approvals': 'Your requests to Maccabi',
 };
 
 export interface ProblemGroup {

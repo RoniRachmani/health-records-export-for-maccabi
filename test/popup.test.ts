@@ -74,7 +74,7 @@ describe('popup', () => {
       'Each export orders a fresh copy of your full medical file, for your whole history: a wider range than the site’s own form offers.' +
       ' Maccabi texts you about it. A copy already ordered today is reused.');
     expect(main[1].textContent).toBe('The new copy replaces the medical file now on the site.');
-    expect(main[2].textContent).toContain('Only for records you may legally access.');
+    expect(main[2].textContent).toContain('Use it only for records you may legally access.');
     const links = [...document.querySelectorAll('.consent a')].map((a) => [a.textContent, a.getAttribute('href'), a.getAttribute('target')]);
     expect(links).toEqual([['Terms of Use', '/terms.html', '_blank'], ['Privacy Policy', '/privacy.html', '_blank']]);
     expect(document.querySelectorAll('button')).toHaveLength(1);
@@ -229,10 +229,10 @@ describe('popup', () => {
   });
 
   it('says an unexpected error in words, with the code\'s own beside it for a report', async () => {
-    const failed = running({ status: 'error', message: 'The export ran into something it did not expect in “Referrals”.', errorDetail: 'x is not iterable' });
+    const failed = running({ status: 'error', message: 'Something unexpected stopped the export during “Referrals”.', errorDetail: 'x is not iterable' });
     await openPopup({ run: failed, tab });
     const note = document.querySelector('.note.err') as HTMLElement;
-    expect(note.firstElementChild?.textContent).toBe('The export ran into something it did not expect in “Referrals”.');
+    expect(note.firstElementChild?.textContent).toBe('Something unexpected stopped the export during “Referrals”.');
     expect(note.querySelector('.err-detail')?.textContent).toBe('Details, for a report: x is not iterable');
   });
 
@@ -240,7 +240,7 @@ describe('popup', () => {
     const done = running({ status: 'done', next: PLAN.length, percent: 100, fileCount: 12, zipName: 'maccabi-export-2026-09-17.zip', finishedAt: new Date().toISOString() });
     await openPopup({ run: done, tab });
     const row = buttonNamed('Show in folder').parentElement as HTMLElement;
-    expect([...row.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Show in folder', 'How to ask an AI']);
+    expect([...row.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Show in folder', 'Open it in an AI']);
     // The pair are the next steps; nothing says them again.
     expect(row.previousElementSibling?.className).toBe('file-card');
     expect(buttonNamed('Clear this summary (the ZIP stays)').className).toBe('quiet');

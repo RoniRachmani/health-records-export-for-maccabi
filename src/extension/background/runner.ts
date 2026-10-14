@@ -28,8 +28,7 @@ let cancelRequested = false;
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
 
 const OLD_VERSION_MESSAGE =
-  'This export was started by an earlier version of the extension, which ran a different list of steps or named files differently, so it cannot be continued. ' +
-  'Discard the files it collected and start a new export.';
+  'An earlier version of the extension started this export, so it can’t be continued. Delete its files and start a new export.';
 
 // ---- state ------------------------------------------------------------
 export async function loadRun(): Promise<RunState | null> {
@@ -88,9 +87,9 @@ export class UserError extends Error {}
 
 async function loggedInSession(tabId: number): Promise<Session> {
   const tab = await chrome.tabs.get(tabId).catch(() => undefined);
-  if (!tab || !tab.url || !tab.url.startsWith(MACCABI_ORIGIN + '/')) throw new UserError('Open online.maccabi4u.co.il in this tab first.');
+  if (!tab || !tab.url || !tab.url.startsWith(MACCABI_ORIGIN + '/')) throw new UserError('Open Maccabi Online in this tab first.');
   const s = await currentSession(tabId, new URL(tab.url).pathname.startsWith('/sonline/') ? tab.url : SONLINE_PAGE, true);
-  if (!s) throw new UserError('Log in to Maccabi Online in this tab first (after logging in, any page of the new site works).');
+  if (!s) throw new UserError('Log in to Maccabi Online in this tab first.');
   return s;
 }
 
@@ -127,7 +126,7 @@ export async function resume(tabId: number): Promise<void> {
   if (run.planMismatch) throw new UserError(OLD_VERSION_MESSAGE);
   const s = await loggedInSession(tabId);
   if (run.memberHash && run.memberHash !== (await midHash(s.mid))) {
-    throw new UserError('A different member is logged in than the one this export started with. Cancel it to start a new one.');
+    throw new UserError('This export belongs to a different member. Log in as them to resume it, or cancel it to start a new one.');
   }
   await setSession(s);
   cancelRequested = false;
@@ -170,7 +169,7 @@ export async function recover(reason: 'startup' | 'heartbeat'): Promise<void> {
   }
   if (run.status === 'running' || run.status === 'paused_hidden') {
     if (reason === 'startup' || !(await getSession())) {
-      await pause('paused_session', 'Chrome was restarted during the export. Log in to Maccabi Online, then click this extension’s icon on that tab and press Resume. Files collected so far are kept.');
+      await pause('paused_session', 'Chrome was restarted during the export. Log in to Maccabi Online, then click the extension’s icon on the Maccabi Online tab and press Resume. Files collected so far are kept.');
       return;
     }
     run.status = 'running';
@@ -184,7 +183,7 @@ async function pause(status: 'paused_session' | 'paused_hidden', message: string
   state.status = status;
   state.message = message;
   await save();
-  await notify('attention', status === 'paused_session' ? 'Export paused' : 'Export waiting for you', message);
+  await notify('attention', 'Export paused', message);
 }
 
 function loop(): Promise<void> {
@@ -239,7 +238,7 @@ function loop(): Promise<void> {
               }
             }
             if (cancelRequested) break;
-            await pause('paused_session', 'Your Maccabi Online session ended. Log in again on the Maccabi Online tab, then open this popup there and press Resume. Files collected so far are kept.');
+            await pause('paused_session', 'Your Maccabi Online session ended. Log in again, then click the extension’s icon on the Maccabi Online tab and press Resume. Files collected so far are kept.');
             return;
           }
           if ((e as RateLimitedError).rateLimited) {
@@ -253,10 +252,10 @@ function loop(): Promise<void> {
           }
           if (state) {
             state.status = 'error';
-            state.message = 'The export ran into something it did not expect in “' + LABELS[step] + '”.';
+            state.message = 'Something unexpected stopped the export during “' + LABELS[step] + '”.';
             state.errorDetail = errMessage(e);
             await save();
-            await notify('attention', 'Export failed', state.message);
+            await notify('attention', 'Export stopped', state.message);
           }
           return;
         }
@@ -563,7 +562,7 @@ export async function onDownloadChanged(delta: chrome.downloads.DownloadDelta): 
     await chrome.alarms.clear(HEARTBEAT);
     await closeOffscreen();
     const p = run.problemCount;
-    await notify('ready', 'Export ready', run.zipName + ': ' + run.fileCount + ' files' + (p ? ', ' + p + ' problem' + (p === 1 ? '' : 's') : '') + '.');
+    await notify('ready', 'Export ready', run.zipName + ': ' + (run.fileCount ?? 0).toLocaleString('en-US') + ' files.' + (p ? ' ' + p + (p === 1 ? ' item' : ' items') + ' couldn’t be exported.' : ''));
   } else if (delta.state?.current === 'interrupted') {
     await saveFailed(run, delta.error?.current || 'interrupted');
   }

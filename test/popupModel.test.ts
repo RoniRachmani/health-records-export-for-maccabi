@@ -203,7 +203,7 @@ describe('statsText and stepText', () => {
     expect(stepText({ ...base, next: PLAN.indexOf('approvals'), detail: 'Approvals: approvals' }).detail).toBe('Downloading each approval as a PDF');
     expect(stepText({ ...base, next: PLAN.indexOf('infoPages'), detail: 'Information pages: information pages' }).detail).toBe('Downloading each page as a PDF');
     const waiting = { ...base, next: PLAN.indexOf('waitMedicalFile') };
-    expect(stepText({ ...waiting, detail: 'Collecting your medical file: medical file status 2' }).detail).toBe('Being prepared: usually minutes, 15 at most');
+    expect(stepText({ ...waiting, detail: 'Collecting your medical file: medical file status 2' }).detail).toBe('Maccabi is preparing it: up to 15 min');
     expect(stepText({ ...base, next: PLAN.length })).toEqual({ title: '', detail: '' });
   });
 
