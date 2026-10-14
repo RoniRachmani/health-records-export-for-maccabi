@@ -153,6 +153,9 @@ MACCABI_PASSWORD=op://<vault>/<item>/password
 ```
 
 (`op item get <item> --format json` lists each field's `reference`; IDs in place of names survive a rename).
+The maintainer's references, and the ElevenLabs key's, are kept in `.env.tpl`, and `npm run env` writes `.env`
+from it with the values themselves (`op inject`), since `store-video` reads `.env` as it is and resolves no
+reference. Keep every key the scripts read in 1Password and its reference there, so `.env` can always be rebuilt.
 Without them, the item named by `MACCABI_OP_ITEM` (default `Maccabi`) is used. The script walks Maccabi's three sign-in pages itself:
 the ID number, then *sign in with password* (never the SMS or voice-call code), then the password. They are filled once and never re-submitted, since a
 script retrying a wrong password is how an account gets locked. The browser profile lives outside the repo

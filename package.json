@@ -24,6 +24,7 @@
     "icons": "node scripts/make-icons.mjs",
     "live": "vite build --mode development && node scripts/live-run.mjs",
     "export": "node scripts/headless-export.mjs",
+    "env": "op inject -i .env.tpl -o .env",
     "endpoints": "node tools/endpoint-scan/endpoint-scan.mjs",
     "store-assets": "node scripts/store-assets.mjs",
     "store-video": "node scripts/store-video.mjs",

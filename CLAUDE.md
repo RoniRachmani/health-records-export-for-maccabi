@@ -22,6 +22,7 @@ npm run export                    # an export with no extension: test results in
 npm run export -- --all           # every section, nothing ordered; --steps a,b for some; --out DIR; --keep
 npm run endpoints                 # the site's own calls that docs/endpoints/endpoints.json lacks, and mapped ones it dropped (same .env; calls no API)
 npm run endpoints -- --from DIR   # the same on scripts a --save DIR kept, with no sign-in; --rea adds REA's parser
+npm run env                       # write .env from 1Password, by the references in .env.tpl (op inject)
 npm run clean                     # remove dist/, dist-dev/, dist-store/, dist-cli/, release/
 npm run release:zip               # clean, test, build:dev, package
 npm run release                   # release:zip, then store-assets, store-video
