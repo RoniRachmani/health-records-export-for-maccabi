@@ -251,7 +251,7 @@ and your doctor decide. For urgent symptoms, call your doctor or Magen David Ado
 
 > [!WARNING]
 > **Your records go only where you take them.** The extension sends your records nowhere. The AI service you open them
-> in can read them, so before you do, check what it keeps and for how long, and where it lets you:
+> in can read them, so before you do, check what it keeps and for how long. Where its settings allow:
 > **turn off training** on your chats, **give each person a project** of their own, and check what its memory shares
 > with your other chats, and **delete the chats and the project** when you're done with them.
 

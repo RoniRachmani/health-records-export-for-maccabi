@@ -100,8 +100,8 @@ on several areas of the export, not one metric. They're ordered as a new user re
 | **Before a visit** | "What should I raise with my doctor on Thursday?" | Three questions to ask, and a one-page summary for the visit | **Walk in prepared.** Short visits go further, and a new doctor gets your history in a page. |
 | **What I spent** | "Chart what I've spent on medicines, and what insurance covered" | ₪4,120 paid and ₪3,270 covered, as columns by year from 2008 | **Every receipt, added up.** Nineteen years of pharmacy purchases in one chart. |
 
-Under the hero, before the tabs, a slim strip shows the whole history as a feature highlight: "Back to 1981. The site's
-own form starts in 2020. The export asks for all of it." beside five flat lanes of dots, one dot for each year that holds
+Under the hero, before the tabs, a slim strip shows the whole history as a feature highlight: "Back to 1981. Maccabi
+Online's form for your medical file starts in 2020. The export asks for all of it." beside five flat lanes of dots, one dot for each year that holds
 a record of each kind. A pale panel sits over the years the site's own form orders the medical file for, captioned *On
 the site: from 2020*, and *Your full medical file: all of it* sits under the dots. It leads with how far back, not a
 count, because the hero's dashboard already shows one (486 files), and two numbers on the first screen read as one that
