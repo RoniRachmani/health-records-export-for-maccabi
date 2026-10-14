@@ -2,7 +2,8 @@
 // as window.video.soundtrack): a music bed written to its parts, the sound of what happens on
 // screen, and the narration (narration.mjs), mixed to YouTube's loudness. The music and the effects
 // are synthesized here from oscillators and seeded noise — no sample, loop or recording, so there
-// is nothing to license — and the same timeline always gives the same audio.
+// is nothing to license — and the same timeline always gives the same audio. (`--eleven` swaps the two
+// for ElevenLabs' recordings, from eleven-sound.mjs, mixed the same way.)
 //
 // Levels: the voice is set to -16 LUFS, the music to -25 LUFS and dipped 9 dB whenever the voice is
 // speaking, the effects sit between the two, and the whole mix is brought to -14 LUFS (what YouTube
@@ -689,24 +690,87 @@ function score(length, scenes) {
   return music;
 }
 
+/** A recording ({ rate, l, r }) as a track `length` long at RATE: cut, or padded with silence. */
+function recorded(audio, length) {
+  const track = new Stereo(length);
+  const l = resample(audio.l, audio.rate);
+  const r = resample(audio.r, audio.rate);
+  track.l.set(l.subarray(0, length));
+  track.r.set(r.subarray(0, length));
+  return track;
+}
+
+/** The RMS of both channels over [i0, i1), where the sound is. */
+function rms(track, i0 = 0, i1 = track.l.length) {
+  let sum = 0;
+  for (let i = i0; i < i1; i++) sum += track.l[i] ** 2 + track.r[i] ** 2;
+  return Math.sqrt(sum / (2 * Math.max(1, i1 - i0)));
+}
+
+/** Where a recording's sound is: from 5 ms before it first rises out of silence to where it last does. */
+function span(track) {
+  const floor = peak(track) * dB(-40);
+  let i0 = 0;
+  let i1 = track.l.length;
+  while (i0 < i1 && Math.max(Math.abs(track.l[i0]), Math.abs(track.r[i0])) < floor) i0++;
+  while (i1 > i0 && Math.max(Math.abs(track.l[i1 - 1]), Math.abs(track.r[i1 - 1])) < floor) i1--;
+  return [Math.max(0, i0 - Math.round(0.005 * RATE)), i1];
+}
+
+/**
+ * Lays a recorded effect into the bus with its first sound on `s.at`, as loud (RMS, where each one
+ * sounds) as the synthesized effect of the same kind and length would be, and at most 4 dB louder at its peak.
+ */
+function place(bus, s, audio, rand) {
+  const take = recorded(audio, Math.floor(audio.l.length * RATE / audio.rate));
+  const [i0, i1] = span(take);
+  const synth = new Stereo(Math.round(((s.dur ?? 1) + 3) * RATE));
+  EFFECTS[s.kind](synth, 0, s.dur, rand);
+  const [j0, j1] = span(synth);
+  // Peaking at most 4 dB above it: a sound with a long quiet tail would otherwise be pushed up to match.
+  const gain = Math.min(rms(synth, j0, j1) / (rms(take, i0, i1) || 1), dB(4) * peak(synth) / (peak(take) || 1));
+  const at = Math.round(s.at * RATE);
+  // 3 ms in and 20 ms out, so a cut never clicks.
+  const fadeIn = Math.round(0.003 * RATE);
+  const fadeOut = Math.round(0.02 * RATE);
+  for (let i = i0; i < i1; i++) {
+    const f = gain * Math.min(1, (i - i0) / fadeIn, (i1 - i) / fadeOut);
+    bus.put(at + i - i0, take.l[i] * f, 1, 0);
+    bus.put(at + i - i0, take.r[i] * f, 0, 1);
+  }
+}
+
 /**
  * The whole soundtrack, for `spec` (window.video.soundtrack) and the spoken narration (or null to
  * leave the voice out). Returns the stereo track at RATE, a line of levels for the log, and the
  * three stems as they went into the mix, for looking at one on its own.
+ *
+ * `eleven` (eleven-sound.mjs) swaps the synthesized music and effects for ElevenLabs': the music is
+ * levelled as this score is, and each effect is placed from its first sound and brought to the
+ * loudness of the effect it stands in for, so the mix keeps its balance whichever plays.
  */
-export function buildSoundtrack(spec, clips) {
+export function buildSoundtrack(spec, clips, eleven = null) {
   const { scenes, sounds, duration } = spec;
   const length = Math.round(duration * RATE);
 
   // The music, to -25 LUFS.
-  const music = score(length, scenes);
+  const music = eleven ? recorded(eleven.music, length) : score(length, scenes);
   level(music, -25);
 
-  // The effects, at their seconds, in a room of their own.
+  // The effects, at their seconds, in a room of their own (a recorded one brings its own).
   const fx = new Stereo(length);
   const rand = noise(47);
-  for (const s of sounds) EFFECTS[s.kind](fx, s.at, s.dur, rand);
-  fx.mix(reverb(fx, 0.8, 0.35), 0.35);
+  if (eleven) {
+    const seen = new Map();
+    for (const s of sounds) {
+      const n = seen.get(s.kind) ?? 0;
+      seen.set(s.kind, n + 1);
+      place(fx, s, eleven.effects(s.kind, s.dur, n), rand);
+    }
+  } else {
+    for (const s of sounds) EFFECTS[s.kind](fx, s.at, s.dur, rand);
+    fx.mix(reverb(fx, 0.8, 0.35), 0.35);
+  }
   fx.scale(dB(-4));
 
   // The voice, and the music stepping back for it.

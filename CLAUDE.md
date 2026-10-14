@@ -31,6 +31,7 @@ npm run store-video               # re-render store/assets/promo-video.mp4 (not 
 npm run store-video -- 8 12       # just those seconds of it, while working on a scene
 npm run store-video -- --audio-only   # just the soundtrack, to store/assets/promo-soundtrack.wav
 npm run store-video -- --remux        # a changed soundtrack on the last render's picture, in seconds
+npm run store-video -- --eleven --remux   # the same picture with ElevenLabs' music and effects, to promo-video-elevenlabs.mp4
 npm run store-video -- --script       # the narration as one take's text, for ElevenLabs
 npm run store-video -- --captions     # the narration as subtitles, to store/assets/promo-captions.srt, for YouTube
 npm run store-video -- --import take.mp3 --audio-only   # cut that take into the narration's lines

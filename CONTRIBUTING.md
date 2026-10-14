@@ -234,7 +234,13 @@ keeps its words' times, which `--captions` cues the subtitles by, a phrase at a 
 set; set it for `--script` and `--import` too). Spoken lines are cached in `.cache/narration/` by voice, model and
 words, so only a changed line costs anything. `--audio-only` writes the soundtrack alone, to listen to; `--remux` puts a changed soundtrack
 on the last render's picture in seconds, without drawing it again; `--no-narration` leaves the voice out, and
-`--silent` the sound. `--clip` draws the popup over a white page instead of the film's ground, with no pointer, which is how the Pages
+`--silent` the sound. `--eleven` swaps the synthesized music and effects for ElevenLabs' (`scripts/eleven-sound.mjs`) and
+writes `promo-video-elevenlabs.mp4` beside the film (with `--remux`, on its picture): the music from Eleven Music v2.5 and
+each effect from its Sound Effects model, either brought in by hand as `.cache/elevenlabs-sound/import/music.mp3` and
+`<kind>.mp3` (or `<kind>-1.mp3`… for several takes), made in ElevenLabs' app or its connector, or, with the key, asked for
+over the API, the music composed to a plan with a chunk per part of the film. Each recorded effect starts on its second
+and is brought to the loudness of the synthesized one it stands in for. Music made by ElevenLabs carries its own terms,
+so check them before publishing that version. `--clip` draws the popup over a white page instead of the film's ground, with no pointer, which is how the Pages
 workflow renders the landing page's clip. The MP4 is not committed — the store's video
 field takes a YouTube link, so upload it there and paste the link on the dashboard. The README's poster is one frame of the same
 film, drawn by the same page: `npm run store-assets -- poster`.
