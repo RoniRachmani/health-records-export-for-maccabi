@@ -16,7 +16,7 @@ export interface Stage {
  * The run plan as the user sees it, and the popup's main view of the run: one line per part of the export,
  * named for what it collects, so the list reads as an inventory of the member's records and ticks along at a
  * steady pace. Page changes and bookkeeping steps are folded into the line they serve. What the current line is
- * doing (DESCRIPTIONS) is said in the panel above the list, and a finished line shows the files it collected. Stages are in PLAN order, a step's stages consecutive, and the first
+ * doing (DESCRIPTIONS) is said in the panel above the list, and the lines done fold into one that counts them. Stages are in PLAN order, a step's stages consecutive, and the first
  * stage is labelled with one of its steps' LABELS entries, so errors and problems name it the same way. A step that
  * only serves another shares its label; a step that collects something of its own keeps its own name there, and a
  * step split into parts is named as a whole.
@@ -164,7 +164,7 @@ export function waitingForFile(run: RunState): boolean {
 }
 
 /**
- * The reminder under the list. While the medical file is being prepared it leads into the link to the AI assistant
+ * The reminder at the foot of the panel. While the medical file is being prepared it leads into the link to the AI assistant
  * page (the panel says how long that can take). One line, in any font: the running view has no room to spare under
  * Chrome's 600px cap.
  */

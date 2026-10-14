@@ -1,6 +1,6 @@
 import { PLAN, SITE_ASK, SITE_OPEN, type Request, type RunState, type StateReply } from '../shared/state';
 import {
-  countOf, countText, currentStage, formatBytes, formatDuration, groupProblems, hintText, problemText, STAGES, stageFileCounts, stageSpan, stageStates, statsText,
+  countOf, countText, currentStage, formatBytes, formatDuration, groupProblems, hintText, problemText, STAGES, stageSpan, stageStates, statsText,
   waitingForFile,
   stepText, viewKey, type Confirm, type UiFlags,
 } from './model';
@@ -27,6 +27,7 @@ let live: {
   count?: HTMLElement;
   stats?: HTMLElement;
   stages?: HTMLElement[];
+  doneSummary?: HTMLElement;
   hint?: HTMLElement;
   reminder?: HTMLElement;
   ask?: HTMLElement;
@@ -166,22 +167,25 @@ const TAB_ICON = '<svg class="tab-icon" width="14" height="14" viewBox="0 0 16 1
 // ---- views -------------------------------------------------------------
 /**
  * Shown once, before anything is read from the tab. The links open the pages shipped in the extension. It fits the
- * popup: the medical-file order, the one thing here with consequences, comes first, and nothing is below the fold
- * when Agree is clicked. That the tab moves between pages is under "What’s included" on the next view.
+ * popup: what happens comes first, led by the medical-file order, then the one consequence that can't be undone, in
+ * amber, then the cautions, and nothing is below the fold when Agree is clicked. Amber is kept for that one line: it
+ * means a warning everywhere else. That the tab moves between pages is under "What’s included" on the next view.
  */
 function noticeView(): Child[] {
   const link = (href: string, text: string) => h('a', { href, target: '_blank' }, text);
   return [
     status('Before you start'),
     h('h2', {}, 'How the export works'),
-    note('warn', h('strong', {}, 'Each export orders a fresh copy of your full medical file.'),
-      ' It asks for your whole history, a wider range than the site’s own form offers. Maccabi Healthcare Services' +
-      ' texts you about it, and it replaces the previous one on the site. A copy already ordered today is reused.'),
+    // What it does. The others are one line each: a second would take the view past the popup's 600px.
     h('ul', { class: 'points' },
-      // One line each: two would take the view past the popup's 600px.
-      // What it does first, then what is asked of the member.
+      h('li', {}, h('strong', {}, 'Each export orders a fresh copy of your full medical file'),
+        ', for your whole history: a wider range than the site’s own form offers. Maccabi texts you about it.' +
+        ' A copy already ordered today is reused.'),
       h('li', {}, 'Everything stays on this computer, in one ZIP.'),
-      h('li', {}, 'It keeps you logged in to Maccabi while it runs.'),
+      h('li', {}, 'It keeps you logged in to Maccabi while it runs.')),
+    note('warn', h('strong', {}, 'The new copy replaces the medical file now on the site.')),
+    // What is asked of the member.
+    h('ul', { class: 'points' },
       h('li', {}, 'The ZIP holds sensitive health information.'),
       h('li', {}, 'Only for records you may legally access.')),
     // Pinned with the button, in case a larger font takes the text past the popup's height: what the click
@@ -240,18 +244,17 @@ function idleView(st: StateReply): Child[] {
     h('h2', {}, 'Your records, one ZIP'),
     h('p', { class: 'lead' }, 'Tests, visits, prescriptions, letters, your full medical file and more. Usually a few minutes; up to 20 if the medical file is slow to arrive.'),
     actions(actionButton('Start export', { type: 'start' }, 'primary block', 'Checking your login…')),
-    // The notice said it in full before the first export; this is the reminder.
-    note('', h('strong', {}, 'Maccabi will text you:'), ' this orders a fresh copy of your medical file.'),
-    // What the ZIP is for, as the finished view's "Next:" says it. Nothing runs yet, so the page may take a tab.
-    note('', h('strong', {}, 'Then:'), ' ask an AI assistant about your records. ',
-      h('a', { href: SITE_OPEN, target: '_blank' }, 'See how')),
+    // What the click does, as the button's caption, so it is read with it. The notice said it in full before the
+    // first export; this is the reminder.
+    h('p', { class: 'caption' }, 'Orders a fresh copy of your medical file. Maccabi will text you.'),
     includedDetails(),
   ];
 }
 
 /**
  * Each fact once: the panel holds everything that moves (how far, what the current section is doing, its count, the
- * totals), the list names the sections, and its ticks are the only count of sections done.
+ * totals) and, as its last line, the one thing to do meanwhile; the list names the sections still to come, under one
+ * line counting those done. Cancel is a quiet button at the end: it is nobody's next step, and it asks first.
  */
 function progressView(run: RunState): Child[] {
   const pill = status('');
@@ -261,21 +264,23 @@ function progressView(run: RunState): Child[] {
   const stats = h('p', { class: 'stats' });
   const hint = h('span');
   const ask = h('span');
-  const stages = STAGES.map((s) => h('li', {}, h('span', { class: 'name' }, s.label), h('span', { class: 'count' })));
+  const stages = STAGES.map((s) => h('li', {}, h('span', { class: 'name' }, s.label)));
+  const doneSummary = h('li', { class: 'done summary', hidden: '' }, h('span', { class: 'name' }));
   const reminder = h('p', { class: 'reminder' }, h('span', {}, hint, ask));
   reminder.insertAdjacentHTML('afterbegin', TAB_ICON + ASK_ICON);
-  live = { status: pill, bar, fill, band, activity, count, stats, stages, hint, reminder, ask };
+  live = { status: pill, bar, fill, band, activity, count, stats, stages, doneSummary, hint, reminder, ask };
   return [
     h('h2', { class: 'visually-hidden' }, 'Export in progress'),
     h('div', { class: 'panel' },
-      h('div', { class: 'status-row' }, pill, run.status === 'running' && ui.confirm !== 'cancel' && cancelButton('small')),
+      pill,
       h('p', { class: 'activity' }, activity, count),
       bar,
-      stats),
+      stats,
+      reminder),
     // The list is hidden while Cancel is being confirmed, so the question fits without scrolling.
     ui.confirm === 'cancel' && cancelConfirm(),
-    ui.confirm !== 'cancel' && h('ol', { class: 'stages', 'aria-label': 'Sections' }, ...stages),
-    reminder,
+    ui.confirm !== 'cancel' && h('ol', { class: 'stages', 'aria-label': 'Sections' }, doneSummary, ...stages),
+    run.status === 'running' && ui.confirm !== 'cancel' && h('p', { class: 'dismiss' }, cancelButton('quiet')),
   ];
 }
 
@@ -338,9 +343,9 @@ function doneView(run: RunState): Child[] {
   icon.innerHTML = ZIP_ICON;
   const caution = h('p', { class: 'caution' }, h('span', {}, 'The ZIP contains sensitive health information. Store and share it with care.'));
   caution.insertAdjacentHTML('afterbegin', LOCK_ICON);
-  // Not one of the pair: it clears this summary and goes back to the start, which is nobody's next step.
-  const clear = h('p', { class: 'dismiss' }, actionButton('Clear this summary', { type: 'dismiss' }, 'quiet'));
-  (clear.firstElementChild as HTMLElement).title = 'The ZIP stays in your Downloads folder.';
+  // Not one of the pair: it clears this summary and goes back to the start, which is nobody's next step. It says on its
+  // face that the ZIP is not touched.
+  const clear = h('p', { class: 'dismiss' }, actionButton('Clear this summary (the ZIP stays)', { type: 'dismiss' }, 'quiet'));
   return [
     status('Saved', 'ok'),
     h('h2', {}, 'Your export is ready'),
@@ -358,8 +363,7 @@ function doneView(run: RunState): Child[] {
           h('h3', {}, g.label),
           h('ul', {}, ...g.items.map((p) => h('li', {}, problemText(p.what), p.where.includes('/') && h('span', { class: 'path' }, p.where))))))),
       count > shown.length && h('p', { class: 'small' }, 'Showing the first ' + shown.length + '.')),
-    // What the ZIP is for comes first, and its way in is one of the pair: finding the file, then asking about it.
-    note('', h('strong', {}, 'Next: '), 'unzip it and open the folder in your AI assistant, then ask about your records.'),
+    // The two next steps, as the pair: finding the file, then asking an AI about it, which is what the ZIP is for.
     actions(actionButton('Show in folder', { type: 'showFile' }, 'primary'), button('How to ask an AI', () => void window.open(SITE_OPEN, '_blank'))),
     clear,
     caution,
@@ -432,17 +436,14 @@ function updateLive(run: RunState): void {
   }
   if (live.stages) {
     const states = stageStates(run);
-    const files = stageFileCounts(run);
-    // The first number in the column says what the column counts; the rest are heard as files and read as numbers.
-    const first = states.findIndex((s, i) => s === 'done' && files[i]);
+    // The sections done fold into one line, so the current one stays near the top of the list.
+    const done = states.filter((s) => s === 'done').length;
+    if (live.doneSummary) {
+      live.doneSummary.hidden = done === 0;
+      setText(live.doneSummary.firstElementChild as HTMLElement, countOf(done, 'section', 'sections') + ' done');
+    }
     live.stages.forEach((li, i) => {
-      const n = states[i] === 'done' ? files[i] : undefined;
-      const count = li.querySelector('.count') as HTMLElement;
-      const key = String(n ?? '') + (i === first ? ' unit' : '');
-      if (count.dataset.n !== key) {
-        count.dataset.n = key;
-        count.replaceChildren(...(n ? [n.toLocaleString('en-US'), h('span', i === first ? {} : { class: 'visually-hidden' }, n === 1 ? ' file' : ' files')] : []));
-      }
+      li.hidden = states[i] === 'done';
       if (li.className === states[i]) return;
       li.className = states[i];
       if (states[i] === 'current') li.setAttribute('aria-current', 'step');

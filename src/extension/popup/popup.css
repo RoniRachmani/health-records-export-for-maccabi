@@ -429,6 +429,14 @@ button.quiet:not([aria-disabled='true']):hover {
   margin: 6px 0 0;
   text-align: center;
 }
+/* What a block button does, said under it and read with it. One line in Roboto; balanced if a wider face wraps it. */
+.caption {
+  margin: 7px 0 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12.5px;
+  text-wrap: balance;
+}
 button[aria-disabled='true'] {
   cursor: progress;
 }
@@ -629,10 +637,10 @@ details.more summary:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* The running view: a pale-blue panel holds everything that moves (status and Cancel, what the current section is
-   doing and its count, the bar, the totals), then the list of sections, then the one thing to do meanwhile. Every
-   line here is kept to one line: a second would take the view past Chrome's 600px cap. One rhythm: 12px around and
-   inside the panel (11px padding and its border), 8px between its parts. */
+/* The running view: a pale-blue panel holds everything that moves (status, what the current section is doing and its
+   count, the bar, the totals) and the one thing to do meanwhile, then the list of sections, then Cancel. Every line
+   here is kept to one line: a second would take the view past Chrome's 600px cap. One rhythm: 12px around and inside
+   the panel (11px padding and its border), 8px between its parts. */
 .panel {
   display: grid;
   /* One column no wider than the panel: its one-line rows end in an ellipsis instead of widening it. */
@@ -643,15 +651,8 @@ details.more summary:hover {
   border-radius: 14px;
   background: var(--surface-2);
 }
-.status-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  /* Cancel's height, so the panel keeps its size when the button goes (saving, or while Cancel is confirmed). */
-  min-height: 30px;
-}
-.status-row .status {
+.panel > .status {
+  justify-self: start;
   margin: 0;
 }
 .activity {
@@ -742,12 +743,12 @@ details.more summary:hover {
   flex: 1;
   min-width: 0;
 }
-/* A finished line's files, in --muted: they are read, so they keep AA like every other text. */
-.stages .count {
-  flex: none;
-  color: var(--muted);
-  font-weight: 400;
-  font-variant-numeric: tabular-nums;
+/* The sections done are folded into the line that counts them. */
+.stages li[hidden] {
+  display: none;
+}
+.stages li.summary {
+  font-weight: 500;
 }
 /* 15px with its border: the rule at the top of the file does not reach pseudo-elements, and a border outside the 15px
    made each line 17px (18px on a high-density screen). */
@@ -787,15 +788,14 @@ details.more summary:hover {
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
   }
 }
-/* The one thing to do while it runs, in the style of the notes, with a browser window (not a folder: that is the mark). */
+/* The one thing to do while it runs, as the panel's last line, by the bar it keeps moving, with a browser window (not a
+   folder: that is the mark). */
 .reminder {
   display: flex;
   align-items: center;
   gap: 7px;
-  margin: 12px 0 0;
-  padding: 7px 10px;
-  border-radius: 10px;
-  background: var(--surface-2);
+  padding-top: 8px;
+  border-top: 1px solid var(--line-soft);
   color: var(--heading);
   font-size: 12px;
 }

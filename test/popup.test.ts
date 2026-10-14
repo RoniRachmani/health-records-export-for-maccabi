@@ -67,12 +67,14 @@ describe('popup', () => {
   it('shows the first-use notice, linking the Terms and Privacy Policy, until it is accepted', async () => {
     await openPopup({ run: null, noticeAccepted: false, tab: { onMaccabi: false, loggedIn: false } });
     expect(document.querySelector('h2')?.textContent).toBe('How the export works');
-    expect(document.querySelector('.points')?.textContent).toContain('Only for records you may legally access.');
-    expect(document.querySelector('.note.warn')?.textContent).toContain('Each export orders a fresh copy of your full medical file.');
-    expect(document.querySelector('.note.warn')?.textContent).toContain('a wider range than the site’s own form offers');
-    // The order is the one thing here with consequences: it comes before the points, above the fold.
-    const main = [...document.querySelectorAll('.note.warn, .points')];
-    expect(main.map((e) => e.className)).toEqual(['note warn', 'points']);
+    // What happens, led by the order; then the one consequence, alone in amber; then the cautions.
+    const main = [...document.querySelectorAll('.note, .points')];
+    expect(main.map((e) => e.className)).toEqual(['points', 'note warn', 'points']);
+    expect(main[0].firstElementChild?.textContent).toBe(
+      'Each export orders a fresh copy of your full medical file, for your whole history: a wider range than the site’s own form offers.' +
+      ' Maccabi texts you about it. A copy already ordered today is reused.');
+    expect(main[1].textContent).toBe('The new copy replaces the medical file now on the site.');
+    expect(main[2].textContent).toContain('Only for records you may legally access.');
     const links = [...document.querySelectorAll('.consent a')].map((a) => [a.textContent, a.getAttribute('href'), a.getAttribute('target')]);
     expect(links).toEqual([['Terms of Use', '/terms.html', '_blank'], ['Privacy Policy', '/privacy.html', '_blank']]);
     expect(document.querySelectorAll('button')).toHaveLength(1);
@@ -82,10 +84,6 @@ describe('popup', () => {
     await flush();
     expect(sent.map((m) => m.type)).toContain('acceptNotice');
     expect(buttonNamed('Start export')).toBeTruthy();
-    // What the ZIP is for, before the first export as after it.
-    const then = [...document.querySelectorAll('.note')].find((n) => n.textContent?.startsWith('Then:'));
-    expect(then?.textContent).toBe('Then: ask an AI assistant about your records. See how');
-    expect([then?.querySelector('a')?.getAttribute('href'), then?.querySelector('a')?.getAttribute('target')]).toEqual(['https://maccabi.ronirachmani.com/#where', '_blank']);
   });
 
   it('has a one-line header with the Unofficial chip, and a footer grouped by purpose', () => {
@@ -117,9 +115,12 @@ describe('popup', () => {
   it('applies progress in place, keeping the Cancel button under the pointer', async () => {
     await openPopup({ run: running({ fileCount: 40, byteCount: 2_300_000, items: { done: 38, total: 61 } }), tab });
     const cancel = buttonNamed('Cancel export');
-    // The panel, in reading order: status and Cancel, what is happening and its count, the bar, the totals.
+    // Cancel is a quiet line after the list, nobody's next step.
+    expect(cancel.className).toBe('quiet');
+    expect(cancel.parentElement?.previousElementSibling?.className).toBe('stages');
+    // The panel, in reading order: status, what is happening and its count, the bar, the totals, what to do meanwhile.
     const panel = document.querySelector('.panel') as HTMLElement;
-    expect([...panel.children].map((e) => e.className)).toEqual(['status-row', 'activity', 'bar active', 'stats']);
+    expect([...panel.children].map((e) => e.className)).toEqual(['status', 'activity', 'bar active', 'stats', 'reminder']);
     expect(document.querySelector('.status')?.textContent).toBe('Exporting · 12%');
     expect(panel.querySelector('.activity .what')?.textContent).toBe('Saving each lab value’s history');
     expect(panel.querySelector('.activity .count')?.textContent).toBe('38 of 61');
@@ -127,14 +128,10 @@ describe('popup', () => {
     // The list names the sections: the current line by its name only.
     expect(document.querySelector('.stages [aria-current=step]')?.textContent).toBe('Lab histories');
     expect(document.querySelector('.stages .detail')).toBeNull();
-    expect(document.getElementById('view')?.textContent).not.toMatch(/sections/);
-    expect(document.querySelector('.reminder')?.textContent).toBe('Keep the Maccabi Online tab open and in front.');
+    expect(panel.querySelector('.reminder')?.textContent).toBe('Keep the Maccabi Online tab open and in front.');
     expect(document.querySelector('.reminder svg')?.getAttribute('aria-hidden')).toBe('true');
 
-    storageChange(running({
-      next: PLAN.indexOf('approvals'), percent: 48, detail: 'Approvals: approvals', fileCount: 212, byteCount: 14_800_000,
-      filesByKey: { profileAndDoctors: 6, 'testResults:test results': 96, 'testResults:lab histories': 61, visits: 1, 'visits:visits': 30 },
-    }));
+    storageChange(running({ next: PLAN.indexOf('approvals'), percent: 48, detail: 'Approvals: approvals', fileCount: 212, byteCount: 14_800_000 }));
     expect(buttonNamed('Cancel export')).toBe(cancel);
     expect(document.querySelector('.status')?.textContent).toBe('Exporting · 48%');
     expect(panel.querySelector('.activity .what')?.textContent).toBe('Downloading each approval as a PDF');
@@ -143,13 +140,11 @@ describe('popup', () => {
     expect(document.querySelector('.stats')?.textContent).toBe('212 files · 15 MB · 6 min elapsed');
     expect(document.querySelector('[role=progressbar]')?.getAttribute('aria-valuenow')).toBe('48');
     expect(document.querySelector('.stages [aria-current=step] .name')?.textContent).toBe('Approvals');
-    expect(document.querySelectorAll('.stages li.done')).toHaveLength(10);
-    // Finished lines show the files they collected, and nothing when there were none.
-    const counts = Object.fromEntries([...document.querySelectorAll('.stages li')].map((li) => [li.querySelector('.name')?.textContent, li.querySelector('.count')?.textContent]));
-    expect(counts).toMatchObject({
-      'Ordering your medical file': '', 'Your details and doctor': '6 files', 'Test results': '96 files', 'Lab histories': '61 files',
-      'Visit summaries': '31 files', Referrals: '', Approvals: '',
-    });
+    // The sections done fold into one line that counts them, so the current one is second.
+    const shown = [...document.querySelectorAll<HTMLElement>('.stages li')].filter((li) => !li.hidden);
+    expect(shown.slice(0, 2).map((li) => li.textContent)).toEqual(['10 sections done', 'Approvals']);
+    expect(shown[0].className).toBe('done summary');
+    expect(document.querySelectorAll('.stages li.done[hidden]')).toHaveLength(10);
     // The band covers the rest of the current section, from the fill's end.
     const band = document.querySelector('.bar .band') as HTMLElement;
     expect(band.style.left).toBe('48%');
@@ -208,10 +203,12 @@ describe('popup', () => {
     expect(document.querySelector('.account')?.textContent).toBe('Logged in to Maccabi Online');
   });
 
-  it('offers Start export straight away, with the SMS warning beside it', async () => {
+  it('offers Start export straight away, with what it orders as its caption', async () => {
     await openPopup({ run: null, tab });
-    expect(buttonNamed('Start export')).toBeTruthy();
-    expect(document.querySelector('.note')?.textContent).toContain('Maccabi will text you:');
+    const caption = buttonNamed('Start export').parentElement?.nextElementSibling;
+    expect(caption?.className).toBe('caption');
+    expect(caption?.textContent).toBe('Orders a fresh copy of your medical file. Maccabi will text you.');
+    expect(document.querySelector('.note')).toBeNull();
     expect(document.querySelector('details.more')?.hasAttribute('open')).toBe(false);
 
     buttonNamed('Start export').click();
@@ -244,8 +241,9 @@ describe('popup', () => {
     await openPopup({ run: done, tab });
     const row = buttonNamed('Show in folder').parentElement as HTMLElement;
     expect([...row.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Show in folder', 'How to ask an AI']);
-    expect(row.previousElementSibling?.textContent).toBe('Next: unzip it and open the folder in your AI assistant, then ask about your records.');
-    expect(buttonNamed('Clear this summary').className).toBe('quiet');
+    // The pair are the next steps; nothing says them again.
+    expect(row.previousElementSibling?.className).toBe('file-card');
+    expect(buttonNamed('Clear this summary (the ZIP stays)').className).toBe('quiet');
     expect(row.classList.contains('actions')).toBe(true);
     const caution = document.querySelector('#view > :last-child') as HTMLElement;
     expect(caution.className).toBe('caution');
