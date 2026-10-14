@@ -16,13 +16,13 @@ export interface Stage {
  * The run plan as the user sees it, and the popup's main view of the run: one line per part of the export,
  * named for what it collects, so the list reads as an inventory of the member's records and ticks along at a
  * steady pace. Page changes and bookkeeping steps are folded into the line they serve. What the current line is
- * doing (DESCRIPTIONS) is said in the panel above the list, and the lines done fold into one that counts them. Stages are in PLAN order, a step's stages consecutive, and the first
+ * doing (DESCRIPTIONS) is said in the panel above the list, and a finished line shows the files it collected. Stages are in PLAN order, a step's stages consecutive, and the first
  * stage is labelled with one of its steps' LABELS entries, so errors and problems name it the same way. A step that
  * only serves another shares its label; a step that collects something of its own keeps its own name there, and a
  * step split into parts is named as a whole.
  *
- * Room is the constraint: Chrome caps the popup at 600px, which leaves 19 lines here (16px each). Merge before adding
- * a twentieth.
+ * Room is the constraint: Chrome caps the popup at 600px, and today's 17 lines (16px each) under the file counts' column
+ * head take the running view to 589px. Merge before adding an eighteenth.
  */
 export const STAGES: Stage[] = [
   // Ordering comes first so Maccabi can build the file while everything else is collected; collecting it is the

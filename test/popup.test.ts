@@ -131,7 +131,10 @@ describe('popup', () => {
     expect(panel.querySelector('.reminder')?.textContent).toBe('Keep the Maccabi Online tab open and in front.');
     expect(document.querySelector('.reminder svg')?.getAttribute('aria-hidden')).toBe('true');
 
-    storageChange(running({ next: PLAN.indexOf('approvals'), percent: 48, detail: 'Approvals: approvals', fileCount: 212, byteCount: 14_800_000 }));
+    storageChange(running({
+      next: PLAN.indexOf('approvals'), percent: 48, detail: 'Approvals: approvals', fileCount: 212, byteCount: 14_800_000,
+      filesByKey: { profileAndDoctors: 6, 'testResults:test results': 96, 'testResults:lab histories': 61, visits: 1, 'visits:visits': 30 },
+    }));
     expect(buttonNamed('Cancel export')).toBe(cancel);
     expect(document.querySelector('.status')?.textContent).toBe('Exporting · 48%');
     expect(panel.querySelector('.activity .what')?.textContent).toBe('Downloading each approval as a PDF');
@@ -140,11 +143,17 @@ describe('popup', () => {
     expect(document.querySelector('.stats')?.textContent).toBe('212 files · 15 MB · 6 min elapsed');
     expect(document.querySelector('[role=progressbar]')?.getAttribute('aria-valuenow')).toBe('48');
     expect(document.querySelector('.stages [aria-current=step] .name')?.textContent).toBe('Approvals');
-    // The sections done fold into one line that counts them, so the current one is second.
-    const shown = [...document.querySelectorAll<HTMLElement>('.stages li')].filter((li) => !li.hidden);
-    expect(shown.slice(0, 2).map((li) => li.textContent)).toEqual(['10 sections done', 'Approvals']);
-    expect(shown[0].className).toBe('done summary');
-    expect(document.querySelectorAll('.stages li.done[hidden]')).toHaveLength(10);
+    expect(document.querySelectorAll('.stages li.done')).toHaveLength(10);
+    // Every section stays listed. A finished line shows its files as a bare number under the column's one head, and
+    // nothing when there were none; each count is heard as files.
+    const head = document.querySelector('.files-head') as HTMLElement;
+    expect([head.textContent, head.getAttribute('aria-hidden'), head.nextElementSibling?.className]).toEqual(['Files', 'true', 'stages']);
+    const counts = Object.fromEntries([...document.querySelectorAll('.stages li')].map((li) => [li.querySelector('.name')?.textContent, li.querySelector('.count')?.textContent]));
+    expect(counts).toMatchObject({
+      'Ordering your medical file': '', 'Your details and doctor': '6 files', 'Test results': '96 files', 'Lab histories': '61 files',
+      'Visit summaries': '31 files', Referrals: '', Approvals: '',
+    });
+    expect([...document.querySelectorAll('.stages .count > span')].every((s) => s.className === 'visually-hidden')).toBe(true);
     // The band covers the rest of the current section, from the fill's end.
     const band = document.querySelector('.bar .band') as HTMLElement;
     expect(band.style.left).toBe('48%');
@@ -170,6 +179,7 @@ describe('popup', () => {
     buttonNamed('Cancel export').click();
     expect(document.querySelector('.confirm p')?.textContent).toBe('Cancel the export and delete the files collected so far?');
     expect(document.querySelector('.stages')).toBeNull();
+    expect(document.querySelector('.files-head')).toBeNull();
 
     buttonNamed('Keep exporting').click();
     expect(document.querySelector('.confirm')).toBeNull();

@@ -735,10 +735,23 @@ details.more summary:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* The head of the finished lines' file counts, over their column: said once, small, like a table's. */
+.files-head {
+  margin: 10px 0 1px;
+  text-align: right;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
 .stages {
   list-style: none;
   margin: 12px 0 0;
   padding: 0;
+}
+.files-head + .stages {
+  margin-top: 0;
 }
 .stages li {
   display: flex;
@@ -753,12 +766,12 @@ details.more summary:hover {
   flex: 1;
   min-width: 0;
 }
-/* The sections done are folded into the line that counts them. */
-.stages li[hidden] {
-  display: none;
-}
-.stages li.summary {
-  font-weight: 500;
+/* A finished line's files, in --muted: they are read, so they keep AA like every other text. */
+.stages .count {
+  flex: none;
+  color: var(--muted);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
 }
 /* 15px with its border: the rule at the top of the file does not reach pseudo-elements, and a border outside the 15px
    made each line 17px (18px on a high-density screen). */

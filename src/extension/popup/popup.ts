@@ -1,6 +1,6 @@
 import { PLAN, SITE_ASK, SITE_OPEN, type Request, type RunState, type StateReply } from '../shared/state';
 import {
-  countOf, countText, currentStage, formatBytes, formatDuration, groupProblems, hintText, problemText, STAGES, stageSpan, stageStates, statsText,
+  countOf, countText, currentStage, formatBytes, formatDuration, groupProblems, hintText, problemText, STAGES, stageFileCounts, stageSpan, stageStates, statsText,
   waitingForFile,
   stepText, viewKey, type Confirm, type UiFlags,
 } from './model';
@@ -27,7 +27,6 @@ let live: {
   count?: HTMLElement;
   stats?: HTMLElement;
   stages?: HTMLElement[];
-  doneSummary?: HTMLElement;
   hint?: HTMLElement;
   reminder?: HTMLElement;
   ask?: HTMLElement;
@@ -258,8 +257,9 @@ function idleView(st: StateReply): Child[] {
 
 /**
  * Each fact once: the panel holds everything that moves (how far, what the current section is doing, its count, the
- * totals) and, as its last line, the one thing to do meanwhile; the list names the sections still to come, under one
- * line counting those done. Cancel is a quiet button at the end: it is nobody's next step, and it asks first.
+ * totals) and, as its last line, the one thing to do meanwhile; the list names every section, and a finished one shows
+ * the files it collected, in a column headed once. Cancel is a quiet button at the end: it is nobody's next step, and it
+ * asks first.
  */
 function progressView(run: RunState): Child[] {
   const pill = status('');
@@ -269,11 +269,10 @@ function progressView(run: RunState): Child[] {
   const stats = h('p', { class: 'stats' });
   const hint = h('span');
   const ask = h('span');
-  const stages = STAGES.map((s) => h('li', {}, h('span', { class: 'name' }, s.label)));
-  const doneSummary = h('li', { class: 'done summary', hidden: '' }, h('span', { class: 'name' }));
+  const stages = STAGES.map((s) => h('li', {}, h('span', { class: 'name' }, s.label), h('span', { class: 'count' })));
   const reminder = h('p', { class: 'reminder' }, h('span', {}, hint, ask));
   reminder.insertAdjacentHTML('afterbegin', TAB_ICON + ASK_ICON);
-  live = { status: pill, bar, fill, band, activity, count, stats, stages, doneSummary, hint, reminder, ask };
+  live = { status: pill, bar, fill, band, activity, count, stats, stages, hint, reminder, ask };
   return [
     h('h2', { class: 'visually-hidden' }, 'Export in progress'),
     h('div', { class: 'panel' },
@@ -284,7 +283,9 @@ function progressView(run: RunState): Child[] {
       reminder),
     // The list is hidden while Cancel is being confirmed, so the question fits without scrolling.
     ui.confirm === 'cancel' && cancelConfirm(),
-    ui.confirm !== 'cancel' && h('ol', { class: 'stages', 'aria-label': 'Sections' }, doneSummary, ...stages),
+    // The column's head, said once over the counts; screen readers hear "files" with each count instead.
+    ui.confirm !== 'cancel' && h('p', { class: 'files-head', 'aria-hidden': 'true' }, 'Files'),
+    ui.confirm !== 'cancel' && h('ol', { class: 'stages', 'aria-label': 'Sections' }, ...stages),
     run.status === 'running' && ui.confirm !== 'cancel' && h('p', { class: 'dismiss' }, cancelButton('quiet')),
   ];
 }
@@ -454,14 +455,15 @@ function updateLive(run: RunState): void {
   }
   if (live.stages) {
     const states = stageStates(run);
-    // The sections done fold into one line, so the current one stays near the top of the list.
-    const done = states.filter((s) => s === 'done').length;
-    if (live.doneSummary) {
-      live.doneSummary.hidden = done === 0;
-      setText(live.doneSummary.firstElementChild as HTMLElement, countOf(done, 'section', 'sections') + ' done');
-    }
+    const files = stageFileCounts(run);
     live.stages.forEach((li, i) => {
-      li.hidden = states[i] === 'done';
+      // A finished line's files: a bare number under the column's head, heard as files.
+      const n = states[i] === 'done' ? files[i] : undefined;
+      const count = li.querySelector('.count') as HTMLElement;
+      if (count.dataset.n !== String(n ?? '')) {
+        count.dataset.n = String(n ?? '');
+        count.replaceChildren(...(n ? [n.toLocaleString('en-US'), h('span', { class: 'visually-hidden' }, n === 1 ? ' file' : ' files')] : []));
+      }
       if (li.className === states[i]) return;
       li.className = states[i];
       if (states[i] === 'current') li.setAttribute('aria-current', 'step');
