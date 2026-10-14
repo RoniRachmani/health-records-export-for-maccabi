@@ -3869,8 +3869,11 @@ h2 {
     opacity: 0.35;
     cursor: default;
   }
+  /* The count keeps one width and one place beside the back button; the next question takes the right edge, so a
+     longer name only closes the space between them. */
   .s-count {
-    flex: 1;
+    flex: none;
+    width: 4.5em;
     border-radius: 6px;
     color: var(--muted);
     font-size: 14px;
@@ -3880,6 +3883,7 @@ h2 {
   .s-next {
     flex: none;
     display: flex;
+    margin-left: auto;
     align-items: center;
     gap: 8px;
     min-height: 44px;
