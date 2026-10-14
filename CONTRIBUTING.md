@@ -190,6 +190,34 @@ way to export for everyone else. `scripts/headless-lib.mjs` holds the two seams 
 as `Transport` and a folder as `Sink`, and `test/headless.test.ts` runs the test-results step through them against
 the fake site.
 
+### Without a browser at all
+
+```sh
+npm run export -- --no-browser          # sign in and send every request from Node; with MACCABI_PASSWORD, no one has to be there
+npm run export -- --no-browser --all    # the same, every section
+npm run export -- --no-browser --phone 2    # without a password: Maccabi texts a code to that phone, and the script asks for it
+```
+
+`--no-browser` needs no Chrome and no extension: the sign-in and the requests run in Node, so an export can run on a
+server, in a container, or from `cron` — the way to keep a copy of your records that refreshes itself. The sign-in is
+Maccabi's own SAML handoff replayed over `fetch` with a cookie jar (`scripts/maccabi-session.mjs`): the chain that
+[Oren Yomtov's maccabi-health](https://github.com/orenyomtov/maccabi-health) (MIT) first worked out and documented
+in its [AUTH.md](https://github.com/orenyomtov/maccabi-health/blob/main/docs/AUTH.md), and where that project showed
+that Maccabi's bot protection leaves the authenticated API alone, which is what makes this possible at all; its
+[SESSION-LIFETIME.md](https://github.com/orenyomtov/maccabi-health/blob/main/docs/research/SESSION-LIFETIME.md) is
+where the hour below comes from. With a password in `.env` or 1Password, the script takes the site's "sign in with
+password" road, recorded from the page itself with `scripts/discover-login.mjs`: no SMS, nothing to type. Without
+one it takes the SMS road maccabi-health replays: the code is asked for in the terminal, once, and never stored.
+
+Two things Maccabi decides. Every session ends 3600 seconds after it began, whatever happens, and an idle session ends
+in under six minutes, which the script holds off with the site's own `alive` request every four; an export fits
+easily inside the hour. And one wrong password, or one wrong code, ends that sign-in — the script never resubmits
+either, because repeated attempts are what lock an account; it starts a fresh sign-in next time. Like the browser
+run, this one ends the member's other Maccabi sessions when it signs in, and orders nothing. The legacy `/online/`
+steps (`--all`) load the summary page under the navigation session the portal's bootstrap hands out, as the tab
+would. `test/session.test.ts` runs the sign-in on both roads and the test-results step through the Node transport
+against a fake of the login origin and the fake site.
+
 ## Finding what the export could add
 
 `npm run endpoints` lists what Maccabi Online's own front-end code can call that `docs/endpoints/endpoints.json` does

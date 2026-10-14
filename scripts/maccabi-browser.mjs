@@ -48,6 +48,8 @@ export function credentials() {
   if (process.env.MACCABI_USERNAME && process.env.MACCABI_PASSWORD) {
     return { username: resolve('MACCABI_USERNAME'), password: resolve('MACCABI_PASSWORD') };
   }
+  // The ID number alone: enough for a sign-in that asks Maccabi for an SMS code (headless-export --no-browser).
+  if (process.env.MACCABI_USERNAME && !process.env.MACCABI_OP_ITEM) return { username: resolve('MACCABI_USERNAME'), password: '' };
   let out;
   try {
     out = execFileSync('op', ['item', 'get', ITEM, '--format', 'json', '--reveal'], {
@@ -256,6 +258,7 @@ export async function signIn(page) {
         await page.probe(clickText(WITH_PASSWORD), false);
         console.log('Sign-in: chose to sign in with a password.');
       } else if (stage === 'password') {
+        if (!creds.password) throw new Error('The browser sign-in needs MACCABI_PASSWORD (in .env, or the 1Password item); the SMS road is headless-export --no-browser.');
         if (await page.probe(ID_BEFORE_PASSWORD_EMPTY, false)) await page.insertText(creds.username);
         await page.probe(FOCUS_PASSWORD, false);
         await page.insertText(creds.password);

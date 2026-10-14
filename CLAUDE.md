@@ -20,6 +20,8 @@ npm run package                   # build + release/<name>-<version>.zip (refuse
 npm run live                      # a live export on your own account, never ordering, no ZIP (1Password refs in .env)
 npm run export                    # an export with no extension: test results into ./maccabi-export-<today>/ (same .env)
 npm run export -- --all           # every section, nothing ordered; --steps a,b for some; --out DIR; --keep
+npm run export -- --no-browser    # no Chrome: SAML sign-in over fetch (password from .env, else an SMS code typed in), requests from Node
+node scripts/discover-login.mjs   # record the browser sign-in's request shapes (secrets replaced), to keep maccabi-session.mjs true to the site
 npm run endpoints                 # the site's own calls that docs/endpoints/endpoints.json lacks, and mapped ones it dropped (same .env; calls no API)
 npm run endpoints -- --from DIR   # the same on scripts a --save DIR kept, with no sign-in; --rea adds REA's parser
 npm run clean                     # remove dist/, dist-dev/, dist-store/, dist-cli/, release/
