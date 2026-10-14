@@ -224,8 +224,8 @@ size — and each frame is piped straight into the encoder: `ffmpeg` when that i
 macOS, `scripts/encode-mp4.swift`, compiled on the spot. A full render takes about 20 minutes; give two times in
 seconds to render one part of it while working on it, e.g. `npm run store-video -- 8 12`.
 
-Its soundtrack is scored from the same timeline by `scripts/soundtrack.mjs`: music and effects synthesized there,
-from oscillators and noise, and narration spoken by ElevenLabs (`scripts/narration.mjs`). The voice comes from one
+Its soundtrack is mixed from the same timeline by `scripts/soundtrack.mjs`: music from Eleven Music v2.5, effects from
+ElevenLabs Sound Effects (`scripts/eleven-sound.mjs`, below), and narration spoken by ElevenLabs (`scripts/narration.mjs`). The voice comes from one
 take of the whole script, made in ElevenLabs with the text `--script` prints and brought in with
 `--import <take>`, which cuts it into lines at the pauses; or, with `ELEVENLABS_API_KEY` in the environment or a
 gitignored `.env`, line by line over the API. With the key, `--import` cuts on the words instead: ElevenLabs' forced
@@ -234,13 +234,12 @@ keeps its words' times, which `--captions` cues the subtitles by, a phrase at a 
 set; set it for `--script` and `--import` too). Spoken lines are cached in `.cache/narration/` by voice, model and
 words, so only a changed line costs anything. `--audio-only` writes the soundtrack alone, to listen to; `--remux` puts a changed soundtrack
 on the last render's picture in seconds, without drawing it again; `--no-narration` leaves the voice out, and
-`--silent` the sound. `--eleven` swaps the synthesized music and effects for ElevenLabs' (`scripts/eleven-sound.mjs`) and
-writes `promo-video-elevenlabs.mp4` beside the film (with `--remux`, on its picture): the music from Eleven Music v2.5 and
-each effect from its Sound Effects model, either brought in by hand as `.cache/elevenlabs-sound/import/music.mp3` and
-`<kind>.mp3` (or `<kind>-1.mp3`… for several takes), made in ElevenLabs' app or its connector, or, with the key, asked for
-over the API, the music composed to a plan with a chunk per part of the film. Each recorded effect starts on its second
-and is brought to the loudness of the synthesized one it stands in for. Music made by ElevenLabs carries its own terms,
-so check them before publishing that version. `--clip` draws the popup over a white page instead of the film's ground, with no pointer, which is how the Pages
+`--silent` the sound. The music and each effect in `SOUNDS` are either brought in by hand as
+`.cache/elevenlabs-sound/import/music.mp3` and `<kind>.mp3` (or `<kind>-1.mp3`… for several takes), made in ElevenLabs'
+app or its connector, or, with the key, asked for over the API, the music then composed to a plan with a chunk per part of
+the film. Each recorded effect starts on its second and is brought to the loudness of the one `soundtrack.mjs` synthesizes
+for it; `--synth` plays those synthesized music and effects instead, with nothing to bring in or pay for. ElevenLabs'
+paid plans license their output for commercial use, which a YouTube promo is; the free plan does not. `--clip` draws the popup over a white page instead of the film's ground, with no pointer, which is how the Pages
 workflow renders the landing page's clip. The MP4 is not committed — the store's video
 field takes a YouTube link, so upload it there and paste the link on the dashboard. The README's poster is one frame of the same
 film, drawn by the same page: `npm run store-assets -- poster`.

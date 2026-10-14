@@ -2,8 +2,9 @@
 // as window.video.soundtrack): a music bed written to its parts, the sound of what happens on
 // screen, and the narration (narration.mjs), mixed to YouTube's loudness. The music and the effects
 // are synthesized here from oscillators and seeded noise — no sample, loop or recording, so there
-// is nothing to license — and the same timeline always gives the same audio. (`--eleven` swaps the two
-// for ElevenLabs' recordings, from eleven-sound.mjs, mixed the same way.)
+// is nothing to license — and the same timeline always gives the same audio. The film plays
+// ElevenLabs' recordings in their place (eleven-sound.mjs), mixed the same way; this score and these
+// effects are what `--synth` plays, and what each recorded effect's loudness is matched to.
 //
 // Levels: the voice is set to -16 LUFS, the music to -25 LUFS and dipped 9 dB whenever the voice is
 // speaking, the effects sit between the two, and the whole mix is brought to -14 LUFS (what YouTube

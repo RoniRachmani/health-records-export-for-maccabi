@@ -3,9 +3,10 @@
 // images), and each frame goes straight into an H.264 encoder as it is photographed. Give two times in
 // seconds to render only that slice while working on it, e.g. `npm run store-video -- 8 12`.
 //
-// The soundtrack is scored from the same timeline (soundtrack.mjs), with the narration spoken by
-// ElevenLabs (narration.mjs, which needs ELEVENLABS_API_KEY, from the environment or .env). It is
-// built before the first frame, so a missing key costs seconds, not a render.
+// The soundtrack is mixed from the same timeline (soundtrack.mjs): the narration spoken by ElevenLabs
+// (narration.mjs), the music from Eleven Music v2.5 and the effects from ElevenLabs Sound Effects
+// (eleven-sound.mjs), brought in by hand or asked for with ELEVENLABS_API_KEY (from the environment or
+// .env). It is built before the first frame, so a missing sound costs seconds, not a render.
 //   --audio-only    write the soundtrack alone, to store/assets/promo-soundtrack.wav, and stop
 //   --no-narration  music and effects only
 //   --silent        no soundtrack at all
@@ -19,9 +20,8 @@
 //                   ELEVENLABS_API_KEY, else at its pauses; then go on
 //   --remux         keep the picture of the last render and give it this soundtrack: seconds, not a
 //                   render, for trying a sound
-//   --eleven        the music from Eleven Music v2.5 and the effects from ElevenLabs Sound Effects
-//                   (eleven-sound.mjs) instead of the synthesized ones, into promo-video-elevenlabs.mp4
-//                   (and promo-soundtrack-elevenlabs.wav); with --remux, on promo-video.mp4's picture
+//   --synth         soundtrack.mjs's own synthesized music and effects instead of ElevenLabs': nothing to
+//                   bring in or pay for
 //
 // The stage is laid out at 1920x1080 and drawn at twice that, so the film is 4K: text, the popup and
 // every line drawing are rendered at 3840x2160 rather than scaled up to it, and YouTube gives a 4K
@@ -42,9 +42,7 @@ import { isFile, openStage, root } from './stage.mjs';
 const WIDTH = 1920;
 const HEIGHT = 1080;
 const SCALE = 2;
-const ELEVEN = process.argv.includes('--eleven');
-const PICTURE = join(root, 'store', 'assets', 'promo-video.mp4');
-const OUT = ELEVEN ? join(root, 'store', 'assets', 'promo-video-elevenlabs.mp4') : PICTURE;
+const OUT = join(root, 'store', 'assets', 'promo-video.mp4');
 // Written here and moved into place only once it is whole, so a failed render leaves the last good film.
 const PARTIAL = join(root, 'store', 'assets', 'promo-video.partial.mp4');
 // Frames per browser. The stage draws frame n from n alone, so the browser can be replaced at any
@@ -58,7 +56,7 @@ const importAt = args.indexOf('--import');
 const take = importAt < 0 ? null : args.splice(importAt, 2)[1];
 if (take === undefined || take?.startsWith('--')) throw new Error('--import needs the take: --import <file>');
 const flags = new Set(args.filter((a) => a.startsWith('--')));
-const OPTIONS = ['--audio-only', '--no-narration', '--silent', '--script', '--captions', '--remux', '--clip', '--eleven'];
+const OPTIONS = ['--audio-only', '--no-narration', '--silent', '--script', '--captions', '--remux', '--clip', '--synth'];
 for (const f of flags) if (!OPTIONS.includes(f)) throw new Error('Unknown option ' + f);
 const PAGE = '/store/src/video.html' + (flags.has('--clip') ? '?clip' : '');
 const [from, to] = args.filter((a) => !a.startsWith('--')).map(Number);
@@ -131,7 +129,7 @@ let encoder;
  * encoded, and nothing is drawn again.
  */
 function remux(wav, seconds) {
-  const picture = PICTURE;
+  const picture = OUT;
   if (!existsSync(picture)) throw new Error('--remux needs a render to take the picture from: store/assets/promo-video.mp4');
   if (!wav) throw new Error('--remux is for a new soundtrack; there is none with --silent');
   const ffmpeg = process.env.FFMPEG_PATH || onPath('ffmpeg');
@@ -219,12 +217,12 @@ async function render() {
   let wav = null;
   if (!flags.has('--silent')) {
     const clips = flags.has('--no-narration') ? null : await speak(soundtrack.narration);
-    const { track, summary } = buildSoundtrack(soundtrack, clips, ELEVEN ? await elevenSound(soundtrack) : null);
-    console.log(summary + (ELEVEN ? ', music and effects by ElevenLabs' : ''));
+    const synth = flags.has('--synth');
+    const { track, summary } = buildSoundtrack(soundtrack, clips, synth ? null : await elevenSound(soundtrack));
+    console.log(summary + (synth ? ', synthesized music and effects' : ', music and effects by ElevenLabs'));
     if (flags.has('--audio-only')) {
-      const name = ELEVEN ? 'promo-soundtrack-elevenlabs.wav' : 'promo-soundtrack.wav';
-      writeWav(join(root, 'store', 'assets', name), track, first / fps, last / fps);
-      console.log('wrote store/assets/' + name + ' (' + seconds + 's)');
+      writeWav(join(root, 'store', 'assets', 'promo-soundtrack.wav'), track, first / fps, last / fps);
+      console.log('wrote store/assets/promo-soundtrack.wav (' + seconds + 's)');
       await page.close();
       return;
     }

@@ -31,7 +31,7 @@ npm run store-video               # re-render store/assets/promo-video.mp4 (not 
 npm run store-video -- 8 12       # just those seconds of it, while working on a scene
 npm run store-video -- --audio-only   # just the soundtrack, to store/assets/promo-soundtrack.wav
 npm run store-video -- --remux        # a changed soundtrack on the last render's picture, in seconds
-npm run store-video -- --eleven --remux   # the same picture with ElevenLabs' music and effects, to promo-video-elevenlabs.mp4
+npm run store-video -- --synth        # the synthesized music and effects instead of ElevenLabs'
 npm run store-video -- --script       # the narration as one take's text, for ElevenLabs
 npm run store-video -- --captions     # the narration as subtitles, to store/assets/promo-captions.srt, for YouTube
 npm run store-video -- --import take.mp3 --audio-only   # cut that take into the narration's lines
@@ -180,8 +180,10 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   started as in one that drew the frames before it (the render restarts it every 150 frames): no
   `translate3d`, whose layers keep text where it was first drawn, and no camera or element creeping by
   fractions of a pixel, which reads as text shivering. The soundtrack is scored from the same timeline
-  (`window.video.soundtrack`: the parts, `NARRATION`, `SOUNDS`) by `scripts/soundtrack.mjs`, which synthesizes the
-  music and effects itself; the voice is ElevenLabs (`scripts/narration.mjs`): one take of the script
+  (`window.video.soundtrack`: the parts, `NARRATION`, `SOUNDS`) by `scripts/soundtrack.mjs`. The music is Eleven Music v2.5
+  and the effects ElevenLabs Sound Effects (`scripts/eleven-sound.mjs`), brought in as `.cache/elevenlabs-sound/import/`
+  `music.mp3` and `<kind>.mp3` (or `<kind>-1.mp3`…), or asked for with the key; `--synth` plays the score and effects
+  `soundtrack.mjs` synthesizes instead, which each recorded effect's loudness is matched to. The voice is ElevenLabs (`scripts/narration.mjs`): one take of the script
   (`--script`) cut into lines by `--import <take>` (on its words, by ElevenLabs' forced alignment, when there is a key), or line by line with `ELEVENLABS_API_KEY` from `.env`, and
   cached in `.cache/narration/`. Retime a scene and the narration moves with it; a line that no longer fits stops
   the render before the first frame. The MP4 is gitignored, because the store's video field takes a YouTube link.

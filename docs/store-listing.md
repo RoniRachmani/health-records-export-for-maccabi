@@ -169,8 +169,10 @@ whole disclaimer is its tooltip) is on screen whenever the popup is.
 The README shows the video as a poster that links to it: `store/assets/video-poster.png`, one frame of the same film
 with a play badge over it, drawn by `npm run store-assets -- poster`. Re-render it whenever the video changes.
 
-The soundtrack is made the same way, from the same timeline (`scripts/soundtrack.mjs`). The music and effects are
-synthesized by that script, from oscillators and noise, so no music licence is involved. The music is twenty bars
+The soundtrack is mixed from the same timeline (`scripts/soundtrack.mjs`). The music is Eleven Music v2.5 and the
+effects ElevenLabs Sound Effects (`scripts/eleven-sound.mjs`), used under ElevenLabs' commercial licence, which its paid
+plans carry. `--synth` plays the score and effects that script synthesizes from oscillators and noise instead, which
+need no licence and which the film was first timed to: that score is twenty bars
 from the start to the closing card (`BARS`): two under the opening answer (`INTRO`, which is `OPEN` in
 `store/src/video.ts`), and two under the assistant's part at the end. Lengthen or shorten a part and the tempo follows,
 unless the bar count changes with it. The narration is
@@ -255,7 +257,7 @@ Your records stay on your computer, and you choose which AI assistant, if any, r
 
 תוסף לא רשמי לכרום ששומר במחשב שלכם עותק של הרשומות הרפואיות ממכבי אונליין – בדיקות, ביקורים, מרשמים, מכתבים והתיק הרפואי המלא – בקובץ ZIP אחד. ממשק התוסף באנגלית.
 
-The narration is an AI voice (ElevenLabs). The music and sound effects were synthesized for this video. The records shown are made up.
+The narration is an AI voice, and the music and sound effects were made with AI (ElevenLabs, including Eleven Music). The records shown are made up.
 
 Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare Services.
 ```

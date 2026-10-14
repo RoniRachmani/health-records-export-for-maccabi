@@ -1,5 +1,5 @@
-// The promo video's music and effects from ElevenLabs instead of soundtrack.mjs's synthesizer, for
-// `npm run store-video -- --eleven`: the music from Eleven Music v2.5, composed to a plan with one
+// The promo video's music and effects, from ElevenLabs (`npm run store-video -- --synth` uses
+// soundtrack.mjs's synthesizer instead): the music from Eleven Music v2.5, composed to a plan with one
 // chunk per part of the film, so that each part's change of music lands on its cut; and each effect
 // in SOUNDS (store/src/video.ts) from its Sound Effects model, one sound per kind and length (a few
 // takes of the tick, so a run of files landing doesn't sound like one sample repeated).
