@@ -73,7 +73,16 @@ export interface OrderResult {
 export function orderSettled(o: OrderResult | undefined): boolean {
   if (!o) return false;
   if (o.ordered || o.skipped_ready_today) return true;
-  return !!o.sent && o.success_code !== '3';
+  return !!o.sent && !orderRefused(o);
+}
+
+/**
+ * Maccabi plainly refused the order: Success '3', where the site's own button tells the member to try again later
+ * (online/scripts/Summary/summary.js). Nothing was ordered and no SMS sent, so asking again is safe; on 2026-10-15 an
+ * order refused in the morning went through on a run started within 11 minutes of it.
+ */
+export function orderRefused(o: OrderResult | undefined): boolean {
+  return !!o && !o.ordered && o.success_code === '3';
 }
 
 // Orders the medical file (Maccabi sends an SMS and replaces the previous file
@@ -123,7 +132,9 @@ export async function placeOrder(c: Collector, opts: { reorder?: boolean } = {})
   }
   await c.sleep(PACE_MS);
   // Success '1' = ordered, SMS sent; '2' = ordered, no SMS: either way Maccabi builds the file, and the run waits
-  // for it. '3' (failed) or no clear answer is reported, not waited on.
+  // for it. '3' is a refusal, which the run asks again once at the wait, and reports there with the file it keeps
+  // instead (keepListedMedicalFile); no clear answer is reported here, and not waited on.
+  if (res.status === 200 && data && data.Success === '3') return { ordered: false, sent: true, success_code: '3' };
   if (res.status !== 200 || !data || (data.Success !== '1' && data.Success !== '2')) {
     await c.problem(MEDICAL_FILE, 'medical file order not confirmed: HTTP ' + res.status + ' Success ' + (data && data.Success));
     return { ordered: false, sent: true, success_code: data ? data.Success : undefined };
@@ -141,6 +152,22 @@ export async function placeOrder(c: Collector, opts: { reorder?: boolean } = {})
  */
 function coversFrom(letter: Json, fromDate: string): boolean {
   return !letter.from_date || iso(letter.from_date) === fromDate;
+}
+
+/**
+ * No new file was ordered: keep the one Maccabi already lists, as a run that orders nothing does. When an order was
+ * tried and not taken, say which file the export has instead, so neither the member nor an assistant reading the
+ * export takes an earlier file for today's.
+ */
+export async function keepListedMedicalFile(c: Collector, order?: OrderResult): Promise<void> {
+  const list = await letters(c, newCtx());
+  if (!order || order.ordered || order.skipped_ready_today) return;
+  const x = list.find((l) => l.letter_type === 2 && l.link);
+  const rel = x ? iso(x.original_item_date || x.item_date) + '_medical-file.pdf' : '';
+  const kept = rel && (await c.exists(rel)) ? 'this export has the earlier medical file, ' + rel : 'this export has no medical file';
+  await c.problem(MEDICAL_FILE, orderRefused(order)
+    ? 'Maccabi Online asked to try again later, so ' + kept + '; export again in a few minutes for today\'s (Success 3)'
+    : 'a new medical file was not ordered, so ' + kept);
 }
 
 export interface WaitOptions {

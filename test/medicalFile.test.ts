@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { letters, newCtx, orderSettled, placeOrder, waitMedicalFile } from '../src/core';
+import { keepListedMedicalFile, letters, newCtx, orderRefused, orderSettled, placeOrder, waitMedicalFile } from '../src/core';
 import type { HttpRequest } from '../src/core/types';
 import { fakeMaccabi, fakeTransport, makeCollector, FakeClock, MemorySink, PDF, bytesResp } from './fakes';
 
@@ -39,14 +39,17 @@ describe('placeOrder', () => {
     const { c, sink } = makeCollector(fakeTransport(site.routes, { pagePath: SUMMARY, xhr: () => ok('3') }));
     const refused = await placeOrder(c);
     expect(refused).toMatchObject({ ordered: false, sent: true, success_code: '3' });
-    expect((sink as MemorySink).problems[0].what).toMatch(/not confirmed: HTTP 200 Success 3/);
+    // A refusal is asked again at the wait, and reported there with the file the export keeps instead.
+    expect((sink as MemorySink).problems).toEqual([]);
     expect(orderSettled(refused)).toBe(false);
+    expect(orderRefused(refused)).toBe(true);
 
     // No answer (the tab's XHR fails or times out) is not a refusal: Maccabi may have taken the order.
     const { c: c2 } = makeCollector(fakeTransport(site.routes, { pagePath: SUMMARY, xhr: () => ({ status: 0, text: '' }) }));
     const lost = await placeOrder(c2);
     expect(lost).toMatchObject({ ordered: false, sent: true });
     expect(orderSettled(lost)).toBe(true);
+    expect(orderRefused(lost)).toBe(false);
     const { c: c3 } = makeCollector(fakeTransport(site.routes, { pagePath: SUMMARY, xhr: () => ({ status: 500, text: 'oops' }) }));
     expect(orderSettled(await placeOrder(c3))).toBe(true);
   });
@@ -174,5 +177,38 @@ describe('letters', () => {
     expect([...(sink as MemorySink).files.keys()].sort()).toEqual(['letters/files/2026-04-01_L1_מכתב-שיחרור.pdf', 'letters/list.json']);
     await letters(c, newCtx());
     expect((sink as MemorySink).files.has('2026-01-01_medical-file.pdf')).toBe(true);
+  });
+});
+
+describe('keepListedMedicalFile', () => {
+  const earlier = { letter_type: 2, status: 1, to_date: '2026-10-14', item_date: '2026-10-14T09:00:00', link: 'old.pdf', timestamp: 'ts' };
+
+  it('keeps the listed file and names it when Maccabi refused the order', async () => {
+    const { c, sink } = makeCollector(fakeTransport(fakeMaccabi({ medicalFile: earlier }).routes));
+    await keepListedMedicalFile(c, { ordered: false, sent: true, success_code: '3' });
+    expect((sink as MemorySink).files.get('2026-10-14_medical-file.pdf')).toEqual(PDF);
+    expect((sink as MemorySink).problems.map((p) => [p.where, p.what])).toEqual([[
+      'medical-file',
+      "Maccabi Online asked to try again later, so this export has the earlier medical file, 2026-10-14_medical-file.pdf; export again in a few minutes for today's (Success 3)",
+    ]]);
+  });
+
+  it('says so when there is no earlier file, or the order was not taken for another reason', async () => {
+    const { c, sink } = makeCollector(fakeTransport(fakeMaccabi().routes));
+    await keepListedMedicalFile(c, { ordered: false, sent: true, success_code: '3' });
+    expect((sink as MemorySink).problems[0].what).toMatch(/^Maccabi Online asked to try again later, so this export has no medical file;/);
+
+    const { c: c2, sink: sink2 } = makeCollector(fakeTransport(fakeMaccabi({ medicalFile: earlier }).routes));
+    await keepListedMedicalFile(c2, { ordered: false, sent: true });
+    expect((sink2 as MemorySink).problems[0].what).toBe('a new medical file was not ordered, so this export has the earlier medical file, 2026-10-14_medical-file.pdf');
+  });
+
+  it('reports nothing when no order was tried, or a ready file from today was used', async () => {
+    for (const order of [undefined, { ordered: false, skipped_ready_today: true }]) {
+      const { c, sink } = makeCollector(fakeTransport(fakeMaccabi({ medicalFile: earlier }).routes));
+      await keepListedMedicalFile(c, order);
+      expect((sink as MemorySink).files.has('2026-10-14_medical-file.pdf')).toBe(true);
+      expect((sink as MemorySink).problems).toEqual([]);
+    }
   });
 });

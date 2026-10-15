@@ -34,7 +34,7 @@ order the medical file and collect purchases, hospital stays and uploads (with t
 which the REST API answers from any page), back to `/sonline/` for the other REST API sections, and the medical file collected last, by which time Maccabi Healthcare Services has had the whole run to build it. Each finished step is
 checkpointed in `chrome.storage.local`, so a paused run, or a restarted service worker, continues from there. The
 medical file is ordered at most once per run: once the order has gone out, a resume or a reconnect that comes back
-through that step skips it, even when Maccabi Healthcare Services' answer was lost, and only a plain refusal is tried again.
+through that step skips it, even when Maccabi Healthcare Services' answer was lost, and only a plain refusal is tried again. A refusal (`Success 3`, where the site's own button says to try again later) is asked once more when the run reaches `waitMedicalFile`, a few minutes on: from the summary page again, then back to `/sonline/` for a fresh token. If that is refused too, or the order was not taken for another reason, the run keeps the file Maccabi already lists and files a problem that names it, so an earlier file is never taken for today's.
 
 A step that continues is run again from its start, so every step is safe to repeat: JSON is rewritten only when
 its content changed, and a document already staged is not asked for again. Staging also keeps a SHA-256 index of the

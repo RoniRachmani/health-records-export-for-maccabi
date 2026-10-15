@@ -3,8 +3,8 @@
    worker can pick it up); the member's session token lives only in
    chrome.storage.session; exported files live in IndexedDB staging. */
 import {
-  CancelledError, Collector, errMessage, LEGACY_STEPS, letters, MEDICAL_FILE, newCtx, orderSettled, placeOrder, RateLimitedError, runStep,
-  SessionEndedError, sha256Hex, waitMedicalFile, type Session, type StepName, type Transport,
+  CancelledError, Collector, errMessage, LEGACY_STEPS, MEDICAL_FILE, newCtx, orderSettled, placeOrder, RateLimitedError, runStep,
+  SessionEndedError, sha256Hex, waitMedicalFile, keepListedMedicalFile, orderRefused, type Session, type StepName, type Transport,
 } from '../../core';
 import {
   alignToPlan, exportName, FILE_LAYOUT, LABELS, MACCABI_ORIGIN, percentOf, PLAN, resumeIndex, sameLayout, savingOutcome, SONLINE_PAGE, SUMMARY_PAGE, type PlanStep, type RunState,
@@ -383,6 +383,25 @@ function counted(t: Transport): Transport {
 
 const SUMMARY_PATH = /^\/online\/medicalfile\/summary\/?$/i;
 
+/** Sends the order from the summary page, opening it first when the tab is elsewhere, and keeps the answer. */
+async function orderMedicalFile(run: RunState): Promise<void> {
+  // Normally the tab is still on the page openLegacyPage opened; after a Resume, a reconnect or the rest of the run
+  // it is back on /sonline/, and the order needs this page again.
+  if (!SUMMARY_PATH.test((await snapshot(run.tabId)).path)) await navigate(run.tabId, SUMMARY_PAGE, SUMMARY_PATH);
+  const c = await collector();
+  const reorder = __DEV_BRIDGE__ && !!(await chrome.storage.local.get('devReorder')).devReorder;
+  run.order = await placeOrder(c, { reorder });
+  if (run.order.ordered) run.orderedAt = new Date().toISOString();
+  if (run.order.error) await c.problem(MEDICAL_FILE, 'medical file not ordered: ' + run.order.error);
+}
+
+/** Takes the tab back to /sonline/ and its fresh token, refusing another member's session. */
+async function backToSonline(run: RunState, ended: string): Promise<void> {
+  const s = await currentSession(run.tabId, SONLINE_PAGE);
+  if (!s || (run.memberHash && run.memberHash !== (await midHash(s.mid)))) throw new SessionEndedError(ended);
+  await setSession(s);
+}
+
 async function runPlanStep(step: PlanStep): Promise<void> {
   const run = state as RunState;
   switch (step) {
@@ -397,27 +416,25 @@ async function runPlanStep(step: PlanStep): Promise<void> {
       // dev:skipOrder: a test run collects everything else without ordering, and waitMedicalFile then keeps
       // the file Maccabi already has, as it does when an order fails.
       if (__DEV_BRIDGE__ && (await chrome.storage.local.get('devSkipOrder')).devSkipOrder) return;
-      // Normally the tab is still on the page openLegacyPage opened; after a Resume or a reconnect it
-      // is back on /sonline/, and the order needs this page again.
-      if (!SUMMARY_PATH.test((await snapshot(run.tabId)).path)) await navigate(run.tabId, SUMMARY_PAGE, SUMMARY_PATH);
-      const c = await collector();
-      const reorder = __DEV_BRIDGE__ && !!(await chrome.storage.local.get('devReorder')).devReorder;
-      run.order = await placeOrder(c, { reorder });
-      if (run.order.ordered) run.orderedAt = new Date().toISOString();
-      if (run.order.error) await c.problem(MEDICAL_FILE, 'medical file not ordered: ' + run.order.error);
+      await orderMedicalFile(run);
       return;
     }
-    case 'returnToSonline': {
+    case 'returnToSonline':
       // What is left needs only the REST API, and the site renews the SPA token only on /sonline/
       // pages: cross back before the longest wait of the run instead of letting the token age out.
-      const s = await currentSession(run.tabId, SONLINE_PAGE);
-      if (!s || (run.memberHash && run.memberHash !== (await midHash(s.mid)))) {
-        throw new SessionEndedError('the session ended while the medical file was being ordered');
-      }
-      await setSession(s);
+      await backToSonline(run, 'the session ended while the medical file was being ordered');
       return;
-    }
     case 'waitMedicalFile': {
+      // Maccabi refused the order and asked to try again later: the rest of the run has given it a few minutes, so
+      // ask once more. The flag is saved before the order goes out, so a resume never sends a third.
+      if (orderRefused(run.order) && !run.orderRetried) {
+        run.orderRetried = true;
+        await save();
+        (await collector()).progress(0, 1, 'ordering again');
+        await orderMedicalFile(run);
+        await save();
+        await backToSonline(run, 'the session ended while the medical file was being ordered again');
+      }
       const c = await collector();
       if (run.order && run.order.ordered) {
         // A run stored before same_range_before existed goes by same_day_before, as it did then.
@@ -429,8 +446,8 @@ async function runPlanStep(step: PlanStep): Promise<void> {
         });
         if (waited.ready && run.orderedAt) run.medicalFileMs = Date.now() - Date.parse(run.orderedAt);
       } else {
-        // No new file was ordered: keep the one Maccabi already has, if any.
-        await letters(c, newCtx());
+        // No new file was ordered: keep the one Maccabi already has, if any, and say which it is.
+        await keepListedMedicalFile(c, run.order);
       }
       return;
     }
