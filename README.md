@@ -39,13 +39,13 @@ where an assistant can read all of it.
   record you keep, not a one-time snapshot.
 
 <p align="center">
-  <a href="https://youtu.be/0-K1rAA4uMM">
+  <a href="https://youtu.be/xcy8fo-PjHc">
     <img src="store/assets/video-poster.png" alt="Watch an export, start to finish: a one-minute video" width="720">
   </a>
 </p>
 
 <p align="center">
-  ▶︎ <a href="https://youtu.be/0-K1rAA4uMM">Watch an export, start to finish</a> · 1 minute, narrated
+  ▶︎ <a href="https://youtu.be/xcy8fo-PjHc">Watch an export, start to finish</a> · 1 minute, narrated
 </p>
 
 [Install](#install) · [Export your records](#export-your-records) · [What's in the ZIP](#whats-in-the-zip) ·
