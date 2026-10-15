@@ -48,6 +48,8 @@ export function credentials() {
   if (process.env.MACCABI_USERNAME && process.env.MACCABI_PASSWORD) {
     return { username: resolve('MACCABI_USERNAME'), password: resolve('MACCABI_PASSWORD') };
   }
+  // The ID number alone: enough for a sign-in that asks Maccabi for an SMS code (headless-export --no-browser).
+  if (process.env.MACCABI_USERNAME && !process.env.MACCABI_OP_ITEM) return { username: resolve('MACCABI_USERNAME'), password: '' };
   let out;
   try {
     out = execFileSync('op', ['item', 'get', ITEM, '--format', 'json', '--reveal'], {
@@ -70,7 +72,7 @@ export function credentials() {
  * (branded Chrome ignores the flag; the profile then keeps one loaded by hand). `keep` leaves the
  * browser open when the process exits; otherwise it is killed. Returns the page (evaluate, probe,
  * navigate, insertText, pressEnter) with the raw protocol `send`, its `sessionId` and `targetId`,
- * for what the page object does not cover.
+ * and `on` for protocol events, for what the page object does not cover.
  */
 export async function openBrowser({ startUrl = START, extension = null, keep = false } = {}) {
   const exe = BROWSERS.find(isFile);
@@ -109,8 +111,13 @@ export async function openBrowser({ startUrl = START, extension = null, keep = f
   });
   let lastId = 0;
   const pending = new Map();
+  const listeners = new Map(); // protocol event -> handlers, for a script that watches the page (on())
   ws.onmessage = (e) => {
     const m = JSON.parse(e.data);
+    if (m.method) {
+      for (const f of listeners.get(m.method) || []) f(m.params, m.sessionId);
+      return;
+    }
     const p = m.id && pending.get(m.id);
     if (!p) return;
     pending.delete(m.id);
@@ -171,6 +178,12 @@ export async function openBrowser({ startUrl = START, extension = null, keep = f
     send,
     sessionId,
     targetId: target0.targetId,
+    /** Subscribes to a protocol event (enable its domain with send() first); returns the unsubscribe. */
+    on(method, handler) {
+      if (!listeners.has(method)) listeners.set(method, new Set());
+      listeners.get(method).add(handler);
+      return () => listeners.get(method).delete(handler);
+    },
   };
   return page;
 }
@@ -245,6 +258,7 @@ export async function signIn(page) {
         await page.probe(clickText(WITH_PASSWORD), false);
         console.log('Sign-in: chose to sign in with a password.');
       } else if (stage === 'password') {
+        if (!creds.password) throw new Error('The browser sign-in needs MACCABI_PASSWORD (in .env, or the 1Password item); the SMS road is headless-export --no-browser.');
         if (await page.probe(ID_BEFORE_PASSWORD_EMPTY, false)) await page.insertText(creds.username);
         await page.probe(FOCUS_PASSWORD, false);
         await page.insertText(creds.password);
