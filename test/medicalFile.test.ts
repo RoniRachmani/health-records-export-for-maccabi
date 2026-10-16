@@ -34,14 +34,15 @@ describe('placeOrder', () => {
     expect((sink as MemorySink).problems).toEqual([]);
   });
 
-  it('reports a refused or unanswered order as sent, and only a refusal may be sent again', async () => {
+  it('reports a refused or unanswered order as sent, and never sends either again', async () => {
     const site = fakeMaccabi();
     const { c, sink } = makeCollector(fakeTransport(site.routes, { pagePath: SUMMARY, xhr: () => ok('3') }));
     const refused = await placeOrder(c);
     expect(refused).toMatchObject({ ordered: false, sent: true, success_code: '3' });
-    // A refusal is asked again at the wait, and reported there with the file the export keeps instead.
+    // Reported at the wait, with the file the export keeps instead. Maccabi may still carry it out (2026-10-15: an SMS
+    // 21 minutes after a refusal), so a resume does not order again.
     expect((sink as MemorySink).problems).toEqual([]);
-    expect(orderSettled(refused)).toBe(false);
+    expect(orderSettled(refused)).toBe(true);
     expect(orderRefused(refused)).toBe(true);
 
     // No answer (the tab's XHR fails or times out) is not a refusal: Maccabi may have taken the order.
@@ -189,14 +190,15 @@ describe('keepListedMedicalFile', () => {
     expect((sink as MemorySink).files.get('2026-10-14_medical-file.pdf')).toEqual(PDF);
     expect((sink as MemorySink).problems.map((p) => [p.where, p.what])).toEqual([[
       'medical-file',
-      "Maccabi Online asked to try again later, so this export has the earlier medical file, 2026-10-14_medical-file.pdf; export again in a few minutes for today's (Success 3)",
+      "Maccabi Online asked to try again later, so this export has the earlier medical file, 2026-10-14_medical-file.pdf. " +
+      "Maccabi may still prepare today's and text you: export again after that text, the same day, and it takes that file without ordering again (Success 3)",
     ]]);
   });
 
   it('says so when there is no earlier file, or the order was not taken for another reason', async () => {
     const { c, sink } = makeCollector(fakeTransport(fakeMaccabi().routes));
     await keepListedMedicalFile(c, { ordered: false, sent: true, success_code: '3' });
-    expect((sink as MemorySink).problems[0].what).toMatch(/^Maccabi Online asked to try again later, so this export has no medical file;/);
+    expect((sink as MemorySink).problems[0].what).toMatch(/^Maccabi Online asked to try again later, so this export has no medical file\. /);
 
     const { c: c2, sink: sink2 } = makeCollector(fakeTransport(fakeMaccabi({ medicalFile: earlier }).routes));
     await keepListedMedicalFile(c2, { ordered: false, sent: true });

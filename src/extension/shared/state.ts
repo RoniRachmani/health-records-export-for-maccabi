@@ -160,8 +160,6 @@ export interface RunState {
   layout?: number;
   ctx: Ctx;
   order?: OrderResult;
-  /** Maccabi refused the first order, and waitMedicalFile has sent the one more it may (order then holds that one's answer). */
-  orderRetried?: boolean;
   /** Within the current step. */
   stepDone: number;
   stepTotal: number;

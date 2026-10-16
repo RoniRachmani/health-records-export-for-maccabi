@@ -67,20 +67,16 @@ export interface OrderResult {
 
 /**
  * Whether a run holding this result must not order again (a resume or a reconnect rewinds through the order step):
- * Maccabi took the order, or may have, or a ready file was used instead. Only an order that was never sent, or that
- * Maccabi plainly refused (Success '3'), is tried again: anything else could build the file and text the member twice.
+ * Maccabi took the order, or may have, or a ready file was used instead. Only an order that was never sent is tried
+ * again. That includes a refusal: on 2026-10-15 one refused at 11:14 was followed by an SMS at 11:35, when nothing
+ * else was ordering, so Maccabi may carry out an order it refused, and asking again could text the member twice.
  */
 export function orderSettled(o: OrderResult | undefined): boolean {
   if (!o) return false;
-  if (o.ordered || o.skipped_ready_today) return true;
-  return !!o.sent && !orderRefused(o);
+  return !!(o.ordered || o.skipped_ready_today || o.sent);
 }
 
-/**
- * Maccabi plainly refused the order: Success '3', where the site's own button tells the member to try again later
- * (online/scripts/Summary/summary.js). Nothing was ordered and no SMS sent, so asking again is safe; on 2026-10-15 an
- * order refused in the morning went through on a run started within 11 minutes of it.
- */
+/** Maccabi refused the order: Success '3', where the site's own button tells the member to try again later. */
 export function orderRefused(o: OrderResult | undefined): boolean {
   return !!o && !o.ordered && o.success_code === '3';
 }
@@ -132,8 +128,8 @@ export async function placeOrder(c: Collector, opts: { reorder?: boolean } = {})
   }
   await c.sleep(PACE_MS);
   // Success '1' = ordered, SMS sent; '2' = ordered, no SMS: either way Maccabi builds the file, and the run waits
-  // for it. '3' is a refusal, which the run asks again once at the wait, and reports there with the file it keeps
-  // instead (keepListedMedicalFile); no clear answer is reported here, and not waited on.
+  // for it. '3' is a refusal, reported at the wait with the file the run keeps instead (keepListedMedicalFile); no
+  // clear answer is reported here. Neither is waited on or asked again.
   if (res.status === 200 && data && data.Success === '3') return { ordered: false, sent: true, success_code: '3' };
   if (res.status !== 200 || !data || (data.Success !== '1' && data.Success !== '2')) {
     await c.problem(MEDICAL_FILE, 'medical file order not confirmed: HTTP ' + res.status + ' Success ' + (data && data.Success));
@@ -165,8 +161,11 @@ export async function keepListedMedicalFile(c: Collector, order?: OrderResult): 
   const x = list.find((l) => l.letter_type === 2 && l.link);
   const rel = x ? iso(x.original_item_date || x.item_date) + '_medical-file.pdf' : '';
   const kept = rel && (await c.exists(rel)) ? 'this export has the earlier medical file, ' + rel : 'this export has no medical file';
+  // A refused order may still be carried out, with its SMS, minutes later: an export after that SMS, the same day,
+  // takes the ready file without ordering (placeOrder skipped_ready_today), where exporting again at once would order.
   await c.problem(MEDICAL_FILE, orderRefused(order)
-    ? 'Maccabi Online asked to try again later, so ' + kept + '; export again in a few minutes for today\'s (Success 3)'
+    ? 'Maccabi Online asked to try again later, so ' + kept + '. Maccabi may still prepare today\'s and text you: ' +
+      'export again after that text, the same day, and it takes that file without ordering again (Success 3)'
     : 'a new medical file was not ordered, so ' + kept);
 }
 

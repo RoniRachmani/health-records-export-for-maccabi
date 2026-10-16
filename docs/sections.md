@@ -29,7 +29,7 @@ line to the run steps behind it, the parts of a step it stands for, and what tho
 | 13 | Letters | `letters` | `letters` | `letters/list.json`, `files/` |
 | 14 | Messages with your doctor | `doctorCommunications` | `doctor inquiries` | `communication-with-doctor/list.json`, `details/`, `files/` (a form whose bytes are already in the export is not written again); `visit-summaries/details/`, `files/` for a visit an inquiry links to that the visit list no longer has |
 | 15 | Information pages | `infoPages` | `information pages` | `info-pages/list.json`, `files/` |
-| 16 | Collecting your medical file | `waitMedicalFile` | `ordering again` (only after a refused order), `waiting for the medical file to appear`, `medical file status …`, `letters` | `<date>_medical-file.pdf`, at the root |
+| 16 | Collecting your medical file | `waitMedicalFile` | `waiting for the medical file to appear`, `medical file status …`, `letters` | `<date>_medical-file.pdf`, at the root |
 | 17 | Saving the ZIP | `save` | – | `README.md`, `CLAUDE.md`, `AGENTS.md` at the root, then the ZIP |
 
 Lines 1–6 run with the tab on the old site's page: the order, purchases, hospital stays and uploads need it, and

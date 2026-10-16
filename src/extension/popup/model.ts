@@ -213,7 +213,6 @@ export const DESCRIPTIONS: Record<PlanStep, Record<string, string>> = {
   waitMedicalFile: {
     '': 'Checking whether your file is ready',
     'waiting for the medical file to appear': 'Waiting for the new file to be listed',
-    'ordering again': 'Maccabi said try later: ordering again',
     'medical file status': 'Maccabi is preparing it: up to 15 min',
     letters: 'Downloading your medical file',
   },
