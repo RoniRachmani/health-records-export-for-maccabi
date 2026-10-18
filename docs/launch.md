@@ -45,7 +45,7 @@ One channel in each window, because that is the only way to tell them apart (see
 
 | Week | What | Where | Notes | Status |
 |---|---|---|---|---|
-| 14–17 Oct | Baselines, tagged store links, this log | | Before any post | Links tagged. The baseline row still needs the dashboard's and GoatCounter's numbers |
+| 14–17 Oct | Baselines, tagged store links, this log | | Before any post | Done |
 | 18–24 Oct | [A message](#a-message-to-someone-you-know) to 30–40 Maccabi members | WhatsApp, direct messages | About one contact in four is a member, so that is some 150 people, or the groups you're in. Aim: 10 installs, 3 reviews, 5 conversations, and a word with 5 who stopped | |
 | 25–31 Oct | [The founder's post](#linkedin), and a comment on day 3 | LinkedIn | Needs nothing before it | |
 | 1–7 Nov | [*Loose ends*, in Hebrew](#hebrew-ai-groups) | 2 or 3 AI groups on Facebook, two days apart | Ask each admin first. Needs the first reviews on the listing | |
@@ -110,7 +110,7 @@ only measure this launch gives of what the other three quarters would want.
 
 | Date | Posted that week | Visits | Listing views: site / github / untagged | Installs | Uninstalls | Users | Reviews | Stars | Asked for another fund | Notes |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 14 Oct | Nothing yet | | | | | 3 | 0 | 1 | 0 | Baseline. GitHub: 115 views from 18 people in the 14 days before |
+| 14 Oct | Nothing yet | 0 | 0 / 0 / 0 | 0 | 0 | 3 | 0 | 1 | 0 | Baseline. GitHub: 115 views from 18 people in the 14 days before |
 | 18 Oct | | | | | | | | | | |
 | 25 Oct | | | | | | | | | | |
 | 1 Nov | | | | | | | | | | |
