@@ -16,4 +16,17 @@ if ! fc-list | grep -qi roboto; then
   fc-cache -f >/dev/null
 fi
 
+# The container's Chromium is Playwright's, at a path `scripts/stage.mjs` doesn't look in, and the
+# container runs as root, where Chromium won't start without --no-sandbox. A wrapper outside the
+# checkout adds the flag, and CHROME_PATH points the renders and `site-check` at it.
+if [ -x /opt/pw-browsers/chromium ] && [ -z "${CHROME_PATH:-}" ]; then
+  wrapper="$HOME/.local/bin/chromium-nosandbox"
+  mkdir -p "$(dirname "$wrapper")"
+  printf '#!/bin/sh\nexec /opt/pw-browsers/chromium --no-sandbox "$@"\n' > "$wrapper"
+  chmod +x "$wrapper"
+  if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
+    echo "export CHROME_PATH=\"$wrapper\"" >> "$CLAUDE_ENV_FILE"
+  fi
+fi
+
 npm install --no-audit --no-fund --no-save
