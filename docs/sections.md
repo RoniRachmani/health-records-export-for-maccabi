@@ -143,6 +143,14 @@ line waits only for the download. The run does not check earlier, so how much le
 weights above, the bar was within about 2 points of the elapsed time throughout: 16% where test results began at
 18% of the time, 94% where line 16 began at 94%.
 
+Maccabi sends one SMS per order it carries out, a minute or two after it. On 2026-10-16 (0.8.11) an order at 11:38
+brought one text, at 11:40. On 2026-10-18 the day's first export on 0.8.12 (`--export`) ordered on the first try and
+had the PDF 3 min 1 s after the order, in 3 min 7 s and 257 requests (236 files, 16.1 MB, no problems), and exactly
+one text came, at 14:10. The bursts of two to four texts in the weeks before fit as many orders close together:
+test exports, `--reorder` and 0.8.11's second try at a refused order. A refusal (`Success 3`) is no proof that nothing
+was ordered: on 2026-10-15 one was followed by its text 21 minutes later, which is why 0.8.12 never asks again (see
+*How a run works* in `CONTRIBUTING.md`).
+
 A live test without `--export` never orders (`dev:skipOrder`) and stops before `save`: its line 1 is only the page
 change, and its line 16 collects whatever medical file Maccabi already has.
 
