@@ -8,46 +8,21 @@
 // (names, plus the shape of Authorization), the request body with every secret replaced, the
 // response status, and the response JSON reduced to its keys and value types. Nothing printed is
 // a value: the ID number and the password are replaced by <ID> and <PASSWORD> wherever they appear,
-// anything that looks like a JWT or a long token by <jwt>/<token>, and response values are never
-// printed, only their types.
+// in every spelling the wire gives them (as typed, JSON-escaped, URL-encoded), and a JSON body's
+// credential fields are blanked by name besides; anything that looks like a JWT or a long token
+// becomes <jwt>/<token>, and response values are never printed, only their types (scripts/redact.mjs,
+// which test/session.test.ts holds to this).
 //
 // The report is the input for a browserless sign-in (the same chain Oren Yomtov's maccabi-health
 // replays over fetch for the SMS path, docs/AUTH.md there) with the password step in place of the
 // SMS step. Run it once; it signs in once, like any run, and ends the member's other sessions.
 import { credentials, openBrowser, signIn, START } from './maccabi-browser.mjs';
+import { redactor, shape } from './redact.mjs';
 import { sleep } from './stage.mjs';
 
-const WATCH = /^https:\/\/(mac\.maccabi4u\.co\.il\/(infosec|saml|login)|online\.maccabi4u\.co\.il\/(saml|sonline\/TokenServerAPI|sonline\/MainAppAPI\/webapi\/mac\/v1\/alive))/;
+/** The sign-in chain's hosts and paths, and the portal's token bootstrap: what maccabi-session.mjs replays. */
+const WATCH = /^https:\/\/(mac\.maccabi4u\.co\.il\/(infosec|saml|login)|online\.maccabi4u\.co\.il\/(saml|sonline\/TokenServerAPI))/;
 const HEADERS_OF_INTEREST = ['authorization', 'relay', 'content-type', 'accept', 'origin', 'referer', 'x-requested-with'];
-
-function redactor(creds) {
-  const secrets = [creds.password, creds.username].filter((s) => s && s.length >= 4);
-  const withPlaceholders = (text, labels) => labels.reduce((t, [value, label]) => t.split(value).join(label), text);
-  return (text) => {
-    if (typeof text !== 'string') return text;
-    let out = withPlaceholders(text, [[creds.password, '<PASSWORD>'], [creds.username, '<ID>']]);
-    // An ID stored without leading zeros, or sent with a "0-" prefix as the portal does.
-    out = out.replace(new RegExp('0-' + Number(creds.username), 'g'), '0-<ID>');
-    out = out.replace(/\b[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g, '<jwt>');
-    out = out.replace(/\b[A-Za-z0-9+/=_-]{48,}\b/g, '<token>');
-    for (const s of secrets) out = out.split(s).join('<secret>');
-    return out;
-  };
-}
-
-/** A JSON value reduced to keys and types: {"status":"string","payload":{"SAMLResponse":"string(2048)"}}. */
-function shape(v, depth = 0) {
-  if (v === null) return 'null';
-  if (Array.isArray(v)) return v.length ? [shape(v[0], depth + 1), ...(v.length > 1 ? ['…' + v.length] : [])] : [];
-  if (typeof v === 'object') {
-    if (depth > 4) return '{…}';
-    const out = {};
-    for (const [k, x] of Object.entries(v)) out[k] = shape(x, depth + 1);
-    return out;
-  }
-  if (typeof v === 'string') return 'string' + (v.length > 24 ? '(' + v.length + ')' : v === '' ? '(empty)' : '');
-  return typeof v;
-}
 
 async function main() {
   const creds = credentials();

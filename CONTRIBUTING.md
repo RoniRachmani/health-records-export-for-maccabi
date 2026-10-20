@@ -193,9 +193,9 @@ the fake site.
 ### Without a browser at all
 
 ```sh
-npm run export -- --no-browser          # sign in and send every request from Node; with MACCABI_PASSWORD, no one has to be there
+npm run export -- --no-browser          # sign in with the password and send every request from Node: no one has to be there
 npm run export -- --no-browser --all    # the same, every section
-npm run export -- --no-browser --phone 2    # without a password: Maccabi texts a code to that phone, and the script asks for it
+npm run export -- --no-browser --sms    # sign in with an SMS code instead: Maccabi texts it, the script asks for it; --phone 2 picks the phone
 ```
 
 `--no-browser` needs no Chrome and no extension: the sign-in and the requests run in Node, so an export can run on a
@@ -205,18 +205,26 @@ Maccabi's own SAML handoff replayed over `fetch` with a cookie jar (`scripts/mac
 in its [AUTH.md](https://github.com/orenyomtov/maccabi-health/blob/main/docs/AUTH.md), and where that project showed
 that Maccabi's bot protection leaves the authenticated API alone, which is what makes this possible at all; its
 [SESSION-LIFETIME.md](https://github.com/orenyomtov/maccabi-health/blob/main/docs/research/SESSION-LIFETIME.md) is
-where the hour below comes from. With a password in `.env` or 1Password, the script takes the site's "sign in with
-password" road, recorded from the page itself with `scripts/discover-login.mjs`: no SMS, nothing to type. Without
-one it takes the SMS road maccabi-health replays: the code is asked for in the terminal, once, and never stored.
+where the hour below comes from. By default the script takes the site's "sign in with password" road, recorded from
+the page itself with `scripts/discover-login.mjs`, with the ID number and password exactly as the browser run reads
+them (`.env` or the 1Password item): no SMS, nothing to type. `--sms` takes the SMS road maccabi-health replays
+instead: only the ID number is read (`MACCABI_USERNAME`, else the item's username; a password is ignored), and the
+code is asked for in the terminal, once, and never stored.
 
-Two things Maccabi decides. Every session ends 3600 seconds after it began, whatever happens, and an idle session ends
-in under six minutes, which the script holds off with the site's own `alive` request every four; an export fits
-easily inside the hour. And one wrong password, or one wrong code, ends that sign-in — the script never resubmits
-either, because repeated attempts are what lock an account; it starts a fresh sign-in next time. Like the browser
-run, this one ends the member's other Maccabi sessions when it signs in, and orders nothing. The legacy `/online/`
-steps (`--all`) load the summary page under the navigation session the portal's bootstrap hands out, as the tab
-would. `test/session.test.ts` runs the sign-in on both roads and the test-results step through the Node transport
-against a fake of the login origin and the fake site.
+Two things Maccabi decides. Every session ends 3600 seconds after it began, whatever happens, and nothing extends it;
+an export fits easily inside the hour, and needs no keep-alive of its own, since the run's requests are never further
+apart than the gateway's idle window. And one wrong password, or one wrong code, ends that sign-in — the script never
+resubmits either, because repeated attempts are what lock an account; it starts a fresh sign-in next time (a code that
+is not six digits, or an empty password, is refused before anything is sent and leaves the sign-in open). Like the
+browser run, this one ends the member's other Maccabi sessions when it signs in, and orders nothing. The legacy
+`/online/` steps (`--all`) load the summary page under the navigation session the portal's bootstrap hands out, as
+the tab would. The ground rules below cover this road as they do the extension, with the one exception they name:
+every request it sends, the sign-in chain included, goes out one at a time, `PACE_MS` after the previous, through the
+single queue in `MaccabiSession.request`; an ended session is recognised by the collector's own markers
+(`signedOutUrl`), and the origins and the legacy page are `core`'s; and every request the script sends itself is listed
+in [docs/endpoints/scripts-endpoints.json](docs/endpoints/scripts-endpoints.json). `test/session.test.ts` runs the
+sign-in on both roads and the test-results step through the Node transport against a fake of the login origin and
+the fake site, and holds the script to each of these.
 
 ## Finding what the export could add
 
@@ -269,8 +277,15 @@ film, drawn by the same page: `npm run store-assets -- poster`.
 
 - **Never commit real data.** No responses, exports, PDFs or anything else taken from a real account. Test fixtures are
   synthetic.
-- **List every request in [docs/endpoints/endpoints.json](docs/endpoints/endpoints.json).** The privacy policy and the store review rely on
-  it being complete.
+- **List every request in [docs/endpoints/](docs/endpoints/).** The collector's, whether a tab or Node sends them, in
+  [endpoints.json](docs/endpoints/endpoints.json), which the privacy policy and the store review rely on being complete;
+  the ones the terminal scripts send themselves (the sign-in chain, the token bootstrap, the legacy page prime) in
+  [scripts-endpoints.json](docs/endpoints/scripts-endpoints.json), with what each sends and returns as names and shapes,
+  never values. `test/endpoints.test.ts` checks both.
+- **The rules cover the scripts too.** What holds for the extension holds for `npm run export` and `npm run live`,
+  with one exception: the extension never calls anything that returns credentials, and the no-browser export must, once
+  per sign-in, for the API token (the portal's own bootstrap, in `scripts-endpoints.json`). Nothing else is excepted:
+  nothing ordered, nothing marked read, every request paced and one at a time, no credential or record printed.
 - **Keep the policies in sync.** `docs/privacy.md` goes with `public/privacy.html`, and `docs/terms.md` with
   `public/terms.html`. Change the effective date when you change either. For a material change, also set
   `TERMS_EFFECTIVE` in `src/extension/shared/state.ts` to the new date, so the popup asks users to accept again.

@@ -43,13 +43,8 @@ function resolve(name) {
   }
 }
 
-/** Username and password, from the references in .env or the 1Password item, read only when the page asks for them. */
-export function credentials() {
-  if (process.env.MACCABI_USERNAME && process.env.MACCABI_PASSWORD) {
-    return { username: resolve('MACCABI_USERNAME'), password: resolve('MACCABI_PASSWORD') };
-  }
-  // The ID number alone: enough for a sign-in that asks Maccabi for an SMS code (headless-export --no-browser).
-  if (process.env.MACCABI_USERNAME && !process.env.MACCABI_OP_ITEM) return { username: resolve('MACCABI_USERNAME'), password: '' };
+/** The 1Password item's fields (username, password), read with op. */
+function opItem() {
   let out;
   try {
     out = execFileSync('op', ['item', 'get', ITEM, '--format', 'json', '--reveal'], {
@@ -61,10 +56,29 @@ export function credentials() {
     throw new Error(`op could not read the 1Password item "${ITEM}"; set MACCABI_USERNAME and MACCABI_PASSWORD in .env, or MACCABI_OP_ITEM.`);
   }
   const fields = JSON.parse(out).fields || [];
-  const username = fields.find((f) => f.purpose === 'USERNAME')?.value;
-  const password = fields.find((f) => f.purpose === 'PASSWORD')?.value;
+  return { username: fields.find((f) => f.purpose === 'USERNAME')?.value, password: fields.find((f) => f.purpose === 'PASSWORD')?.value };
+}
+
+/** Username and password, from the references in .env or the 1Password item, read only when the page asks for them. */
+export function credentials() {
+  if (process.env.MACCABI_USERNAME && process.env.MACCABI_PASSWORD) {
+    return { username: resolve('MACCABI_USERNAME'), password: resolve('MACCABI_PASSWORD') };
+  }
+  const { username, password } = opItem();
   if (!username || !password) throw new Error(`The 1Password item "${ITEM}" has no username or no password.`);
   return { username, password };
+}
+
+/**
+ * The ID number alone, for a sign-in that asks Maccabi for an SMS code instead of the password
+ * (headless-export --no-browser --sms): MACCABI_USERNAME when set, else the 1Password item's username.
+ * The password is not read, whether or not there is one.
+ */
+export function idNumber() {
+  if (process.env.MACCABI_USERNAME) return resolve('MACCABI_USERNAME');
+  const { username } = opItem();
+  if (!username) throw new Error(`The 1Password item "${ITEM}" has no username; set MACCABI_USERNAME in .env, or MACCABI_OP_ITEM.`);
+  return username;
 }
 
 /**
@@ -258,7 +272,7 @@ export async function signIn(page) {
         await page.probe(clickText(WITH_PASSWORD), false);
         console.log('Sign-in: chose to sign in with a password.');
       } else if (stage === 'password') {
-        if (!creds.password) throw new Error('The browser sign-in needs MACCABI_PASSWORD (in .env, or the 1Password item); the SMS road is headless-export --no-browser.');
+        if (!creds.password) throw new Error('The browser sign-in needs MACCABI_PASSWORD (in .env, or the 1Password item); the SMS road is npm run export -- --no-browser --sms.');
         if (await page.probe(ID_BEFORE_PASSWORD_EMPTY, false)) await page.insertText(creds.username);
         await page.probe(FOCUS_PASSWORD, false);
         await page.insertText(creds.password);

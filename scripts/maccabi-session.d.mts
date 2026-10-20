@@ -1,9 +1,6 @@
 // Types of maccabi-session.mjs for the test that imports it; the script itself is plain JavaScript.
 import type { HttpRequest, HttpResponse, Session } from '../src/core';
 
-export const LOGIN_ORIGIN: string;
-export const PORTAL_ORIGIN: string;
-
 export class SessionEndedError extends Error {
   sessionEnded: true;
 }
@@ -31,8 +28,18 @@ export interface Transport {
   pagePath(): Promise<string>;
 }
 
+/** What the session takes from core: the bundled src/cli/index.ts, or the sources in a test. */
+export interface SessionCore {
+  MACCABI_ORIGIN: string;
+  LOGIN_ORIGIN: string;
+  SUMMARY_PAGE: string;
+  PACE_MS: number;
+  signedOutUrl(url: string | undefined): string | null;
+  jwtClaims(jwt: string | null | undefined): Record<string, unknown> | null;
+}
+
 export class MaccabiSession {
-  constructor(options?: { fetch?: typeof fetch; now?: () => number; timeoutMs?: number; maxBytes?: number });
+  constructor(options: { core: SessionCore; fetch?: typeof fetch; now?: () => number; sleep?: (ms: number) => Promise<void>; timeoutMs?: number; maxBytes?: number });
   jar: CookieJar;
   jwt: string | null;
   mid: string | null;
@@ -45,8 +52,7 @@ export class MaccabiSession {
   sendCode(phoneIndex?: number): Promise<void>;
   finishSignIn(code: string): Promise<void>;
   finishSignInWithPassword(password: string): Promise<void>;
-  bootstrap(core?: unknown): Promise<Session>;
-  keepAlive(): Promise<number>;
+  bootstrap(): Promise<Session>;
   primeLegacy(): Promise<void>;
   backToPortal(): void;
   transport(): Transport;

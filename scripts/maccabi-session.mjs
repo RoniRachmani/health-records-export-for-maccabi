@@ -16,19 +16,24 @@
 // also where maccabi-health showed that Maccabi's bot protection leaves the authenticated API alone.
 // The code here is written for this repo's Transport; the chain and its gotchas are his.
 //
+// Every request this module sends is listed in docs/endpoints/scripts-endpoints.json (the sign-in chain,
+// the bootstrap, the legacy page); the collector's own go through transport() and are endpoints.json's.
+// test/endpoints.test.ts checks the first list against the paths written here. The repo's rules apply
+// to these requests as to the extension's: nothing is ordered, nothing is marked read, and every request
+// goes out one at a time, core.PACE_MS after the one before -- the sign-in chain and the redirect hops
+// included, through the one queue in request(). The one rule the extension keeps that this cannot is
+// "never call anything that returns credentials": the bootstrap is the only way to the API token here.
+//
 // What this does not do: order anything (the medical file order is a tab-only request and the extension's
 // job), extend the session past Maccabi's hour (every session dies 3600 s after login, activity or not,
-// measured in maccabi-health's docs/research/SESSION-LIFETIME.md), retry a code (one wrong code ends the
-// challenge; a second attempt against the same one is what locks an account), or retry a password.
+// measured in maccabi-health's docs/research/SESSION-LIFETIME.md), keep it alive (a run's own requests
+// reset the gateway's idle clock, and the page's idle timer is a page's, which this has none of), retry a
+// code (one wrong code ends the challenge; a second attempt against the same one is what locks an account),
+// or retry a password.
 //
 // Nothing here logs a credential, a cookie, a token or a record.
-export const LOGIN_ORIGIN = 'https://mac.maccabi4u.co.il';
-export const PORTAL_ORIGIN = 'https://online.maccabi4u.co.il';
-const ACS = PORTAL_ORIGIN + '/saml/sp/profile/post/acs';
+const ACS_PATH = '/saml/sp/profile/post/acs';
 const BOOTSTRAP = '/sonline/TokenServerAPI/webapi/mac/v4/members/token/full?checksum=&sr_id=';
-const ALIVE = '/sonline/MainAppAPI/webapi/mac/v1/alive';
-/** Where the legacy /online/ services are primed: the page the extension's tab visits for them. */
-const SUMMARY = '/online/medicalfile/summary/';
 const REDIRECTS = new Set([301, 302, 303, 307, 308]);
 const MAX_HOPS = 8;
 
@@ -119,9 +124,11 @@ export class CookieJar {
 // ---- the session --------------------------------------------------------------------------------
 
 /**
- * One member's session: the jar, the API token, and the requests that use them. `fetch` is Node's
- * unless a test passes its own. Nothing is persisted; a run signs in, exports and ends well inside
- * Maccabi's hour.
+ * One member's session: the jar, the API token, and the requests that use them. `core` is the bundled
+ * src/cli/index.ts (or, in the tests, the sources): the origins, the legacy page, the pacing and the
+ * ended-session markers come from there, so this cannot drift from the collector. `fetch` is Node's
+ * unless a test passes its own, and `sleep` real time unless a test makes it instant. Nothing is
+ * persisted; a run signs in, exports and ends well inside Maccabi's hour.
  */
 export class MaccabiSession {
   jar = new CookieJar();
@@ -135,26 +142,43 @@ export class MaccabiSession {
   /** location.pathname as the extension's tab would report it: the last page this session "loaded". */
   pagePath = '/sonline/';
   #signedIn = false;
+  #challenge = null;
 
-  constructor({ fetch = globalThis.fetch, now = Date.now, timeoutMs = 10 * 60_000, maxBytes = 32 * 1024 * 1024 } = {}) {
+  constructor({ core, fetch = globalThis.fetch, now = Date.now, sleep, timeoutMs = 10 * 60_000, maxBytes = 32 * 1024 * 1024 } = {}) {
+    if (!core) throw new Error('MaccabiSession needs core (the bundled src/cli/index.ts)');
+    this.#core = core;
+    this.#portal = core.MACCABI_ORIGIN;
+    this.#login = core.LOGIN_ORIGIN;
+    this.#summary = new URL(core.SUMMARY_PAGE).pathname;
     this.#fetch = fetch;
     this.#now = now;
+    this.#sleep = sleep || ((ms) => new Promise((r) => setTimeout(r, ms)));
     this.#timeoutMs = timeoutMs;
     this.#maxBytes = maxBytes;
   }
+  #core;
+  #portal;
+  #login;
+  #summary;
   #fetch;
   #now;
+  #sleep;
   #timeoutMs;
   #maxBytes;
+  /** The one queue every request goes through: the previous request's end, as a promise. */
+  #queue = Promise.resolve();
+  /** When the last request came back, by #now; the next goes out core.PACE_MS after it. */
+  #lastDone = -Infinity;
 
   /**
    * One request with the jar, redirects followed by hand so every hop's cookies are kept and an ended
-   * session is seen as the portal shows it: a redirect to the login origin or to /my.policy (never a
-   * 401 or 403, which on this site mean a bot challenge, not expiry). `redirect: 'manual'` returns the
-   * first response, as the extension's fetch does for API calls.
+   * session is seen as the portal shows it: a redirect to the login site or to the gateway's logout or
+   * policy page (core.signedOutUrl; never a 401 or 403, which on this site mean a bot challenge, not
+   * expiry). `redirect: 'manual'` returns the first response, as the extension's fetch does for API
+   * calls. Every hop is sent through #send, so the pacing holds across redirects too.
    */
   async request(input, init = {}) {
-    let url = new URL(input, PORTAL_ORIGIN);
+    let url = new URL(input, this.#portal);
     let method = (init.method || 'GET').toUpperCase();
     let body = init.body;
     const headers = new Headers(init.headers || {});
@@ -164,15 +188,16 @@ export class MaccabiSession {
       const outbound = new Headers(headers);
       const cookies = this.jar.get(url);
       if (cookies) outbound.set('cookie', cookies);
-      const response = await this.#fetch(url.href, { method, body, headers: outbound, redirect: 'manual', signal });
+      const response = await this.#send(url.href, { method, body, headers: outbound, redirect: 'manual', signal });
       for (const c of response.headers.getSetCookie?.() || []) this.jar.set(c, url.href);
       const location = response.headers.get('location');
       const redirected = REDIRECTS.has(response.status) && !!location;
       if (!redirected) return Object.assign(response, { finalUrl: url.href, hops: hop });
       const next = new URL(location, url);
-      if (this.#signedIn && url.origin === PORTAL_ORIGIN && (next.origin === LOGIN_ORIGIN || next.pathname === '/my.policy')) {
+      const out = this.#signedIn && url.origin === this.#portal ? this.#core.signedOutUrl(next.href) : null;
+      if (out) {
         await response.arrayBuffer().catch(() => {});
-        throw new SessionEndedError('redirected to ' + next.hostname + next.pathname);
+        throw new SessionEndedError(out);
       }
       if (init.redirect === 'manual') return Object.assign(response, { finalUrl: url.href, hops: hop, next: next.href });
       if (next.origin !== url.origin) for (const h of ['authorization', 'origin', 'referer']) headers.delete(h);
@@ -188,10 +213,29 @@ export class MaccabiSession {
     throw new Error('too many redirects from ' + input);
   }
 
+  /**
+   * The one place a request leaves: one at a time, each core.PACE_MS after the previous one came back,
+   * whoever asked for it (the sign-in, the bootstrap, the collector, a redirect hop). The collector
+   * sleeps that long after each of its own, so this adds nothing to its pace; it paces the rest.
+   */
+  #send(url, init) {
+    const turn = this.#queue.then(async () => {
+      const wait = this.#core.PACE_MS - (this.#now() - this.#lastDone);
+      if (wait > 0) await this.#sleep(wait);
+      try {
+        return await this.#fetch(url, init);
+      } finally {
+        this.#lastDone = this.#now();
+      }
+    });
+    this.#queue = turn.catch(() => {});
+    return turn;
+  }
+
   /** A JSON call to the login origin's /infosec service, as its own page makes them. */
   async #infosec(path, token, { method = 'GET', body, headers = {} } = {}) {
-    const url = new URL('/infosec' + path, LOGIN_ORIGIN);
-    const h = { authorization: 'Bearer ' + token, origin: LOGIN_ORIGIN, accept: 'application/json; charset=utf-8', 'content-type': 'application/json; charset=utf-8', ...headers };
+    const url = new URL(path, this.#login);
+    const h = { authorization: 'Bearer ' + token, origin: this.#login, accept: 'application/json; charset=utf-8', 'content-type': 'application/json; charset=utf-8', ...headers };
     if (url.pathname !== '/infosec/auth') {
       url.searchParams.set('_', String(this.#now()));
       Object.assign(h, { 'cache-control': 'no-cache, no-store, must-revalidate', pragma: 'no-cache', expires: '0' });
@@ -216,16 +260,17 @@ export class MaccabiSession {
    * that can take an SMS. Returns them (number as the site masks it, index) without sending anything.
    */
   async beginSignIn(idNumber) {
-    if (!/^\d{5,9}$/.test(idNumber)) throw new SignInError('INVALID_ID_FORMAT');
+    if (typeof idNumber !== 'string' || !/^\d{5,9}$/.test(idNumber)) throw new SignInError('INVALID_ID_FORMAT');
     this.jar.clear();
     this.#signedIn = false;
+    this.#challenge = null;
     this.jwt = this.mid = this.legacySessionId = null;
-    const login = await this.request(PORTAL_ORIGIN + '/');
+    const login = await this.request(this.#portal + '/');
     const html = await login.text();
     const originJwt = /(?:window\.)?originJWT\s*=\s*["']([A-Za-z0-9_.-]+)["']/.exec(html)?.[1];
     if (!originJwt) throw new SignInError(login.ok ? 'LOGIN_PAGE_CHANGED' : 'LOGIN_PAGE_UNAVAILABLE', login.status);
-    const auth = await this.#infosec('/auth', originJwt, { body: { id: '0-' + Number.parseInt(idNumber, 10), password: '', type: 'none' } });
-    const details = await this.#infosec('/otp/detailsV2', tokenOf(auth));
+    const auth = await this.#infosec('/infosec/auth', originJwt, { body: { id: '0-' + Number.parseInt(idNumber, 10), password: '', type: 'none' } });
+    const details = await this.#infosec('/infosec/otp/detailsV2', tokenOf(auth));
     const d = details.details;
     if (!d || typeof d !== 'object' || !Array.isArray(d.phones)) throw new SignInError('AUTH_RESPONSE_CHANGED');
     if (d.allowedAge !== true || d.digitalUser !== true) throw new SignInError('LOGIN_NOT_AVAILABLE');
@@ -233,19 +278,20 @@ export class MaccabiSession {
     this.#challenge = { id: '0-' + Number.parseInt(idNumber, 10), senderJwt: tokenOf(details), phones };
     return phones;
   }
-  #challenge = null;
 
   /**
    * Signs in with the password, as the site's "sign in with password" page does: one more /infosec/auth
    * with the password in place of the SMS steps. Call after beginSignIn. A refused password ends the
-   * sign-in and is not tried again: that is how an account gets locked.
+   * sign-in and is not tried again: that is how an account gets locked. A password that is not one
+   * (empty, not a string) is refused here, before anything is sent, and the sign-in is still open.
    */
   async finishSignInWithPassword(password) {
     const ch = this.#challenge;
     if (!ch) throw new SignInError('NO_SIGN_IN_STARTED');
-    this.#challenge = null;
     if (typeof password !== 'string' || !password) throw new SignInError('NO_PASSWORD');
-    const assertion = await this.#infosec('/auth', ch.senderJwt, { body: { id: ch.id, password, type: 'password' } });
+    // From here Maccabi sees an attempt: the sign-in is spent whatever it answers.
+    this.#challenge = null;
+    const assertion = await this.#infosec('/infosec/auth', ch.senderJwt, { body: { id: ch.id, password, type: 'password' } });
     await this.#land(tokenOf(assertion), '');
   }
 
@@ -253,24 +299,27 @@ export class MaccabiSession {
   async sendCode(phoneIndex) {
     const ch = this.#challenge;
     if (!ch) throw new SignInError('NO_SIGN_IN_STARTED');
+    if (ch.validatorJwt) throw new SignInError('CODE_ALREADY_SENT');
     if (!ch.phones.some((p) => p.sms)) throw new SignInError('SMS_NOT_AVAILABLE');
     const index = phoneIndex ?? ch.phones.find((p) => p.sms)?.index;
     if (!ch.phones.some((p) => p.index === index && p.sms)) throw new SignInError('INVALID_PHONE_CHOICE');
-    const sent = await this.#infosec('/otp/generateV2?target=sms&phone=' + index, ch.senderJwt);
+    const sent = await this.#infosec('/infosec/otp/generateV2?target=sms&phone=' + index, ch.senderJwt);
     ch.validatorJwt = tokenOf(sent);
   }
 
   /**
    * Finishes the sign-in with the code from the SMS: validates it, takes the SAML response, posts it to
    * the portal, and runs the portal's bootstrap for the API token. A wrong code ends the sign-in: start
-   * again rather than try another code against the same SMS.
+   * again rather than try another code against the same SMS. A code that is not six digits never
+   * reaches Maccabi and does not spend the SMS: the right one can still be given.
    */
   async finishSignIn(code) {
     const ch = this.#challenge;
     if (!ch?.validatorJwt) throw new SignInError('CODE_NOT_SENT');
+    if (typeof code !== 'string' || !/^\d{6}$/.test(code)) throw new SignInError('INVALID_CODE_FORMAT');
+    // From here Maccabi sees an attempt: the SMS is spent whatever it answers.
     this.#challenge = null;
-    if (!/^\d{6}$/.test(code)) throw new SignInError('INVALID_CODE_FORMAT');
-    const verified = await this.#infosec('/otp/validate?otp=' + encodeURIComponent(code), ch.validatorJwt);
+    const verified = await this.#infosec('/infosec/otp/validate?otp=' + encodeURIComponent(code), ch.validatorJwt);
     if (verified.status !== 'ok') throw new SignInError('OTP_REJECTED');
     await this.#land(tokenOf(verified), 'home');
   }
@@ -279,21 +328,22 @@ export class MaccabiSession {
    * The assertion into a portal session: /infosec/response gives the SAML response (the `relay` header
    * is what the site's page sends on that road: "home" after an SMS, empty after a password), the
    * portal's ACS takes it and sets the session cookies, and the bootstrap proves it by handing out the
-   * API token -- the one check that cannot pass on a page that bounced back to the login.
+   * API token -- the one check that cannot pass on a page that bounced back to the login. That
+   * bootstrap is the sign-in's only one: the session is complete when this returns.
    */
   async #land(assertionJwt, relay) {
-    const handoff = await this.#infosec('/response', assertionJwt, { headers: { relay } });
+    const handoff = await this.#infosec('/infosec/response', assertionJwt, { headers: { relay } });
     const p = handoff.payload;
-    if (handoff.status !== 'ok' || handoff.method !== 'post' || handoff.destination !== ACS || !p || typeof p.SAMLResponse !== 'string' || typeof p.RelayState !== 'string') {
+    if (handoff.status !== 'ok' || handoff.method !== 'post' || handoff.destination !== this.#portal + ACS_PATH || !p || typeof p.SAMLResponse !== 'string' || typeof p.RelayState !== 'string') {
       throw new SignInError('SAML_RESPONSE_CHANGED');
     }
-    const landed = await this.request(ACS, {
+    const landed = await this.request(this.#portal + ACS_PATH, {
       method: 'POST',
-      headers: { 'content-type': 'application/x-www-form-urlencoded', origin: LOGIN_ORIGIN, referer: LOGIN_ORIGIN + '/' },
+      headers: { 'content-type': 'application/x-www-form-urlencoded', origin: this.#login, referer: this.#login + '/' },
       body: new URLSearchParams({ RelayState: p.RelayState, SAMLResponse: p.SAMLResponse }).toString(),
     });
     const html = await landed.text();
-    if (!landed.ok || new URL(landed.finalUrl).origin !== PORTAL_ORIGIN || /originJWT\s*=/.test(html)) {
+    if (!landed.ok || new URL(landed.finalUrl).origin !== this.#portal || /originJWT\s*=/.test(html)) {
       throw new SignInError('PORTAL_SESSION_UNCONFIRMED', landed.status);
     }
     this.#signedIn = true;
@@ -302,14 +352,19 @@ export class MaccabiSession {
 
   /**
    * The portal's own first request after landing: the API token, who is logged in, and the legacy
-   * navigation session. Call again to renew the token on a session that is still alive.
+   * navigation session. Call again to renew the token on a session that is still alive, as the tab
+   * gets a fresh one on returning to /sonline/. A session that has ended answers this with the
+   * login page instead of JSON, and is reported as ended, not as the site having changed.
    */
-  async bootstrap(core) {
+  async bootstrap() {
     const r = await this.request(BOOTSTRAP, { headers: { authorization: 'Bearer null', 'content-type': 'application/json' } });
+    const text = await r.text();
     let data;
     try {
-      data = await r.json();
+      data = JSON.parse(text);
     } catch {
+      const out = this.#core.signedOutUrl(r.finalUrl);
+      if (out || /originJWT\s*=/.test(text)) throw new SessionEndedError(out || 'the login page answered the bootstrap');
       throw new SignInError('BOOTSTRAP_CHANGED', r.status);
     }
     const token = data?.token;
@@ -318,7 +373,7 @@ export class MaccabiSession {
     if (data.current_customer_info && String(data.current_customer_info.member_id) !== String(logged.member_id)) throw new SignInError('DEPENDENT_SELECTED');
     this.jwt = token.content;
     this.mid = String(logged.member_id);
-    const claims = core ? core.jwtClaims(this.jwt) : null;
+    const claims = this.#core.jwtClaims(this.jwt);
     this.gender = claims?.gender ?? logged.sex;
     this.legacySessionId = typeof data.session_id === 'string' ? data.session_id : null;
     this.#signedIn = true;
@@ -330,13 +385,6 @@ export class MaccabiSession {
     return { mid: this.mid, jwt: this.jwt, gender: this.gender };
   }
 
-  /** The request the site's own pages make to stay signed in; the idle logout is under six minutes. */
-  async keepAlive() {
-    const r = await this.request(ALIVE, { headers: { authorization: 'Bearer ' + this.jwt }, redirect: 'manual' });
-    await r.arrayBuffer().catch(() => {});
-    return r.status;
-  }
-
   /**
    * Loads the legacy summary page as the extension's tab does before the legacy steps: the /online/
    * services answer only a session that has loaded one of their pages, under the navigation session id
@@ -345,14 +393,16 @@ export class MaccabiSession {
   async primeLegacy() {
     if (!this.legacySessionId) throw new SignInError('NO_LEGACY_SESSION');
     const key = 'cookie_sessionId_0_' + this.mid;
-    if (!this.jar.has(key, PORTAL_ORIGIN + '/')) this.jar.set(key + '=' + this.legacySessionId + '; Path=/; Secure', PORTAL_ORIGIN + '/');
-    const r = await this.request(SUMMARY + '?relative=-1&sr_id=' + encodeURIComponent(this.legacySessionId));
+    if (!this.jar.has(key, this.#portal + '/')) this.jar.set(key + '=' + this.legacySessionId + '; Path=/; Secure', this.#portal + '/');
+    const r = await this.request(this.#summary + '?relative=-1&sr_id=' + encodeURIComponent(this.legacySessionId));
     const html = await r.text();
     const at = new URL(r.finalUrl);
-    if (!r.ok || at.origin !== PORTAL_ORIGIN || at.pathname.toLowerCase().replace(/\/$/, '') !== SUMMARY.replace(/\/$/, '') || /originJWT\s*=/.test(html)) {
-      throw new SessionEndedError('the legacy page did not open (HTTP ' + r.status + ' at ' + at.pathname + ')');
+    const out = this.#core.signedOutUrl(r.finalUrl);
+    if (out || /originJWT\s*=/.test(html)) throw new SessionEndedError(out || 'the login page answered the legacy page');
+    if (!r.ok || at.origin !== this.#portal || at.pathname.toLowerCase().replace(/\/$/, '') !== this.#summary.replace(/\/$/, '')) {
+      throw new Error('The legacy page did not open (HTTP ' + r.status + ' at ' + at.pathname + ')');
     }
-    this.pagePath = SUMMARY;
+    this.pagePath = this.#summary;
   }
 
   /** Back to the portal for the API steps; the extension's tab returns to /sonline/ the same way. */
@@ -362,7 +412,7 @@ export class MaccabiSession {
 
   /** The collector's Transport over this session. */
   transport() {
-    const absolute = (req) => new URL(req.url, PORTAL_ORIGIN).toString();
+    const absolute = (req) => new URL(req.url, this.#portal).toString();
     return {
       fetch: async (req) => {
         const r = await this.request(absolute(req), { method: req.method, headers: req.headers, body: req.body, redirect: req.redirect });
@@ -382,6 +432,7 @@ export class MaccabiSession {
         if (bytes.length > this.#maxBytes) return { ...head, bytes: new Uint8Array(), tooLarge: true };
         return { ...head, bytes };
       },
+      // The Transport's contract: never rejects, status 0 on error. The collector only uses it to order, which no script does.
       xhr: async (req) => {
         try {
           const r = await this.request(absolute(req), { method: req.method, headers: req.headers, body: req.body });

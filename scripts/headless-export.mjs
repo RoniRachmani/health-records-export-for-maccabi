@@ -10,17 +10,20 @@
 //                                         run's own order, with any step they read from (STEP_NEEDS)
 //   npm run export -- --out ~/health      the export folder goes under that directory
 //   npm run export -- --keep              leave the browser open at the end
-//   npm run export -- --no-browser        no browser at all: sign in here and send every request from Node.
-//                                         With MACCABI_PASSWORD in .env it signs in with the password, so
-//                                         it can run on a schedule; without one it asks Maccabi for an SMS
-//                                         and asks you for the code (--phone N picks the phone when there
-//                                         is more than one)
+//   npm run export -- --no-browser        no browser at all: sign in here with the password and send every
+//                                         request from Node, so it can run on a schedule
+//   npm run export -- --no-browser --sms  the same, signed in with an SMS code instead of the password: the ID
+//                                         number alone is read, Maccabi texts a code, and the script asks
+//                                         for it (--phone N picks the phone when more than one can take it)
 //
 // Without a browser (--no-browser), the sign-in and the requests are scripts/maccabi-session.mjs: the
 // SAML sign-in replayed over fetch with a cookie jar, as Oren Yomtov's maccabi-health first did, and the
 // portal's own bootstrap for the API token. It needs no Chrome and no extension, and works wherever Node
 // does -- a server, a container, a cron job. The ID number and the password come from .env or 1Password
-// exactly as for the browser; an SMS code is asked for once and never stored.
+// exactly as for the browser (credentials() in maccabi-browser.mjs, unchanged); with --sms only the ID
+// number is read (idNumber()), and the code is asked for once and never stored. Every request it sends,
+// the sign-in chain included, is paced like the extension's (core.PACE_MS, one at a time), and listed in
+// docs/endpoints/scripts-endpoints.json.
 //
 // With a browser (the default), the browser and the sign-in are scripts/maccabi-browser.mjs: a real Chrome, Chromium or Edge with a
 // profile outside the repo, so a live session is reused, and the username and password from 1Password
@@ -43,7 +46,7 @@ import { pathToFileURL } from 'node:url';
 import { build } from 'vite';
 import { createInterface } from 'node:readline/promises';
 import { folderSink, keepAlive, pageTransport, sessionOf } from './headless-lib.mjs';
-import { START, credentials, openBrowser, signIn } from './maccabi-browser.mjs';
+import { START, credentials, idNumber, openBrowser, signIn } from './maccabi-browser.mjs';
 import { MaccabiSession } from './maccabi-session.mjs';
 import { root, sleep } from './stage.mjs';
 
@@ -62,13 +65,18 @@ if (flag('--steps') && (!STEPS_ARG || STEPS_ARG.startsWith('--'))) {
 }
 const OUT = resolve(option('--out') || '.');
 const NO_BROWSER = flag('--no-browser');
+const SMS = flag('--sms');
 const PHONE = option('--phone');
-if (flag('--phone') && !/^\d+$/.test(PHONE || '')) {
-  console.error('--phone takes the number of the phone in the list the sign-in prints: --phone 2');
+if (SMS && !NO_BROWSER) {
+  console.error('--sms is a --no-browser road: npm run export -- --no-browser --sms');
+  process.exit(1);
+}
+if (flag('--phone') && (!SMS || !/^\d+$/.test(PHONE || ''))) {
+  console.error('--phone goes with --sms and takes the number of the phone in the list the sign-in prints: --no-browser --sms --phone 2');
   process.exit(1);
 }
 
-/** The site logs the tab out after ~6 min without a click; a mousedown every 2 min keeps it (see keepSessionAlive in tab.ts). */
+/** The site logs the tab out after ~6 min without a click; a mousedown every 2 min keeps it (see keepSessionAlive in tab.ts). A browser's timer: a Node session has no page to go idle, and its own requests reset the gateway's clock. */
 const ALIVE_MS = 120_000;
 
 /** The TypeScript sources, bundled for Node: src/cli/index.ts re-exports what this script uses. */
@@ -134,21 +142,21 @@ async function browserDriver(core) {
   };
 }
 
-/** Maccabi's own sessions die 3600 s after login whatever happens; the idle logout is under 6 min, and this holds it off. */
-const NODE_ALIVE_MS = 240_000;
-
 /**
- * Node as the run's driver: the sign-in over fetch with the ID number and the SMS code, requests with the
- * cookie jar and the bearer token, the site's own keep-alive request, the legacy page fetched.
+ * Node as the run's driver: the sign-in over fetch with the password, or with the ID number and an SMS
+ * code (--sms), requests with the cookie jar and the bearer token, the legacy page fetched. No keep-alive:
+ * the run's own requests are never further apart than the gateway's idle window (the longest wait inside
+ * one is the collector's RATE_LIMIT_MAX_MS), and Maccabi's hour cannot be extended by anything.
  */
 async function nodeDriver(core) {
-  const m = new MaccabiSession();
-  const creds = credentials();
-  const phones = await m.beginSignIn(creds.username);
-  if (creds.password) {
+  const m = new MaccabiSession({ core, sleep });
+  if (!SMS) {
+    const creds = credentials();
+    await m.beginSignIn(creds.username);
     await m.finishSignInWithPassword(creds.password);
     console.log('Signed in with the password.');
   } else {
+    const phones = await m.beginSignIn(idNumber());
     const able = phones.filter((p) => p.sms);
     let index;
     if (PHONE !== undefined) {
@@ -161,22 +169,21 @@ async function nodeDriver(core) {
     }
     await m.sendCode(index);
     const rl = createInterface({ input: process.stdin, output: process.stdout });
-    const code = (await rl.question('The code Maccabi texted' + (index !== undefined ? ' to ' + phones[index].number : '') + ': ')).trim();
+    // Typed with a space in the middle, or pasted with one around it: the digits are the code.
+    const code = (await rl.question('The code Maccabi texted' + (index !== undefined ? ' to ' + phones[index].number : '') + ': ')).replace(/\s+/g, '');
     rl.close();
     await m.finishSignIn(code);
     console.log('Signed in with the SMS code.');
   }
-  await m.bootstrap(core);
+  // The sign-in's own bootstrap filled the session (token, member id, gender): nothing to ask again.
   console.log('The session ends on its own an hour after this.');
   return {
     session: m.session,
     transport: m.transport(),
-    aliveMs: NODE_ALIVE_MS,
-    keepAlive: () => m.keepAlive().catch(() => {}),
     primeLegacy: () => m.primeLegacy(),
     async backToPortal() {
       m.backToPortal();
-      return m.bootstrap(core); // a fresh token, as the tab gets one on returning to /sonline/
+      return m.bootstrap(); // a fresh token, as the tab gets one on returning to /sonline/
     },
   };
 }
@@ -220,7 +227,8 @@ async function main() {
   };
   const c = new core.Collector(deps, session);
   const ctx = core.newCtx();
-  const alive = setInterval(() => driver.keepAlive(), driver.aliveMs);
+  // The page's idle timer is the browser driver's to hold off; the Node driver has none.
+  const alive = driver.keepAlive ? setInterval(() => driver.keepAlive(), driver.aliveMs) : null;
 
   const ran = [];
   // The step a failure is filed under: the one running, or the one a page change was for.
@@ -257,7 +265,7 @@ async function main() {
     await c.problem(current || 'run', e.message);
     process.exitCode = 1;
   } finally {
-    clearInterval(alive);
+    if (alive) clearInterval(alive);
   }
 
   const { files, errors } = sink.writeRootFiles(startedAt, ran);

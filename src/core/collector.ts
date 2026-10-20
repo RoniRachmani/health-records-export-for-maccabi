@@ -14,22 +14,35 @@ export class SessionEndedError extends Error {
   }
 }
 
+/** The sign-in site. A redirect there from the portal is the portal saying the session has ended. */
+export const LOGIN_ORIGIN = 'https://mac.maccabi4u.co.il';
+
+/**
+ * Where an ended session lands: the login site, or the gateway's logout or policy page. The one list,
+ * for every client of the site in this repo: the collector's followed redirects below, and the
+ * terminal session (scripts/maccabi-session.mjs), which sees each redirect as it is sent. Returns
+ * what to say about it, or null when the URL is not one of them (or not a URL at all).
+ */
+export function signedOutUrl(url: string | undefined): string | null {
+  if (!url) return null;
+  let u: URL;
+  try {
+    u = new URL(url);
+  } catch {
+    return null;
+  }
+  const path = u.pathname.toLowerCase();
+  if (u.origin === LOGIN_ORIGIN || path === '/my.logout.php3' || path === '/my.policy') return 'redirected to ' + u.hostname + u.pathname;
+  return null;
+}
+
 /**
  * A followed redirect that ended on the gateway's logout or policy page, or on the login site, is an
  * ended session. Legacy requests follow redirects, so without this it would arrive as a 200 web page
  * (seen 2026-09-27: /my.logout.php3) and be filed as a bad response instead of stopping the run.
  */
 function signedOut(r: HttpResponse): string | null {
-  if (!r.url) return null;
-  let u: URL;
-  try {
-    u = new URL(r.url);
-  } catch {
-    return null;
-  }
-  const path = u.pathname.toLowerCase();
-  if (u.hostname === 'mac.maccabi4u.co.il' || path === '/my.logout.php3' || path === '/my.policy') return 'redirected to ' + u.hostname + u.pathname;
-  return null;
+  return signedOutUrl(r.url);
 }
 
 export class CancelledError extends Error {

@@ -1,0 +1,85 @@
+{
+  "_note": "Every request the terminal scripts send themselves, beside the collector's (which are docs/endpoints/endpoints.json's, whether sent from a tab or from Node): the sign-in chain, the portal's token bootstrap and the legacy page prime of scripts/maccabi-session.mjs (npm run export -- --no-browser). Nothing here is requested by the extension. The chain is the one orenyomtov/maccabi-health documented (docs/AUTH.md there); the password road was recorded from the site's own page with scripts/discover-login.mjs. No values: what each request sends and returns is field names and shapes. test/endpoints.test.ts checks that every path written in scripts/maccabi-session.mjs is listed here.",
+  "conventions": {
+    "pacing": "One at a time, core.PACE_MS (300 ms) after the previous one came back, redirect hops included: the one queue in MaccabiSession.request.",
+    "auth": "The login origin's /infosec calls carry Authorization: Bearer <jwt>, each with the token the previous answer handed out (originJWT from the login page, then auth -> detailsV2 -> generateV2 -> validate, or detailsV2 -> auth on the password road -> response). The portal's requests carry its session cookies; the bootstrap also Authorization: Bearer null, as the portal's own page sends it.",
+    "ended_session": "A redirect from the portal to the login origin, /my.logout.php3 or /my.policy is an ended session (core.signedOutUrl, the collector's own list); a 401 or 403 from the portal is not, it is a bot challenge, passed through to the collector as a status.",
+    "attempts": "One password or one code per sign-in: a refused one ends the sign-in and is never resubmitted, because repeated attempts are what lock an account. A code that is not six digits, or an empty password, is refused before anything is sent and leaves the sign-in open."
+  },
+
+  "sign_in": [
+    {
+      "method": "GET",
+      "url": "https://online.maccabi4u.co.il/",
+      "sends": "nothing (no cookies yet)",
+      "returns": "302 to https://mac.maccabi4u.co.il/login..., followed: the login page, text/html, whose script carries originJWT = \"<jwt>\" and whose Set-Cookie starts the login origin's cookies",
+      "notes": "beginSignIn's first request. The originJWT is the bearer for /infosec/auth."
+    },
+    {
+      "method": "POST",
+      "url": "https://mac.maccabi4u.co.il/infosec/auth",
+      "sends": "Authorization: Bearer <originJWT>; JSON {id: \"0-<id number, no leading zeros>\", password: \"\", type: \"none\"}",
+      "returns": "200 JSON {status, jwt, message}; 4xx JSON {code} (301/304 blocked, 300/303 refused)",
+      "notes": "Starts the sign-in with the ID number. The jwt is the bearer for /infosec/otp/detailsV2."
+    },
+    {
+      "method": "GET",
+      "url": "https://mac.maccabi4u.co.il/infosec/otp/detailsV2?_=<ms>",
+      "sends": "Authorization: Bearer <auth jwt>; no-cache headers",
+      "returns": "200 JSON {jwt, details: {allowedAge: boolean, digitalUser: boolean, phones: [{number: string (masked by the site), mobile: boolean, kosher: boolean}]}}",
+      "notes": "The member's sign-in options. Nothing is sent to the member. The jwt is the bearer for the next step on either road."
+    },
+    {
+      "method": "GET",
+      "url": "https://mac.maccabi4u.co.il/infosec/otp/generateV2?target=sms&phone=<index>&_=<ms>",
+      "sends": "Authorization: Bearer <detailsV2 jwt>",
+      "returns": "200 JSON {jwt}",
+      "notes": "The SMS road (--sms): Maccabi texts the six-digit code to that phone. Sent once per sign-in. The jwt is the bearer for /infosec/otp/validate."
+    },
+    {
+      "method": "GET",
+      "url": "https://mac.maccabi4u.co.il/infosec/otp/validate?otp=<code>&_=<ms>",
+      "sends": "Authorization: Bearer <generateV2 jwt>; the code typed in the terminal, in the query as the site's page sends it",
+      "returns": "200 JSON {status: \"ok\", jwt}; 4xx JSON {code} (303 wrong code, 302 expired)",
+      "notes": "One attempt: a refused code ends the sign-in. The jwt is the assertion, the bearer for /infosec/response."
+    },
+    {
+      "method": "POST",
+      "url": "https://mac.maccabi4u.co.il/infosec/auth",
+      "sends": "Authorization: Bearer <detailsV2 jwt>; JSON {id: \"0-<id number>\", password: \"<password>\", type: \"password\"}",
+      "returns": "200 JSON {status, jwt, message}; 4xx JSON {code} (301/304 blocked)",
+      "notes": "The password road (the default without a browser): the same endpoint as the first step, with the password, in place of generateV2 and validate. One attempt: a refused password ends the sign-in. The jwt is the assertion."
+    },
+    {
+      "method": "GET",
+      "url": "https://mac.maccabi4u.co.il/infosec/response?_=<ms>",
+      "sends": "Authorization: Bearer <assertion jwt>; header relay: \"home\" after an SMS, \"\" after a password (what the site's page sends on each road)",
+      "returns": "200 JSON {status: \"ok\", method: \"post\", destination: \"https://online.maccabi4u.co.il/saml/sp/profile/post/acs\", payload: {SAMLResponse: string, RelayState: string}}",
+      "notes": "The assertion as a SAML response for the portal."
+    },
+    {
+      "method": "POST",
+      "url": "https://online.maccabi4u.co.il/saml/sp/profile/post/acs",
+      "sends": "application/x-www-form-urlencoded RelayState, SAMLResponse (from /infosec/response, as they came); Origin and Referer of the login origin",
+      "returns": "303 to a portal page, followed: 200 text/html; Set-Cookie: the portal's session cookies",
+      "notes": "The portal's assertion consumer service: this is what signs the session in. Landing anywhere but the portal, or on a page that carries originJWT, is an unconfirmed session (SignInError PORTAL_SESSION_UNCONFIRMED)."
+    }
+  ],
+
+  "session": [
+    {
+      "method": "GET",
+      "url": "https://online.maccabi4u.co.il/sonline/TokenServerAPI/webapi/mac/v4/members/token/full?checksum=&sr_id=",
+      "sends": "session cookies; Authorization: Bearer null; Content-Type: application/json",
+      "returns": "200 JSON {token: {success: boolean, content: string (the API bearer, a JWT whose claims carry mem_id and gender)}, logged_customer_info: {member_id: number, sex: string, ...}, current_customer_info: {member_id: number, ...}, session_id: string, ...}; an ended session answers with a redirect to /my.logout.php3 (SessionEndedError), as docs/endpoints/other-endpoints.json records",
+      "notes": "The portal's own first request after landing, and the one request in this repo that returns credentials: the extension's rule against calling one (CLAUDE.md, Read-only) is the extension's, because without this there is no API token outside a tab. Sent once per sign-in (the sign-in ends with it), and once more on returning from the legacy steps, as the tab takes a fresh token on returning to /sonline/. Only token.content, logged_customer_info.member_id and sex, and session_id are kept; nothing else in the answer is read or written. A current_customer_info naming another member than logged_customer_info (a dependent selected in the portal) stops the run (DEPENDENT_SELECTED)."
+    },
+    {
+      "method": "GET",
+      "url": "https://online.maccabi4u.co.il/online/medicalfile/summary/?relative=-1&sr_id=<session_id>",
+      "sends": "session cookies, with cookie_sessionId_0_<mid> = session_id set by the script when the portal did not set it",
+      "returns": "200 text/html (the page; not read beyond checking it is not the login page)",
+      "notes": "Primes the legacy /online/ services before the legacy steps, as the extension's tab does by opening the page (core.SUMMARY_PAGE): they answer only a session that has loaded one of their pages. A redirect to the login origin, /my.logout.php3 or /my.policy, or a page that carries originJWT, is an ended session."
+    }
+  ]
+}
