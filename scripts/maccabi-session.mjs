@@ -446,6 +446,23 @@ export class MaccabiSession {
   }
 }
 
+/**
+ * Which phone the SMS goes to, from the phones beginSignIn returned: `asked` (1-based, as --phone takes it) when
+ * given, else the first that can take one -- unless the phones that can show different numbers, when the choice
+ * is the member's: null then, with the phones to show. The site lists the same number more than once (seen
+ * 2026-10-20: two entries, both 052-*****28), which is not a choice.
+ */
+export function choosePhone(phones, asked) {
+  const able = phones.filter((p) => p.sms);
+  if (asked !== undefined) {
+    const index = Number(asked) - 1;
+    if (!able.some((p) => p.index === index)) throw new SignInError('INVALID_PHONE_CHOICE');
+    return index;
+  }
+  if (!able.length) throw new SignInError('SMS_NOT_AVAILABLE');
+  return new Set(able.map((p) => p.number)).size > 1 ? null : able[0].index;
+}
+
 function tokenOf(value) {
   if (!value || typeof value.jwt !== 'string' || !value.jwt || /[\r\n]/.test(value.jwt)) throw new SignInError('AUTH_RESPONSE_CHANGED');
   return value.jwt;

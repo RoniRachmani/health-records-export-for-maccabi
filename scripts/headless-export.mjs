@@ -47,7 +47,7 @@ import { build } from 'vite';
 import { createInterface } from 'node:readline/promises';
 import { folderSink, keepAlive, pageTransport, sessionOf } from './headless-lib.mjs';
 import { START, credentials, idNumber, openBrowser, signIn } from './maccabi-browser.mjs';
-import { MaccabiSession } from './maccabi-session.mjs';
+import { MaccabiSession, choosePhone } from './maccabi-session.mjs';
 import { root, sleep } from './stage.mjs';
 
 const args = process.argv.slice(2);
@@ -157,12 +157,15 @@ async function nodeDriver(core) {
     console.log('Signed in with the password.');
   } else {
     const phones = await m.beginSignIn(idNumber());
-    const able = phones.filter((p) => p.sms);
     let index;
-    if (PHONE !== undefined) {
-      index = Number(PHONE) - 1;
-      if (!able.some((p) => p.index === index)) throw new Error('--phone ' + PHONE + ' is not one of the phones that can take an SMS (1-' + phones.length + ').');
-    } else if (able.length > 1) {
+    try {
+      index = choosePhone(phones, PHONE);
+    } catch (e) {
+      if (e.code === 'INVALID_PHONE_CHOICE') throw new Error('--phone ' + PHONE + ' is not one of the phones that can take an SMS (1-' + phones.length + ').');
+      throw e;
+    }
+    if (index === null) {
+      // Different numbers can take it: the member's choice, not the script's. The same number listed twice is not one.
       console.log('More than one phone can take the code; choose with --phone N:');
       phones.forEach((p) => console.log(`  ${p.index + 1}. ${p.number}${p.sms ? '' : ' (no SMS)'}`));
       throw new Error('No SMS was sent.');
@@ -170,7 +173,7 @@ async function nodeDriver(core) {
     await m.sendCode(index);
     const rl = createInterface({ input: process.stdin, output: process.stdout });
     // Typed with a space in the middle, or pasted with one around it: the digits are the code.
-    const code = (await rl.question('The code Maccabi texted' + (index !== undefined ? ' to ' + phones[index].number : '') + ': ')).replace(/\s+/g, '');
+    const code = (await rl.question('The code Maccabi texted to ' + phones[index].number + ': ')).replace(/\s+/g, '');
     rl.close();
     await m.finishSignIn(code);
     console.log('Signed in with the SMS code.');

@@ -195,7 +195,7 @@ the fake site.
 ```sh
 npm run export -- --no-browser          # sign in with the password and send every request from Node: no one has to be there
 npm run export -- --no-browser --all    # the same, every section
-npm run export -- --no-browser --sms    # sign in with an SMS code instead: Maccabi texts it, the script asks for it; --phone 2 picks the phone
+npm run export -- --no-browser --sms    # sign in with an SMS code instead: Maccabi texts it, the script asks for it; --phone 2 picks between different numbers
 ```
 
 `--no-browser` needs no Chrome and no extension: the sign-in and the requests run in Node, so an export can run on a

@@ -10,7 +10,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { Collector, newCtx, runStep, type HttpRequest, type HttpResponse } from '../src/core';
 import * as core from '../src/cli/index';
 import { folderSink } from '../scripts/headless-lib.mjs';
-import { CookieJar, MaccabiSession, SessionEndedError, SignInError } from '../scripts/maccabi-session.mjs';
+import { choosePhone, CookieJar, MaccabiSession, SessionEndedError, SignInError } from '../scripts/maccabi-session.mjs';
 import { redactor, spellings } from '../scripts/redact.mjs';
 import { fakeMaccabi, htmlParser, MID } from './fakes';
 
@@ -326,6 +326,25 @@ describe('session over fetch', () => {
     await expect(m.sendCode()).rejects.toMatchObject({ code: 'NO_SIGN_IN_STARTED' });
     await m.beginSignIn(MID);
     await expect(m.sendCode(1)).rejects.toMatchObject({ code: 'INVALID_PHONE_CHOICE' }); // a landline
+  });
+});
+
+describe('which phone the SMS goes to', () => {
+  const mobile = (index: number, number: string) => ({ index, number, sms: true });
+  const landline = (index: number, number: string) => ({ index, number, sms: false });
+
+  it('takes the one phone that can, and the first when the site lists the same number twice (seen live 2026-10-20)', () => {
+    expect(choosePhone([mobile(0, '050-***1234'), landline(1, '03-***5678')])).toBe(0);
+    expect(choosePhone([landline(0, '03-***5678'), mobile(1, '052-*****28'), mobile(2, '052-*****28')])).toBe(1);
+  });
+
+  it('leaves a choice between different numbers to the member, and takes --phone as given', () => {
+    const phones = [mobile(0, '050-***1234'), mobile(1, '052-***9876')];
+    expect(choosePhone(phones)).toBeNull();
+    expect(choosePhone(phones, '2')).toBe(1);
+    expect(() => choosePhone(phones, '3')).toThrow(/INVALID_PHONE_CHOICE/);
+    expect(() => choosePhone([landline(0, '03-***5678')], '1')).toThrow(/INVALID_PHONE_CHOICE/);
+    expect(() => choosePhone([landline(0, '03-***5678')])).toThrow(/SMS_NOT_AVAILABLE/);
   });
 });
 

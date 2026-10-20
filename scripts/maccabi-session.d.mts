@@ -38,6 +38,9 @@ export interface SessionCore {
   jwtClaims(jwt: string | null | undefined): Record<string, unknown> | null;
 }
 
+/** The phone an SMS goes to (its index), or null when the member has to choose between different numbers. */
+export function choosePhone(phones: Phone[], asked?: string | number): number | null;
+
 export class MaccabiSession {
   constructor(options: { core: SessionCore; fetch?: typeof fetch; now?: () => number; sleep?: (ms: number) => Promise<void>; timeoutMs?: number; maxBytes?: number });
   jar: CookieJar;
