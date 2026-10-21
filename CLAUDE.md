@@ -20,6 +20,9 @@ npm run package                   # build + release/<name>-<version>.zip (refuse
 npm run live                      # a live export on your own account, never ordering, no ZIP (1Password refs in .env)
 npm run export                    # an export with no extension: test results into ./maccabi-export-<today>/ (same .env)
 npm run export -- --all           # every section, nothing ordered; --steps a,b for some; --out DIR; --keep
+npm run export -- --no-browser    # no Chrome: SAML sign-in over fetch with the password from .env or 1Password, requests from Node
+npm run export -- --no-browser --sms   # the same, signed in with an SMS code typed in (the ID number alone is read; --phone N picks the phone)
+node scripts/discover-login.mjs   # record the browser sign-in's request shapes (secrets replaced), to keep maccabi-session.mjs true to the site
 npm run endpoints                 # the site's own calls that docs/endpoints/endpoints.json lacks, and mapped ones it dropped (same .env; calls no API)
 npm run endpoints -- --from DIR   # the same on scripts a --save DIR kept, with no sign-in; --rea adds REA's parser
 npm run env                       # write .env from 1Password, by the references in .env.tpl (op inject)
@@ -211,8 +214,22 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
 - **Read-only, except one call.** The medical-file order (`core/sections/letters.ts` `placeOrder`) is the
   only request that changes anything. Don't add another, and don't call anything that marks items read,
   returns credentials or touches payments. Requests are paced `PACE_MS` (300 ms) apart, one at a time.
-- **Every request goes in `docs/endpoints/endpoints.json`** with the file it produces — the privacy policy and the
-  store review depend on it being complete. `test/endpoints.test.ts` fails if a path in `src/core` isn't there.
+- **The rules cover the terminal scripts too** (`scripts/`, `npm run export` and `npm run live`), with one exception:
+  the *returns credentials* clause is the extension's only, because the no-browser export cannot work without the
+  portal's token bootstrap (`scripts/maccabi-session.mjs`, the one such request, listed in `scripts-endpoints.json`).
+  So the pacing holds there as well: every request a script sends, the sign-in chain and redirect hops included,
+  goes out `PACE_MS` after the previous one came back, one at a time, through the single queue in
+  `MaccabiSession.request` — never a timer of its own beside it. The session's ended-session markers are the
+  collector's (`signedOutUrl`, `LOGIN_ORIGIN` from `core/collector.ts`), its origins and legacy page are
+  `MACCABI_ORIGIN` and `SUMMARY_PAGE` from `shared/state.ts`: the scripts take all of these from `core` and never
+  spell them again. A sign-in attempt (a password, an SMS code) is sent once and never resubmitted; what is refused
+  before it is sent (an empty password, a code that is not six digits) leaves the sign-in open.
+- **Every request goes in `docs/endpoints/`**: the collector's (`src/core`, sent from the tab or from Node) in
+  `endpoints.json` with the file it produces, and the ones the scripts send themselves (the sign-in chain, the token
+  bootstrap, the legacy page prime) in `scripts-endpoints.json` with what each sends and returns, names and shapes and
+  never values — the privacy policy and the store review depend on the first being complete, and the second says what
+  else this repo asks the site for. `test/endpoints.test.ts` fails if a path in `src/core` or in
+  `scripts/maccabi-session.mjs` isn't in its file.
 - **Never write the member id into a path or a stored `endpoint` string**; `Collector.rec` keeps `{mid}`
   as a placeholder.
 - **Keep the policies in sync**: `docs/privacy.md` ↔ `public/privacy.html`, `docs/terms.md` ↔

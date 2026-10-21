@@ -43,11 +43,8 @@ function resolve(name) {
   }
 }
 
-/** Username and password, from the references in .env or the 1Password item, read only when the page asks for them. */
-export function credentials() {
-  if (process.env.MACCABI_USERNAME && process.env.MACCABI_PASSWORD) {
-    return { username: resolve('MACCABI_USERNAME'), password: resolve('MACCABI_PASSWORD') };
-  }
+/** The 1Password item's fields (username, password), read with op. */
+function opItem() {
   let out;
   try {
     out = execFileSync('op', ['item', 'get', ITEM, '--format', 'json', '--reveal'], {
@@ -59,10 +56,29 @@ export function credentials() {
     throw new Error(`op could not read the 1Password item "${ITEM}"; set MACCABI_USERNAME and MACCABI_PASSWORD in .env, or MACCABI_OP_ITEM.`);
   }
   const fields = JSON.parse(out).fields || [];
-  const username = fields.find((f) => f.purpose === 'USERNAME')?.value;
-  const password = fields.find((f) => f.purpose === 'PASSWORD')?.value;
+  return { username: fields.find((f) => f.purpose === 'USERNAME')?.value, password: fields.find((f) => f.purpose === 'PASSWORD')?.value };
+}
+
+/** Username and password, from the references in .env or the 1Password item, read only when the page asks for them. */
+export function credentials() {
+  if (process.env.MACCABI_USERNAME && process.env.MACCABI_PASSWORD) {
+    return { username: resolve('MACCABI_USERNAME'), password: resolve('MACCABI_PASSWORD') };
+  }
+  const { username, password } = opItem();
   if (!username || !password) throw new Error(`The 1Password item "${ITEM}" has no username or no password.`);
   return { username, password };
+}
+
+/**
+ * The ID number alone, for a sign-in that asks Maccabi for an SMS code instead of the password
+ * (headless-export --no-browser --sms): MACCABI_USERNAME when set, else the 1Password item's username.
+ * The password is not read, whether or not there is one.
+ */
+export function idNumber() {
+  if (process.env.MACCABI_USERNAME) return resolve('MACCABI_USERNAME');
+  const { username } = opItem();
+  if (!username) throw new Error(`The 1Password item "${ITEM}" has no username; set MACCABI_USERNAME in .env, or MACCABI_OP_ITEM.`);
+  return username;
 }
 
 /**
@@ -70,7 +86,7 @@ export function credentials() {
  * (branded Chrome ignores the flag; the profile then keeps one loaded by hand). `keep` leaves the
  * browser open when the process exits; otherwise it is killed. Returns the page (evaluate, probe,
  * navigate, insertText, pressEnter) with the raw protocol `send`, its `sessionId` and `targetId`,
- * for what the page object does not cover.
+ * and `on` for protocol events, for what the page object does not cover.
  */
 export async function openBrowser({ startUrl = START, extension = null, keep = false } = {}) {
   const exe = BROWSERS.find(isFile);
@@ -109,8 +125,13 @@ export async function openBrowser({ startUrl = START, extension = null, keep = f
   });
   let lastId = 0;
   const pending = new Map();
+  const listeners = new Map(); // protocol event -> handlers, for a script that watches the page (on())
   ws.onmessage = (e) => {
     const m = JSON.parse(e.data);
+    if (m.method) {
+      for (const f of listeners.get(m.method) || []) f(m.params, m.sessionId);
+      return;
+    }
     const p = m.id && pending.get(m.id);
     if (!p) return;
     pending.delete(m.id);
@@ -171,6 +192,12 @@ export async function openBrowser({ startUrl = START, extension = null, keep = f
     send,
     sessionId,
     targetId: target0.targetId,
+    /** Subscribes to a protocol event (enable its domain with send() first); returns the unsubscribe. */
+    on(method, handler) {
+      if (!listeners.has(method)) listeners.set(method, new Set());
+      listeners.get(method).add(handler);
+      return () => listeners.get(method).delete(handler);
+    },
   };
   return page;
 }
@@ -245,6 +272,7 @@ export async function signIn(page) {
         await page.probe(clickText(WITH_PASSWORD), false);
         console.log('Sign-in: chose to sign in with a password.');
       } else if (stage === 'password') {
+        if (!creds.password) throw new Error('The browser sign-in needs MACCABI_PASSWORD (in .env, or the 1Password item); the SMS road is npm run export -- --no-browser --sms.');
         if (await page.probe(ID_BEFORE_PASSWORD_EMPTY, false)) await page.insertText(creds.username);
         await page.probe(FOCUS_PASSWORD, false);
         await page.insertText(creds.password);

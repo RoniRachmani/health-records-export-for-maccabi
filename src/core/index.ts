@@ -1,7 +1,7 @@
 export * from './types';
 export * from './util';
 export { canon } from './canon';
-export { Collector, SessionEndedError, CancelledError, RateLimitedError, isControl, errMessage, changed, PACE_MS } from './collector';
+export { Collector, SessionEndedError, CancelledError, RateLimitedError, isControl, errMessage, changed, PACE_MS, LOGIN_ORIGIN, signedOutUrl } from './collector';
 export { STEPS, STEP_ORDER, LEGACY_STEPS, STEP_NEEDS, runStep, type StepName } from './steps';
 export { keepListedMedicalFile, orderRefused, orderSettled, placeOrder, waitMedicalFile, letters, MEDICAL_FILE, type OrderResult, type WaitOptions } from './sections/letters';
 export { domHtmlParser } from './html';
