@@ -60,7 +60,10 @@ function fakeSite(routes: ReturnType<typeof fakeMaccabi>['routes']): Fake {
           // The password road: the same endpoint again, with the token the details step handed out.
           if (auth !== JWT({ step: 'details' })) return json({ code: 401 }, 401);
           if (body === JSON.stringify({ id: '0-' + Number(MID), password: PASSWORD, type: 'password' })) { state.validated = 'password'; return json({ status: 'ok', jwt: JWT({ step: 'verified' }), message: 'signed in' }); }
-          if (body?.includes('"type":"password"')) return json({ code: 301 }, 400);
+          // A refused password answers with the same codes as a refused SMS code (303, or 302 when the sign-in went stale); a blocked account with 301.
+          if (body?.includes('"password":"locked"')) return json({ code: 301 }, 400);
+          if (body?.includes('"password":"stale"')) return json({ code: 302 }, 400);
+          if (body?.includes('"type":"password"')) return json({ code: 303 }, 400);
           return json({ code: 400 }, 400);
         case '/infosec/otp/detailsV2':
           if (auth !== JWT({ step: 'auth' }) || !url.searchParams.has('_')) return json({ code: 401 }, 401);
@@ -268,7 +271,7 @@ describe('session over fetch', () => {
       await expect(m.finishSignInWithPassword(bad)).rejects.toMatchObject({ code: 'NO_PASSWORD' });
     }
     expect(site.calls.filter((c) => c.url.endsWith('/infosec/auth'))).toHaveLength(1); // the sign-in is still open: nothing was sent
-    await expect(m.finishSignInWithPassword('wrong')).rejects.toMatchObject({ code: 'LOGIN_BLOCKED' });
+    await expect(m.finishSignInWithPassword('wrong')).rejects.toMatchObject({ code: 'PASSWORD_REJECTED' });
     await expect(m.finishSignInWithPassword(PASSWORD)).rejects.toMatchObject({ code: 'NO_SIGN_IN_STARTED' });
     expect(site.state.codeSent).toEqual([]); // no SMS on this road
 
@@ -282,6 +285,19 @@ describe('session over fetch', () => {
     expect(auths.map((c) => JSON.parse(c.body!).type)).toEqual(['none', 'password', 'none', 'password']);
     expect(site.calls.find((c) => c.url.includes('/infosec/response'))!.headers.relay).toBe('');
     expect(site.calls.filter((c) => c.url.includes('/sonline/TokenServerAPI/'))).toHaveLength(1);
+  });
+
+  it('names a refused password as the password, never as an SMS code, and a blocked account as blocked', async () => {
+    const site = fakeSite(fakeMaccabi().routes);
+    const refusal = async (password: string) => {
+      const m = session(site);
+      await m.beginSignIn(MID);
+      return m.finishSignInWithPassword(password).then(() => 'signed in', (e) => e.code);
+    };
+    expect(await refusal('wrong')).toBe('PASSWORD_REJECTED'); // 303, which the SMS road calls OTP_REJECTED
+    expect(await refusal('stale')).toBe('PASSWORD_REJECTED'); // 302, which the SMS road calls OTP_EXPIRED
+    expect(await refusal('locked')).toBe('LOGIN_BLOCKED');
+    expect(site.state.codeSent).toEqual([]);
   });
 
   it('reports an ended session each way the portal shows it, and a bot challenge as a plain status', async () => {
