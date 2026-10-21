@@ -212,7 +212,8 @@ where the hour below comes from. By default the script takes the site's "sign in
 the page itself with `scripts/discover-login.mjs`, with the ID number and password exactly as the browser run reads
 them (`.env` or the 1Password item): no SMS, nothing to type. `--sms` takes the SMS road maccabi-health replays
 instead: only the ID number is read (`MACCABI_USERNAME`, else the item's username; a password is ignored), and the
-code is asked for in the terminal, once, and never stored.
+code is asked for in the terminal, once, and never stored. [docs/sms.md](docs/sms.md) shows the texts Maccabi sends,
+the code and the medical file's.
 
 Two things Maccabi decides. Every session ends 3600 seconds after it began, whatever happens, and nothing extends it;
 an export fits easily inside the hour, and needs no keep-alive of its own, since the run's requests are never further

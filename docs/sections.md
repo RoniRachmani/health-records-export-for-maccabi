@@ -151,21 +151,7 @@ test exports, `--reorder` and 0.8.11's second try at a refused order. A refusal 
 was ordered: on 2026-10-15 one was followed by its text 21 minutes later, which is why 0.8.12 never asks again (see
 *How a run works* in `CONTRIBUTING.md`).
 
-The text comes from the sender name `Maccabi` (not a phone number), into the same thread as Maccabi's appointment
-and pharmacy texts, and reads the same every time, with the member's first name and a short `macb.li` link to
-Maccabi Online:
-
-```text
-<first name> שלום,
-הסתיים הטיפול בבקשתך לקבלת התיק הרפואי.
-ניתן להיכנס לאתר מכבי online לצפייה https://M.macb.li/…
-ברכת בריאות שלמה,
-מכבי שירותי בריאות
-```
-
-That is: "Hello <first name>, your request for the medical file has been handled. You can view it on the Maccabi
-Online website [link]. Wishing you full health, Maccabi Healthcare Services." It names neither the order's date nor
-its range, so two texts can't be told apart by what they say, only by when they came.
+What the text says, and the sign-in codes Maccabi texts from another sender, are in [sms.md](sms.md).
 
 A live test without `--export` never orders (`dev:skipOrder`) and stops before `save`: its line 1 is only the page
 change, and its line 16 collects whatever medical file Maccabi already has.
