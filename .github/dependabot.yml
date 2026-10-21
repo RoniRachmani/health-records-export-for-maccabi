@@ -1,5 +1,7 @@
 # fflate is the only dependency that ships in the extension, so it gets its own pull request and a
-# proper look. Everything else is build-time and arrives grouped, once a week.
+# proper look. Everything else is build-time and arrives grouped, once a week. CI merges every pull
+# request from here once its gate passes, except fflate's and a major version of an action (the
+# `dependabot` job in workflows/ci.yml).
 version: 2
 updates:
   - package-ecosystem: npm

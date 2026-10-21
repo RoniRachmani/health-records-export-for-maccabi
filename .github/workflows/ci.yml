@@ -24,3 +24,26 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+  # Dependabot's pull requests merge themselves once the gate above passes, squashed like any other.
+  # Not fflate, the one dependency that ships in the extension, and not a major version of an action,
+  # which the release, Pages and render workflows use without this gate running them: those wait for a
+  # person. The merge isn't GitHub's auto-merge, which with no required checks would merge before this
+  # job had run.
+  dependabot:
+    needs: check
+    if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]' && github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - id: meta
+        uses: dependabot/fetch-metadata@v3
+      - if: >-
+          steps.meta.outputs.dependency-type != 'direct:production' &&
+          !(steps.meta.outputs.package-ecosystem == 'github_actions' && steps.meta.outputs.update-type == 'version-update:semver-major')
+        run: gh pr merge "$PR" --squash
+        env:
+          PR: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ github.token }}
