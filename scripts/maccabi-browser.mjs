@@ -65,7 +65,8 @@ export function credentials() {
     return { username: resolve('MACCABI_USERNAME'), password: resolve('MACCABI_PASSWORD') };
   }
   const { username, password } = opItem();
-  if (!username || !password) throw new Error(`The 1Password item "${ITEM}" has no username or no password.`);
+  if (!username) throw new Error(`The 1Password item "${ITEM}" has no username.`);
+  if (!password) throw new Error(`No password: set MACCABI_PASSWORD in .env, or add one to the 1Password item "${ITEM}". Without one, sign in by SMS: npm run export -- --no-browser --sms.`);
   return { username, password };
 }
 
@@ -272,7 +273,6 @@ export async function signIn(page) {
         await page.probe(clickText(WITH_PASSWORD), false);
         console.log('Sign-in: chose to sign in with a password.');
       } else if (stage === 'password') {
-        if (!creds.password) throw new Error('The browser sign-in needs MACCABI_PASSWORD (in .env, or the 1Password item); the SMS road is npm run export -- --no-browser --sms.');
         if (await page.probe(ID_BEFORE_PASSWORD_EMPTY, false)) await page.insertText(creds.username);
         await page.probe(FOCUS_PASSWORD, false);
         await page.insertText(creds.password);

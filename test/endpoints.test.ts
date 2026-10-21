@@ -73,7 +73,8 @@ const IN_SCRIPT = /'(\/(?:infosec|saml|sonline|online)\/[^']+)'/g;
 
 describe('docs/endpoints/scripts-endpoints.json', () => {
   const map = JSON.parse(readFileSync('docs/endpoints/scripts-endpoints.json', 'utf8'));
-  const known = [...documented(map)].map((u) => (/^https?:/.test(u) ? bare(new URL(u).pathname) : u));
+  // The portal's root (the sign-in's first GET) bares to '', which every path starts with: it lists nothing.
+  const known = [...documented(map)].map((u) => (/^https?:/.test(u) ? bare(new URL(u).pathname) : u)).filter(Boolean);
   const listed = (path: string) => known.some((url) => path === url || path.startsWith(url) || url.startsWith(path));
 
   it('lists every request path in scripts/maccabi-session.mjs, and the legacy page it primes', () => {
@@ -83,6 +84,7 @@ describe('docs/endpoints/scripts-endpoints.json', () => {
     expect(paths.size).toBeGreaterThan(5); // the chain, the ACS and the bootstrap, so the check cannot pass by reading nothing
     expect([...paths].filter((p) => !listed(p))).toEqual([]);
     expect(listed(bare(new URL(SUMMARY_PAGE).pathname))).toBe(true);
+    expect(listed('infosec/otp/notListed')).toBe(false); // so the check can fail
   });
 
   it('names no value: what each request sends and returns is shapes', () => {

@@ -172,10 +172,22 @@ async function nodeDriver(core) {
     }
     await m.sendCode(index);
     const rl = createInterface({ input: process.stdin, output: process.stdout });
-    // Typed with a space in the middle, or pasted with one around it: the digits are the code.
-    const code = (await rl.question('The code Maccabi texted to ' + phones[index].number + ': ')).replace(/\s+/g, '');
-    rl.close();
-    await m.finishSignIn(code);
+    try {
+      for (;;) {
+        // Typed with a space in the middle, or pasted with one around it: the digits are the code.
+        const code = (await rl.question('The code Maccabi texted to ' + phones[index].number + ': ')).replace(/\s+/g, '');
+        try {
+          await m.finishSignIn(code);
+          break;
+        } catch (e) {
+          // Not six digits never reached Maccabi, so the SMS still stands: ask again rather than spend it.
+          if (e.code !== 'INVALID_CODE_FORMAT') throw e;
+          console.log('The code is six digits.');
+        }
+      }
+    } finally {
+      rl.close();
+    }
     console.log('Signed in with the SMS code.');
   }
   // The sign-in's own bootstrap filled the session (token, member id, gender): nothing to ask again.
@@ -292,11 +304,20 @@ async function htmlParser(needed) {
   };
 }
 
+/** What a refused sign-in (maccabi-session.mjs SignInError) means to the member; any other code prints as it is. */
+const SIGN_IN_SAYS = {
+  PASSWORD_REJECTED: 'Maccabi refused the password. Nothing was retried; check MACCABI_PASSWORD (or the 1Password item) before the next run.',
+  OTP_REJECTED: 'Maccabi refused the code. Nothing was retried; the next run sends a new SMS.',
+  OTP_EXPIRED: 'The code expired before it was sent. The next run sends a new SMS.',
+  LOGIN_BLOCKED: 'Maccabi has blocked signing in to this account for now. Sign in on the website to see why.',
+  LOGIN_NOT_AVAILABLE: 'Maccabi does not offer this account an online sign-in.',
+};
+
 // Exiting kills the browser (see openBrowser), unless --keep asked for it to stay.
 main().then(
   () => process.exit(),
   (e) => {
-    console.error(e.message);
+    console.error(SIGN_IN_SAYS[e.code] || e.message);
     process.exit(1);
   },
 );

@@ -1,9 +1,6 @@
 // Types of maccabi-session.mjs for the test that imports it; the script itself is plain JavaScript.
-import type { HttpRequest, HttpResponse, Session } from '../src/core';
+import type { Session, Transport } from '../src/core';
 
-export class SessionEndedError extends Error {
-  sessionEnded: true;
-}
 export class SignInError extends Error {
   code: string;
   status?: number;
@@ -22,18 +19,15 @@ export interface Phone {
   sms: boolean;
 }
 
-export interface Transport {
-  fetch(req: HttpRequest): Promise<HttpResponse>;
-  xhr(req: HttpRequest): Promise<{ status: number; text: string }>;
-  pagePath(): Promise<string>;
-}
-
 /** What the session takes from core: the bundled src/cli/index.ts, or the sources in a test. */
 export interface SessionCore {
   MACCABI_ORIGIN: string;
   LOGIN_ORIGIN: string;
   SUMMARY_PAGE: string;
   PACE_MS: number;
+  TAB_FETCH_TIMEOUT_MS: number;
+  TAB_MAX_BYTES: number;
+  SessionEndedError: new (msg: string) => Error;
   signedOutUrl(url: string | undefined): string | null;
   jwtClaims(jwt: string | null | undefined): Record<string, unknown> | null;
 }

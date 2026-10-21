@@ -10,7 +10,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { Collector, newCtx, runStep, type HttpRequest, type HttpResponse } from '../src/core';
 import * as core from '../src/cli/index';
 import { folderSink } from '../scripts/headless-lib.mjs';
-import { choosePhone, CookieJar, MaccabiSession, SessionEndedError, SignInError } from '../scripts/maccabi-session.mjs';
+import { choosePhone, CookieJar, MaccabiSession, SignInError } from '../scripts/maccabi-session.mjs';
 import { redactor, spellings } from '../scripts/redact.mjs';
 import { fakeMaccabi, htmlParser, MID } from './fakes';
 
@@ -298,13 +298,13 @@ describe('session over fetch', () => {
     // bootstrap on returning from the legacy steps must say the session ended, not that the site changed.
     site.state.expired = 'logout';
     await expect(m.transport().fetch(api)).rejects.toMatchObject({ sessionEnded: true, message: expect.stringContaining('/my.logout.php3') });
-    await expect(m.transport().fetch({ ...api, redirect: undefined })).rejects.toBeInstanceOf(SessionEndedError);
-    await expect(m.bootstrap()).rejects.toBeInstanceOf(SessionEndedError);
-    await expect(m.primeLegacy()).rejects.toBeInstanceOf(SessionEndedError);
+    await expect(m.transport().fetch({ ...api, redirect: undefined })).rejects.toBeInstanceOf(core.SessionEndedError);
+    await expect(m.bootstrap()).rejects.toBeInstanceOf(core.SessionEndedError);
+    await expect(m.primeLegacy()).rejects.toBeInstanceOf(core.SessionEndedError);
     // The login page served straight, with no redirect at all.
     site.state.expired = 'login-page';
-    await expect(m.bootstrap()).rejects.toBeInstanceOf(SessionEndedError);
-    await expect(m.primeLegacy()).rejects.toBeInstanceOf(SessionEndedError);
+    await expect(m.bootstrap()).rejects.toBeInstanceOf(core.SessionEndedError);
+    await expect(m.primeLegacy()).rejects.toBeInstanceOf(core.SessionEndedError);
     site.state.expired = false;
     const forbidden = new MaccabiSession({ core, sleep: async () => {}, fetch: (async () => new Response('challenge', { status: 403, headers: { 'content-type': 'text/html' } })) as typeof fetch });
     const r = await forbidden.transport().fetch({ url: '/sonline/x', method: 'GET' });

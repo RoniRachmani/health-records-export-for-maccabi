@@ -37,10 +37,6 @@ const BOOTSTRAP = '/sonline/TokenServerAPI/webapi/mac/v4/members/token/full?chec
 const REDIRECTS = new Set([301, 302, 303, 307, 308]);
 const MAX_HOPS = 8;
 
-export class SessionEndedError extends Error {
-  sessionEnded = true;
-}
-
 export class SignInError extends Error {
   constructor(code, status) {
     super(code + (status ? ' (HTTP ' + status + ')' : ''));
@@ -144,7 +140,7 @@ export class MaccabiSession {
   #signedIn = false;
   #challenge = null;
 
-  constructor({ core, fetch = globalThis.fetch, now = Date.now, sleep, timeoutMs = 10 * 60_000, maxBytes = 32 * 1024 * 1024 } = {}) {
+  constructor({ core, fetch = globalThis.fetch, now = Date.now, sleep, timeoutMs = core?.TAB_FETCH_TIMEOUT_MS, maxBytes = core?.TAB_MAX_BYTES } = {}) {
     if (!core) throw new Error('MaccabiSession needs core (the bundled src/cli/index.ts)');
     this.#core = core;
     this.#portal = core.MACCABI_ORIGIN;
@@ -197,7 +193,7 @@ export class MaccabiSession {
       const out = this.#signedIn && url.origin === this.#portal ? this.#core.signedOutUrl(next.href) : null;
       if (out) {
         await response.arrayBuffer().catch(() => {});
-        throw new SessionEndedError(out);
+        throw new this.#core.SessionEndedError(out);
       }
       if (init.redirect === 'manual') return Object.assign(response, { finalUrl: url.href, hops: hop, next: next.href });
       if (next.origin !== url.origin) for (const h of ['authorization', 'origin', 'referer']) headers.delete(h);
@@ -233,7 +229,7 @@ export class MaccabiSession {
   }
 
   /** A JSON call to the login origin's /infosec service, as its own page makes them. */
-  async #infosec(path, token, { method = 'GET', body, headers = {} } = {}) {
+  async #infosec(path, token, { method = 'GET', body, headers = {}, password = false } = {}) {
     const url = new URL(path, this.#login);
     const h = { authorization: 'Bearer ' + token, origin: this.#login, accept: 'application/json; charset=utf-8', 'content-type': 'application/json; charset=utf-8', ...headers };
     if (url.pathname !== '/infosec/auth') {
@@ -250,6 +246,8 @@ export class MaccabiSession {
     if (!value || typeof value !== 'object') throw new SignInError('AUTH_RESPONSE_CHANGED', r.status);
     if (!r.ok) {
       const code = Number(value.code);
+      // On the password road the code's refusals are the password's: no SMS was ever sent.
+      if (password && [300, 302, 303].includes(code)) throw new SignInError('PASSWORD_REJECTED', r.status);
       throw new SignInError(code === 302 ? 'OTP_EXPIRED' : [301, 304].includes(code) ? 'LOGIN_BLOCKED' : [300, 303].includes(code) ? 'OTP_REJECTED' : 'AUTHENTICATION_FAILED', r.status);
     }
     return value;
@@ -265,6 +263,8 @@ export class MaccabiSession {
     this.#signedIn = false;
     this.#challenge = null;
     this.jwt = this.mid = this.legacySessionId = null;
+    this.gender = undefined;
+    this.pagePath = '/sonline/';
     const login = await this.request(this.#portal + '/');
     const html = await login.text();
     const originJwt = /(?:window\.)?originJWT\s*=\s*["']([A-Za-z0-9_.-]+)["']/.exec(html)?.[1];
@@ -291,7 +291,7 @@ export class MaccabiSession {
     if (typeof password !== 'string' || !password) throw new SignInError('NO_PASSWORD');
     // From here Maccabi sees an attempt: the sign-in is spent whatever it answers.
     this.#challenge = null;
-    const assertion = await this.#infosec('/infosec/auth', ch.senderJwt, { body: { id: ch.id, password, type: 'password' } });
+    const assertion = await this.#infosec('/infosec/auth', ch.senderJwt, { body: { id: ch.id, password, type: 'password' }, password: true });
     await this.#land(tokenOf(assertion), '');
   }
 
@@ -364,7 +364,7 @@ export class MaccabiSession {
       data = JSON.parse(text);
     } catch {
       const out = this.#core.signedOutUrl(r.finalUrl);
-      if (out || /originJWT\s*=/.test(text)) throw new SessionEndedError(out || 'the login page answered the bootstrap');
+      if (out || /originJWT\s*=/.test(text)) throw new this.#core.SessionEndedError(out || 'the login page answered the bootstrap');
       throw new SignInError('BOOTSTRAP_CHANGED', r.status);
     }
     const token = data?.token;
@@ -398,7 +398,7 @@ export class MaccabiSession {
     const html = await r.text();
     const at = new URL(r.finalUrl);
     const out = this.#core.signedOutUrl(r.finalUrl);
-    if (out || /originJWT\s*=/.test(html)) throw new SessionEndedError(out || 'the login page answered the legacy page');
+    if (out || /originJWT\s*=/.test(html)) throw new this.#core.SessionEndedError(out || 'the login page answered the legacy page');
     if (!r.ok || at.origin !== this.#portal || at.pathname.toLowerCase().replace(/\/$/, '') !== this.#summary.replace(/\/$/, '')) {
       throw new Error('The legacy page did not open (HTTP ' + r.status + ' at ' + at.pathname + ')');
     }

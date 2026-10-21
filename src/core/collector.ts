@@ -32,7 +32,7 @@ export function signedOutUrl(url: string | undefined): string | null {
     return null;
   }
   const path = u.pathname.toLowerCase();
-  if (u.origin === LOGIN_ORIGIN || path === '/my.logout.php3' || path === '/my.policy') return 'redirected to ' + u.hostname + u.pathname;
+  if (u.hostname === new URL(LOGIN_ORIGIN).hostname || path === '/my.logout.php3' || path === '/my.policy') return 'redirected to ' + u.hostname + u.pathname;
   return null;
 }
 
