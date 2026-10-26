@@ -56,4 +56,5 @@ jobs:
           title=$(head -n 1 "$notes" | sed 's/^# *//')
           tail -n +2 "$notes" > "$RUNNER_TEMP/notes.md"
           gh release create "v$VERSION" "release/health-records-export-for-maccabi-$VERSION.zip" \
-            --target "$(git rev-parse HEAD)" --title "$title" --notes-file "$RUNNER_TEMP/notes.md"
+            --target "$(git rev-parse HEAD)" --title "$title" --notes-file "$RUNNER_TEMP/notes.md" --draft
+          gh release edit "v$VERSION" --draft=false --latest

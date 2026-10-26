@@ -9,6 +9,12 @@ is the short version of this page for an AI coding assistant.
 [An export from the terminal](#an-export-from-the-terminal-without-the-extension) ·
 [The endpoint scan](tools/endpoint-scan/README.md) · [Releasing](#releasing) · [Ground rules](#ground-rules)
 
+## Pull requests
+
+Branch from `main` and open a pull request for changes. The `check` CI job must pass against the latest
+`main` before merging. No second-person approval is required. Resolve review conversations before merging.
+Never include real medical records, account details, tokens, exports or HAR files in a pull request.
+
 ## Setup
 
 You need Node.js 22 or newer and Chrome.
@@ -238,6 +244,10 @@ not map, and which mapped requests the code has dropped. It reads static script 
 
 ## Releasing
 
+GitHub releases are published from a draft after their ZIP has uploaded, so future releases can be immutable.
+Published release tags and assets cannot be replaced; create a new version for corrections. Existing releases
+are not retroactively made immutable.
+
 ```sh
 npm run release        # all of it from clean: tests, dist-dev/, the release ZIP, the store images and the video
 npm run release:zip    # the same without the store images and the video
@@ -251,7 +261,8 @@ npm run icons          # public/icons/ and store/assets/icon-128.png
 `package` builds `dist/` first, and refuses a development build. The store images and the video show the real
 popup with made-up states, and they need Roboto on the machine that draws them. Without it, run the *Store images*
 workflow from the Actions tab (or `gh workflow run store-assets.yml`, with `-f shots="start open"` for only some): it
-renders them on Linux with Roboto and commits the ones that changed. The *Store video* workflow
+renders them on Linux with Roboto and pushes changed images to a `store-images/` branch. Open the compare
+link in the run summary to create a pull request, then wait for CI and merge it. The *Store video* workflow
 (`gh workflow run store-video.yml`) does the same for the video's picture, kept as the run's artifact and silent:
 download it with `gh run download <run id> -n promo-video -D store/assets`, then `npm run store-video -- --remux`
 puts the soundtrack on it from your narration cache. [docs/store-listing.md](docs/store-listing.md)
