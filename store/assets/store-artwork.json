@@ -1,0 +1,58 @@
+[
+  {
+    "file": "screenshot-1-ask.png",
+    "shot": "ask",
+    "width": 1280,
+    "height": 800,
+    "sha256": "f954c03325e224c98a350c3bdc97748ffdbadf11e10b12dd5d7dc882a7d4c5db"
+  },
+  {
+    "file": "screenshot-2-whole.png",
+    "shot": "whole",
+    "width": 1280,
+    "height": 800,
+    "sha256": "53c22da9a226f464333af45ef038df31548772fe9e454f397a58ec9d68b69711"
+  },
+  {
+    "file": "screenshot-3-advice.png",
+    "shot": "advice",
+    "width": 1280,
+    "height": 800,
+    "sha256": "88e4845873d4c96ac550682dec40db44b293a8953808380587f72f02e6baff5e"
+  },
+  {
+    "file": "screenshot-4-start.png",
+    "shot": "start",
+    "width": 1280,
+    "height": 800,
+    "sha256": "162829da1b070858d87e23892d34512ed9260e07917ea7d120411b7e0bad9bbe"
+  },
+  {
+    "file": "screenshot-5-open.png",
+    "shot": "open",
+    "width": 1280,
+    "height": 800,
+    "sha256": "ee83312be162b9627bbe80a3786c0cf86029173e45e689d23281b8aca899087d"
+  },
+  {
+    "file": "promo-small-440x280.png",
+    "shot": "promo",
+    "width": 440,
+    "height": 280,
+    "sha256": "a9252d7e5c2c0fa23841c3a0a449f5f04511f09116c9ba700e2652a250d52c37"
+  },
+  {
+    "file": "promo-marquee-1400x560.png",
+    "shot": "marquee",
+    "width": 1400,
+    "height": 560,
+    "sha256": "8faf817e6748fdae3b578113d30fd38d14f957b847e4c3e4939a560a883c844e"
+  },
+  {
+    "file": "icon-128.png",
+    "shot": "icon",
+    "width": 128,
+    "height": 128,
+    "sha256": "b216168733e1b56e05e2962ed29265e91c4bee4d0cfc7c31e887e4e0d56e29a3"
+  }
+]

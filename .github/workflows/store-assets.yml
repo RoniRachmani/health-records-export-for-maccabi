@@ -1,4 +1,4 @@
-# Renders the store images (npm run store-assets) on Linux with Roboto installed, which the renders need and a
+# Renders the approved store images (npm run store-assets) on Linux with Roboto installed, which the renders need and a
 # maintainer's machine may not have, and pushes changed images to a branch for a pull request. Run it by hand from the Actions tab
 # after the popup's appearance changes; name shots to render only those (e.g. "start open"), or leave it empty for
 # all. The link previews (og, social) are drawn too but are gitignored: the Pages workflow publishes those.
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       shots:
-        description: Shots to render, space-separated (empty for all)
+        description: 'Shots: ask whole advice start open promo marquee icon poster og-site social (empty for all)'
         required: false
         default: ''
 
@@ -46,6 +46,14 @@ jobs:
           SHOTS: ${{ inputs.shots }}
         # $SHOTS is split into shot names on purpose.
         run: npm run store-assets -- $SHOTS
+      - name: Verify the listing upload bundle
+        run: node scripts/check-store-assets.mjs
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: store-artwork
+          path: |
+            store/assets/store-artwork.zip
+            store/assets/store-artwork.json
       - name: Push changed images for a pull request
         run: |
           git add store/assets

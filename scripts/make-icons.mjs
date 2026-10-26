@@ -269,7 +269,6 @@ mkdirSync(new URL('../public/icons/', import.meta.url), { recursive: true });
 for (const size of [16, 32, 48, 128]) {
   writeFileSync(new URL(`../public/icons/icon-${size}.png`, import.meta.url), render(size));
 }
-// The store icon: 96x96 artwork with 16 px of transparent padding, as the Chrome Web Store asks.
-mkdirSync(new URL('../store/', import.meta.url), { recursive: true });
-writeFileSync(new URL('../store/assets/icon-128.png', import.meta.url), render(128, 16));
-console.log('wrote public/icons/icon-{16,32,48,128}.png and store/assets/icon-128.png');
+// The store's padded SVG rendering is captured by store-assets.mjs, using the same mark.
+// Keep this renderer responsible for the hand-tuned packaged toolbar sizes only.
+console.log('wrote public/icons/icon-{16,32,48,128}.png');

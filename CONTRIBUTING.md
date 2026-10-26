@@ -92,7 +92,16 @@ the guide to opening an export in an AI assistant, which the popup and every exp
 address, `ai-assistant.html`, is a redirect there. `popup.css` and `pages.css` both pin `color-scheme: light` —
 there is no dark theme, and pinning it keeps Chrome's auto-dark-mode from repainting controls and scrollbars
 against a light page. Every text colour meets WCAG AA on the surface it sits on. Chrome caps a popup at 600px
-tall, so keep the states that are not disclosures under it; `npm run store-assets` re-renders the store images.
+tall, so keep the states that are not disclosures under it. `npm run store-assets` generates the approved listing
+artwork at its canonical `store/assets/` paths.
+
+The latest store images use the same palette and typography, with a shared 8px grid, 64px screenshot margins,
+a 528px copy column, a 48px gutter and a 576px visual column. Keep the small Unofficial chip beside the title,
+use distinct file and folder glyphs, and label synthetic examples. The folder illustration uses two simple document
+shapes; screenshot 1 and the marquee put it directly on white. Keep the shadow on the assistant card, pale-blue
+prompt bubbles, the screenshot 2 pink-line callout, and the numbered steps. Extension popup previews belong over a
+browser page, with the real popup in a synthetic running or completed state. See
+[the artwork guide](store/redesign/README.md) for the complete selected set and regeneration instructions.
 
 ## Driving a run from the console
 
@@ -253,14 +262,36 @@ npm run release        # all of it from clean: tests, dist-dev/, the release ZIP
 npm run release:zip    # the same without the store images and the video
 npm run clean          # remove dist/, dist-dev/, dist-store/, dist-cli/ and release/
 npm run package        # release/health-records-export-for-maccabi-<version>.zip for the Chrome Web Store and GitHub release
-npm run store-assets   # store/assets/ screenshots, promo tiles, the video's poster and the web page's link preview (needs Chrome, Chromium or Edge; set CHROME_PATH if not found)
+npm run store-assets   # approved store/assets/ images, upload bundle, video poster and web link previews (Chrome; CHROME_PATH)
+node scripts/check-store-assets.mjs # validate eight listing PNGs, dimensions, manifest and ZIP
 npm run store-video    # store/assets/promo-video.mp4, the promo video (same browser; ffmpeg if you have it)
-npm run icons          # public/icons/ and store/assets/icon-128.png
+npm run icons          # hand-tuned public/icons/; the store icon is `npm run store-assets -- icon`
 ```
 
-`package` builds `dist/` first, and refuses a development build. The store images and the video show the real
-popup with made-up states, and they need Roboto on the machine that draws them. Without it, run the *Store images*
-workflow from the Actions tab (or `gh workflow run store-assets.yml`, with `-f shots="start open"` for only some): it
+`package` builds `dist/` first, and refuses a development build. `npm run store-assets`, `npm run release`,
+and the *Store images* workflow all generate the approved design into `store/assets/`. Inspect `store/assets/review.html`
+and use `store/assets/store-artwork.zip` (gitignored: written by each render, and kept as the *Store images* workflow's artifact) for its eight upload PNGs; `store-artwork.json` records dimensions and SHA-256
+hashes. `node scripts/check-store-assets.mjs` checks these against the PNGs. Named shots still work, including `icon`,
+`poster`, `og-site` and `social`. A render that includes a listing shot rewrites the bundle from all eight images, and stops with an error if one is missing.
+Updating listing images alone does not require a new extension package or version bump.
+
+The layouts and SVG illustration live in `store/design/listing.mjs`, with the approved CSS in
+`store/design/listing.css`. `scripts/store-listing.mjs` captures those layouts; `scripts/store-auxiliary.mjs` retains
+the video-poster and landing-page-preview recipes. The social preview uses the approved marquee at its own size.
+The one-off proposal script and `--mock` flag are retired. The historical comparison is preserved in
+`store/redesign/mock-review.html`, with original images under `store/redesign/original/` and the latest column linking
+to the canonical assets.
+
+The image and video renderers build the local store stage with Vite and photograph it in headless Chrome. They need
+a local listening port, Node.js 22 or newer, installed dependencies, and Chrome, Chromium or Edge (`CHROME_PATH` overrides
+discovery). Roboto should be installed on the rendering machine for the intended typography; otherwise the system
+fallback changes pixels. The latest renderer enables the popup's reduced-motion styles and waits two animation frames
+before each capture. All eight latest PNGs matched byte for byte across two consecutive runs on 25 October 2026;
+the ZIP entries matched the exported files too. This check applies to the same browser, fonts and operating system,
+not to renders across different environments.
+
+The store images and video show the real popup with made-up states and need Roboto on the machine that draws them.
+Without it, run the *Store images* workflow from the Actions tab (or `gh workflow run store-assets.yml`, with `-f shots="start open"` for only some): it
 renders them on Linux with Roboto and pushes changed images to a `store-images/` branch. Open the compare
 link in the run summary to create a pull request, then wait for CI and merge it. The *Store video* workflow
 (`gh workflow run store-video.yml`) does the same for the video's picture, kept as the run's artifact and silent:
@@ -317,4 +348,5 @@ film, drawn by the same page: `npm run store-assets -- poster`.
 - **Keep [public/third-party-notices.txt](public/third-party-notices.txt) current.** It carries the licenses of
   third-party code bundled into the package (fflate, and Vite's module preload polyfill). Update it when a runtime
   dependency is added or upgraded.
-- **Regenerate the store images** with `npm run store-assets` when the popup changes.
+- **Regenerate the store images** with `npm run store-assets` when their copy, illustrations or popup change.
+  Inspect the eight canonical images and run `node scripts/check-store-assets.mjs` to validate the upload bundle.

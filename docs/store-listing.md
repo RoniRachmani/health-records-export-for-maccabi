@@ -5,11 +5,18 @@ the extension changes, update this file along with it (see [Keeping it true](#ke
 
 ## Before each upload
 
+For an image-only listing update, regenerate the selected images with `npm run store-assets`,
+review `store/assets/review.html`, and upload the eight PNGs in `store/assets/store-artwork.zip` to their
+matching graphic fields. Do not upload this artwork ZIP as an extension package. Image-only updates do not require
+a version bump or a new package. The steps below apply when releasing an extension package as well.
+
 1. Raise `version` in `package.json`. The store rejects a package whose version isn't higher than the published one.
 2. `npm test` and `npm run typecheck`.
-3. If the popup changed, run `npm run store-assets` and look at the images in `store/assets/` before uploading them.
-   Name shots to render only some of them, e.g. `npm run store-assets -- promo marquee`. The promo video shows
-   the popup too: re-render it with `npm run store-video` and re-upload it to YouTube (see [Promo video](#promo-video)).
+3. If the popup changed, run `npm run store-assets` and inspect the canonical images in `store/assets/review.html`.
+   Name shots to render only some, e.g. `npm run store-assets -- start open`. Run `node scripts/check-store-assets.mjs`
+   to verify the eight upload PNGs, manifest and ZIP. The promo video shows the popup too: re-render it with
+   `npm run store-video`, refresh its poster with `npm run store-assets -- poster`, and re-upload the video to YouTube
+   (see [Promo video](#promo-video)).
 4. `npm run package`, which builds `dist/` and writes `release/health-records-export-for-maccabi-<version>.zip`.
    Upload that file on the **Package** tab. The script refuses to package a development build.
 5. For the GitHub release, write its notes in `docs/releases/<version>.md` (the first line, `# <title>`, names it),
@@ -115,26 +122,42 @@ Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare 
 
 ### Graphic assets
 
-| Field | File | Shows |
-|---|---|---|
-| Store icon (128×128) | `store/assets/icon-128.png` | The toolbar icon: 96×96 artwork with 16 px of transparent padding |
-| Screenshot 1 | `store/assets/screenshot-1-ask.png` | The headline, "Your whole Maccabi history, and a genius friend who's read all of it": a generic AI assistant opened on the export, saying what stands out in it and naming the file (`STANDS_OUT`) |
-| Screenshot 2 | `store/assets/screenshot-2-whole.png` | "Everything, in one place": the unzipped export, its README, medical file and folders, with a file the member added themselves |
-| Screenshot 3 | `store/assets/screenshot-3-advice.png` | "Advice about you, not an average person": the assistant's one thing to do today, tied to the member's own numbers (`ONE_THING`), with things it can build offered under it |
-| Screenshot 4 | `store/assets/screenshot-4-start.png` | The popup, ready to start: "Log in and press Start export", with the one line on price and privacy |
-| Screenshot 5 | `store/assets/screenshot-5-open.png` | The finished export: "Then open it in Claude or ChatGPT", with where each desktop app opens a folder and the first message to send |
-| Small promo tile (440×280) | `store/assets/promo-small-440x280.png` | The icon's artwork on a blue background, with no text |
-| Marquee promo tile (1400×560) | `store/assets/promo-marquee-1400x560.png` | Screenshot 1 in a wide frame: the name, the headline and the subline beside the assistant saying what stands out (`STANDS_OUT`). Optional: the store uses it only when it features the extension |
-| Global promo video | https://youtu.be/xcy8fo-PjHc | Optional. See [Promo video](#promo-video) below |
+The approved design, selected on 25 October 2026, is now the default renderer and lives in `store/assets/`.
+[Review the production images](../store/assets/review.html), or open the historical
+[comparison](../store/redesign/mock-review.html). Its original images are archived in `store/redesign/original/`;
+**First redesign** is the intermediate proposal, and **Latest revision** links to the canonical production files.
+The existing store listing is not changed by generating files locally.
 
-The screenshots are 1280×800 PNG files with no transparency. They follow [positioning.md](positioning.md): what the
-member gets comes first, in its order of value (the whole history, a friend who has read it, theirs to keep), and how
-they get there follows, so upload them in this order. Privacy and price are conditions, said once and lightly, on the
-shot that starts an export. Screenshots 4 and 5 show the real popup in made-up states over a placeholder page, never
-a real account. Screenshots 1 and 3 draw an AI assistant instead, plain enough to be no real product (`chatWindow` in
-`store/src/parts.ts`), answering about positioning.md's made-up demo member, and screenshot 2 the export's folder
-(`exportRows`). The text beside each comes from `SHOTS` in `store/src/stage.ts`. Screenshot 5's steps repeat
-positioning.md's *Getting started*, so check them against the apps when that section changes.
+| Field | Selected file | Shows |
+|---|---|---|
+| Store icon (128×128) | `store/assets/icon-128.png` | The established navy folder and download arrow with the pink offset, on transparent padding |
+| Screenshot 1 | `store/assets/screenshot-1-ask.png` | "Your whole Maccabi history. Ready to ask." Simplified folder illustration on white, feature pills, and a synthetic assistant finding with a source |
+| Screenshot 2 | `store/assets/screenshot-2-whole.png` | "Years of records. One place." An illustrative export directory with distinct document and folder icons, plus the pink-line "Original files. Organised folders." callout |
+| Screenshot 3 | `store/assets/screenshot-3-advice.png` | "Better questions. A fuller picture." Prompt ideas in pale-blue chat bubbles, and a synthetic vitamin D history with three dated results and a source |
+| Screenshot 4 | `store/assets/screenshot-4-start.png` | "Log in. Click Start. Keep the ZIP." The real popup exporting at 47%, over a synthetic browser page, with completed and current sections |
+| Screenshot 5 | `store/assets/screenshot-5-open.png` | "Your history. Yours to explore." The completed popup over a browser page, beside numbered Unzip, Open and Ask steps |
+| Small promo tile (440×280) | `store/assets/promo-small-440x280.png` | Two understated document shapes behind the folder mark, on a full pale-blue background, with no text |
+| Marquee promo tile (1400×560) | `store/assets/promo-marquee-1400x560.png` | "Your whole history. Now in your hands." Navy and magenta text on white, beside the same simplified illustration without a background panel |
+| Global promo video | https://youtu.be/xcy8fo-PjHc | Existing optional video; its separate renderer is described below |
+
+Run `npm run store-assets` to recreate the eight listing PNGs, the video poster, and web/social previews.
+The command also writes `store/assets/review.html`, `store-artwork.json` and `store-artwork.zip` (gitignored: written by each render, and kept as the *Store images* workflow's artifact). The ZIP contains
+only the eight listing PNGs. The release command and *Store images* workflow use the same renderer; CI also
+validates the bundle and offers its ZIP and hash manifest as a downloadable artifact. The old proposal renderer and
+`--mock` flag are retired. Use shot names to select outputs, e.g. `npm run store-assets -- marquee icon`.
+
+Upload screenshots in the numbered order above. They are opaque, full-bleed 1280×800 PNGs; the icon retains alpha.
+The images follow the existing design system and [positioning](positioning.md), with a small **Unofficial** chip
+beside the product title instead of a full disclaimer footer. Screenshots 1 and 3 label illustrative assistant output;
+screenshot 2 labels its export folder; screenshots 4 and 5 use the actual popup with synthetic states from
+`store/src/mock-chrome.ts`. They never access a real account. Their background is a browser with a placeholder page,
+not a capture of a member's records. The packaged extension icon and popup are unchanged by this artwork renderer.
+
+All current illustrations, copy and layout are composed in code; no AI image generation is needed to rebuild them.
+Static captures use the popup's existing reduced-motion styles to freeze the progress sheen and pulse. Exact PNG
+reproducibility was checked across two consecutive runs in the same rendering environment. Use the same browser and
+fonts for comparisons; matching pixels across different operating systems or font installations is not guaranteed.
+See [the artwork guide](../store/redesign/README.md) for the source files, prerequisites and verification checklist.
 
 ### Promo video
 
@@ -404,12 +427,12 @@ of this page:
 
 | Change | Also update |
 |---|---|
-| Popup layout or wording | Run `npm run store-assets` and `npm run store-video`. Check the description and the test instructions. |
+| Popup layout or wording | Run `npm run store-assets` for the selected images; inspect the latest revision. Re-render the video with `npm run store-video` and its poster with `npm run store-assets -- poster`. Check the description and test instructions. |
 | A section is added, renamed or dropped | Description list, `FOLDERS` in `store/src/parts.ts`, README |
 | A permission is added or removed | Permission justifications here, the manifest, `docs/privacy.md`, `public/privacy.html`, README |
 | A new kind of data or request | Data usage here, the privacy policy, `docs/endpoints/endpoints.json` |
 | A link the popup or a notification opens on the web | The privacy policy's line on the links the extension opens (`docs/privacy.md`, `public/privacy.html`) |
 | The manifest's `description` | Summary here (132 characters at most) |
-| What the export's README asks of the assistant (`shared/readme.ts`) | The description's "What the assistant is asked to do" and "Yours to keep, and to grow", the README's *Hand it to an AI assistant*, and the answers in `STANDS_OUT` and `ONE_THING` (`store/src/parts.ts`), which screenshots 1 and 3 and the video draw |
-| The questions to start with, or the Ask and Build use cases in [positioning.md](positioning.md) | The description's "A friend who's read it all", YouTube's "Things to ask", the README's list, and `FOLLOW_UPS` and `BUILDS` in `store/src/parts.ts` |
+| What the export's README asks of the assistant (`shared/readme.ts`) | The description's "What the assistant is asked to do" and "Yours to keep, and to grow", the README's *Hand it to an AI assistant*, the assistant examples in `store/design/listing.mjs`, and `STANDS_OUT` and `ONE_THING` in `store/src/parts.ts` for the original images and video |
+| The questions to start with, or the Ask and Build use cases in [positioning.md](positioning.md) | The description's "A friend who's read it all", YouTube's "Things to ask", the README's list, the prompt examples in `store/design/listing.mjs`, and `FOLLOW_UPS` and `BUILDS` in `store/src/parts.ts` for the original images and video |
 | Health in ChatGPT, or another assistant's medical-record connection, reaches Maccabi or opens to Israel | *Alternatives the customer has* and the positioning statement in [positioning.md](positioning.md). Customer-facing copy doesn't mention those tools, so nothing else changes |

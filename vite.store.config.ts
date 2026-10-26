@@ -27,7 +27,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         popup: 'src/extension/popup/popup.html',
-        stage: 'store/src/stage.html',
+        listing: 'store/src/listing.html',
         video: 'store/src/video.html',
       },
     },

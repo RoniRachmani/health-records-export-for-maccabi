@@ -1,0 +1,42 @@
+[
+  {
+    "file": "screenshot-1-ask.png",
+    "width": 1280,
+    "height": 800
+  },
+  {
+    "file": "screenshot-2-whole.png",
+    "width": 1280,
+    "height": 800
+  },
+  {
+    "file": "screenshot-3-advice.png",
+    "width": 1280,
+    "height": 800
+  },
+  {
+    "file": "screenshot-4-start.png",
+    "width": 1280,
+    "height": 800
+  },
+  {
+    "file": "screenshot-5-open.png",
+    "width": 1280,
+    "height": 800
+  },
+  {
+    "file": "promo-small-440x280.png",
+    "width": 440,
+    "height": 280
+  },
+  {
+    "file": "promo-marquee-1400x560.png",
+    "width": 1400,
+    "height": 560
+  },
+  {
+    "file": "icon-128.png",
+    "width": 128,
+    "height": 128
+  }
+]

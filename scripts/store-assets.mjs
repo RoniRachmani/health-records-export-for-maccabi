@@ -1,57 +1,81 @@
-// Renders the Chrome Web Store images into store/assets/: screenshots of the real popup fed made-up
-// states (store/src/mock-chrome.ts, no real data), the two promo tiles, the poster the README
-// shows for the promo video, which is a frame of the film itself (store/src/video.ts), and the
-// link previews of the AI assistant page and the landing page. Name shots on the command line to render only those, e.g.
-// `npm run store-assets -- marquee`.
-import { writeFileSync } from 'node:fs';
+// The approved store design is the default. Name shots to render a subset, e.g. -- start open.
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { zipSync } from 'fflate';
+import { LISTING_IMAGES } from '../store/design/listing.mjs';
+import { AUXILIARY_IMAGES } from './store-auxiliary.mjs';
+import { renderListingImage } from './store-listing.mjs';
 import { openStage, root } from './stage.mjs';
 
-const IMAGES = [
-  // What the member gets comes first, in docs/positioning.md's order; how they get there follows.
-  { file: 'screenshot-1-ask.png', shot: 'ask', width: 1280, height: 800 },
-  { file: 'screenshot-2-whole.png', shot: 'whole', width: 1280, height: 800 },
-  { file: 'screenshot-3-advice.png', shot: 'advice', width: 1280, height: 800 },
-  { file: 'screenshot-4-start.png', shot: 'start', width: 1280, height: 800 },
-  { file: 'screenshot-5-open.png', shot: 'open', width: 1280, height: 800 },
-  { file: 'promo-small-440x280.png', shot: 'promo', width: 440, height: 280 },
-  { file: 'promo-marquee-1400x560.png', shot: 'marquee', width: 1400, height: 560 },
-  // Not a store field: the README's poster, drawn by the video's own page at the size it plays.
-  { file: 'video-poster.png', shot: 'poster', page: '/store/src/video.html?poster', width: 1920, height: 1080 },
-  // Not a store field either, and not committed: the landing page's link preview, which .github/workflows/pages.yml
-  // renders on each deploy (with Roboto installed) and publishes as og-site.png. It is a photograph of the page's own
-  // hero, so the two cannot drift apart.
-  // The page is restyled for the picture: only its name and its dashboard, centred, as the finished dashboard and
-  // not a moment of its animation. Its og:title, the headline, is printed under the picture by whatever shows it.
-  {
-    file: 'og-site-1200x630.png', shot: 'og-site', page: '/site/index.html', width: 1200, height: 630, scale: 1,
-    prepare: `document.head.insertAdjacentHTML('beforeend', '<style>' +
-      'body > :not(.hero), .hero-text > :not(.eyebrow), .he-slip, .asked, .scene { display: none !important; }' +
-      'html, body { width: 1200px; height: 630px; margin: 0; padding: 0; max-width: none; overflow: hidden; background: linear-gradient(135deg, #e6f0ff 0%, #f3f0fb 50%, #fde9ef 100%); }' +
-      '.hero { display: flex !important; flex-direction: column; align-items: center; justify-content: center; gap: 22px; width: 1200px; height: 630px; margin: 0 !important; padding: 0 !important; max-width: none !important; }' +
-      '.hero-text, .dash-stage { margin: 0 !important; padding: 0 !important; width: auto !important; min-height: 0 !important; }' +
-      '.eyebrow { margin: 0 !important; }' +
-      // A definite width: .dash is a size container, so in this column it would shrink to its padding.
-      '.dash-stage { width: 760px !important; zoom: 0.93; }' +
-      '.anim, .anim * { animation: none !important; }' +
-      '</style>')`,
-  },
-  // The marquee at GitHub's size, published as social.png to be uploaded as the repository's social preview.
-  { file: 'social-1280x640.png', shot: 'social', width: 1280, height: 640 },
-];
+const marquee = LISTING_IMAGES.find(image => image.shot === 'marquee');
+const social = {
+  ...marquee,
+  file: 'social-1280x640.png', shot: 'social', className: 'marquee social', width: 1280, height: 640,
+  css: '.social .mq-copy{width:640px}.social .mq-copy h1{font-size:56px}.social .mq-art{left:736px;top:144px;width:480px;height:352px}',
+};
+export const IMAGES = [...LISTING_IMAGES, ...AUXILIARY_IMAGES, social];
 
-const only = process.argv.slice(2);
-const images = only.length ? IMAGES.filter((img) => only.includes(img.shot)) : IMAGES;
-if (!images.length) throw new Error('No such shot: ' + only.join(', ') + '. Known: ' + IMAGES.map((i) => i.shot).join(', '));
+export function selectImages(names) {
+  const unknown = names.filter(name => !IMAGES.some(image => image.shot === name));
+  if (unknown.length) throw new Error('Unknown shot: ' + unknown.join(', ') + '. Known: ' + IMAGES.map(image => image.shot).join(', '));
+  return names.length ? IMAGES.filter(image => names.includes(image.shot)) : IMAGES;
+}
 
-const stage = await openStage();
-try {
-  for (const img of images) {
-    const page = await stage.open(img.page || '/store/src/stage.html?shot=' + img.shot, img.width, img.height, img.scale, img.prepare);
-    writeFileSync(join(root, 'store', 'assets', img.file), await page.screenshot());
-    await page.close();
-    console.log('wrote store/assets/' + img.file);
+/** Throws unless `bytes` is a PNG of the listing image's size. */
+export function assertListingPng(bytes, image) {
+  if (bytes.toString('hex', 0, 8) !== '89504e470d0a1a0a' || bytes.readUInt32BE(16) !== image.width || bytes.readUInt32BE(20) !== image.height) {
+    throw new Error('Unexpected PNG dimensions: ' + image.file);
   }
-} finally {
-  await stage.close();
+}
+
+// The upload ZIP is gitignored (*.zip): it is written here and kept as the Store images workflow's artifact.
+export function writeListingBundle(out) {
+  const missing = LISTING_IMAGES.filter(image => !existsSync(join(out, image.file))).map(image => image.file);
+  if (missing.length) throw new Error('Cannot write the upload bundle without ' + missing.join(', ') + ': run npm run store-assets with no shot names');
+  const files = {};
+  const manifest = LISTING_IMAGES.map(image => {
+    const { file, shot, width, height } = image;
+    const bytes = readFileSync(join(out, file));
+    assertListingPng(bytes, image);
+    files[file] = bytes;
+    return { file, shot, width, height, sha256: createHash('sha256').update(bytes).digest('hex') };
+  });
+  writeFileSync(join(out, 'store-artwork.json'), JSON.stringify(manifest, null, 2) + '\n');
+  writeFileSync(join(out, 'store-artwork.zip'), zipSync(files));
+  const cards = LISTING_IMAGES.map(({ file, shot, width, height }) => `<figure><figcaption>${shot} · ${width} × ${height}</figcaption><a href="${file}"><img src="${file}" alt="${shot}" ${shot === 'icon' ? 'class="icon"' : ''}></a></figure>`).join('');
+  writeFileSync(join(out, 'review.html'), `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Chrome Web Store artwork</title><style>body{margin:32px;background:#f1f9fe;color:#083f92;font:16px/1.5 system-ui}h1{font-size:26px}main{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:24px}figure{margin:0}figcaption{margin:16px 0 8px}img{display:block;width:100%;height:auto}.icon{width:128px}a{color:#b83b7c}</style><h1>Chrome Web Store artwork</h1><p><a href="store-artwork.zip">The ${LISTING_IMAGES.length} PNGs as one ZIP</a> (written by npm run store-assets, not committed) · <a href="store-artwork.json">Dimensions and SHA-256 hashes</a> · <a href="../redesign/mock-review.html">Design comparison</a></p><main>${cards}</main></html>`);
+}
+
+export async function renderStoreAssets(names = []) {
+  const images = selectImages(names);
+  const out = join(root, 'store/assets');
+  mkdirSync(out, { recursive: true });
+  const stage = await openStage();
+  try {
+    for (const image of images) {
+      let bytes;
+      if (image.html) {
+        bytes = await renderListingImage(stage, image);
+      } else {
+        const page = await stage.open(image.page, image.width, image.height, image.scale, image.prepare);
+        try { bytes = await page.screenshot(); } finally { await page.close(); }
+      }
+      writeFileSync(join(out, image.file), bytes);
+      console.log('wrote store/assets/' + image.file);
+    }
+    if (images.some(image => LISTING_IMAGES.includes(image))) writeListingBundle(out);
+  } finally {
+    await stage.close();
+  }
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const args = process.argv.slice(2);
+  if (args[0] === '--list') {
+    console.log(JSON.stringify(selectImages(args.slice(1)).map(({ file, shot, width, height }) => ({ file, shot, width, height })), null, 2));
+  } else {
+    await renderStoreAssets(args);
+  }
 }
