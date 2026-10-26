@@ -136,6 +136,15 @@ first reorder under the new rule, the same day, took 2 min 48 s and 254 requests
 the order, took the file, the run had the PDF 2 min 42 s after the order, and it was a new one. A same-day file over another range (the site's own order form asks for a narrower one) is waited
 past for as long as the new one takes, up to 15 minutes, since its range shows it is not the new one.
 
+An earlier day's file is waited past the same way. Until 2026-10-26 the wait gave it 2 minutes (`appearMs`, then also
+the time allowed for a file to appear where none was listed), counted from the start of the wait, as if the order had
+not been taken. That day's first export ordered, Maccabi confirmed it, and the list still showed the file from eight
+days before at every check: the wait gave up 127 s in, and the export had no medical file at all, since a run that
+orders leaves the listed one out while it collects the letters. Since then only an empty list gives up after
+`appearMs`; any other listed file is waited past for up to 15 minutes. A wait that gives up keeps the file Maccabi
+still lists and names it in `export-errors.json` (with its range when that is narrower than the whole history), and
+says to export again once Maccabi Online lists today's, which that export takes without ordering.
+
 The next day's first export (2026-09-30, `--export`, no same-day file) ordered in 1.5 s, and line 16's first check,
 2 min 43 s after the order, found the file ready: the run had the PDF 2 min 51 s after the order, in 2 min 58 s and
 254 requests all told. So Maccabi builds this member's file in less time than the rest of the run takes, and the

@@ -153,8 +153,56 @@ describe('waitMedicalFile', () => {
     const site = fakeMaccabi();
     const { c, sink } = makeCollector(fakeTransport(site.routes));
     expect(await waitMedicalFile(c, { toDate: '2026-09-17' })).toMatchObject({ ready: false });
-    expect((sink as MemorySink).problems[0].what).toMatch(/no medical file with to_date 2026-09-17 after 1[23]\d s/);
+    expect((sink as MemorySink).problems[0].what).toMatch(/^no medical file with to_date 2026-09-17 after 1[23]\d s, so this export has no medical file\. Export again later today, /);
     expect((sink as MemorySink).problems[0].where).toBe('medical-file');
+  });
+
+  // 2026-10-26: an order Maccabi confirmed was still not swapped in 2 minutes into the wait, when an earlier day's
+  // file in the list made the wait give up at once, and the export had no medical file at all.
+  const earlierDay = { letter_type: 2, status: 1, to_date: '2026-09-10', from_date: '1900-01-01T00:00:00', item_date: '2026-09-10T00:00:00', link: 'old.pdf', timestamp: 'a' };
+
+  it('waits past an earlier day\'s file as long as the new one takes', async () => {
+    const state = { medicalFile: earlierDay as Record<string, unknown> };
+    const clock = new FakeClock();
+    const t0 = clock.t;
+    clock.onSleep = () => {
+      if (clock.t - t0 >= 300_000) state.medicalFile = { ...earlierDay, to_date: '2026-09-17', item_date: '2026-09-17T00:00:00', link: 'mf.pdf', timestamp: 'b' };
+    };
+    const details: string[] = [];
+    const { c, sink } = makeCollector(fakeTransport(fakeMaccabi(state).routes), new MemorySink(), clock, { progress: (ev) => details.push(ev.detail ?? '') });
+    const w = await waitMedicalFile(c, { toDate: '2026-09-17', fromDate: '1900-01-01', orderedAt: t0 - 120_000 });
+    expect(w.ready).toBe(true);
+    expect(w.ready_after_s).toBeGreaterThanOrEqual(300);
+    expect(details[0]).toBe('medical file status pending');
+    expect((sink as MemorySink).files.has('2026-09-17_medical-file.pdf')).toBe(true);
+    expect((sink as MemorySink).files.has('2026-09-10_medical-file.pdf')).toBe(false);
+    expect((sink as MemorySink).problems).toEqual([]);
+  });
+
+  it('keeps the earlier day\'s file, and names it, when the new one is not listed in 15 minutes', async () => {
+    const { c, sink } = makeCollector(fakeTransport(fakeMaccabi({ medicalFile: earlierDay }).routes));
+    const w = await waitMedicalFile(c, { toDate: '2026-09-17', fromDate: '1900-01-01' });
+    expect(w.ready).toBe(false);
+    expect(w.polls).toBeGreaterThanOrEqual(60);
+    expect((sink as MemorySink).files.get('2026-09-10_medical-file.pdf')).toEqual(PDF);
+    expect((sink as MemorySink).files.has('letters/list.json')).toBe(true);
+    expect((sink as MemorySink).problems.map((p) => [p.where, p.what])).toEqual([[
+      'medical-file',
+      'medical file to 2026-09-17 not listed after 15 min, so this export has the earlier medical file, 2026-09-10_medical-file.pdf. ' +
+      "Export again later today, once Maccabi Online lists today's: that export takes it without ordering again",
+    ]]);
+  });
+
+  it('keeps today\'s file over a narrower range when the new one is not swapped in, and says what it covers', async () => {
+    const narrower = { ...earlierDay, to_date: '2026-09-17', from_date: '2023-09-17T00:00:00', item_date: '2026-09-17T00:00:00' };
+    const { c, sink } = makeCollector(fakeTransport(fakeMaccabi({ medicalFile: narrower }).routes));
+    expect(await waitMedicalFile(c, { toDate: '2026-09-17', fromDate: '1900-01-01' })).toMatchObject({ ready: false });
+    expect((sink as MemorySink).files.has('2026-09-17_medical-file.pdf')).toBe(true);
+    expect((sink as MemorySink).problems.map((p) => p.what)).toEqual([
+      'medical file to 2026-09-17 not listed after 15 min, so this export has the earlier medical file, ' +
+      "2026-09-17_medical-file.pdf, which covers only 2023-09-17 to 2026-09-17. Export again later today, once Maccabi Online lists today's: " +
+      'that export takes it without ordering again',
+    ]);
   });
 
   it('retries a 202 download up to 8 times', async () => {

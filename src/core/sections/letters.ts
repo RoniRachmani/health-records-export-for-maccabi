@@ -25,6 +25,9 @@ export async function letters(c: Collector, ctx: Ctx): Promise<Json[]> {
 /** Where problems with the full medical file are reported. Its PDF sits at the root of the export, in no folder. */
 export const MEDICAL_FILE = 'medical-file';
 
+/** The order's startDate: the whole history. */
+const FULL_HISTORY = '1900-01-01';
+
 // Full medical file (letter_type 2). Maccabi delivers it as a letter, but it is the export's main
 // document, so it is saved at the root, beside README.md, not in letters/files/.
 // replace=true overwrites a same-day file from an earlier order.
@@ -92,7 +95,7 @@ export function orderRefused(o: OrderResult | undefined): boolean {
 export async function placeOrder(c: Collector, opts: { reorder?: boolean } = {}): Promise<OrderResult> {
   if (!/^\/online\/medicalfile\/summary\/?$/i.test(await c.deps.transport.pagePath())) return { error: 'open /online/medicalfile/summary/ first' };
   if (!c.session.jwt) return { error: 'no SPA token in this tab -- open any /sonline/ page, then /online/medicalfile/summary/, and rerun' };
-  const fromDate = '1900-01-01';
+  const fromDate = FULL_HISTORY;
   const toDate = israelToday(c.now());
   const pre = await medicalFileLetter(c);
   // Without the current list, a ready same-day file could be mistaken for the new order.
@@ -151,16 +154,26 @@ function coversFrom(letter: Json, fromDate: string): boolean {
 }
 
 /**
- * No new file was ordered: keep the one Maccabi already lists, as a run that orders nothing does. When an order was
- * tried and not taken, say which file the export has instead, so neither the member nor an assistant reading the
- * export takes an earlier file for today's.
+ * Saves the medical file Maccabi lists now, with letters/list.json, and says which file the export has, so neither
+ * the member nor an assistant reading the export takes an earlier file for today's.
  */
-export async function keepListedMedicalFile(c: Collector, order?: OrderResult): Promise<void> {
+async function keepListed(c: Collector): Promise<string> {
   const list = await letters(c, newCtx());
-  if (!order || order.ordered || order.skipped_ready_today) return;
   const x = list.find((l) => l.letter_type === 2 && l.link);
   const rel = x ? iso(x.original_item_date || x.item_date) + '_medical-file.pdf' : '';
-  const kept = rel && (await c.exists(rel)) ? 'this export has the earlier medical file, ' + rel : 'this export has no medical file';
+  if (!rel || !(await c.exists(rel))) return 'this export has no medical file';
+  // Today's file over a narrower range is named for today: its range is what tells it from the whole history.
+  const partial = x.from_date && iso(x.from_date) !== FULL_HISTORY ? ', which covers only ' + iso(x.from_date) + ' to ' + iso(x.to_date) : '';
+  return 'this export has the earlier medical file, ' + rel + partial;
+}
+
+/**
+ * No new file was ordered: keep the one Maccabi already lists, as a run that orders nothing does. When an order was
+ * tried and not taken, say which file the export has instead.
+ */
+export async function keepListedMedicalFile(c: Collector, order?: OrderResult): Promise<void> {
+  const kept = await keepListed(c);
+  if (!order || order.ordered || order.skipped_ready_today) return;
   // A refused order may still be carried out, with its SMS, minutes later: an export after that SMS, the same day,
   // takes the ready file without ordering (placeOrder skipped_ready_today), where exporting again at once would order.
   await c.problem(MEDICAL_FILE, orderRefused(order)
@@ -188,14 +201,18 @@ export interface WaitOptions {
   orderedAt?: number;
 }
 
+// A confirmed order Maccabi has not finished: an export after it is listed, the same day, takes it without ordering
+// (placeOrder skipped_ready_today), where one before that would order again. A problem keeps 300 characters.
+const EXPORT_AGAIN = 'Export again later today, once Maccabi Online lists today\'s: that export takes it without ordering again';
+
 // Waits until the medical file ordered with endDate toDate is ready, then
-// saves the PDF and letters/list.json.
+// saves the PDF and letters/list.json. When it gives up, it keeps the file Maccabi still lists, and says so.
 export async function waitMedicalFile(c: Collector, opts: WaitOptions = {}): Promise<{ polls: number; ready: boolean; ready_after_s?: number }> {
   const toDate = opts.toDate || israelToday(c.now());
   const everyMs = opts.everyMs || 15000;
   const appearMs = opts.appearMs || 2 * 60000;
   const timeoutMs = opts.timeoutMs || 15 * 60000;
-  const fromDate = opts.fromDate || '1900-01-01';
+  const fromDate = opts.fromDate || FULL_HISTORY;
   const started = c.now();
   let polls = 0;
   let sawPending = false;
@@ -203,22 +220,29 @@ export async function waitMedicalFile(c: Collector, opts: WaitOptions = {}): Pro
   while (true) {
     polls++;
     const m = await medicalFileLetter(c);
-    const sameDay: Json = m.letter && m.letter.to_date === toDate ? m.letter : null;
-    // Today's file over another range was ordered before this one (on the site, say): it is still listed because
-    // Maccabi has not swapped in this order's file yet, so it is being prepared.
+    const listed: Json = m.letter;
+    const sameDay: Json = listed && listed.to_date === toDate ? listed : null;
+    // Maccabi swaps the order's file into the list's one entry in place, so any other file still listed (an earlier
+    // day's, or today's over another range, ordered on the site) means it has not swapped this one in yet: being prepared.
     x = sameDay && coversFrom(sameDay, fromDate) ? sameDay : null;
     const waited = c.now() - started;
     c.progress(Math.min(waited, timeoutMs), timeoutMs,
-      x ? 'medical file status ' + x.status : sameDay ? 'medical file status pending' : 'waiting for the medical file to appear');
+      x ? 'medical file status ' + x.status : listed ? 'medical file status pending' : 'waiting for the medical file to appear');
     if (x && x.status !== 1) sawPending = true;
     if (x && x.status === 1 && x.link && (sawPending || !opts.mustSeePending || c.now() - (opts.orderedAt ?? started) > appearMs)) break;
-    if (!sameDay && waited > appearMs) {
-      await c.problem(MEDICAL_FILE, 'no medical file with to_date ' + toDate + ' after ' + Math.round(waited / 1000) + ' s');
+    // No entry at all, where the order should have put one.
+    if (m.http === 200 && !listed && waited > appearMs) {
+      await c.problem(MEDICAL_FILE, 'no medical file with to_date ' + toDate + ' after ' + Math.round(waited / 1000) + ' s, so ' +
+        (await keepListed(c)) + '. ' + EXPORT_AGAIN);
       return { polls, ready: false };
     }
     if (waited > timeoutMs) {
-      const what = x ? 'still status ' + x.status : 'still not swapped for an earlier file over another range';
-      await c.problem(MEDICAL_FILE, 'medical file to ' + toDate + ' ' + what + ' after ' + Math.round(waited / 60000) + ' min; export again later');
+      const after = ' after ' + Math.round(waited / 60000) + ' min';
+      if (x) {
+        await c.problem(MEDICAL_FILE, 'medical file to ' + toDate + ' still status ' + x.status + after + '; export again later');
+        return { polls, ready: false };
+      }
+      await c.problem(MEDICAL_FILE, 'medical file to ' + toDate + ' not listed' + after + ', so ' + (await keepListed(c)) + '. ' + EXPORT_AGAIN);
       return { polls, ready: false };
     }
     await c.sleep(everyMs);
