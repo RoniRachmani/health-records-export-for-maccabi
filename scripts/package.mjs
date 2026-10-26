@@ -1,6 +1,6 @@
 // Zips dist/ into release/health-records-export-for-maccabi-<version>.zip for
 // the Chrome Web Store upload (run through `npm run package`, which builds first).
-import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { zipSync } from 'fflate';
 
@@ -13,10 +13,10 @@ if (manifest.content_scripts) {
 
 const files = {};
 (function walk(dir) {
-  for (const name of readdirSync(dir).sort()) {
-    const full = join(dir, name);
-    if (statSync(full).isDirectory()) walk(full);
-    else if (name !== '.DS_Store') files[relative('dist', full)] = readFileSync(full);
+  for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : 1))) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) walk(full);
+    else if (entry.name !== '.DS_Store') files[relative('dist', full)] = readFileSync(full);
   }
 })('dist');
 

@@ -24,7 +24,7 @@
 // this machine, on those files alone; its first run downloads it from npm (REA_VERSION below; REA_BIN names
 // an installed one).
 import { spawn } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { call } from '../../scripts/in-page.mjs';
@@ -216,7 +216,7 @@ function scriptsIn(dir) {
     for (const entry of readdirSync(at, { withFileTypes: true })) {
       const path = join(at, entry.name);
       if (entry.isDirectory()) walk(path);
-      else if (/\.m?js$/.test(entry.name) && statSync(path).isFile()) files.set(relative(dir, path).split(sep).join('/'), readFileSync(path, 'utf8'));
+      else if (/\.m?js$/.test(entry.name) && entry.isFile()) files.set(relative(dir, path).split(sep).join('/'), readFileSync(path, 'utf8'));
     }
   };
   walk(dir);
