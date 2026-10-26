@@ -4,55 +4,55 @@
     "shot": "ask",
     "width": 1280,
     "height": 800,
-    "sha256": "f954c03325e224c98a350c3bdc97748ffdbadf11e10b12dd5d7dc882a7d4c5db"
+    "sha256": "10432c1842d10d41de5153affbc3f734052dd8dbf16c6861f6ec244d1261891c"
   },
   {
     "file": "screenshot-2-whole.png",
     "shot": "whole",
     "width": 1280,
     "height": 800,
-    "sha256": "53c22da9a226f464333af45ef038df31548772fe9e454f397a58ec9d68b69711"
+    "sha256": "b5e1a688932947cb1774d01f36b3830853a1c7e67b1d198cb9909ee2089819cb"
   },
   {
     "file": "screenshot-3-advice.png",
     "shot": "advice",
     "width": 1280,
     "height": 800,
-    "sha256": "88e4845873d4c96ac550682dec40db44b293a8953808380587f72f02e6baff5e"
+    "sha256": "1514704a0e5ab80eb9ae50a688cd61b80329d5311b351f8c1ef2310e47d95cdf"
   },
   {
     "file": "screenshot-4-start.png",
     "shot": "start",
     "width": 1280,
     "height": 800,
-    "sha256": "162829da1b070858d87e23892d34512ed9260e07917ea7d120411b7e0bad9bbe"
+    "sha256": "0649806778a6f4b43e31b71a1825b6772ac464e072b31b20f259e65df6d219e1"
   },
   {
     "file": "screenshot-5-open.png",
     "shot": "open",
     "width": 1280,
     "height": 800,
-    "sha256": "ee83312be162b9627bbe80a3786c0cf86029173e45e689d23281b8aca899087d"
+    "sha256": "8cf43f98513dd3b087420fd368265ea2f55468233f670d6495877c3974cc0946"
   },
   {
     "file": "promo-small-440x280.png",
     "shot": "promo",
     "width": 440,
     "height": 280,
-    "sha256": "a9252d7e5c2c0fa23841c3a0a449f5f04511f09116c9ba700e2652a250d52c37"
+    "sha256": "d0b098ba8ef87e12eea4ab1ef547ab8586e2157993c52bc30947e89a3f620d4f"
   },
   {
     "file": "promo-marquee-1400x560.png",
     "shot": "marquee",
     "width": 1400,
     "height": 560,
-    "sha256": "8faf817e6748fdae3b578113d30fd38d14f957b847e4c3e4939a560a883c844e"
+    "sha256": "cdb157a498a754c70c00895558de42380f409c4c4b9e23edf57344f1b2c71b33"
   },
   {
     "file": "icon-128.png",
     "shot": "icon",
     "width": 128,
     "height": 128,
-    "sha256": "b216168733e1b56e05e2962ed29265e91c4bee4d0cfc7c31e887e4e0d56e29a3"
+    "sha256": "f74d41853b3d8dc4f79d2dff0217aa488be5b862f491c0359b69da2d642e5088"
   }
 ]
