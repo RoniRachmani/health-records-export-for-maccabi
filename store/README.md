@@ -83,8 +83,9 @@ icons share the same mark, with different canvas scale, padding and rasterizatio
 ## The Store images workflow
 
 `gh workflow run store-assets.yml` (with `-f shots="start open"` for only some) renders on Linux in the runner's own
-fonts (DejaVu Sans, which is wider), validates the bundle, offers its ZIP and hash manifest as an artifact, and pushes
-changed images to a `store-images/` branch. It shows that a render works: delete its branch rather than merging it.
+fonts (DejaVu Sans, which is wider), validates the bundle, keeps its ZIP and hash manifest as the run's artifact, and
+lists in the run's summary which images came out different from the committed ones. It shows that a render works, and
+commits nothing: its images are in the wrong font for the store.
 
 ## Source and design rules
 

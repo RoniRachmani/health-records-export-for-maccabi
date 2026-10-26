@@ -72,7 +72,7 @@ export const FOLDERS: [string, string, string][] = [
 ];
 
 /** One row of the ZIP's contents; the medical file passes DOC, the folders FOLDER. */
-export function fileRow(icon: string, name: string, what: string, kinds: string): HTMLElement {
+function fileRow(icon: string, name: string, what: string, kinds: string): HTMLElement {
   return h('div', 'file-row',
     svg(icon, 'folder'),
     h('span', 'file-name', name),
@@ -82,7 +82,7 @@ export function fileRow(icon: string, name: string, what: string, kinds: string)
 }
 
 /** What the member adds to the folder themselves, after the export: it is theirs to grow. */
-export const ADDED = { name: 'private-clinic-letter.pdf', what: 'Added by you', kinds: 'PDF' };
+const ADDED = { name: 'private-clinic-letter.pdf', what: 'Added by you', kinds: 'PDF' };
 
 /** The unzipped export's rows: its README, the medical file, a file of the member's own (class `added`), and the folders. */
 export function exportRows(): { readme: HTMLElement; medical: HTMLElement; added: HTMLElement; folders: HTMLElement[] } {
@@ -100,7 +100,7 @@ export function exportRows(): { readme: HTMLElement; medical: HTMLElement; added
 const SPARK = '<svg viewBox="0 0 20 20" width="18" height="18"><path d="M10 1.5c.6 4.4 4.1 7.9 8.5 8.5-4.4.6-7.9 4.1-8.5 8.5-.6-4.4-4.1-7.9-8.5-8.5 4.4-.6 7.9-4.1 8.5-8.5z" fill="#296bed"/></svg>';
 
 /** More questions a member might ask, offered under the answer: docs/positioning.md's Ask use cases. */
-export const FOLLOW_UPS = ['What might I be due for?', 'What changed in my latest blood test?', 'What should I raise with my doctor on Thursday?'];
+const FOLLOW_UPS = ['What might I be due for?', 'What changed in my latest blood test?', 'What should I raise with my doctor on Thursday?'];
 
 /** A question put to the assistant, and its answer: paragraphs, then the file it names as its source. */
 export interface Exchange {

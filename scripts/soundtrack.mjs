@@ -479,7 +479,7 @@ const EFFECTS = {
 
 // ---- measuring and levelling -------------------------------------------------
 /** Integrated loudness per ITU-R BS.1770 (K-weighted, gated), in LUFS; -Infinity for silence. */
-export function loudness(track) {
+function loudness(track) {
   const kweight = (x) => {
     // The standard's two stages, as it gives them for 48 kHz.
     const shelf = { b: [1.53512485958697, -2.69169618940638, 1.19839281085285], a: [-1.69065929318241, 0.73248077421585] };

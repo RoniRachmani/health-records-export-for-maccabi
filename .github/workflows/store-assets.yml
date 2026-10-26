@@ -1,9 +1,10 @@
-# Renders the approved store images (npm run store-assets) on Linux, in the runner's own fonts (Roboto is not
-# installed), and pushes changed images to a branch for a pull request. Run it by hand from the Actions tab
-# after the popup's appearance changes; name shots to render only those (e.g. "start open"), or leave it empty for
-# all. The link previews (og, social) are drawn too but are gitignored: the Pages workflow publishes those.
-# The video is not rendered here: it takes 20 minutes and goes to YouTube, not the repo. The Store video workflow
-# (store-video.yml) renders its picture.
+# Renders the approved store images (npm run store-assets) on Linux and checks the upload bundle: a check that a
+# render still works after a change, not a source of images. The runner draws in its own fonts (DejaVu Sans, as
+# Roboto is not installed), while the committed images are rendered on a Mac in its system face (store/README.md),
+# so nothing here is committed: the ZIP and its hash manifest are kept as the run's artifact, and the summary lists
+# which images came out different from the committed ones. Run it by hand from the Actions tab; name shots to render
+# only those (e.g. "start open"), or leave it empty for all. The video is not rendered here: the Store video
+# workflow (store-video.yml) renders its picture.
 name: Store images
 
 on:
@@ -15,7 +16,7 @@ on:
         default: ''
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: store-images
@@ -49,18 +50,12 @@ jobs:
           path: |
             store/assets/store-artwork.zip
             store/assets/store-artwork.json
-      - name: Push changed images for a pull request
+      - name: List the images that differ from the committed ones
         run: |
-          git add store/assets
-          if git diff --cached --quiet; then
-            echo "No image changed."
-            exit 0
-          fi
-          branch="store-images/$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
-          git switch -c "$branch"
-          git diff --cached --stat
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898799+github-actions[bot]@users.noreply.github.com'
-          git commit -q -m "Re-render the store images" -m "Rendered by the Store images workflow, in the Linux runner's fonts."
-          git push origin "HEAD:refs/heads/$branch"
-          printf 'Open a pull request and wait for CI: %s\n' "https://github.com/$GITHUB_REPOSITORY/compare/main...$branch?expand=1" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo '### Images that differ from main'
+            echo 'Expected for every listing image: the runner draws in other fonts. Never commit these.'
+            echo '```'
+            git status --short store/assets
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

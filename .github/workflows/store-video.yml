@@ -6,8 +6,8 @@
 # soundtrack is put on afterwards, in seconds, where that cache is:
 #   gh run download <run id> -n promo-video -D store/assets
 #   npm run store-video -- --remux
-# then upload store/assets/promo-video.mp4 to YouTube and re-render its poster (the Store images workflow, shot
-# "poster").
+# then upload store/assets/promo-video.mp4 to YouTube and re-render its poster on a Mac
+# (npm run store-assets -- poster; store/README.md).
 name: Store video
 
 on:

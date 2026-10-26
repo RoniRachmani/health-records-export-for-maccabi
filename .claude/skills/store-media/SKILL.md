@@ -15,7 +15,7 @@ must not get wrong:
 
 - The store images are rendered on a Mac **without** Roboto installed, so the Roboto-first stacks fall back to San
   Francisco: that is the chosen look. Check in Font Book (macOS has no `fc-list`). Never commit images from Linux or
-  from the *Store images* workflow, which renders in DejaVu Sans; delete its `store-images/` branch, don't merge it.
+  from the *Store images* workflow, which renders in DejaVu Sans and only checks that a render works.
 - The video (`store-video`) does want Roboto on the machine (`fonts-roboto` on Debian/Ubuntu, then `fc-cache -f`), as
   its workflow installs. Either way the font is only the machine's; the extension never ships or fetches one.
 - The listing PNGs repeat byte for byte with the same browser, fonts and OS; the 4K video poster drifts by a level or
