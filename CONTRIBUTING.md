@@ -53,7 +53,8 @@ through that step skips it, even when Maccabi Healthcare Services' answer was lo
 A step that continues is run again from its start, so every step is safe to repeat: JSON is rewritten only when
 its content changed, and a document already staged is not asked for again. Staging also keeps a SHA-256 index of the
 documents it holds: `Collector.pdfOnce` saves a form, an upload or a linked visit's summary only when no staged file
-has its bytes, and otherwise records it as a copy of that file, so a repeat makes no request for it either. Each staged
+has its bytes, and otherwise records it as a copy of that file, so a repeat makes no request for it either. `test/sinkContract.test.ts` runs these write rules against the staging itself, on `fake-indexeddb`, beside the
+tests' in-memory sink and the terminal export's folder, so the three cannot drift apart. Each staged
 file also keeps the step, and the part of it, that first wrote it: the popup counts the files each finished section
 collected from those, so a resumed run's sections still show what they hold. A run
 paused before an update that renames files (`FILE_LAYOUT`) can't be continued, only discarded, or it would stage the

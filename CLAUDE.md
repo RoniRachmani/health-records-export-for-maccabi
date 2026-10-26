@@ -82,7 +82,9 @@ Three layers, and the boundary between the first two is the point of the design:
   IndexedDB staging, the popup.
 - **`test/`** — Vitest against `fakes.ts`: a fake Maccabi (`fakeMaccabi`), `MemorySink`, `FakeClock`
   (sleeps are instant and advance time), and `happy-dom` for `DOMParser`. `runner.test.ts` drives the run loop
-  with `chrome.*` faked; `repoRules.test.ts` checks the pairs below that must stay in step.
+  with `chrome.*` faked; `sinkContract.test.ts` holds `MemorySink`, the shipped IndexedDB `stagingSink` (on
+  `fake-indexeddb`) and the terminal export's `folderSink` to the same write rules; `repoRules.test.ts` checks the
+  pairs below that must stay in step.
 
 ### Two sites, two routes
 
