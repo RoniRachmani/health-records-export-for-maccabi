@@ -1,7 +1,7 @@
 /* A continuous desktop story. Every record and assistant answer is synthetic. */
 import { DOC, FOLDER, MARK } from './parts';
-import { currentStage, DESCRIPTIONS, STAGES, stageSpan } from '../../src/extension/popup/model';
-import { LABELS, PLAN, WEIGHTS, percentOf, type RunState } from '../../src/extension/shared/state';
+import { type RunState } from '../../src/extension/shared/state';
+import { doneRun, FILES, runAt as demoRunAt } from './demo-run';
 const FPS = 60, END = 56;
 const narration = [
   { at: .55, text: 'A new doctor. On Thursday. Where do you even begin?' },
@@ -27,7 +27,7 @@ stage.innerHTML=`<div id="world">
 <div class="actor note"><small>BEFORE THE APPOINTMENT</small><div class="note-question"></div></div>
 ${records.map(([title,year,x,y,angle],i)=>`<div class="actor record" data-x="${x}" data-y="${y}" data-angle="${angle}" data-i="${i}"><div class="record-type">HEALTH RECORD ${DOC}</div><h3>${title}</h3><div class="lines"><i></i><i></i><i></i></div><span class="record-year">${year}</span></div>`).join('')}
 <div class="actor browser"><div class="window-tabs"><i></i><i></i><i></i><span class="window-tab">Health portal</span></div><div class="toolbar"><span>‹</span><span>›</span><span>↻</span><span class="address">health-portal.example</span><span class="pin">${mark}</span></div><div class="site-bar">Your health portal</div><div class="site-nav"><div>Overview</div><div class="active">My medical records</div><div>Appointments</div></div><div class="site-page"><h3>Your medical records</h3><div class="site-row"><strong>Test results</strong><small>Results and history</small></div><div class="site-row"><strong>Visit summaries</strong><small>Documents and follow-ups</small></div><div class="site-row"><strong>Medical file</strong><small>Your full history</small></div></div><iframe title="Actual extension popup, synthetic account" src="/src/extension/popup/popup.html?state=ready"></iframe><div class="browser-note"><b>Actual extension UI</b> · Demo sped up · Keep the portal open and in front<br>Orders your medical file; you will get a text. Usually a few minutes, up to 20.</div></div>
-<div class="actor zip"><div class="zip-art">${DOC}</div><div class="zip-label">maccabi-export.zip</div><small class="zip-meta">486 files · Saved on your computer</small></div>
+<div class="actor zip"><div class="zip-art">${DOC}</div><div class="zip-label">maccabi-export.zip</div><small class="zip-meta">${FILES} files · Saved on your computer</small></div>
 <div class="actor assistant"><div class="assistant-bar"><span>Your chosen assistant</span><small>Illustrative assistant · After export</small></div><div class="folder-pill">${FOLDER}maccabi-export</div><div class="file-list">${['README.md','medical-file.pdf','test-results/','visit-summaries/','approvals/','medications-and-prescriptions/'].map((name,i)=>`<div class="file-row ${i===0?'readme':''}">${i<2?DOC:FOLDER}${name}</div>`).join('')}</div><div class="prompt"></div><div class="reading">Reading your selected files…</div><div class="extract"><small></small><h3></h3><p></p><div class="source-path"></div></div><div class="save-brief">Save brief ↓</div></div>
 <div class="permission"><h3>Open this folder in your assistant?</h3><p>You choose what to share.<br>Check the service’s data settings first.</p><div class="permission-actions"><span>Cancel</span><span class="primary">Open folder</span></div></div>
 <svg class="thread"><path d="M990 660 C1060 660 1050 480 1120 480"/></svg>
@@ -46,16 +46,11 @@ function typed(s:string,text:string,u:number){q(s).textContent=text.slice(0,Math
 const frame=q<HTMLIFrameElement>('iframe');
 const BASE_TIME=Date.parse('2026-09-17T09:00:00Z');
 let clickTarget={x:1599,y:457};
+const STARTED=new Date(BASE_TIME).toISOString(),FINISHED=new Date(BASE_TIME+540000).toISOString();
 function runAt(t:number):RunState|null {
   if(t<13.2)return null;
-  const u=clamp((t-13.2)/6), total=PLAN.reduce((n,s)=>n+WEIGHTS[s],0), target=u*total;
-  let before=0,next=0;
-  for(;next<PLAN.length-1&&target>before+WEIGHTS[PLAN[next]];next++)before+=WEIGHTS[PLAN[next]];
-  const step=PLAN[next],fraction=clamp((target-before)/WEIGHTS[step]),parts=Object.keys(DESCRIPTIONS[step]);
-  const part=parts[Math.min(parts.length-1,Math.floor(fraction*parts.length))],detail=part?LABELS[step]+': '+part:undefined;
-  const filesByKey:Record<string,number>={};
-  for(let i=1;i<currentStage({next,detail});i++){const stage=STAGES[i],part=stage.parts?.at(-1),span=stageSpan(i);filesByKey[part?stage.steps.at(-1)+':'+part:stage.steps[0]]=Math.max(1,Math.round(486*(span.end-span.start)/100));}
-  return {id:'synthetic-film',status:u===1?'done':step==='save'?'saving':'running',tabId:1,ctx:{},next:u===1?PLAN.length:next,nextStep:PLAN[next],startedAt:new Date(BASE_TIME).toISOString(),finishedAt:u===1?new Date(BASE_TIME+540000).toISOString():undefined,percent:u===1?100:percentOf(next,fraction,1),stepDone:fraction,stepTotal:1,detail,filesByKey,fileCount:Math.round(u*486),byteCount:Math.round(u*38400000),zipBytes:u===1?38400000:undefined,zipName:'maccabi-export-2026-09-17.zip',problems:[],problemCount:0};
+  const u=clamp((t-13.2)/6);
+  return u===1?doneRun(STARTED,FINISHED,false):demoRunAt(u,STARTED,false);
 }
 function sizePopup(){frame.style.width=frame.contentDocument!.body.offsetWidth+'px';frame.style.height=Math.min(600,Math.ceil(frame.contentDocument!.body.getBoundingClientRect().height))+'px';}
 const extracts=[

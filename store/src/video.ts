@@ -14,8 +14,9 @@
    so the bar, the step names and the section list move as they do in an export. Every record,
    date, id and file name around it is made up here. */
 import '@fontsource-variable/heebo';
-import { currentStage, DESCRIPTIONS, formatBytes, STAGES, stageSpan } from '../../src/extension/popup/model';
-import { LABELS, PLAN, WEIGHTS, percentOf, type PlanStep, type RunState } from '../../src/extension/shared/state';
+import { formatBytes } from '../../src/extension/popup/model';
+import { type PlanStep, type RunState } from '../../src/extension/shared/state';
+import { doneRun as demoDoneRun, runAt as demoRunAt, ZIP } from './demo-run';
 import {
   between, clamp01, fade, inCubic, inOut, kinetic, lerp, linear, out, outBack, outQuint, place, pulse, ramp, rise, showing,
   type Point,
@@ -65,91 +66,19 @@ const T = {
 /** The second the README's poster is taken from: the export running, which is what the film is about. */
 const POSTER_AT = OPEN + 19.7;
 
-// What a long-standing member's export comes to, the same numbers the store images show.
-const FILES = 486;
-const BYTES = 38_400_000;
-const ZIP = 'maccabi-export-2026-09-17.zip';
 const DISCLAIMER = 'Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare Services.';
 
 // ---- the run, as the popup will be given it -----------------------------
-const TOTAL_WEIGHT = PLAN.reduce((sum, step) => sum + WEIGHTS[step], 0);
+/** An export of this size takes about 9 minutes; the popup shows the time elapsed from when it began. */
+const begun = (u: number): string => new Date(Date.now() - Math.round(u * 9 * 60_000)).toISOString();
 
-/** How many records each counting part lists, for the panel's "38 of 61". */
-const RECORDS: Record<string, number> = {
-  prescriptions: 9, 'hospital letters': 2, 'saved documents': 11, 'test results': 96, 'lab histories': 61, visits: 24,
-  referrals: 31, approvals: 12, vaccinations: 14, letters: 8, 'doctor inquiries': 17, 'information pages': 4,
-};
-
-/** The staged-file keys of the lines finished before `stage`, each with its share of the export's files by weight. */
-function filesBefore(stage: number): Record<string, number> {
-  const byKey: Record<string, number> = {};
-  // The first line orders the file, and writes none of its own.
-  for (let i = 1; i < stage; i++) {
-    const s = STAGES[i];
-    const part = s.parts?.at(-1);
-    const { start, end } = stageSpan(i);
-    byKey[part ? s.steps.at(-1) + ':' + part : s.steps[0]] = Math.max(1, Math.round((FILES * (end - start)) / 100));
-  }
-  return byKey;
-}
-
-/** The run state a fraction `u` of the way through the plan, weighted as a real run is. */
-function runAt(u: number): RunState {
-  const target = clamp01(u) * TOTAL_WEIGHT;
-  let before = 0;
-  let i = 0;
-  let frac = 1;
-  for (; i < PLAN.length; i++) {
-    const weight = WEIGHTS[PLAN[i]];
-    if (target <= before + weight || i === PLAN.length - 1) {
-      frac = clamp01((target - before) / weight);
-      break;
-    }
-    before += weight;
-  }
-  const step = PLAN[i];
-  // The step's own progress detail, as the collector reports it: its parts in the order they run.
-  const parts = Object.keys(DESCRIPTIONS[step]);
-  const at = Math.min(parts.length - 1, Math.floor(frac * parts.length));
-  const part = parts[at];
-  const records = RECORDS[part];
-  const detail = part ? LABELS[step] + ': ' + part : undefined;
-  return {
-    id: 'demo',
-    status: step === 'save' ? 'saving' : 'running',
-    tabId: 1,
-    // An export of this size takes about 9 minutes; the popup shows the time elapsed from here.
-    startedAt: new Date(Date.now() - Math.round(u * 9 * 60_000)).toISOString(),
-    next: i,
-    nextStep: step,
-    ctx: {},
-    stepDone: frac,
-    stepTotal: 1,
-    detail,
-    items: records ? { done: Math.floor(clamp01(frac * parts.length - at) * records), total: records } : undefined,
-    percent: percentOf(i, frac, 1),
-    fileCount: Math.round(u * FILES),
-    byteCount: Math.round(u * BYTES),
-    filesByKey: filesBefore(currentStage({ next: i, detail })),
-  };
-}
+const runAt = (u: number): RunState => demoRunAt(u, begun(u));
 
 let finished: RunState | null = null;
 
 /** The finished run. Built once, so the time it says it took does not drift while rendering. */
 function doneRun(): RunState {
-  finished ??= {
-    ...runAt(1),
-    status: 'done',
-    next: PLAN.length,
-    percent: 100,
-    finishedAt: new Date().toISOString(),
-    zipName: ZIP,
-    fileCount: FILES,
-    zipBytes: BYTES,
-    problems: [],
-    problemCount: 0,
-  };
+  finished ??= demoDoneRun(begun(1), new Date().toISOString());
   return finished;
 }
 
