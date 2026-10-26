@@ -113,12 +113,12 @@ describe('public/third-party-notices.txt', () => {
 describe('scripts/', () => {
   // The scripts take the portal's origin from core (core.MACCABI_ORIGIN). The one place it is written out is the
   // browser driver, which runs before core is bundled; it has to agree with the extension's.
-  const HOST = new URL(MACCABI_ORIGIN).hostname.replace(/\./g, '\\.');
-  const spelled = new RegExp(`['"\`]https://${HOST}`);
+  // As a string literal opens it, in any of the three quotes.
+  const spelled = (text: string) => ["'", '"', '`'].some((q) => text.includes(q + MACCABI_ORIGIN));
 
   it("spells the portal's origin only in maccabi-browser.mjs", () => {
     const files = readdirSync('scripts').filter((f) => f.endsWith('.mjs') && f !== 'maccabi-browser.mjs');
-    expect(files.filter((f) => spelled.test(read(join('scripts', f))))).toEqual([]);
+    expect(files.filter((f) => spelled(read(join('scripts', f))))).toEqual([]);
   });
 
   it("spells it in maccabi-browser.mjs as the extension's MACCABI_ORIGIN", () => {
