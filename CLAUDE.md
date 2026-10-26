@@ -204,6 +204,13 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   spell them again (`maccabi-browser.mjs`'s `ORIGIN` is the one copy, which a test holds to it). They are typed
   with JSDoc, checked by `scripts/tsconfig.json`, never with a `.d.mts` beside them. A sign-in attempt (a password, an SMS code) is sent once and never resubmitted; what is refused
   before it is sent (an empty password, a code that is not six digits) leaves the sign-in open.
+- **The research tools stay internal.** The no-browser SAML/SMS sign-in (`scripts/maccabi-session.mjs`), the export
+  from the terminal (`npm run export`), the live run (`npm run live`), the sign-in recorder
+  (`scripts/discover-login.mjs`) and the endpoint scan with REA (`tools/endpoint-scan/`) are for researching the site
+  and checking the collector on your own account, and nothing more. They never ship (not in the extension, the store
+  package, a release or the website), and nothing a member reads (the README's parts for members, the store listing, the landing
+  page, the popup, an export's README) offers or mentions them. Work on them keeps out of the code that ships
+  (`src/extension/`, and `src/core/` beyond what the extension needs too); `src/cli/index.ts` only re-exports for them.
 - **Every request goes in `docs/endpoints/`**: the collector's (`src/core`, sent from the tab or from Node) in
   `endpoints.json` with the file it produces, and the ones the scripts send themselves (the sign-in chain, the token
   bootstrap, the legacy page prime) in `scripts-endpoints.json` with what each sends and returns, names and shapes and

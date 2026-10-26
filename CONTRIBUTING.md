@@ -183,6 +183,9 @@ reused: every new sign-in ends your other sessions. Branded Chrome ignores `--lo
 
 ## An export from the terminal, without the extension
 
+The live run above, this export (with or without a browser) and the endpoint scan below are internal research tools:
+see [Ground rules](#ground-rules).
+
 `npm run export` makes an export with no extension installed: it opens the same browser and signs in the same way as
 `npm run live` (the profile, `.env` and 1Password references above), then runs the collector in Node — `src/core/`
 bundled for it into `dist-cli/` — with the requests sent from inside the Maccabi Online page, as the extension sends
@@ -317,6 +320,13 @@ film, drawn by the same page: `npm run store-assets -- poster`.
 
 - **Never commit real data.** No responses, exports, PDFs or anything else taken from a real account. Test fixtures are
   synthetic.
+- **The research tools stay internal.** The no-browser SAML/SMS sign-in, the export from the terminal
+  (`npm run export`), the live run (`npm run live`), the sign-in recorder (`scripts/discover-login.mjs`) and the
+  endpoint scan with REA (`npm run endpoints`) are for researching the site and checking the collector on your own
+  account. They never ship in the extension, the store package, a release or the website, and nothing a member reads
+  (the README's parts for members, the store listing, the landing page, the popup, an export's README) offers or mentions them. A
+  change for them stays out of the code that ships: `src/extension/`, and `src/core/` beyond what the extension needs
+  too.
 - **List every request in [docs/endpoints/](docs/endpoints/).** The collector's, whether a tab or Node sends them, in
   [endpoints.json](docs/endpoints/endpoints.json), which the privacy policy and the store review rely on being complete;
   the ones the terminal scripts send themselves (the sign-in chain, the token bootstrap, the legacy page prime) in
