@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { unzipSync } from 'fflate';
 import { LISTING_IMAGES } from '../store/design/listing.mjs';
 import { root } from './stage.mjs';
-import { assertListingPng } from './store-assets.mjs';
+import { assertListingPng, SCALE, scaledFile } from './store-assets.mjs';
 
 const out = join(root, 'store/assets');
 const count = LISTING_IMAGES.length;
@@ -25,6 +25,13 @@ for (const image of LISTING_IMAGES) {
   assertListingPng(bytes, image);
   // Opaque RGB for store screenshots/promo tiles, RGBA for the transparent store icon.
   if (bytes[25] !== (image.shot === 'icon' ? 6 : 2)) throw new Error('Incorrect PNG colour type: ' + image.file);
+  // The drawing it was scaled down from, kept beside it, when there is one (--scale 1 writes none).
+  const large = join(out, scaledFile(image.file, SCALE));
+  if (existsSync(large)) {
+    const big = readFileSync(large);
+    assertListingPng(big, { ...image, file: scaledFile(image.file, SCALE), width: image.width * SCALE, height: image.height * SCALE });
+    if (big[25] !== bytes[25]) throw new Error('Incorrect PNG colour type: ' + scaledFile(image.file, SCALE));
+  }
   if (archive && (!archive[image.file] || !bytes.equals(Buffer.from(archive[image.file])))) throw new Error('Stale ZIP entry: ' + image.file);
 }
-console.log(`Verified ${count} PNGs, dimensions, colour types and SHA-256 hashes` + (archive ? ', and the ZIP.' : '; no ZIP here to check.'));
+console.log(`Verified ${count} PNGs (and their @${SCALE}x drawings), dimensions, colour types and SHA-256 hashes` + (archive ? ', and the ZIP.' : '; no ZIP here to check.'));

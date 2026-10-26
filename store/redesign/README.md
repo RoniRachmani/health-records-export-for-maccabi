@@ -55,6 +55,7 @@ npm run store-assets -- icon           # approved padded store icon
 npm run store-assets -- poster         # video poster, drawn by the video's own page
 npm run store-assets -- og-site social # landing-page preview and approved marquee at GitHub size
 npm run store-assets -- --list         # available shot names, filenames and dimensions; no browser needed
+npm run store-assets -- --scale 1      # store sizes only, with no @2x drawings
 npm run icons                         # packaged toolbar icons only; the store icon is the `icon` shot
 ```
 

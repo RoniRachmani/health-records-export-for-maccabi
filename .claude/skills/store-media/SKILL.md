@@ -21,8 +21,11 @@ The approved listing images are the default for `npm run store-assets`, `npm run
 workflow. Canonical outputs are the eight PNGs in `store/assets/`, with `review.html` and `store-artwork.json`
 (committed) and `store-artwork.zip` (gitignored: written by each render; upload one rendered on a Mac, not the Store
 images workflow's artifact). CI validates the bundle and uploads its ZIP and hash manifest as an artifact. The README hero uses
-`store/assets/screenshot-1-ask.png`. Named shots include the five screenshots, `promo`, `marquee`, `icon`, `poster`,
+`store/assets/screenshot-1-ask@2x.png`. Named shots include the five screenshots, `promo`, `marquee`, `icon`, `poster`,
 `og-site` and `social`; `npm run store-assets -- start open` updates only those shots, then refreshes the bundle.
+Every shot is drawn at 2x (`<name>@2x.png`, committed beside it) and its
+store-sized file is that drawing scaled down; `--scale 1` draws only the store size. The 4K poster differs by a level
+or two between runs; the other images are byte for byte.
 The proposal renderer and `--mock` flag are retired. `store/redesign/mock-review.html` preserves the historical
 comparison; the latest column links to canonical assets. See `store/redesign/README.md` and `docs/store-listing.md`.
 

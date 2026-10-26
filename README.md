@@ -20,7 +20,7 @@ where an assistant can read all of it.
 
 <p align="center">
   <a href="https://maccabi.ronirachmani.com/#ask">
-    <img src="store/assets/screenshot-1-ask.png" alt="Your whole Maccabi history. Ready to ask: an export folder illustration and a synthetic assistant answer citing a penicillin rash in medical-file.pdf, page 14" width="720">
+    <img src="store/assets/screenshot-1-ask@2x.png" alt="Your whole Maccabi history. Ready to ask: an export folder illustration and a synthetic assistant answer citing a penicillin rash in medical-file.pdf, page 14" width="720">
   </a>
 </p>
 

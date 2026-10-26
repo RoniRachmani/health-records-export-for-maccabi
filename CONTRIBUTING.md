@@ -262,7 +262,7 @@ npm run release        # all of it from clean: tests, dist-dev/, the release ZIP
 npm run release:zip    # the same without the store images and the video
 npm run clean          # remove dist/, dist-dev/, dist-store/, dist-cli/ and release/
 npm run package        # release/health-records-export-for-maccabi-<version>.zip for the Chrome Web Store and GitHub release
-npm run store-assets   # approved store/assets/ images, upload bundle, video poster and web link previews (Chrome; CHROME_PATH)
+npm run store-assets   # approved store/assets/ images at 2x and store size, upload bundle, video poster and web link previews (Chrome; CHROME_PATH)
 node scripts/check-store-assets.mjs # validate eight listing PNGs, dimensions, manifest and ZIP
 npm run store-video    # store/assets/promo-video.mp4, the promo video (same browser; ffmpeg if you have it)
 npm run icons          # hand-tuned public/icons/; the store icon is `npm run store-assets -- icon`
@@ -272,7 +272,9 @@ npm run icons          # hand-tuned public/icons/; the store icon is `npm run st
 and the *Store images* workflow all generate the approved design into `store/assets/`. Inspect `store/assets/review.html`
 and use `store/assets/store-artwork.zip` (gitignored: written by each render; upload one rendered on a Mac, not the Store images workflow's artifact) for its eight upload PNGs; `store-artwork.json` records dimensions and SHA-256
 hashes. `node scripts/check-store-assets.mjs` checks these against the PNGs. Named shots still work, including `icon`,
-`poster`, `og-site` and `social`. A render that includes a listing shot rewrites the bundle from all eight images, and stops with an error if one is missing.
+`poster`, `og-site` and `social`. Each image is drawn at twice its size and kept as `<name>@2x.png` (the README's
+hero is one), and the file at its own size, the one the store takes, is that drawing scaled down by the browser;
+`--scale 1` draws only the store-sized files, as renders did before, and `--scale 3` a larger drawing. A render that includes a listing shot rewrites the bundle from all eight images, and stops with an error if one is missing.
 Updating listing images alone does not require a new extension package or version bump.
 
 The layouts and SVG illustration live in `store/design/listing.mjs`, with the approved CSS in
@@ -285,8 +287,10 @@ to the canonical assets.
 The image and video renderers build the local store stage with Vite and photograph it in headless Chrome. They need
 a local listening port, Node.js 22 or newer, installed dependencies, and Chrome, Chromium or Edge (`CHROME_PATH` overrides
 discovery). The fonts installed on the rendering machine change the pixels, as the next paragraph says. The latest renderer enables the popup's reduced-motion styles and waits two animation frames
-before each capture. All eight latest PNGs matched byte for byte across two consecutive runs on 25 October 2026;
-the ZIP entries matched the exported files too. This check applies to the same browser, fonts and operating system,
+before each capture. All eight latest PNGs matched byte for byte across two consecutive runs on 25 October 2026,
+and again, with their 2x drawings, on 26 October; the ZIP entries matched the exported files too. The video poster
+does not: drawn at 4K, its pixels differ by a level or two from run to run, so leave it out of a commit that is not
+about it. This check applies to the same browser, fonts and operating system,
 not to renders across different environments.
 
 The store images and video show the real popup with made-up states. The store images are rendered on a Mac without

@@ -147,6 +147,8 @@ validates the bundle and offers its ZIP and hash manifest as a downloadable arti
 `--mock` flag are retired. Use shot names to select outputs, e.g. `npm run store-assets -- marquee icon`.
 
 Upload screenshots in the numbered order above. They are opaque, full-bleed 1280×800 PNGs; the icon retains alpha.
+Each is drawn at twice that size and scaled down; the 2× drawing is kept beside it as `<name>@2x.png` for the README and
+anywhere else that wants it sharper, but the store takes only the sizes in the table.
 The images follow the existing design system and [positioning](positioning.md), with a small **Unofficial** chip
 beside the product title instead of a full disclaimer footer. Screenshots 1 and 3 label illustrative assistant output;
 screenshot 2 labels its export folder; screenshots 4 and 5 use the actual popup with synthetic states from

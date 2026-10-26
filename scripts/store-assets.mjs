@@ -1,4 +1,6 @@
 // The approved store design is the default. Name shots to render a subset, e.g. -- start open.
+// Each image is drawn at SCALE times its size (--scale N, default 2) and kept as <name>@<N>x.png, and the file at the
+// size the store asks for is that drawing scaled down, so its edges are sharper too. --scale 1 draws only that file.
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -16,6 +18,10 @@ const social = {
   css: '.social .mq-copy{width:640px}.social .mq-copy h1{font-size:56px}.social .mq-art{left:736px;top:144px;width:480px;height:352px}',
 };
 export const IMAGES = [...LISTING_IMAGES, ...AUXILIARY_IMAGES, social];
+export const SCALE = 2;
+
+/** The file an image is kept in when drawn `scale` times its size: screenshot-1-ask@2x.png. */
+export const scaledFile = (file, scale) => file.replace(/\.png$/, `@${scale}x.png`);
 
 export function selectImages(names) {
   const unknown = names.filter(name => !IMAGES.some(image => image.shot === name));
@@ -48,7 +54,27 @@ export function writeListingBundle(out) {
   writeFileSync(join(out, 'review.html'), `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Chrome Web Store artwork</title><style>body{margin:32px;background:#f1f9fe;color:#083f92;font:16px/1.5 system-ui}h1{font-size:26px}main{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:24px}figure{margin:0}figcaption{margin:16px 0 8px}img{display:block;width:100%;height:auto}.icon{width:128px}a{color:#b83b7c}</style><h1>Chrome Web Store artwork</h1><p><a href="store-artwork.zip">The ${LISTING_IMAGES.length} PNGs as one ZIP</a> (written by npm run store-assets, not committed) · <a href="store-artwork.json">Dimensions and SHA-256 hashes</a> · <a href="../redesign/mock-review.html">Design comparison</a></p><main>${cards}</main></html>`);
 }
 
-export async function renderStoreAssets(names = []) {
+// The large drawing scaled down to the image's own size by the browser, on a transparent page so the icon keeps its alpha.
+async function scaleDown(stage, bytes, image) {
+  const page = await stage.open('/store/src/listing.html', image.width, image.height, 1, 'void 0');
+  try {
+    await page.evaluate(`(async () => {
+      document.documentElement.innerHTML = '<head><style>html,body{margin:0;background:transparent}img{display:block;width:${image.width}px;height:${image.height}px}</style></head><body><img></body>';
+      const img = document.querySelector('img');
+      img.src = 'data:image/png;base64,${bytes.toString('base64')}';
+      await img.decode();
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    })()`);
+    if (image.shot === 'icon') {
+      await page.send('Emulation.setDefaultBackgroundColorOverride', { color: { r: 0, g: 0, b: 0, a: 0 } });
+    }
+    return await page.screenshot();
+  } finally {
+    await page.close();
+  }
+}
+
+export async function renderStoreAssets(names = [], scale = SCALE) {
   const images = selectImages(names);
   const out = join(root, 'store/assets');
   mkdirSync(out, { recursive: true });
@@ -57,10 +83,15 @@ export async function renderStoreAssets(names = []) {
     for (const image of images) {
       let bytes;
       if (image.html) {
-        bytes = await renderListingImage(stage, image);
+        bytes = await renderListingImage(stage, image, scale);
       } else {
-        const page = await stage.open(image.page, image.width, image.height, image.scale, image.prepare);
+        const page = await stage.open(image.page, image.width, image.height, scale, image.prepare);
         try { bytes = await page.screenshot(); } finally { await page.close(); }
+      }
+      if (scale !== 1) {
+        writeFileSync(join(out, scaledFile(image.file, scale)), bytes);
+        console.log('wrote store/assets/' + scaledFile(image.file, scale));
+        bytes = await scaleDown(stage, bytes, image);
       }
       writeFileSync(join(out, image.file), bytes);
       console.log('wrote store/assets/' + image.file);
@@ -76,6 +107,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   if (args[0] === '--list') {
     console.log(JSON.stringify(selectImages(args.slice(1)).map(({ file, shot, width, height }) => ({ file, shot, width, height })), null, 2));
   } else {
-    await renderStoreAssets(args);
+    const at = args.indexOf('--scale');
+    const scale = at < 0 ? SCALE : Number(args.splice(at, 2)[1]);
+    if (!Number.isInteger(scale) || scale < 1) throw new Error('--scale takes a whole number, 1 or more');
+    await renderStoreAssets(args, scale);
   }
 }

@@ -8,7 +8,7 @@ export const AUXILIARY_IMAGES = [
   // The page is restyled for the picture: only its name and its dashboard, centred, as the finished dashboard and
   // not a moment of its animation. Its og:title, the headline, is printed under the picture by whatever shows it.
   {
-    file: 'og-site-1200x630.png', shot: 'og-site', page: '/site/index.html', width: 1200, height: 630, scale: 1,
+    file: 'og-site-1200x630.png', shot: 'og-site', page: '/site/index.html', width: 1200, height: 630,
     prepare: `document.head.insertAdjacentHTML('beforeend', '<style>' +
       'body > :not(.hero), .hero-text > :not(.eyebrow), .he-slip, .asked, .scene { display: none !important; }' +
       'html, body { width: 1200px; height: 630px; margin: 0; padding: 0; max-width: none; overflow: hidden; background: linear-gradient(135deg, #e6f0ff 0%, #f3f0fb 50%, #fde9ef 100%); }' +
