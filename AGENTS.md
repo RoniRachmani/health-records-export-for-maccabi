@@ -24,7 +24,7 @@ Match existing TypeScript: two-space indentation, single quotes, semicolons, cam
 Use Vitest with `*.test.ts` names under `test/` or `tools/`. Reuse `test/fakes.ts` for fake transport, storage, clocks, and synthetic records; DOM tests use happy-dom. Cover changed behavior, failures, and resume safety. No numeric coverage threshold is configured. CI runs typecheck, tests, and the production build.
 
 ## Commit & Pull Request Guidelines
-History uses short, imperative subjects such as “Never send a refused medical-file order again”; releases use `Release <version>: <summary>`. Existing maintainer guidance favors direct work on `main`; open PRs only when requested. Run typecheck and tests before pushing. For requested PRs, describe behavior changes and validation, link relevant issues, and include screenshots for UI changes.
+History uses short, imperative subjects such as “Never send a refused medical-file order again”; releases use `Release <version>: <summary>`. Branch from `main` and submit changes through a pull request. The `check` CI job must pass against the latest `main`; no second-person approval is required. Run typecheck and tests before pushing. For requested PRs, describe behavior changes and validation, link relevant issues, and include screenshots for UI changes.
 
 ## Privacy & Architecture Rules
 Never commit real account data, exports, PDFs, tokens, or HAR captures. Keep secrets in ignored `.env` files. Map every request in `docs/endpoints/endpoints.json`. Read `CONTRIBUTING.md` before changing run behavior; preserve repeatable steps and medical-file ordering guards. Update user documentation when behavior changes, keep policy copies synchronized, and regenerate store images after popup changes.

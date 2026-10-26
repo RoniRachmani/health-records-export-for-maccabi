@@ -1,5 +1,5 @@
-# Renders the store images (npm run store-assets) on Linux with Roboto installed, which the renders need and a
-# maintainer's machine may not have, and commits the ones that changed to main. Run it by hand from the Actions tab
+# Renders the approved store images (npm run store-assets) on Linux, in the runner's own fonts (Roboto is not
+# installed), and pushes changed images to a branch for a pull request. Run it by hand from the Actions tab
 # after the popup's appearance changes; name shots to render only those (e.g. "start open"), or leave it empty for
 # all. The link previews (og, social) are drawn too but are gitignored: the Pages workflow publishes those.
 # The video is not rendered here: it takes 20 minutes and goes to YouTube, not the repo. The Store video workflow
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       shots:
-        description: Shots to render, space-separated (empty for all)
+        description: 'Shots: ask whole advice start open promo marquee icon poster og-site social (empty for all)'
         required: false
         default: ''
 
@@ -26,34 +26,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Install Roboto
-        run: |
-          sudo apt-get update -q
-          sudo apt-get install -y --no-install-recommends fonts-roboto
-          fc-cache -f
-          fc-list | grep -qi roboto
-          # Ubuntu's AppArmor keeps Chrome's sandbox from starting without this.
-          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      # Ubuntu's AppArmor keeps Chrome's sandbox from starting without this.
+      - name: Let Chrome's sandbox start
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       - name: Render
         env:
           SHOTS: ${{ inputs.shots }}
         # $SHOTS is split into shot names on purpose.
         run: npm run store-assets -- $SHOTS
-      - name: Commit what changed
+      - name: Verify the listing upload bundle
+        run: node scripts/check-store-assets.mjs
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: store-artwork
+          path: |
+            store/assets/store-artwork.zip
+            store/assets/store-artwork.json
+      - name: Push changed images for a pull request
         run: |
           git add store/assets
           if git diff --cached --quiet; then
             echo "No image changed."
             exit 0
           fi
+          branch="store-images/$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          git switch -c "$branch"
           git diff --cached --stat
           git config user.name 'github-actions[bot]'
           git config user.email '41898799+github-actions[bot]@users.noreply.github.com'
-          git commit -q -m "Re-render the store images" -m "Rendered by the Store images workflow, with Roboto."
-          git pull -q --rebase origin main
-          git push origin HEAD:main
+          git commit -q -m "Re-render the store images" -m "Rendered by the Store images workflow, in the Linux runner's fonts."
+          git push origin "HEAD:refs/heads/$branch"
+          printf 'Open a pull request and wait for CI: %s\n' "https://github.com/$GITHUB_REPOSITORY/compare/main...$branch?expand=1" >> "$GITHUB_STEP_SUMMARY"

@@ -29,7 +29,8 @@ npm run env                       # write .env from 1Password, by the references
 npm run clean                     # remove dist/, dist-dev/, dist-store/, dist-cli/, release/
 npm run release:zip               # clean, test, build:dev, package
 npm run release                   # release:zip, then store-assets, store-video
-npm run store-assets              # re-render store/assets/ images (needs Chrome; CHROME_PATH)
+npm run store-assets              # approved store/assets/ images, upload ZIP, poster and link previews (Chrome; CHROME_PATH)
+node scripts/check-store-assets.mjs # verify PNG dimensions, hashes, colour types and ZIP contents
 npm run store-assets -- marquee   # just one, by shot name
 npm run store-video               # re-render store/assets/promo-video.mp4 (not committed; ffmpeg or macOS)
 npm run store-video -- 8 12       # just those seconds of it, while working on a scene
@@ -39,7 +40,7 @@ npm run store-video -- --synth        # the synthesized music and effects instea
 npm run store-video -- --script       # the narration as one take's text, for ElevenLabs
 npm run store-video -- --captions     # the narration as subtitles, to store/assets/promo-captions.srt, for YouTube
 npm run store-video -- --import take.mp3 --audio-only   # cut that take into the narration's lines
-npm run icons                     # public/icons/ + store/assets/icon-128.png
+npm run icons                     # hand-tuned public/icons/ (the store icon is `npm run store-assets -- icon`)
 npm run site-check                # the landing page's motion: ends where the still page is, at five screen sizes
 npm run site-check -- frames .path scroll 10 375x812   # photograph one picture as it scrolls in (or `time 0 13 0.5`)
 ```
@@ -50,24 +51,19 @@ workflow file in the repo — it is configured in the repository's settings. Loa
 (or `dist/`) unpacked at `chrome://extensions` to run it; the dev build is named "… (dev)" and can be
 driven from the Maccabi page's console (see *Driving a run from the console* in `CONTRIBUTING.md`).
 
-Before `store-assets` or `store-video`, install Roboto on the machine (`fonts-roboto` on Debian/Ubuntu,
-then `fc-cache -f`) and check `fc-list | grep -i roboto`: the renders photograph the popup, and without
-it they draw the fallback face. That is a font for the machine taking the pictures; the extension itself
-still never ships or fetches one. Without Roboto here, run the *Store images* workflow instead
-(`gh workflow run store-assets.yml`, optionally `-f shots="start open"`): it renders on Linux with Roboto and
-commits the images that changed to `main`, so pull afterwards. The *Store video* workflow (`gh workflow run
-store-video.yml`) renders the video's picture there and keeps it as the run's artifact, with no sound: the narration is
-only in a maintainer's `.cache/narration/`, so download it to `store/assets/` and add the soundtrack with `--remux`.
+Rendering the store images, video, poster, link previews or icons (fonts, the CI workflows, the approved
+listing bundle): load the `store-media` skill (`.claude/skills/store-media/SKILL.md`) first.
 
-A session can push to `main` but not push tags, so a GitHub release is published by the *Release* workflow
+A GitHub release is published by the *Release* workflow
 (`.github/workflows/release.yml`, run with the version): it needs the version bump and `docs/releases/<version>.md`
-on `main` first, then tags `v<version>` and attaches the packaged ZIP.
+on `main` first. It tags `v<version>`, uploads the packaged ZIP to a draft, then publishes the immutable release.
 
 ## Git
 
-Work directly on `main`: commit and push to `main` (`git push origin main`), even when a session
-assigns a `claude/...` branch — this is standing permission. Don't open pull requests unless asked.
-Run `npm run typecheck` and `npm test` before every push, since nothing reviews a push before it lands.
+Repository admins can push straight to `main`: the `main` ruleset lets the admin role bypass it. Everyone
+else, Dependabot and the workflows included, branches from `main`, pushes the branch and opens a pull request,
+and the `check` CI job must pass against the latest `main` before merging. No second-person approval is required.
+Run `npm run typecheck` and `npm test` before every push, and resolve review conversations before merging.
 
 ## Architecture
 
@@ -169,35 +165,8 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   `popup.css` and `pages.css` `color-scheme: light`, which also keeps Chrome's auto-dark-mode off them, and every text colour
   must stay at WCAG AA. Chrome caps a popup at 600px tall: keep every non-disclosure state under it
   (`notice` and open `<details>` may scroll).
-- **Store assets**: `store/src/stage.ts` draws the images (one layout per `?shot=`), `store/src/video.ts` draws the
-  promo video a frame at a time (`window.video.at(n)`, nothing animates by itself, so the render is the same
-  everywhere: every value is a function of the second, shaped by the helpers in `motion.ts`). Both are built
-  around the **real popup** in an iframe, fed made-up states by `mock-chrome.ts`; the video drives a whole run
-  through it with `demoRun`, which fires the popup's own `storage.onChanged` listener with states built from
-  `PLAN` and `WEIGHTS`. The README's poster is that page again, asked for one frame with a play badge over it
-  (`?poster=`, taken by `store-assets` as the `poster` shot). The landing page's link preview is
-  the `og-site` shot, a photograph of its hero, which the Pages workflow renders on each deploy, with Roboto installed, and which is not committed. What all of them draw lives in
-  `store/src/parts.ts` and `parts.css`; `scripts/stage.mjs` builds, serves and photographs them in headless
-  Chrome. The video is 4K at 60 fps (the stage at `deviceScaleFactor` 2), each frame piped as it is taken to
-  `ffmpeg` if it is on `PATH`, else to `scripts/encode-mp4.swift` (macOS); the popup's own CSS animations are
-  put on the film's clock, or they would flicker. A frame must look the same in a browser that has just
-  started as in one that drew the frames before it (the render restarts it every 150 frames): no
-  `translate3d`, whose layers keep text where it was first drawn, and no camera or element creeping by
-  fractions of a pixel, which reads as text shivering. The soundtrack is scored from the same timeline
-  (`window.video.soundtrack`: the parts, `NARRATION`, `SOUNDS`) by `scripts/soundtrack.mjs`. The music is Eleven Music v2.5
-  and the effects ElevenLabs Sound Effects (`scripts/eleven-sound.mjs`), brought in as `.cache/elevenlabs-sound/import/`
-  `music.mp3` and `<kind>.mp3` (or `<kind>-1.mp3`…), or asked for with the key; `--synth` plays the score and effects
-  `soundtrack.mjs` synthesizes instead, which each recorded effect's loudness is matched to. The voice is ElevenLabs (`scripts/narration.mjs`): one take of the script
-  (`--script`) cut into lines by `--import <take>` (on its words, by ElevenLabs' forced alignment, when there is a key), or line by line with `ELEVENLABS_API_KEY` from `.env`, and
-  cached in `.cache/narration/`. Retime a scene and the narration moves with it; a line that no longer fits stops
-  the render before the first frame. The MP4 is gitignored, because the store's video field takes a YouTube link.
-- **The mark** is a folder with a download arrow, drawn in Maccabi Online's own illustration register:
-  a navy (`#083f92`) outline of even weight with round joins, and a pale-pink (`#f1c1cd`) echo of that
-  outline offset up and left, so it reads as slightly off-register print. The folder is filled white so
-  the navy survives a dark Chrome toolbar. Its geometry lives twice — as a rounded polygon in
-  `scripts/make-icons.mjs` and as `MARK_PATH` in `store/src/parts.ts` — so change both together. 16 and
-  32px have hand-tuned layouts in `PIXEL`, on the pixel grid; at 16px the arrow is a solid staircase,
-  because a 1px chevron there just makes a cross.
+- **Store images, the promo video and the mark** (`store/`, `scripts/store-*.mjs`, `scripts/make-icons.mjs`): how
+  each is built, and what a frame must never do, is in the `store-media` skill.
 - **Dev bridge**: `__DEV_BRIDGE__` (a Vite `define`) and the `mode === 'development'` branch in
   `manifest.config.ts` keep `background/dev.ts` and the content script out of the store build.
 - File names are `<date>_<id>_<title>`, built with `stem`/`iso`/`safe`/`titleOf` from `core/util.ts`;
@@ -257,24 +226,14 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   `test-results/` (a result's `details/` JSON beside its `files/` PDF of the same name, the film's earlier drill) in step
   with the export. Its copy follows `docs/positioning.md`, and must agree
   with the README's opening and its *Hand it to an AI assistant* on the facts they share.
-- **The landing page's motion is CSS, and it ends where the still page is.** The hero plays once as the page opens, from a clean slate to the finished dashboard, and stops there; the rest plays as it comes
-  into view, on scroll timelines (`animation-timeline: view()`), so a picture's progress is its place on the screen.
-  Every animation moves only opacity, transform, clip-path or colour; its last frame is exactly the page with no motion,
-  which is what `prefers-reduced-motion` (under which nothing moves) and a browser without scroll timelines (each
-  picture sits under `@supports`) both show. A picture that can be on the first screen at load would sit half-played
-  on a scroll timeline, so on those screens it plays once as the page opens instead. Never put `overflow: hidden` (or
-  auto) on anything around a scroll-timeline picture: it becomes the scroll container the timeline follows, which
-  never scrolls, so the picture just stands finished; `overflow: clip` clips the same. A picture near the foot of the
-  page measures its range in pixels of scroll, not in shares of the screen: on a tall screen there isn't that much
-  page left below it. `npm run site-check` checks all of this at five sizes (and is the Pages workflow's gate); look
-  at a change with its `frames` mode, since the check only says where the motion ends, not how it gets there.
+- **The landing page's motion is CSS, and it ends where the still page is**: the rules (scroll timelines, no
+  `overflow: hidden` around them, reduced motion) are in `site/CLAUDE.md`; `npm run site-check` is the gate.
 - **Keep `public/third-party-notices.txt` current** when a runtime dependency changes (only `fflate`
   today, plus Vite's module preload polyfill). The README's `docs/images/chrome-web-store-badge.png` isn't one of
   them: it is Google's own badge, committed byte for byte as it is served from
   [their branding page](https://developer.chrome.com/docs/webstore/branding), and their terms allow resizing
   it and nothing else. It has to keep linking to the listing. It is the bordered version, whose fill is opaque
   white, because the borderless one is transparent and would be dark text on dark in GitHub's dark theme.
-- **Re-run `npm run store-assets`** when the popup's appearance changes, and `npm run store-video` if the video's
-  own copy or the popup states it shows go stale; a re-rendered video has to be re-uploaded to YouTube, and its
-  poster (`store-assets -- poster`) re-rendered with it.
+- **Re-run the store renders** when the listing images, the popup or the video's copy go stale (how and what to
+  check: the `store-media` skill); a re-rendered video is re-uploaded to YouTube with its poster.
 - Builds are deliberately **not minified** so reviewers and users can read what ships.

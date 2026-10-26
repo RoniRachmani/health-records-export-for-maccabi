@@ -2,7 +2,7 @@ import { SITE_OPEN, type RunState } from '../shared/state';
 
 export async function updateBadge(run: RunState | null): Promise<void> {
   let text = '';
-  // Badge colours from the popup's palette (popup.css); store/src/stage.ts uses the same.
+  // Badge colours from the popup's palette (popup.css).
   let color = '#296bed';
   let textColor = '#ffffff';
   let title = '';

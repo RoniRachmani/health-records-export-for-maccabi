@@ -15,7 +15,7 @@ name: Pages
 on:
   push:
     branches: [main]
-    paths: [public/**, site/**, store/src/**, src/extension/popup/**, scripts/stage.mjs, scripts/site-check.mjs, scripts/store-assets.mjs, scripts/store-video.mjs, docs/images/chrome-web-store-badge.png, .github/workflows/pages.yml]
+    paths: [public/**, site/**, store/src/**, store/design/**, src/extension/popup/**, scripts/stage.mjs, scripts/site-check.mjs, scripts/store-assets.mjs, scripts/store-listing.mjs, scripts/store-auxiliary.mjs, scripts/store-video.mjs, docs/images/chrome-web-store-badge.png, .github/workflows/pages.yml]
   workflow_dispatch:
 
 permissions:

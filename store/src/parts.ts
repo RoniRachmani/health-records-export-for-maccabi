@@ -1,7 +1,12 @@
-/* The pieces the store images (stage.ts) and the promo video (video.ts) both draw: the little
+/* The pieces the promo video (video.ts) draws: the little
    DOM helper, the icons, the fake browser window's insides, the ZIP's folder list, the AI
    assistant opened on the export, and the mark.
    Nothing here decides a layout — each page's own CSS places these. */
+
+// The mark and the two file icons are shared with the listing images (store/design/listing.mjs), which run in Node.
+import { DOC, FOLDER, MARK, MARK_PATH } from '../design/glyphs.mjs';
+
+export { DOC, FOLDER, MARK, MARK_PATH };
 
 export type Child = Node | string | null | undefined | false;
 
@@ -24,10 +29,7 @@ export function img(src: string, cls = ''): HTMLImageElement {
   return e;
 }
 
-export const CHECK = '<svg viewBox="0 0 20 20" width="20" height="20"><circle cx="10" cy="10" r="10" fill="#ffffff"/><path d="M6 10.5l2.6 2.6L14.2 7.5" fill="none" stroke="#083f92" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 export const LOCK = '<svg viewBox="0 0 16 16" width="13" height="13"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="#72758c"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="#72758c" stroke-width="1.6"/></svg>';
-export const DOC = '<svg viewBox="0 0 24 20" width="24" height="20"><path d="M5 0h10l5 5v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2z" fill="#296bed"/><path d="M15 0v3a2 2 0 0 0 2 2h3z" fill="#c4e5f8"/><path d="M7 10h10M7 13h10M7 16h6" stroke="#ffffff" stroke-width="1.4" stroke-linecap="round"/></svg>';
-export const FOLDER = '<svg viewBox="0 0 24 20" width="24" height="20"><path d="M1 3a2 2 0 0 1 2-2h6l2 2.5h10a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2z" fill="#c4e5f8"/><path d="M1 7h22v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2z" fill="#296bed"/></svg>';
 
 /** The three window buttons in a toolbar. */
 export function dots(): HTMLElement {
@@ -99,9 +101,6 @@ const SPARK = '<svg viewBox="0 0 20 20" width="18" height="18"><path d="M10 1.5c
 
 /** More questions a member might ask, offered under the answer: docs/positioning.md's Ask use cases. */
 export const FOLLOW_UPS = ['What might I be due for?', 'What changed in my latest blood test?', 'What should I raise with my doctor on Thursday?'];
-
-/** Things the assistant can make, not only answer: docs/positioning.md's Build use cases. */
-export const BUILDS = ['Chart my cholesterol over the years', 'Make me a weekly meal plan', 'Write a one-pager for a new doctor'];
 
 /** A question put to the assistant, and its answer: paragraphs, then the file it names as its source. */
 export interface Exchange {
@@ -176,11 +175,3 @@ export function paper(opacity: number): string {
     <rect x="18" y="48" width="44" height="8" rx="4" fill="#083f92" opacity="0.35"/>`;
 }
 
-// The folder outline, as scripts/make-icons.mjs rounds it: the tab's corners at r 0.8, the rest at
-// r 2.75. Keep the two in step — this is the same mark, drawn twice.
-export const MARK_PATH = 'M2.75 7A2.75 2.75 0 0 1 5.5 4.25L9.031 4.25A0.8 0.8 0 0 1 9.64 4.53L11.51 6.72A0.8 0.8 0 0 0 12.119 7L18.5 7A2.75 2.75 0 0 1 21.25 9.75L21.25 18.25A2.75 2.75 0 0 1 18.5 21L5.5 21A2.75 2.75 0 0 1 2.75 18.25Z';
-export const MARK = `<g fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path d="${MARK_PATH}" transform="translate(-1.1 -1.1)" stroke="#f1c1cd" stroke-width="2.55"/>
-    <path d="${MARK_PATH}" fill="#ffffff" stroke="#083f92" stroke-width="1.6"/>
-    <path d="M12 11.25v5.5M9.4 14.15L12 16.75l2.6-2.6" stroke="#083f92" stroke-width="1.6"/>
-  </g>`;
