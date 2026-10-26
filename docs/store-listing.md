@@ -141,7 +141,7 @@ The existing store listing is not changed by generating files locally.
 | Global promo video | https://youtu.be/xcy8fo-PjHc | Existing optional video; its separate renderer is described below |
 
 Run `npm run store-assets` to recreate the eight listing PNGs, the video poster, and web/social previews.
-The command also writes `store/assets/review.html`, `store-artwork.json` and `store-artwork.zip` (gitignored: written by each render, and kept as the *Store images* workflow's artifact). The ZIP contains
+The command also writes `store/assets/review.html`, `store-artwork.json` and `store-artwork.zip` (gitignored: written by each render; upload one rendered on a Mac, not the Store images workflow's artifact). The ZIP contains
 only the eight listing PNGs. The release command and *Store images* workflow use the same renderer; CI also
 validates the bundle and offers its ZIP and hash manifest as a downloadable artifact. The old proposal renderer and
 `--mock` flag are retired. Use shot names to select outputs, e.g. `npm run store-assets -- marquee icon`.

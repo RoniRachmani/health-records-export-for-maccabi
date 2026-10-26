@@ -270,7 +270,7 @@ npm run icons          # hand-tuned public/icons/; the store icon is `npm run st
 
 `package` builds `dist/` first, and refuses a development build. `npm run store-assets`, `npm run release`,
 and the *Store images* workflow all generate the approved design into `store/assets/`. Inspect `store/assets/review.html`
-and use `store/assets/store-artwork.zip` (gitignored: written by each render, and kept as the *Store images* workflow's artifact) for its eight upload PNGs; `store-artwork.json` records dimensions and SHA-256
+and use `store/assets/store-artwork.zip` (gitignored: written by each render; upload one rendered on a Mac, not the Store images workflow's artifact) for its eight upload PNGs; `store-artwork.json` records dimensions and SHA-256
 hashes. `node scripts/check-store-assets.mjs` checks these against the PNGs. Named shots still work, including `icon`,
 `poster`, `og-site` and `social`. A render that includes a listing shot rewrites the bundle from all eight images, and stops with an error if one is missing.
 Updating listing images alone does not require a new extension package or version bump.
@@ -284,17 +284,17 @@ to the canonical assets.
 
 The image and video renderers build the local store stage with Vite and photograph it in headless Chrome. They need
 a local listening port, Node.js 22 or newer, installed dependencies, and Chrome, Chromium or Edge (`CHROME_PATH` overrides
-discovery). Roboto should be installed on the rendering machine for the intended typography; otherwise the system
-fallback changes pixels. The latest renderer enables the popup's reduced-motion styles and waits two animation frames
+discovery). The fonts installed on the rendering machine change the pixels, as the next paragraph says. The latest renderer enables the popup's reduced-motion styles and waits two animation frames
 before each capture. All eight latest PNGs matched byte for byte across two consecutive runs on 25 October 2026;
 the ZIP entries matched the exported files too. This check applies to the same browser, fonts and operating system,
 not to renders across different environments.
 
-The store images and video show the real popup with made-up states and need Roboto on the machine that draws them.
-Without it, run the *Store images* workflow from the Actions tab (or `gh workflow run store-assets.yml`, with `-f shots="start open"` for only some): it
-renders them on Linux with Roboto and pushes changed images to a `store-images/` branch. Open the compare
-link in the run summary to create a pull request, then wait for CI and merge it. The *Store video* workflow
-(`gh workflow run store-video.yml`) does the same for the video's picture, kept as the run's artifact and silent:
+The store images and video show the real popup with made-up states. The store images are rendered on a Mac without
+Roboto installed, so their text is in the macOS system face; Linux can't draw that, so commit images rendered there.
+The *Store images* workflow (`gh workflow run store-assets.yml`, with `-f shots="start open"` for only some) renders
+on Linux in the runner's own fonts and pushes changed images to a `store-images/` branch: it checks that a render
+works, and its branch is deleted, not merged. The video does want Roboto: the *Store video* workflow
+(`gh workflow run store-video.yml`) renders its picture on Linux with Roboto installed, kept as the run's artifact and silent:
 download it with `gh run download <run id> -n promo-video -D store/assets`, then `npm run store-video -- --remux`
 puts the soundtrack on it from your narration cache. [docs/store-listing.md](docs/store-listing.md)
 has everything to fill in on the store dashboard.

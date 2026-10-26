@@ -9,25 +9,26 @@ Moved out of the root `CLAUDE.md` so it loads only for this work; the root keeps
 
 ## Rendering
 
-Before `store-assets` or `store-video`, install Roboto on the machine
-(`fonts-roboto` on Debian/Ubuntu, then `fc-cache -f`) and check `fc-list | grep -i roboto`: the renders photograph
-the popup, and without it they draw the fallback face. That is a font for the machine taking the pictures; the extension itself
-still never ships or fetches one. The latest image renderer uses the Roboto/system stack too; byte-for-byte
-reproducibility is only expected with the same browser, fonts and OS. Its static captures enable reduced motion
+The store images (`store-assets`) are rendered on a Mac **without** Roboto installed, so the Roboto-first stacks of
+the listing layouts and the popup fall back to the macOS system face (San Francisco): that is the chosen look. Check
+with `fc-list | grep -i roboto` or Font Book, and render elsewhere if this Mac has it. Linux has no San Francisco, so
+CI cannot reproduce these images. The video (`store-video`) still wants Roboto on the machine (`fonts-roboto` on
+Debian/Ubuntu, then `fc-cache -f`), as its workflow installs. Either way the font is only the machine's; the extension
+itself never ships or fetches one. Byte-for-byte reproducibility is only expected with the same browser, fonts and OS. Its static captures enable reduced motion
 and wait two animation frames, so the progress sheen and pulse cannot vary between shots.
 
 The approved listing images are the default for `npm run store-assets`, `npm run release`, and the *Store images*
 workflow. Canonical outputs are the eight PNGs in `store/assets/`, with `review.html`, `store-artwork.json` and
-`store-artwork.zip` (gitignored: written by each render, and kept as the *Store images* workflow's artifact). CI validates the bundle and uploads its ZIP and hash manifest as an artifact. The README hero uses
+`store-artwork.zip` (gitignored: written by each render; upload one rendered on a Mac, not the Store images workflow's artifact). CI validates the bundle and uploads its ZIP and hash manifest as an artifact. The README hero uses
 `store/assets/screenshot-1-ask.png`. Named shots include the five screenshots, `promo`, `marquee`, `icon`, `poster`,
 `og-site` and `social`; `npm run store-assets -- start open` updates only those shots, then refreshes the bundle.
 The proposal renderer and `--mock` flag are retired. `store/redesign/mock-review.html` preserves the historical
 comparison; the latest column links to canonical assets. See `store/redesign/README.md` and `docs/store-listing.md`.
 
-Without Roboto here, run the *Store images* workflow instead
-(`gh workflow run store-assets.yml`, optionally `-f shots="start open"`): it renders on Linux with Roboto and
-pushes changed images to a `store-images/` branch. Open the compare link in the run summary, wait for CI,
-and merge the pull request. The *Store video* workflow (`gh workflow run
+The *Store images* workflow (`gh workflow run store-assets.yml`, optionally `-f shots="start open"`) renders on Linux
+in the runner's own fonts (DejaVu Sans, which is wider) and pushes changed images to a `store-images/` branch: use it
+to check that a render works, not for the committed images, and delete its branch rather than merging it. The
+*Store video* workflow (`gh workflow run
 store-video.yml`) renders the video's picture there and keeps it as the run's artifact, with no sound: the narration is
 only in a maintainer's `.cache/narration/`, so download it to `store/assets/` and add the soundtrack with `--remux`.
 

@@ -20,7 +20,7 @@ npm run store-video -- --remux  # new soundtrack only, fast
 ```
 
 `npm run store-assets` generates the approved design at the canonical `store/assets/` paths.
-Open `store/assets/review.html` to inspect it; `store/assets/store-artwork.zip` (gitignored: written by each render, and kept as the *Store images* workflow's artifact) contains the eight upload PNGs,
+Open `store/assets/review.html` to inspect it; `store/assets/store-artwork.zip` (gitignored: written by each render; upload one rendered on a Mac, not the Store images workflow's artifact) contains the eight upload PNGs,
 and `store-artwork.json` records their dimensions and SHA-256 hashes. The release command and *Store images*
 workflow use this renderer too. Named shots include `icon`, `poster`, `og-site` and `social`.
 

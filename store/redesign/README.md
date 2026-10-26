@@ -17,8 +17,8 @@ node scripts/check-store-assets.mjs
 
 The renderer builds the local Vite stage, serves it on localhost and captures HTML/CSS and SVG layouts in headless
 Chrome. Chrome, Chromium or Edge must be installed; `CHROME_PATH` overrides discovery. A restricted environment may
-require permission to listen on localhost and launch Chrome. Install Roboto on the rendering machine for the intended
-typography; the extension's Roboto/system fallback stack can otherwise change pixels. No fonts are fetched by the
+require permission to listen on localhost and launch Chrome. Render on a Mac without Roboto installed: the Roboto-first
+stacks then fall back to the macOS system face, which is the chosen look and which Linux CI cannot draw. No fonts are fetched by the
 extension, and no AI service, API key, login or real medical records are needed to regenerate the artwork.
 
 Rerender when the artwork's copy, illustration, layout, shared mark or popup changes. An unrelated extension release

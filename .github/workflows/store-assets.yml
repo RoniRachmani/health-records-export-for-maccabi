@@ -61,6 +61,6 @@ jobs:
           git diff --cached --stat
           git config user.name 'github-actions[bot]'
           git config user.email '41898799+github-actions[bot]@users.noreply.github.com'
-          git commit -q -m "Re-render the store images" -m "Rendered by the Store images workflow, with Roboto."
+          git commit -q -m "Re-render the store images" -m "Rendered by the Store images workflow, in the Linux runner's fonts."
           git push origin "HEAD:refs/heads/$branch"
           printf 'Open a pull request and wait for CI: %s\n' "https://github.com/$GITHUB_REPOSITORY/compare/main...$branch?expand=1" >> "$GITHUB_STEP_SUMMARY"
