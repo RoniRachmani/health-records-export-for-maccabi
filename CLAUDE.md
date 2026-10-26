@@ -40,6 +40,8 @@ npm run store-video -- --synth        # the synthesized music and effects instea
 npm run store-video -- --script       # the narration as one take's text, for ElevenLabs
 npm run store-video -- --captions     # the narration as subtitles, to store/assets/promo-captions.srt, for YouTube
 npm run store-video -- --import take.mp3 --audio-only   # cut that take into the narration's lines
+npm run film:before-thursday      # the Before Thursday draft film instead (store-video --before-thursday, same flags but --clip)
+npm run film:before-thursday:all  # that film, then its captions
 npm run icons                     # hand-tuned public/icons/ (the store icon is `npm run store-assets -- icon`)
 npm run site-check                # the landing page's motion: ends where the still page is, at five screen sizes
 npm run site-check -- frames .path scroll 10 375x812   # photograph one picture as it scrolls in (or `time 0 13 0.5`)

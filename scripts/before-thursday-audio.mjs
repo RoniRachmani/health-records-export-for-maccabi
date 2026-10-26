@@ -17,8 +17,8 @@ const PARTS = [
   ['close', '[Resolve]', ['simple piano motif over sustained strings', 'full and warm under the last line', 'final chord rings out only in the last two seconds']],
 ];
 /** The draft's file names: before-thursday.mp4, before-thursday-captions.srt and the rest. */
-export const THIRD_FILM_STEM = 'before-thursday';
-export function thirdFilmSoundOptions(spec) {
+export const BEFORE_THURSDAY_STEM = 'before-thursday';
+export function beforeThursdaySoundOptions(spec) {
   return {
     useImports: false,
     soundModel: 'eleven_text_to_sound_v3',

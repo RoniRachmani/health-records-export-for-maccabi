@@ -22,7 +22,8 @@
 //                   render, for trying a sound
 //   --synth         soundtrack.mjs's own synthesized music and effects instead of ElevenLabs': nothing to
 //                   bring in or pay for
-//   --third-film    the Before Thursday draft (store/src/film-story.ts) instead: every output above is named
+//   --before-thursday
+//                   the Before Thursday draft (store/src/film-story.ts) instead: every output above is named
 //                   before-thursday… rather than promo…
 //
 // The stage is laid out at 1920x1080 and drawn at twice that, so the film is 4K: text, the popup and
@@ -36,7 +37,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
-import { THIRD_FILM_STEM, thirdFilmSoundOptions } from './film-three-audio.mjs';
+import { BEFORE_THURSDAY_STEM, beforeThursdaySoundOptions } from './before-thursday-audio.mjs';
 import { alignClips, importTake, script, speak } from './narration.mjs';
 import { elevenSound } from './eleven-sound.mjs';
 import { buildSoundtrack, writeWav } from './soundtrack.mjs';
@@ -45,11 +46,11 @@ import { isFile, openStage, root } from './stage.mjs';
 const WIDTH = 1920;
 const HEIGHT = 1080;
 const SCALE = 2;
-const THIRD_FILM = process.argv.includes('--third-film');
-const STEM = THIRD_FILM ? THIRD_FILM_STEM : 'promo';
-const OUT = join(root, 'store', 'assets', THIRD_FILM ? STEM + '.mp4' : 'promo-video.mp4');
+const BEFORE_THURSDAY = process.argv.includes('--before-thursday');
+const STEM = BEFORE_THURSDAY ? BEFORE_THURSDAY_STEM : 'promo';
+const OUT = join(root, 'store', 'assets', BEFORE_THURSDAY ? STEM + '.mp4' : 'promo-video.mp4');
 // Written here and moved into place only once it is whole, so a failed render leaves the last good film.
-const PARTIAL = join(root, 'store', 'assets', THIRD_FILM ? STEM + '.partial.mp4' : 'promo-video.partial.mp4');
+const PARTIAL = join(root, 'store', 'assets', BEFORE_THURSDAY ? STEM + '.partial.mp4' : 'promo-video.partial.mp4');
 // Frames per browser. The stage draws frame n from n alone, so the browser can be replaced at any
 // point without the film changing — and a render of thousands of frames then doesn't rest on one
 // browser process staying healthy (and small) to the end.
@@ -61,10 +62,10 @@ const importAt = args.indexOf('--import');
 const take = importAt < 0 ? null : args.splice(importAt, 2)[1];
 if (take === undefined || take?.startsWith('--')) throw new Error('--import needs the take: --import <file>');
 const flags = new Set(args.filter((a) => a.startsWith('--')));
-const OPTIONS = ['--audio-only', '--no-narration', '--silent', '--script', '--captions', '--remux', '--clip', '--synth', '--third-film'];
+const OPTIONS = ['--audio-only', '--no-narration', '--silent', '--script', '--captions', '--remux', '--clip', '--synth', '--before-thursday'];
 for (const f of flags) if (!OPTIONS.includes(f)) throw new Error('Unknown option ' + f);
-if (THIRD_FILM && flags.has('--clip')) throw new Error('--clip is only supported by the original film');
-const PAGE = (THIRD_FILM ? '/store/src/film-story.html' : '/store/src/video.html') + (flags.has('--clip') ? '?clip' : '');
+if (BEFORE_THURSDAY && flags.has('--clip')) throw new Error('--clip is only supported by the original film');
+const PAGE = (BEFORE_THURSDAY ? '/store/src/film-story.html' : '/store/src/video.html') + (flags.has('--clip') ? '?clip' : '');
 const [from, to] = args.filter((a) => !a.startsWith('--')).map(Number);
 if (flags.has('--remux') && (Number.isFinite(from) || Number.isFinite(to))) throw new Error('--remux takes the whole film; leave out the times');
 if (existsSync(join(root, '.env'))) process.loadEnvFile(join(root, '.env'));
@@ -98,7 +99,7 @@ function startEncoder(fps, work, wav) {
     // the conversion from RGB and the navy comes out a different navy.
     args = ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(fps), '-c:v', 'png', '-i', '-',
       ...(wav ? ['-i', wav, '-map', '0:v', '-map', '1:a', '-c:a', 'aac', '-b:a', '320k', '-shortest'] : []),
-      '-c:v', 'libx264', '-preset', THIRD_FILM ? 'medium' : 'slow', '-crf', '16', '-tune', 'animation',
+      '-c:v', 'libx264', '-preset', BEFORE_THURSDAY ? 'medium' : 'slow', '-crf', '16', '-tune', 'animation',
       '-vf', 'scale=out_color_matrix=bt709:out_range=tv', '-pix_fmt', 'yuv420p',
       '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv',
       '-movflags', '+faststart', PARTIAL];
@@ -224,7 +225,7 @@ async function render() {
   if (!flags.has('--silent')) {
     const clips = flags.has('--no-narration') ? null : await speak(soundtrack.narration);
     const synth = flags.has('--synth');
-    const { track, summary } = buildSoundtrack(soundtrack, clips, synth ? null : await elevenSound(soundtrack, THIRD_FILM ? thirdFilmSoundOptions(soundtrack) : undefined));
+    const { track, summary } = buildSoundtrack(soundtrack, clips, synth ? null : await elevenSound(soundtrack, BEFORE_THURSDAY ? beforeThursdaySoundOptions(soundtrack) : undefined));
     console.log(summary + (synth ? ', synthesized music and effects' : ', music and effects by ElevenLabs'));
     if (flags.has('--audio-only')) {
       writeWav(join(root, 'store', 'assets', STEM + '-soundtrack.wav'), track, first / fps, last / fps);

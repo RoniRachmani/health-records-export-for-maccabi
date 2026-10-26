@@ -18,8 +18,9 @@ itself never ships or fetches one. Byte-for-byte reproducibility is only expecte
 and wait two animation frames, so the progress sheen and pulse cannot vary between shots.
 
 The approved listing images are the default for `npm run store-assets`, `npm run release`, and the *Store images*
-workflow. Canonical outputs are the eight PNGs in `store/assets/`, with `review.html`, `store-artwork.json` and
-`store-artwork.zip` (gitignored: written by each render; upload one rendered on a Mac, not the Store images workflow's artifact). CI validates the bundle and uploads its ZIP and hash manifest as an artifact. The README hero uses
+workflow. Canonical outputs are the eight PNGs in `store/assets/`, with `review.html` and `store-artwork.json`
+(committed) and `store-artwork.zip` (gitignored: written by each render; upload one rendered on a Mac, not the Store
+images workflow's artifact). CI validates the bundle and uploads its ZIP and hash manifest as an artifact. The README hero uses
 `store/assets/screenshot-1-ask.png`. Named shots include the five screenshots, `promo`, `marquee`, `icon`, `poster`,
 `og-site` and `social`; `npm run store-assets -- start open` updates only those shots, then refreshes the bundle.
 The proposal renderer and `--mock` flag are retired. `store/redesign/mock-review.html` preserves the historical
@@ -63,6 +64,12 @@ only in a maintainer's `.cache/narration/`, so download it to `store/assets/` an
   (`--script`) cut into lines by `--import <take>` (on its words, by ElevenLabs' forced alignment, when there is a key), or line by line with `ELEVENLABS_API_KEY` from `.env`, and
   cached in `.cache/narration/`. Retime a scene and the narration moves with it; a line that no longer fits stops
   the render before the first frame. The MP4 is gitignored, because the store's video field takes a YouTube link.
+- **Before Thursday** is a draft film beside the promo, not a replacement: a 56-second story about getting ready for
+  a new doctor, drawn by `store/src/film-story.ts` (`film-story.css`, `film-story.html`) on the same stage, popup and
+  narration pipeline. `npm run film:before-thursday` is `store-video --before-thursday`, and takes the same flags
+  (`--captions`, `--remux`, `--synth`…, but not `--clip`); its outputs are `store/assets/before-thursday*`. Its music
+  and effects are asked of ElevenLabs with the prompts in `scripts/before-thursday-audio.mjs` (cached by request, like
+  the promo's), and never taken from the promo's `.cache/elevenlabs-sound/import/`. The poster, the site clip and the *Store video* workflow stay with the promo.
 - **The mark** is a folder with a download arrow, drawn in Maccabi Online's own illustration register:
   a navy (`#083f92`) outline of even weight with round joins, and a pale-pink (`#f1c1cd`) echo of that
   outline offset up and left, so it reads as slightly off-register print. The folder is filled white so

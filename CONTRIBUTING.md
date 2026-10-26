@@ -357,19 +357,19 @@ Claude's original is the main promo: `store/assets/promo-video.mp4`, authored in
 `store/src/video.ts`, `video.css` and `video.html`. `npm run store-video` remains the default
 renderer, and the existing site clips, poster, captions and release workflow stay with this video.
 
-The only retained draft is **Option 3: Before Thursday**, a 56-second continuous story about
+The only retained draft is **Before Thursday**, a 56-second continuous story about
 preparing for a new doctor's appointment. Its sources are `store/src/film-story.ts`,
 `film-story.css` and `film-story.html`. It uses synthetic records, an illustrative assistant,
 and the actual extension popup at its native 360px width and content-driven height.
 The draft is separate from the main promo; review the exported files directly.
 
-- `npm run promo-film:third`: render the 3840×2160 / 60 fps master, `before-thursday.mp4`.
-- `npm run promo-film:third -- --captions`: create word-aligned SubRip captions.
-- `npm run promo-film:third:all`: both above, in order.
-- `npm run promo-film:third -- --remux`: revise sound while preserving the picture.
+- `npm run film:before-thursday`: render the 3840×2160 / 60 fps master, `before-thursday.mp4`.
+- `npm run film:before-thursday -- --captions`: create word-aligned SubRip captions.
+- `npm run film:before-thursday:all`: both above, in order.
+- `npm run film:before-thursday -- --remux`: revise sound while preserving the picture.
 
 Narration, music and effects use ElevenLabs with the existing ignored credentials and shared
-caches. Draft music and effects are configured in `scripts/film-three-audio.mjs`.
+caches. Draft music and effects are configured in `scripts/before-thursday-audio.mjs`.
 `--synth` uses the shared local synthesizer instead. Like the main promo, it draws in the machine's
 Roboto, or the system face without it; no font is shipped. Keep rendered MP4s and WAVs local. Like the main
 promo it encodes with `ffmpeg` when it is on PATH and with macOS's AVFoundation otherwise, and the 4K master and
