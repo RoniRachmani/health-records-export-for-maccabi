@@ -2,6 +2,26 @@
 // its lazy chunks, what its calls are, what rea's analysis says of it, and which of all that
 // docs/endpoints/endpoints.json already maps. Pure, so endpoint-scan.test.ts runs it on made-up scripts.
 
+/** @typedef {{ paths: string[]; services: Set<string> }} Known */
+/** @typedef {{ path: string; method: string; offset: number; via: string }} Call */
+/**
+ * @typedef {{
+ *   endpoints: { path: string; call: string; file: string; line: number; column: number }[];
+ *   routes: Set<string>;
+ *   sourceMaps: { file: string | null; url: string }[];
+ *   partial: string[];
+ *   unparsed: string[];
+ *   parsed: number;
+ * }} Evidence
+ */
+/**
+ * @typedef {{ path: string; method: string | null; proof: 'ast' | 'call' | 'named'; where: string; kind: 'api' | 'page' | 'app'; known: boolean }} Candidate
+ */
+/** @typedef {{ method: string; path: string; where: string; elsewhere: boolean }} Mapped */
+/**
+ * @typedef {Mapped & { status: 'call' | 'method' | 'named' | 'absent' | 'elsewhere'; expected?: boolean; as?: string; at?: string; calledAs?: string | null }} Coverage
+ */
+
 // ---- paths ---------------------------------------------------------------------------------------
 
 /** A string that names a service call: a REST service, a versioned route, or a legacy handler or page. */
@@ -9,7 +29,11 @@
 const API_MARK = /[A-Za-z]API\/|webapi|(?:^|\/)v\d+\/|(?:^|\/)members\/|\.asmx|\.ashx|\.aspx|\/s?online\//i;
 const URLISH = /^[\w\-./{}*:?=&%]+$/;
 
-/** Whether a string in the code reads as an address on the site, with {} for the parts built at run time. */
+/**
+ * Whether a string in the code reads as an address on the site, with {} for the parts built at run time.
+ * @param {string} s
+ * @returns {boolean}
+ */
 export function pathLike(s) {
   // An address has a / or a file's ending in it: 'WebApiData' is a name.
   return API_MARK.test(s) && /[/.]/.test(s) && URLISH.test(s.replace(/\{\}/g, ''));
@@ -50,7 +74,11 @@ function kind(path) {
   return /^\/?sonline\//i.test(p) ? 'app' : 'page';
 }
 
-/** Every path and service docs/endpoints/endpoints.json names, wherever in it they are written. */
+/**
+ * Every path and service docs/endpoints/endpoints.json names, wherever in it they are written.
+ * @param {unknown} endpoints
+ * @returns {Known}
+ */
 export function knownFrom(endpoints) {
   const paths = new Set();
   const services = new Set();
@@ -73,6 +101,9 @@ function legacyWhole(path) {
 /**
  * A path is known when its shape is whole segments of one endpoints.json maps: code often builds a path in
  * pieces, so a piece of a mapped path is that path.
+ * @param {string} path
+ * @param {Known} known
+ * @returns {boolean}
  */
 export function isKnown(path, known) {
   const s = shape(legacyWhole(path));
@@ -164,6 +195,8 @@ function templateText(body) {
  * The string an expression builds, with {} for each part only known at run time: literals, templates,
  * `+` and `"…".concat(…)` (what a template becomes when it is compiled down). Null when no part of it
  * is written out, which is an address built somewhere else.
+ * @param {string} src
+ * @returns {string | null}
  */
 export function builtString(src) {
   const parts = splitTop(src, '+');
@@ -312,6 +345,8 @@ const CALL = /(?<![\w$.])(fetch|axios|\$http)\s*\(|\.(get|post|put|patch|delete|
  * cannot be read that way is left out. The legacy site's Angular pages go through a client of their own,
  * webApi.Call(controller, action, data, …, { method }), a GET unless told otherwise, to /online/webapi/<controller>/<action>/.
  * A call in a comment is one the site no longer makes, and is not read.
+ * @param {string} source
+ * @returns {Call[]}
  */
 export function readCalls(source) {
   const text = withoutComments(source);
@@ -388,6 +423,8 @@ function skipRegex(text, i, end) {
  * or on a long string takes that string's closing quote for the next one's opening, and from there on
  * reads the code between the strings in place of the strings. Only then are the ones too short or too long
  * to be an address (under 2 characters, over 300, 600 for a template) left out.
+ * @param {string} text
+ * @returns {{ value: string; offset: number }[]}
  */
 export function literals(text) {
   const out = [];
@@ -453,7 +490,11 @@ function walk(text, onString, onComment) {
   read(0, text.length);
 }
 
-/** Turns an offset into `line:column`, both from 1, as an editor counts them. */
+/**
+ * Turns an offset into `line:column`, both from 1, as an editor counts them.
+ * @param {string} text
+ * @returns {{ at(offset: number): string }}
+ */
 export function locator(text) {
   const starts = [0];
   for (const m of text.matchAll(/\r\n|[\n\r\u2028\u2029]/g)) starts.push(m.index + m[0].length);
@@ -483,6 +524,8 @@ export function locator(text) {
  * comments, /// <reference path="Documentation/General.js" />, and one of those holds the address of a service
  * the export asks (jqe.ajaxUrl), so those are the one thing read out of a comment; some name files the server
  * no longer has, which answer 404.
+ * @param {string} text
+ * @returns {Set<string>}
  */
 export function chunkFiles(text) {
   const files = new Set();
@@ -513,6 +556,9 @@ export function chunkFiles(text) {
  * A file the code names, as an address. One the runtime places under the public path ("@public:static/js/async/…")
  * goes where the script that named it sits above its own first folder: /sonline/static/js/x.js names
  * /sonline/static/js/async/….
+ * @param {string} f
+ * @param {string} from
+ * @returns {string}
  */
 export function chunkUrl(f, from) {
   if (!f.startsWith('@public:')) return new URL(f, from).href;
@@ -535,9 +581,12 @@ export const REA_FILTER = 'normalized_result.graph.nodes';
  * with the call that makes each; the app's page routes; the source maps declared; and how far it parsed each
  * file. (It also reports chunks and what loads them, but drops those for a file of a megabyte or more, which
  * is where this site keeps its code, so nothing here leans on them.)
+ * @param {any} result
+ * @returns {Evidence}
  */
 export function readEvidence(result) {
   const graph = result?.normalized_result?.graph;
+  /** @type {Evidence} */
   const found = { endpoints: [], routes: new Set(), sourceMaps: [], partial: [], unparsed: [], parsed: 0 };
   if (!graph) return found;
   for (const node of graph.nodes || []) {
@@ -572,6 +621,10 @@ const PROOF = ['ast', 'call', 'named'];
  * taken from a value just above it) or
  * 'named' (a string that reads as an address, with no call seen: a table of paths, or a call rea and this
  * scan both missed).
+ * @param {Map<string, string>} files
+ * @param {Evidence} evidence
+ * @param {Known} known
+ * @returns {Candidate[]}
  */
 export function candidates(files, evidence, known) {
   const byKey = new Map();
@@ -589,7 +642,7 @@ export function candidates(files, evidence, known) {
   const called = new Set();
   const calledAsWritten = new Set();
   for (const e of evidence.endpoints) {
-    const verb = e.call.split('.').pop();
+    const verb = e.call.split('.').pop() ?? '';
     // The method of a fetch or an open is in its arguments, which the call reader below reads; and a service's
     // base alone is the first argument of the site's client, whose path that reader joins to it.
     if (!VERB.test(verb) || BASE.test(e.path)) continue;
@@ -630,6 +683,8 @@ export function candidates(files, evidence, known) {
  * (and a second request after "then" in one), each `request` sentence, and what `manual_not_fetched` says.
  * `where` is the part of the map it is in; `elsewhere` marks a request to another site than the portal,
  * whose code this scan does not read.
+ * @param {any} map
+ * @returns {Mapped[]}
  */
 export function mappedRequests(map) {
   const out = new Map();
@@ -667,6 +722,10 @@ function mappedShape(path) {
  * The code writes many paths from the version on, with no service before them, so an address that ends a mapped
  * one is that one, when it says more than a version and "members". `expected` is the absent ones a scan never
  * finds, each as '<METHOD> <path>' (docs/endpoints/scan-baseline.json): an absent request says whether it is one.
+ * @param {Mapped[]} requests
+ * @param {Candidate[]} found
+ * @param {string[]} [expected]
+ * @returns {Coverage[]}
  */
 export function coverage(requests, found, expected = []) {
   const shapes = found.map((c) => ({ c, s: mappedShape(c.path) }));
@@ -682,21 +741,36 @@ export function coverage(requests, found, expected = []) {
   });
 }
 
-/** The app's page routes a script declares: each `path: "…"` of a router's table. */
+/**
+ * The app's page routes a script declares: each `path: "…"` of a router's table.
+ * @param {string} text
+ * @returns {Set<string>}
+ */
 export function routesIn(text) {
   const routes = new Set();
   for (const m of text.matchAll(/\bpath\s*:\s*["'`]([\w\-/:]*)["'`]/g)) if (m[1]) routes.add(m[1]);
   return routes;
 }
 
-/** The service names (…API) the scripts mention. */
+/**
+ * The service names (…API) the scripts mention.
+ * @param {Map<string, string>} files
+ * @param {Known} known
+ * @returns {{ name: string; known: boolean }[]}
+ */
 export function servicesIn(files, known) {
   const names = new Set();
   for (const text of files.values()) for (const m of text.matchAll(/\b([A-Z][A-Za-z]+API)\b/g)) names.add(m[1]);
   return [...names].sort().map((name) => ({ name, known: known.services.has(name) }));
 }
 
-/** Files in groups rea analyzes one at a time: a group's result has to stay within rea's own budget. */
+/**
+ * Files in groups rea analyzes one at a time: a group's result has to stay within rea's own budget.
+ * @param {Map<string, number>} sizes
+ * @param {number} [maxBytes]
+ * @param {number} [maxFiles]
+ * @returns {string[][]}
+ */
 export function batches(sizes, maxBytes = 1_500_000, maxFiles = 30) {
   const out = [];
   let cur = [];

@@ -5,6 +5,7 @@ const STYLE = ['instrumental only', 'intimate narrative short film score', 'warm
   'restrained dynamics', 'space for narration'];
 const NEVER = ['vocals', 'singing', 'speech', 'lyrics', 'choir', 'trailer booms', 'aggressive drums',
   'cheesy corporate jingle', 'dramatic EDM drops', 'busy lead melody', 'early fade-out', 'silence', 'pauses'];
+/** @type {[string, string, string[]][]} */
 const PARTS = [
   ['answer', '[Opening]', ['tentative intimate piano', 'curiosity before an appointment']],
   ['cards', '[Gather]', ['soft overlapping plucked patterns', 'years accumulating', 'gentle uncertainty']],

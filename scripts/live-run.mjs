@@ -52,7 +52,7 @@ const POLL_MS = 5000;
 
 async function openBrowser() {
   const page = await openPlainBrowser({ startUrl: START, extension: EXTENSION, keep: KEEP });
-  const { send, sessionId, targetId } = page;
+  const { send, targetId } = page;
   const target0 = { targetId };
   /** A dev bridge command; undefined when nothing answered, which is what a missing extension looks like. */
   page.dev = (msg, timeoutMs = 5000) => page.probe(`new Promise((ok) => {
@@ -76,6 +76,7 @@ async function openBrowser() {
   let worker;
   let popupUrl;
   page.shoot = async (name) => {
+    const dir = /** @type {string} */ (SHOTS); // shoot() asks only when --screenshots set it
     if (!worker) {
       const { targetInfos } = await send('Target.getTargets');
       for (const t of targetInfos.filter((t) => t.type === 'service_worker' && t.url.startsWith('chrome-extension://'))) {
@@ -88,7 +89,7 @@ async function openBrowser() {
         }
       }
       if (!worker) throw new Error('no service worker of the development build to open the popup from');
-      mkdirSync(SHOTS, { recursive: true });
+      mkdirSync(dir, { recursive: true });
     }
     // Chrome opens a popup only in a focused window, and the one this script started sits behind the terminal.
     await send('Target.activateTarget', { targetId: target0.targetId });
@@ -107,7 +108,7 @@ async function openBrowser() {
     const { sessionId: popup } = await send('Target.attachToTarget', { targetId: target.targetId, flatten: true });
     await sleep(1200); // it asks the background for the state and renders, and Chrome sizes it to fit
     const { data } = await send('Page.captureScreenshot', { format: 'png' }, popup);
-    writeFileSync(join(SHOTS, name + '.png'), Buffer.from(data, 'base64'));
+    writeFileSync(join(dir, name + '.png'), Buffer.from(data, 'base64'));
     await send('Runtime.evaluate', { expression: 'window.close()' }, popup).catch(() => {});
   };
   return page;

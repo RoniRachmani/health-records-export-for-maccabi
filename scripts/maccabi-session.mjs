@@ -32,12 +32,30 @@
 // or retry a password.
 //
 // Nothing here logs a credential, a cookie, a token or a record.
+/** @import { Session, Transport } from '../src/core' */
+/**
+ * What the session takes from core: the bundled src/cli/index.ts, or the sources in a test.
+ * @typedef {{
+ *   MACCABI_ORIGIN: string; LOGIN_ORIGIN: string; SUMMARY_PAGE: string; PACE_MS: number;
+ *   TAB_FETCH_TIMEOUT_MS: number; TAB_MAX_BYTES: number;
+ *   SessionEndedError: new (msg: string) => Error;
+ *   signedOutUrl(url: string | undefined): string | null;
+ *   jwtClaims(jwt: string | null | undefined): Record<string, any> | null;
+ * }} SessionCore
+ */
+/** @typedef {{ index: number; number: string; sms: boolean }} Phone */
+/** @typedef {Response & { finalUrl: string; hops: number; next?: string }} SessionResponse */
+
 const ACS_PATH = '/saml/sp/profile/post/acs';
 const BOOTSTRAP = '/sonline/TokenServerAPI/webapi/mac/v4/members/token/full?checksum=&sr_id=';
 const REDIRECTS = new Set([301, 302, 303, 307, 308]);
 const MAX_HOPS = 8;
 
 export class SignInError extends Error {
+  /**
+   * @param {string} code
+   * @param {number} [status]
+   */
   constructor(code, status) {
     super(code + (status ? ' (HTTP ' + status + ')' : ''));
     this.code = code;
@@ -58,7 +76,11 @@ export class CookieJar {
     this.#cookies.clear();
   }
 
-  /** Stores one Set-Cookie header value received from `url`; ignores one that names an unrelated domain. */
+  /**
+   * Stores one Set-Cookie header value received from `url`; ignores one that names an unrelated domain.
+   * @param {string} header
+   * @param {string} url
+   */
   set(header, url) {
     const u = new URL(url);
     const host = u.hostname.toLowerCase();
@@ -95,7 +117,11 @@ export class CookieJar {
     else this.#cookies.set(key, { name, value, domain, hostOnly, path, secure, expires });
   }
 
-  /** The Cookie header for a request to `url`, or '' when none apply. */
+  /**
+   * The Cookie header for a request to `url`, or '' when none apply.
+   * @param {string | URL} url
+   * @returns {string}
+   */
   get(url) {
     const u = new URL(url);
     const host = u.hostname.toLowerCase();
@@ -112,6 +138,10 @@ export class CookieJar {
     return out.join('; ');
   }
 
+  /**
+   * @param {string} name
+   * @param {string | URL} url
+   */
   has(name, url) {
     return this.get(url).split('; ').some((p) => p.startsWith(name + '='));
   }
@@ -128,19 +158,27 @@ export class CookieJar {
  */
 export class MaccabiSession {
   jar = new CookieJar();
-  /** The portal API's bearer token, from the bootstrap; null until signed in. */
+  /** The portal API's bearer token, from the bootstrap; null until signed in. @type {string | null} */
   jwt = null;
   /** The member id the bootstrap names, as a string, and the gender as the token's claims carry it. */
+  /** @type {string | null} */
   mid = null;
+  /** @type {unknown} */
   gender = undefined;
   /** The portal's legacy navigation session id, from the bootstrap; the legacy pages ask for it. */
+  /** @type {string | null} */
   legacySessionId = null;
   /** location.pathname as the extension's tab would report it: the last page this session "loaded". */
   pagePath = '/sonline/';
   #signedIn = false;
+  /** The sign-in under way, between beginSignIn and its finish. @type {{ id: string; senderJwt: string; phones: Phone[]; validatorJwt?: string } | null} */
   #challenge = null;
 
-  constructor({ core, fetch = globalThis.fetch, now = Date.now, sleep, timeoutMs = core?.TAB_FETCH_TIMEOUT_MS, maxBytes = core?.TAB_MAX_BYTES } = {}) {
+  /**
+   * @param {{ core: SessionCore; fetch?: typeof globalThis.fetch; now?: () => number; sleep?: (ms: number) => Promise<void>;
+   *   timeoutMs?: number; maxBytes?: number }} options
+   */
+  constructor({ core, fetch = globalThis.fetch, now = Date.now, sleep, timeoutMs = core?.TAB_FETCH_TIMEOUT_MS, maxBytes = core?.TAB_MAX_BYTES } = /** @type {any} */ ({})) {
     if (!core) throw new Error('MaccabiSession needs core (the bundled src/cli/index.ts)');
     this.#core = core;
     this.#portal = core.MACCABI_ORIGIN;
@@ -152,16 +190,25 @@ export class MaccabiSession {
     this.#timeoutMs = timeoutMs;
     this.#maxBytes = maxBytes;
   }
+  /** @type {SessionCore} */
   #core;
+  /** @type {string} */
   #portal;
+  /** @type {string} */
   #login;
+  /** @type {string} */
   #summary;
+  /** @type {typeof fetch} */
   #fetch;
+  /** @type {() => number} */
   #now;
+  /** @type {(ms: number) => Promise<void>} */
   #sleep;
+  /** @type {number} */
   #timeoutMs;
+  /** @type {number} */
   #maxBytes;
-  /** The one queue every request goes through: the previous request's end, as a promise. */
+  /** The one queue every request goes through: the previous request's end, as a promise. @type {Promise<unknown>} */
   #queue = Promise.resolve();
   /** When the last request came back, by #now; the next goes out core.PACE_MS after it. */
   #lastDone = -Infinity;
@@ -172,6 +219,9 @@ export class MaccabiSession {
    * policy page (core.signedOutUrl; never a 401 or 403, which on this site mean a bot challenge, not
    * expiry). `redirect: 'manual'` returns the first response, as the extension's fetch does for API
    * calls. Every hop is sent through #send, so the pacing holds across redirects too.
+   * @param {string | URL} input
+   * @param {RequestInit} [init]
+   * @returns {Promise<SessionResponse>}
    */
   async request(input, init = {}) {
     let url = new URL(input, this.#portal);
@@ -214,6 +264,11 @@ export class MaccabiSession {
    * whoever asked for it (the sign-in, the bootstrap, the collector, a redirect hop). The collector
    * sleeps that long after each of its own, so this adds nothing to its pace; it paces the rest.
    */
+  /**
+   * @param {string} url
+   * @param {RequestInit} init
+   * @returns {Promise<Response>}
+   */
   #send(url, init) {
     const turn = this.#queue.then(async () => {
       const wait = this.#core.PACE_MS - (this.#now() - this.#lastDone);
@@ -228,7 +283,12 @@ export class MaccabiSession {
     return turn;
   }
 
-  /** A JSON call to the login origin's /infosec service, as its own page makes them. */
+  /**
+   * A JSON call to the login origin's /infosec service, as its own page makes them.
+   * @param {string} path
+   * @param {string} token
+   * @param {{ method?: string; body?: unknown; headers?: Record<string, string>; password?: boolean }} [options]
+   */
   async #infosec(path, token, { method = 'GET', body, headers = {}, password = false } = {}) {
     const url = new URL(path, this.#login);
     const h = { authorization: 'Bearer ' + token, origin: this.#login, accept: 'application/json; charset=utf-8', 'content-type': 'application/json; charset=utf-8', ...headers };
@@ -256,6 +316,8 @@ export class MaccabiSession {
   /**
    * Starts a sign-in with the ID number: the login page's originJWT, then /infosec/auth, then the phones
    * that can take an SMS. Returns them (number as the site masks it, index) without sending anything.
+   * @param {string} idNumber
+   * @returns {Promise<Phone[]>}
    */
   async beginSignIn(idNumber) {
     if (typeof idNumber !== 'string' || !/^\d{5,9}$/.test(idNumber)) throw new SignInError('INVALID_ID_FORMAT');
@@ -284,6 +346,8 @@ export class MaccabiSession {
    * with the password in place of the SMS steps. Call after beginSignIn. A refused password ends the
    * sign-in and is not tried again: that is how an account gets locked. A password that is not one
    * (empty, not a string) is refused here, before anything is sent, and the sign-in is still open.
+   * @param {string} password
+   * @returns {Promise<void>}
    */
   async finishSignInWithPassword(password) {
     const ch = this.#challenge;
@@ -295,7 +359,11 @@ export class MaccabiSession {
     await this.#land(tokenOf(assertion), '');
   }
 
-  /** Sends the SMS to one of the phones beginSignIn returned (the first that can take one, unless chosen). One per sign-in. */
+  /**
+   * Sends the SMS to one of the phones beginSignIn returned (the first that can take one, unless chosen). One per sign-in.
+   * @param {number} [phoneIndex]
+   * @returns {Promise<void>}
+   */
   async sendCode(phoneIndex) {
     const ch = this.#challenge;
     if (!ch) throw new SignInError('NO_SIGN_IN_STARTED');
@@ -312,6 +380,8 @@ export class MaccabiSession {
    * the portal, and runs the portal's bootstrap for the API token. A wrong code ends the sign-in: start
    * again rather than try another code against the same SMS. A code that is not six digits never
    * reaches Maccabi and does not spend the SMS: the right one can still be given.
+   * @param {string} code
+   * @returns {Promise<void>}
    */
   async finishSignIn(code) {
     const ch = this.#challenge;
@@ -355,6 +425,7 @@ export class MaccabiSession {
    * navigation session. Call again to renew the token on a session that is still alive, as the tab
    * gets a fresh one on returning to /sonline/. A session that has ended answers this with the
    * login page instead of JSON, and is reported as ended, not as the site having changed.
+   * @returns {Promise<Session>}
    */
   async bootstrap() {
     const r = await this.request(BOOTSTRAP, { headers: { authorization: 'Bearer null', 'content-type': 'application/json' } });
@@ -380,7 +451,7 @@ export class MaccabiSession {
     return this.session;
   }
 
-  /** The Session the collector takes (src/core/types.ts). */
+  /** The Session the collector takes (src/core/types.ts). @type {Session} */
   get session() {
     return { mid: this.mid, jwt: this.jwt, gender: this.gender };
   }
@@ -410,7 +481,7 @@ export class MaccabiSession {
     this.pagePath = '/sonline/';
   }
 
-  /** The collector's Transport over this session. */
+  /** The collector's Transport over this session. @returns {Transport} */
   transport() {
     const absolute = (req) => new URL(req.url, this.#portal).toString();
     return {
@@ -451,6 +522,9 @@ export class MaccabiSession {
  * given, else the first that can take one -- unless the phones that can show different numbers, when the choice
  * is the member's: null then, with the phones to show. The site lists the same number more than once (seen
  * 2026-10-20: two entries, both 052-*****28), which is not a choice.
+ * @param {Phone[]} phones
+ * @param {string | number} [asked]
+ * @returns {number | null}
  */
 export function choosePhone(phones, asked) {
   const able = phones.filter((p) => p.sms);

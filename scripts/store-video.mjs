@@ -120,7 +120,7 @@ function startEncoder(fps, work, wav) {
   const proc = spawn(exe, args, { stdio: ['pipe', 'inherit', 'inherit'] });
   const exited = new Promise((resolve, reject) => {
     proc.on('error', reject);
-    proc.on('exit', (code, signal) => (code === 0 ? resolve() : reject(new Error(name + ' failed (' + (signal || code) + ')'))));
+    proc.on('exit', (code, signal) => (code === 0 ? resolve(undefined) : reject(new Error(name + ' failed (' + (signal || code) + ')'))));
   });
   // Seen when the encoder dies mid-stream; its exit says why.
   proc.stdin.on('error', () => {});
@@ -221,6 +221,7 @@ async function render() {
     return;
   }
 
+  /** @type {string | null} */
   let wav = null;
   if (!flags.has('--silent')) {
     const clips = flags.has('--no-narration') ? null : await speak(soundtrack.narration);
@@ -249,14 +250,15 @@ async function render() {
   // drain — or for the encoder to exit, which would otherwise leave that wait unanswered for ever.
   let failed = null;
   encoder.exited.catch((e) => (failed = e));
+  /** @type {(() => void) | null} */
   let wake = null;
   encoder.proc.on('exit', () => wake?.());
   const feed = (png) => new Promise((resolve) => {
-    if (encoder.proc.stdin.write(png)) return resolve();
-    wake = resolve;
+    if (encoder.proc.stdin.write(png)) return resolve(undefined);
+    wake = () => resolve(undefined);
     encoder.proc.stdin.once('drain', () => {
       wake = null;
-      resolve();
+      resolve(undefined);
     });
   });
 
@@ -284,6 +286,7 @@ async function render() {
     }
   };
 
+  /** @type {Buffer | null} */
   let heldPng = null;
   let heldUntil = -1;
   for (let n = first; n < last; n++) {

@@ -28,6 +28,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, 
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { call } from '../../scripts/in-page.mjs';
+/** @import { Evidence } from './endpoint-scan-lib.mjs' */
 import { ORIGIN, START, openBrowser, signIn } from '../../scripts/maccabi-browser.mjs';
 import { REA_FILTER, batches, candidates, chunkFiles, chunkUrl, coverage, mappedRequests, readEvidence, routesIn, servicesIn, knownFrom, isKnown } from './endpoint-scan-lib.mjs';
 import { root, sleep } from '../../scripts/stage.mjs';
@@ -58,7 +59,7 @@ const SETTLE_MS = 5000;
 function loadedScripts() {
   const urls = [...document.scripts].map((s) => s.src).filter(Boolean);
   for (const e of performance.getEntriesByType('resource')) {
-    if (e.initiatorType === 'script' || /\.m?js(\?|$)/.test(e.name)) urls.push(e.name);
+    if (/** @type {PerformanceResourceTiming} */ (e).initiatorType === 'script' || /\.m?js(\?|$)/.test(e.name)) urls.push(e.name);
   }
   return [...new Set(urls)];
 }
@@ -160,7 +161,7 @@ function rea(dir) {
     child.stdout.on('data', (d) => out.push(d));
     // rea reports its progress here, a line of JSON per phase; only the end of it is kept, for a failure.
     child.stderr.on('data', (d) => { err = (err + d).slice(-2000); });
-    child.on('error', (e) => fail(new Error(e.code === 'ENOENT' ? `${cmd} is not installed.` : e.message)));
+    child.on('error', (e) => fail(new Error(/** @type {NodeJS.ErrnoException} */ (e).code === 'ENOENT' ? `${cmd} is not installed.` : e.message)));
     child.on('close', (code) => {
       if (code !== 0) return fail(new Error(`rea ended with ${code}: ${err.trim().split('\n').pop()}`));
       try {
@@ -176,6 +177,7 @@ function rea(dir) {
 async function analyze(dir, files, jobs) {
   const sizes = new Map([...files].map(([file, text]) => [file, Buffer.byteLength(text)]));
   const groups = batches(sizes);
+  /** @type {Evidence & { failed: string[] }} */
   const merged = { endpoints: [], routes: new Set(), sourceMaps: [], partial: [], unparsed: [], parsed: 0, failed: [] };
   const work = mkdtempSync(join(tmpdir(), 'endpoint-scan-rea-'));
   let next = 0;
@@ -283,6 +285,7 @@ async function main() {
 
   const files = scriptsIn(dir);
   if (!files.size) throw new Error(`No script files in ${dir}.`);
+  /** @type {Evidence & { failed: string[] }} */
   let evidence = { endpoints: [], routes: new Set(), sourceMaps: [], partial: [], unparsed: [], parsed: 0, failed: [] };
   if (REA) {
     console.log(`Analyzing ${files.size} script files with rea ${REA_VERSION} (parsed, never run; about four minutes for the whole app).`);

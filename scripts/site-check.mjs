@@ -78,6 +78,7 @@ const looks = (sel) => `(() => {
   });
 })()`;
 
+/** @param {any} stage @param {number[]} viewport */
 async function check(stage, [width, height]) {
   const fails = [];
   const page = await stage.open(PAGE, width, height, 1, 'true');
@@ -165,6 +166,7 @@ async function popup(stage) {
   return fails;
 }
 
+/** @param {any} stage @param {string[]} spec */
 async function frames(stage, [sel, mode = 'scroll', ...rest]) {
   const size = rest.find((a) => /^\d+x\d+$/.test(a)) || '1440x900';
   const nums = rest.filter((a) => !/x/.test(a)).map(Number);

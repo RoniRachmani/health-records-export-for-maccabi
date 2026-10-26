@@ -6,6 +6,8 @@
  * body, where `"` and `\` are escaped), and URL-encoded (a form body or a query string, where a space may be
  * `%20` or `+`). An empty or missing value has no spelling at all: replacing '' would put the label between
  * every two characters of the text.
+ * @param {unknown} value
+ * @returns {string[]}
  */
 export function spellings(value) {
   if (typeof value !== 'string' || !value) return [];
@@ -19,6 +21,8 @@ export function spellings(value) {
  * <PASSWORD>, the ID number with <ID> (also as the portal spells it, with a "0-" prefix and no leading
  * zeros), and anything that looks like a token with <jwt> or <token>. A JSON body is also parsed, and its
  * `password` and `id` fields blanked outright, so a password the patterns might miss is never printed.
+ * @param {{ username?: string; password?: string }} [creds]
+ * @returns {<T>(text: T) => T}
  */
 export function redactor({ username, password } = {}) {
   const labels = [[password, '<PASSWORD>'], [username, '<ID>']];
@@ -33,7 +37,7 @@ export function redactor({ username, password } = {}) {
     out = out.replace(/\b[A-Za-z0-9+/=_-]{48,}\b/g, '<token>');
     return out;
   };
-  return (text) => {
+  return (/** @type {any} */ text) => {
     if (typeof text !== 'string') return text;
     // A JSON body: the credential fields are blanked by name before any pattern looks at it.
     if (/^\s*[[{]/.test(text)) {
@@ -59,7 +63,12 @@ function blankFields(value) {
   return value;
 }
 
-/** A JSON value reduced to keys and types: {"status":"string","payload":{"SAMLResponse":"string(2048)"}}. */
+/**
+ * A JSON value reduced to keys and types: {"status":"string","payload":{"SAMLResponse":"string(2048)"}}.
+ * @param {unknown} v
+ * @param {number} [depth]
+ * @returns {unknown}
+ */
 export function shape(v, depth = 0) {
   if (v === null) return 'null';
   if (Array.isArray(v)) return v.length ? [shape(v[0], depth + 1), ...(v.length > 1 ? ['…' + v.length] : [])] : [];

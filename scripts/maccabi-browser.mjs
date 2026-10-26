@@ -33,7 +33,7 @@ const NO_OP = 'The 1Password CLI (op) is not installed: brew install 1password-c
 
 /** A secret reference's value; anything else is taken as the value itself (as `op run` passes it). */
 function resolve(name) {
-  const value = process.env[name];
+  const value = /** @type {string} */ (process.env[name]);
   if (!value.startsWith('op://')) return value;
   try {
     return execFileSync('op', ['read', '--no-newline', value], { encoding: 'utf8', stdio: ['inherit', 'pipe', 'inherit'] });
@@ -88,6 +88,7 @@ export function idNumber() {
  * browser open when the process exits; otherwise it is killed. Returns the page (evaluate, probe,
  * navigate, insertText, pressEnter) with the raw protocol `send`, its `sessionId` and `targetId`,
  * and `on` for protocol events, for what the page object does not cover.
+ * @param {{ startUrl?: string; extension?: string | null; keep?: boolean }} [options]
  */
 export async function openBrowser({ startUrl = START, extension = null, keep = false } = {}) {
   const exe = BROWSERS.find(isFile);

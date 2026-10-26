@@ -1,0 +1,15 @@
+// The terminal scripts and the endpoint scan are plain JavaScript, typed with JSDoc and checked by
+// `npm run typecheck` with this config. Implicit any is allowed (most of a script is glue around the
+// DevTools Protocol), and a caught value is any, as JavaScript has it; null checks are not relaxed.
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noImplicitAny": false,
+    "useUnknownInCatchVariables": false,
+    "types": ["node"],
+    "lib": ["ES2023", "DOM", "DOM.Iterable"]
+  },
+  "include": ["*.mjs", "../tools/**/*.mjs"]
+}

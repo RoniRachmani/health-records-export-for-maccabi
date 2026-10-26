@@ -65,6 +65,7 @@ class Stereo {
 class Biquad {
   constructor(type, f, q = 0.707, gain = 0) {
     this.x1 = this.x2 = this.y1 = this.y2 = 0;
+    this.b0 = this.b1 = this.b2 = this.a1 = this.a2 = 0; // set() gives them their values
     this.set(type, f, q, gain);
   }
   set(type, f, q = 0.707, gain = 0) {
@@ -749,6 +750,9 @@ function place(bus, s, audio, rand) {
  * `eleven` (eleven-sound.mjs) swaps the synthesized music and effects for ElevenLabs': the music is
  * levelled as this score is, and each effect is placed from its first sound and brought to the
  * loudness of the effect it stands in for, so the mix keeps its balance whichever plays.
+ * @param {any} spec
+ * @param {any} clips
+ * @param {{ music: any; effects: (kind: string, dur: number, n: number) => any } | null} [eleven]
  */
 export function buildSoundtrack(spec, clips, eleven = null) {
   const { scenes, sounds, duration } = spec;
@@ -776,6 +780,7 @@ export function buildSoundtrack(spec, clips, eleven = null) {
 
   // The voice, and the music stepping back for it.
   const mix = new Stereo(length);
+  /** @type {Stereo | null} */
   let voice = null;
   if (clips) {
     voice = voiceTrack(length, clips, scenes);
