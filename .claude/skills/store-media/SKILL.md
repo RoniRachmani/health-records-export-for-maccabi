@@ -11,7 +11,7 @@ Moved out of the root `CLAUDE.md` so it loads only for this work; the root keeps
 
 The store images (`store-assets`) are rendered on a Mac **without** Roboto installed, so the Roboto-first stacks of
 the listing layouts and the popup fall back to the macOS system face (San Francisco): that is the chosen look. Check
-with `fc-list | grep -i roboto` or Font Book, and render elsewhere if this Mac has it. Linux has no San Francisco, so
+in Font Book (macOS has no `fc-list`), and render on another Mac if this one has it. Linux has no San Francisco, so
 CI cannot reproduce these images. The video (`store-video`) still wants Roboto on the machine (`fonts-roboto` on
 Debian/Ubuntu, then `fc-cache -f`), as its workflow installs. Either way the font is only the machine's; the extension
 itself never ships or fetches one. Byte-for-byte reproducibility is only expected with the same browser, fonts and OS. Its static captures enable reduced motion
