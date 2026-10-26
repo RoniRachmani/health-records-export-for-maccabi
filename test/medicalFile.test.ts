@@ -55,6 +55,24 @@ describe('placeOrder', () => {
     expect(orderSettled(await placeOrder(c3))).toBe(true);
   });
 
+  it('calls beforeSend just before the order goes out, and only when it does', async () => {
+    const site = fakeMaccabi();
+    const seen: string[] = [];
+    const beforeSend = async () => void seen.push('beforeSend');
+    const { c } = makeCollector(fakeTransport(site.routes, { pagePath: SUMMARY, xhr: () => (seen.push('xhr'), ok('1')) }));
+    await placeOrder(c, { beforeSend });
+    expect(seen).toEqual(['beforeSend', 'xhr']);
+
+    // Nothing goes out from another page, or when today's file is already waiting.
+    seen.length = 0;
+    const { c: c2 } = makeCollector(fakeTransport(site.routes, { pagePath: '/sonline/', xhr: () => ok('1') }));
+    await placeOrder(c2, { beforeSend });
+    const ready = { letter_type: 2, status: 1, to_date: '2026-09-17', from_date: '1900-01-01T00:00:00', item_date: '2026-09-17T08:00:00', link: 'mf.pdf', timestamp: 'ts' };
+    const { c: c3 } = makeCollector(fakeTransport(fakeMaccabi({ medicalFile: ready }).routes, { pagePath: SUMMARY, xhr: () => ok('1') }));
+    expect(await placeOrder(c3, { beforeSend })).toMatchObject({ skipped_ready_today: true });
+    expect(seen).toEqual([]);
+  });
+
   it('settles an order once it was placed, skipped or possibly taken, and not before', () => {
     expect(orderSettled(undefined)).toBe(false);
     expect(orderSettled({ error: 'open /online/medicalfile/summary/ first' })).toBe(false);

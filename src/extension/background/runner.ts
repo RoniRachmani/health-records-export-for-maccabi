@@ -383,15 +383,25 @@ function counted(t: Transport): Transport {
 
 const SUMMARY_PATH = /^\/online\/medicalfile\/summary\/?$/i;
 
-/** Sends the order from the summary page, opening it first when the tab is elsewhere, and keeps the answer. */
+/**
+ * Sends the order from the summary page, opening it first when the tab is elsewhere, and keeps the answer. Both the
+ * sending and the answer are checkpointed as they happen, not when the step ends: a worker killed in between would
+ * otherwise come back with no order on record, and order again (and Maccabi text the member again).
+ */
 async function orderMedicalFile(run: RunState): Promise<void> {
   // Normally the tab is still on the page openLegacyPage opened; after a Resume or a reconnect it
   // is back on /sonline/, and the order needs this page again.
   if (!SUMMARY_PATH.test((await snapshot(run.tabId)).path)) await navigate(run.tabId, SUMMARY_PAGE, SUMMARY_PATH);
   const c = await collector();
   const reorder = __DEV_BRIDGE__ && !!(await chrome.storage.local.get('devReorder')).devReorder;
-  run.order = await placeOrder(c, { reorder });
+  // Until the answer is in, the run holds an order that went out with no answer, which orderSettled never repeats.
+  const beforeSend = async () => {
+    run.order = { ordered: false, sent: true };
+    await save();
+  };
+  run.order = await placeOrder(c, { reorder, beforeSend });
   if (run.order.ordered) run.orderedAt = new Date().toISOString();
+  await save();
   if (run.order.error) await c.problem(MEDICAL_FILE, 'medical file not ordered: ' + run.order.error);
 }
 
