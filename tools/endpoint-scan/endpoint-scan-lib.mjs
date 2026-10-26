@@ -271,7 +271,7 @@ function valuesAt(text, src, offset, depth = 0) {
   if (depth > 2) return [];
   if (/^[\w$]+$/.test(src) || WRITTEN_NAME.test(src)) {
     // Minified code writes s=…; the legacy site's own scripts, var url = …
-    const name = new RegExp('(?<![\\w$.])' + src.replace(/[$.]/g, '\\$&') + '\\s*=(?!=)\\s*', 'g');
+    const name = new RegExp('(?<![\\w$.])' + src.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&') + '\\s*=(?!=)\\s*', 'g');
     let at = -1;
     const from = WRITTEN_NAME.test(src) ? 0 : Math.max(0, offset - LOCAL_REACH);
     for (const m of text.slice(from, offset).matchAll(name)) at = from + m.index + m[0].length;

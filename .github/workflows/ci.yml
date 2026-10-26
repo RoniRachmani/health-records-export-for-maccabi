@@ -39,7 +39,9 @@ jobs:
       pull-requests: write
     steps:
       - id: meta
-        uses: dependabot/fetch-metadata@v3
+        # The one action not GitHub's own, in a job that can write and merge: pinned to a commit (v3.1.0),
+        # which Dependabot moves along with the tag.
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
       - if: >-
           steps.meta.outputs.dependency-type != 'direct:production' &&
           !(steps.meta.outputs.package-ecosystem == 'github_actions' && steps.meta.outputs.update-type == 'version-update:semver-major')
