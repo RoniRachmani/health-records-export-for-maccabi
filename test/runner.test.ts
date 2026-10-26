@@ -34,7 +34,19 @@ const world = {
   revoked: [] as string[],
   local: {} as Record<string, unknown>,
   sessionStore: {} as Record<string, unknown>,
+  /** The service worker was killed: from then on its writes never land, and never return. */
+  dead: false,
+  /** Kills the worker as it writes these items, before they land. */
+  dieOn: undefined as ((items: Record<string, unknown>) => boolean) | undefined,
+  /** Whether keepListedMedicalFile was asked, i.e. the run took no new medical file. */
+  keptListed: false,
 };
+
+/** Kills the service worker where it stands: what it has not written by now is lost, and it never goes on. */
+function die(): Promise<never> {
+  world.dead = true;
+  return new Promise(() => {});
+}
 
 vi.mock('../src/core', async (importOriginal) => {
   const core = await importOriginal<typeof import('../src/core')>();
@@ -45,7 +57,8 @@ vi.mock('../src/core', async (importOriginal) => {
       const attempt = world.ran.filter((s) => s === step).length;
       await world.step[step]?.(attempt);
     }),
-    placeOrder: vi.fn(async () => {
+    placeOrder: vi.fn(async (_c: unknown, opts?: { beforeSend?: () => Promise<void> }) => {
+      await opts?.beforeSend?.();
       world.ran.push('orderMedicalFile');
       world.orders++;
       await world.step.orderMedicalFile?.(world.orders);
@@ -57,6 +70,7 @@ vi.mock('../src/core', async (importOriginal) => {
     }),
     keepListedMedicalFile: vi.fn(async () => {
       world.ran.push('waitMedicalFile');
+      world.keptListed = true;
     }),
   };
 });
@@ -116,7 +130,10 @@ vi.mock('../src/extension/background/ui', () => ({
 function fakeChrome() {
   const store = (data: Record<string, unknown>) => ({
     get: async (key: string) => (key in data ? { [key]: structuredClone(data[key]) } : {}),
-    set: async (items: Record<string, unknown>) => void Object.assign(data, structuredClone(items)),
+    set: async (items: Record<string, unknown>) => {
+      if (world.dead || world.dieOn?.(items)) return die();
+      Object.assign(data, structuredClone(items));
+    },
     remove: async (key: string) => void delete data[key],
   });
   return {
@@ -158,7 +175,7 @@ beforeEach(() => {
   Object.assign(world, {
     ran: [], step: {}, orders: 0, order: { ordered: true, to_date: '2026-10-26', from_date: '2016-10-26' }, session: MEMBER,
     visible: true, sessionLookups: 0, navigations: [], path: '/sonline/', stagingCleared: 0, notices: [], downloads: 0, downloadItem: undefined, revoked: [],
-    local: {}, sessionStore: {},
+    local: {}, sessionStore: {}, dead: false, dieOn: undefined, keptListed: false,
   });
   vi.stubGlobal('chrome', fakeChrome());
   vi.stubGlobal('__DEV_BRIDGE__', false);
@@ -319,6 +336,43 @@ describe('a service worker that restarts', () => {
     expect((await settled())?.status).toBe('saving');
     expect(world.ran).toEqual(collected(steps('visits')));
     expect(world.orders).toBe(1);
+  });
+
+  // Maccabi texts the member for every order, and builds the file again: what the worker knew of an order has to be
+  // in storage before anything else can stop it, or the resume orders again.
+  it('does not order the medical file again when it died after Maccabi answered the order', async () => {
+    // Killed at the checkpoint after the order step, the first write past it.
+    world.dieOn = (items) => (items.run as RunState | undefined)?.next === PLAN.indexOf('orderMedicalFile') + 1;
+    let runner = await freshRunner();
+    await runner.start(TAB);
+    await vi.waitFor(() => expect(world.dead).toBe(true), { timeout: 5000, interval: 5 });
+    expect(world.orders).toBe(1);
+
+    world.dead = false;
+    world.dieOn = undefined;
+    runner = await freshRunner();
+    await runner.recover('startup');
+    await runner.resume(TAB);
+    expect((await settled())?.status).toBe('saving');
+    expect(world.orders).toBe(1);
+    expect(world.keptListed).toBe(false); // the order's own file is waited for
+  });
+
+  it('does not order the medical file again when it died while the order was out', async () => {
+    world.step.orderMedicalFile = () => die(); // the request went out, and its answer never came back
+    let runner = await freshRunner();
+    await runner.start(TAB);
+    await vi.waitFor(() => expect(world.dead).toBe(true), { timeout: 5000, interval: 5 });
+
+    world.dead = false;
+    delete world.step.orderMedicalFile;
+    runner = await freshRunner();
+    await runner.recover('startup');
+    await runner.resume(TAB);
+    expect((await settled())?.status).toBe('saving');
+    // Maccabi may have taken it, as with any order whose answer was lost: the file it already lists is kept.
+    expect(world.orders).toBe(1);
+    expect(world.keptListed).toBe(true);
   });
 
   it('refuses to resume a run for another member', async () => {

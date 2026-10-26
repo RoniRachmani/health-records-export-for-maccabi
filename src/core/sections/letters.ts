@@ -91,8 +91,9 @@ export function orderRefused(o: OrderResult | undefined): boolean {
 // already waiting, so the same file is not built twice, unless `reorder` asks (a development build's
 // dev:reorder, to time a real order on a day that already has one). Run from
 // /online/medicalfile/summary/ in a tab that has been on /sonline/ (the wait
-// needs the SPA token).
-export async function placeOrder(c: Collector, opts: { reorder?: boolean } = {}): Promise<OrderResult> {
+// needs the SPA token). `beforeSend` runs just before the order goes out, for the caller to record that it is
+// about to: once it is out, Maccabi may take it whether or not an answer ever comes back.
+export async function placeOrder(c: Collector, opts: { reorder?: boolean; beforeSend?: () => Promise<void> } = {}): Promise<OrderResult> {
   if (!/^\/online\/medicalfile\/summary\/?$/i.test(await c.deps.transport.pagePath())) return { error: 'open /online/medicalfile/summary/ first' };
   if (!c.session.jwt) return { error: 'no SPA token in this tab -- open any /sonline/ page, then /online/medicalfile/summary/, and rerun' };
   const fromDate = FULL_HISTORY;
@@ -113,6 +114,7 @@ export async function placeOrder(c: Collector, opts: { reorder?: boolean } = {})
   }
   // XMLHttpRequest, not fetch: Radware adds the uzlc header only to XHRs.
   let res: { status: number; text: string };
+  await opts.beforeSend?.();
   try {
     res = await c.deps.transport.xhr({
       url: '/online/Ajax/Summary/WsSummaryPage.asmx/MedicalFileOrderAjax',

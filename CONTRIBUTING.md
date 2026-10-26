@@ -32,11 +32,11 @@ Load `dist-dev/` (or `dist/`) unpacked at `chrome://extensions`. The development
 CI runs both, then `npm run site-check -- popup`, which measures every popup state against Chrome's 600px.
 
 `test/runner.test.ts` drives the run loop with `chrome.*` faked: a whole run, reconnecting, a rewind that does not
-order again, rate limits, Cancel, a worker restart at a checkpoint, Save again, a run found `saving` after a restart
-(`settleSave`), and a hidden tab's pause (and Cancel during it). Some of it is not covered there: a worker that stops
-between the medical file's order and the step's checkpoint, the heartbeat's `recover` of a running run, and the real
-Chrome parts the test fakes (the tab's navigation and `executeScript`, the offscreen ZIP, the download). A change to any
-of these, or to `runner.ts`, needs a run of the development build as well (`npm run live`, and a pause and Resume from the console), and a test here when
+order again, rate limits, Cancel, a worker restart at a checkpoint or while the medical file is being ordered, Save
+again, a run found `saving` after a restart (`settleSave`), and a hidden tab's pause (and Cancel during it). Some of
+it is not covered there: the heartbeat's `recover` of a running run, and the real Chrome parts the test fakes (the
+tab's navigation and `executeScript`, the offscreen ZIP, the download). A change to any of these, or to `runner.ts`,
+needs a run of the development build as well (`npm run live`, and a pause and Resume from the console), and a test here when
 one can be written.
 
 ## How a run works
@@ -48,7 +48,7 @@ order the medical file and collect purchases, hospital stays and uploads (with t
 which the REST API answers from any page), back to `/sonline/` for the other REST API sections, and the medical file collected last, by which time Maccabi Healthcare Services has had the whole run to build it. Each finished step is
 checkpointed in `chrome.storage.local`, so a paused run, or a restarted service worker, continues from there. The
 medical file is ordered at most once per run: once the order has gone out, a resume or a reconnect that comes back
-through that step skips it, even when Maccabi Healthcare Services' answer was lost or was a refusal (`Success 3`, where the site's own button says to try again later): on 2026-10-15 a refused order was followed by its SMS 21 minutes later, so Maccabi may still carry one out, and asking again could text the member twice. When no new file was ordered, the run keeps the file Maccabi already lists and files a problem that names it, so an earlier file is never taken for today's. After a refusal it tells the member to export again once the SMS comes, that day: that export takes the ready file without ordering.
+through that step skips it, even when Maccabi Healthcare Services' answer was lost or was a refusal (`Success 3`, where the site's own button says to try again later): on 2026-10-15 a refused order was followed by its SMS 21 minutes later, so Maccabi may still carry one out, and asking again could text the member twice. So the order is not left for the step's checkpoint: the run is saved as the request goes out, and again with the answer, and a service worker killed in between comes back knowing it ordered. When no new file was ordered, the run keeps the file Maccabi already lists and files a problem that names it, so an earlier file is never taken for today's. After a refusal it tells the member to export again once the SMS comes, that day: that export takes the ready file without ordering.
 
 A step that continues is run again from its start, so every step is safe to repeat: JSON is rewritten only when
 its content changed, and a document already staged is not asked for again. Staging also keeps a SHA-256 index of the
