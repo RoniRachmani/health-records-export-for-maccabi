@@ -61,7 +61,7 @@ jobs:
           # Only what the film is drawn from: its own code, the popup it photographs, the icons, and the version the
           # popup prints. The pages in public/ and site/ are not, so changing them deploys without a render. The number
           # after "clips-" stands for the ffmpeg lines below: raise it when their times, crop or encoding change.
-          key: clips-7-${{ hashFiles('store/src/**', 'src/extension/**', 'public/icons/**', 'scripts/stage.mjs', 'scripts/store-video.mjs', 'vite.store.config.ts', 'package.json', 'package-lock.json') }}
+          key: clips-7-${{ hashFiles('store/src/**', 'src/extension/**', 'public/icons/**', 'scripts/stage.mjs', 'scripts/store-video.mjs', 'store/vite.config.ts', 'package.json', 'package-lock.json') }}
       - name: Render the clips
         if: steps.clips.outputs.cache-hit != 'true'
         run: |

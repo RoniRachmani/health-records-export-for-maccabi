@@ -41,7 +41,7 @@ export function isFile(path) {
  * nothing left to shoot.
  */
 export async function openStage() {
-  await build({ root, configFile: join(root, 'vite.store.config.ts'), logLevel: 'warn' });
+  await build({ root, configFile: join(root, 'store', 'vite.config.ts'), logLevel: 'warn' });
 
   const server = createServer((req, res) => {
     const path = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
