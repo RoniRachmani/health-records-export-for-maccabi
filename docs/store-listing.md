@@ -12,9 +12,8 @@ a version bump or a new package. The steps below apply when releasing an extensi
 
 1. Raise `version` in `package.json`. The store rejects a package whose version isn't higher than the published one.
 2. `npm test` and `npm run typecheck`.
-3. If the popup changed, run `npm run store-assets` and inspect the canonical images in `store/assets/review.html`.
-   Name shots to render only some, e.g. `npm run store-assets -- start open`. Run `node scripts/check-store-assets.mjs`
-   to verify the eight upload PNGs, manifest and ZIP. The promo video shows the popup too: re-render it with
+3. If the popup changed, re-render the images as [the artwork guide](../store/README.md) says, on a Mac without
+   Roboto. The promo video shows the popup too: re-render it with
    `npm run store-video`, refresh its poster with `npm run store-assets -- poster`, and re-upload the video to YouTube
    (see [Promo video](#promo-video)).
 4. `npm run package`, which builds `dist/` and writes `release/health-records-export-for-maccabi-<version>.zip`.
@@ -122,11 +121,8 @@ Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare 
 
 ### Graphic assets
 
-The approved design, selected on 25 October 2026, is now the default renderer and lives in `store/assets/`.
-[Review the production images](../store/assets/review.html), or open the historical
-[comparison](../store/redesign/mock-review.html). Its original images are archived in `store/redesign/original/`;
-**First redesign** is the intermediate proposal, and **Latest revision** links to the canonical production files.
-The existing store listing is not changed by generating files locally.
+The approved design, selected on 25 October 2026, lives in `store/assets/`. How to render, check and upload it is
+in [the artwork guide](../store/README.md); this section says what goes in each field.
 
 | Field | Selected file | Shows |
 |---|---|---|
@@ -140,15 +136,8 @@ The existing store listing is not changed by generating files locally.
 | Marquee promo tile (1400×560) | `store/assets/promo-marquee-1400x560.png` | "Your whole history. Now in your hands." Navy and magenta text on white, beside the same simplified illustration without a background panel |
 | Global promo video | https://youtu.be/xcy8fo-PjHc | Existing optional video; its separate renderer is described below |
 
-Run `npm run store-assets` to recreate the eight listing PNGs, the video poster, and web/social previews.
-The command also writes `store/assets/review.html`, `store-artwork.json` and `store-artwork.zip` (gitignored: written by each render; upload one rendered on a Mac, not the Store images workflow's artifact). The ZIP contains
-only the eight listing PNGs. The release command and *Store images* workflow use the same renderer; CI also
-validates the bundle and offers its ZIP and hash manifest as a downloadable artifact. The old proposal renderer and
-`--mock` flag are retired. Use shot names to select outputs, e.g. `npm run store-assets -- marquee icon`.
-
 Upload screenshots in the numbered order above. They are opaque, full-bleed 1280×800 PNGs; the icon retains alpha.
-Each is drawn at twice that size and scaled down; the 2× drawing is kept beside it as `<name>@2x.png` for the README and
-anywhere else that wants it sharper, but the store takes only the sizes in the table.
+The `@2x.png` drawings beside them are for the README and the web; the store takes only the sizes in the table.
 The images follow the existing design system and [positioning](positioning.md), with a small **Unofficial** chip
 beside the product title instead of a full disclaimer footer. Screenshots 1 and 3 label illustrative assistant output;
 screenshot 2 labels its export folder; screenshots 4 and 5 use the actual popup with synthetic states from
@@ -156,10 +145,6 @@ screenshot 2 labels its export folder; screenshots 4 and 5 use the actual popup 
 not a capture of a member's records. The packaged extension icon and popup are unchanged by this artwork renderer.
 
 All current illustrations, copy and layout are composed in code; no AI image generation is needed to rebuild them.
-Static captures use the popup's existing reduced-motion styles to freeze the progress sheen and pulse. Exact PNG
-reproducibility was checked across two consecutive runs in the same rendering environment. Use the same browser and
-fonts for comparisons; matching pixels across different operating systems or font installations is not guaranteed.
-See [the artwork guide](../store/redesign/README.md) for the source files, prerequisites and verification checklist.
 
 ### Promo video
 

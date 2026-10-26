@@ -9,32 +9,20 @@ Moved out of the root `CLAUDE.md` so it loads only for this work; the root keeps
 
 ## Rendering
 
-The store images (`store-assets`) are rendered on a Mac **without** Roboto installed, so the Roboto-first stacks of
-the listing layouts and the popup fall back to the macOS system face (San Francisco): that is the chosen look. Check
-in Font Book (macOS has no `fc-list`), and render on another Mac if this one has it. Linux has no San Francisco, so
-CI cannot reproduce these images. The video (`store-video`) still wants Roboto on the machine (`fonts-roboto` on
-Debian/Ubuntu, then `fc-cache -f`), as its workflow installs. Either way the font is only the machine's; the extension
-itself never ships or fetches one. Byte-for-byte reproducibility is only expected with the same browser, fonts and OS. Its static captures enable reduced motion
-and wait two animation frames, so the progress sheen and pulse cannot vary between shots.
+**Read `store/README.md` before rendering or changing the store images**: it is the one guide to their outputs, the
+upload bundle, the named shots, the @2x drawings, the *Store images* workflow and how to check them. What a session
+must not get wrong:
 
-The approved listing images are the default for `npm run store-assets`, `npm run release`, and the *Store images*
-workflow. Canonical outputs are the eight PNGs in `store/assets/`, with `review.html` and `store-artwork.json`
-(committed) and `store-artwork.zip` (gitignored: written by each render; upload one rendered on a Mac, not the Store
-images workflow's artifact). CI validates the bundle and uploads its ZIP and hash manifest as an artifact. The README hero uses
-`store/assets/screenshot-1-ask@2x.png`. Named shots include the five screenshots, `promo`, `marquee`, `icon`, `poster`,
-`og-site` and `social`; `npm run store-assets -- start open` updates only those shots, then refreshes the bundle.
-Every shot is drawn at 2x (`<name>@2x.png`, committed beside it) and its
-store-sized file is that drawing scaled down; `--scale 1` draws only the store size. The 4K poster differs by a level
-or two between runs; the other images are byte for byte.
-The proposal renderer and `--mock` flag are retired. `store/redesign/mock-review.html` preserves the historical
-comparison; the latest column links to canonical assets. See `store/redesign/README.md` and `docs/store-listing.md`.
-
-The *Store images* workflow (`gh workflow run store-assets.yml`, optionally `-f shots="start open"`) renders on Linux
-in the runner's own fonts (DejaVu Sans, which is wider) and pushes changed images to a `store-images/` branch: use it
-to check that a render works, not for the committed images, and delete its branch rather than merging it. The
-*Store video* workflow (`gh workflow run
-store-video.yml`) renders the video's picture there and keeps it as the run's artifact, with no sound: the narration is
-only in a maintainer's `.cache/narration/`, so download it to `store/assets/` and add the soundtrack with `--remux`.
+- The store images are rendered on a Mac **without** Roboto installed, so the Roboto-first stacks fall back to San
+  Francisco: that is the chosen look. Check in Font Book (macOS has no `fc-list`). Never commit images from Linux or
+  from the *Store images* workflow, which renders in DejaVu Sans; delete its `store-images/` branch, don't merge it.
+- The video (`store-video`) does want Roboto on the machine (`fonts-roboto` on Debian/Ubuntu, then `fc-cache -f`), as
+  its workflow installs. Either way the font is only the machine's; the extension never ships or fetches one.
+- The listing PNGs repeat byte for byte with the same browser, fonts and OS; the 4K video poster drifts by a level or
+  two, so leave it out of a commit that is not about it.
+- The *Store video* workflow (`gh workflow run store-video.yml`) renders the video's picture on Linux and keeps it as
+  the run's artifact, with no sound: the narration is only in a maintainer's `.cache/narration/`, so download it to
+  `store/assets/` and add the soundtrack with `--remux`.
 
 ## How the pieces are built
 
