@@ -1,0 +1,7 @@
+// The store images, the promo films and their build: a project of their own, so the extension's
+// typecheck is the extension's. They draw the real popup, so they import from src/ and are checked
+// against it here. `npm run typecheck` runs this after the root and the scripts.
+{
+  "extends": "../tsconfig.json",
+  "include": ["src", "vite.config.ts", "design/*.mjs"]
+}
