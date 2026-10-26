@@ -16,13 +16,14 @@ must not get wrong:
 - The store images are rendered on a Mac **without** Roboto installed, so the Roboto-first stacks fall back to San
   Francisco: that is the chosen look. Check in Font Book (macOS has no `fc-list`). Never commit images from Linux or
   from the *Store images* workflow, which renders in DejaVu Sans and only checks that a render works.
-- The video (`store-video`) does want Roboto on the machine (`fonts-roboto` on Debian/Ubuntu, then `fc-cache -f`), as
-  its workflow installs. Either way the font is only the machine's; the extension never ships or fetches one.
+- **Render locally on the Mac by default**, images and video alike: `npm run store-assets` and `npm run store-video`
+  on the same Mac without Roboto, so the video's popup is in the images' San Francisco and its soundtrack comes from
+  the local narration cache in the same run. The font is only the machine's; the extension never ships or fetches one.
 - The listing PNGs repeat byte for byte with the same browser, fonts and OS; the 4K video poster drifts by a level or
   two, so leave it out of a commit that is not about it.
-- The *Store video* workflow (`gh workflow run store-video.yml`) renders the video's picture on Linux and keeps it as
-  the run's artifact, with no sound: the narration is only in a maintainer's `.cache/narration/`, so download it to
-  `store/assets/` and add the soundtrack with `--remux`.
+- The *Store images* and *Store video* workflows are optional, manual checks that a render still works on Linux; don't
+  reach for them unless asked. The video one renders the picture in Roboto with no sound (the narration is only in a
+  maintainer's `.cache/narration/`), so its MP4 needs downloading to `store/assets/` and `--remux`.
 
 ## How the pieces are built
 

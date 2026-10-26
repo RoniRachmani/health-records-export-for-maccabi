@@ -82,6 +82,7 @@ icons share the same mark, with different canvas scale, padding and rasterizatio
 
 ## The Store images workflow
 
+An optional check, never the default: the images are rendered on a Mac, as above.
 `gh workflow run store-assets.yml` (with `-f shots="start open"` for only some) renders on Linux in the runner's own
 fonts (DejaVu Sans, which is wider), validates the bundle, keeps its ZIP and hash manifest as the run's artifact, and
 lists in the run's summary which images came out different from the committed ones. It shows that a render works, and

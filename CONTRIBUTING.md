@@ -269,10 +269,13 @@ has everything to fill in on the store dashboard.
 
 The image and video renderers build the local store stage with Vite and photograph it in headless Chrome
 (`scripts/stage.mjs`): a local listening port, Node.js 22 or newer, installed dependencies, and Chrome, Chromium or
-Edge (`CHROME_PATH` overrides discovery). Both show the real popup with made-up states. The video, unlike the images, wants Roboto: the *Store video* workflow
-(`gh workflow run store-video.yml`) renders its picture on Linux with Roboto installed, kept as the run's artifact and silent:
-download it with `gh run download <run id> -n promo-video -D store/assets`, then `npm run store-video -- --remux`
-puts the soundtrack on it from your narration cache.
+Edge (`CHROME_PATH` overrides discovery). Both show the real popup with made-up states. Both are rendered locally, on
+the same Mac without Roboto, so the video's popup is drawn in the same San Francisco as the images, and its soundtrack
+comes from your own narration cache in the same run. The *Store images* and *Store video* workflows are optional
+checks that a render still works on Linux, not the source of anything uploaded: if you do take the video's picture
+from one (`gh workflow run store-video.yml`; silent, and in Roboto), download it with
+`gh run download <run id> -n promo-video -D store/assets`, then `npm run store-video -- --remux` puts the soundtrack
+on it.
 
 The video is drawn frame by frame in the same headless browser (`store/src/video.ts`), so nothing depends on the
 speed of the machine rendering it: the export it plays is the real popup, driven through a whole run by states

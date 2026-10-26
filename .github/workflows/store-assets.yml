@@ -2,9 +2,10 @@
 # render still works after a change, not a source of images. The runner draws in its own fonts (DejaVu Sans, as
 # Roboto is not installed), while the committed images are rendered on a Mac in its system face (store/README.md),
 # so nothing here is committed: the ZIP and its hash manifest are kept as the run's artifact, and the summary lists
-# which images came out different from the committed ones. Run it by hand from the Actions tab; name shots to render
-# only those (e.g. "start open"), or leave it empty for all. The video is not rendered here: the Store video
-# workflow (store-video.yml) renders its picture.
+# which images came out different from the committed ones. The default route is `npm run store-assets` on a Mac;
+# run this by hand from the Actions tab only as a check; name shots to render only those (e.g. "start open"), or leave
+# it empty for all. The video is not rendered here: it is rendered on the Mac too (npm run store-video), and the
+# Store video workflow (store-video.yml) is its optional check.
 name: Store images
 
 on:

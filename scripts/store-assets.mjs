@@ -37,7 +37,8 @@ export function assertListingPng(bytes, image) {
   }
 }
 
-// The upload ZIP is gitignored (*.zip): it is written here and kept as the Store images workflow's artifact.
+// The upload ZIP is gitignored (*.zip): it is written here for the upload, and kept as the Store images workflow's
+// artifact when that check runs.
 export function writeListingBundle(out) {
   const missing = LISTING_IMAGES.filter(image => !existsSync(join(out, image.file))).map(image => image.file);
   if (missing.length) throw new Error('Cannot write the upload bundle without ' + missing.join(', ') + ': run npm run store-assets with no shot names');
