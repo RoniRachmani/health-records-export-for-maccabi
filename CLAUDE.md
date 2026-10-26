@@ -13,7 +13,7 @@ behaviour changes. `tools/endpoint-scan/README.md` describes the endpoint scan.
 npm test                          # vitest run (synthetic fixtures only)
 npx vitest run test/zip.test.ts   # one file
 npx vitest run -t "round-trips"   # one test by name
-npm run typecheck                 # tsc --noEmit
+npm run typecheck                 # tsc: the extension and tests, then scripts/ (JSDoc, checkJs) and store/
 npm run dev                       # watch build into dist-dev/ (dev build, extra dev bridge)
 npm run build                     # typecheck + store build into dist/
 npm run package                   # build + release/<name>-<version>.zip (refuses a dev build)
@@ -44,15 +44,17 @@ npm run store-video -- --import take.mp3 --audio-only   # cut that take into the
 npm run film:before-thursday      # the Before Thursday draft film instead (store-video --before-thursday, same flags but --clip)
 npm run film:before-thursday:all  # that film, then its captions
 npm run icons                     # hand-tuned public/icons/ (the store icon is `npm run store-assets -- icon`)
-npm run site-check                # the landing page's motion: ends where the still page is, at five screen sizes
+npm run site-check                # the popup's states under 600px, then the landing page's motion at five screen sizes
+npm run site-check -- popup       # just the popup's height (CI runs this)
 npm run site-check -- frames .path scroll 10 375x812   # photograph one picture as it scrolls in (or `time 0 13 0.5`)
 ```
 
 There is no linter or formatter configured; `typecheck` and `test` are the whole gate you can run
-here. GitHub adds one more: CodeQL default setup scans pull requests and runs weekly, and it has no
-workflow file in the repo — it is configured in the repository's settings. Load `dist-dev/`
-(or `dist/`) unpacked at `chrome://extensions` to run it; the dev build is named "… (dev)" and can be
-driven from the Maccabi page's console (see *Driving a run from the console* in `CONTRIBUTING.md`).
+here, and CI adds `site-check -- popup` in its own Chrome. GitHub adds one more: CodeQL default setup
+scans pull requests and runs weekly, and it has no workflow file in the repo — it is configured in the
+repository's settings. Load `dist-dev/` (or `dist/`) unpacked at `chrome://extensions` to run it; the dev
+build is named "… (dev)" and can be driven from the Maccabi page's console (see *Driving a run from the
+console* in `CONTRIBUTING.md`).
 
 Rendering the store images, video, poster, link previews or icons (fonts, the CI workflows, the approved
 listing bundle): load the `store-media` skill (`.claude/skills/store-media/SKILL.md`) first.
@@ -79,7 +81,8 @@ Three layers, and the boundary between the first two is the point of the design:
 - **`src/extension/`** — MV3 wiring: the service worker run loop, the tab, the offscreen document,
   IndexedDB staging, the popup.
 - **`test/`** — Vitest against `fakes.ts`: a fake Maccabi (`fakeMaccabi`), `MemorySink`, `FakeClock`
-  (sleeps are instant and advance time), and `happy-dom` for `DOMParser`.
+  (sleeps are instant and advance time), and `happy-dom` for `DOMParser`. `runner.test.ts` drives the run loop
+  with `chrome.*` faked; `repoRules.test.ts` checks the pairs below that must stay in step.
 
 ### Two sites, two routes
 
@@ -92,7 +95,8 @@ differently and the difference drives most of the run's shape:
   `world: 'MAIN'`), after some `/online/` page has been loaded in the session.
 
 `DEFAULT_ROUTES` in `background/tab.ts` encodes this; `routedTransport` picks per request path.
-Functions passed to `executeScript` run in the page and must be self-contained (no closures, no imports).
+Functions passed to `executeScript` run in the page and must be self-contained (no closures, no imports);
+`test/inPage.test.ts` runs each from its own source alone.
 
 ### The run plan is the source of truth
 
@@ -106,8 +110,9 @@ worker or a Chrome restart continues from there. When you touch `PLAN`:
   run: stages are **in `PLAN` order**, one line per thing the member gets (a long step may take a line per part,
   with `parts`), and the first stage holding a step is labelled with its `LABELS` entry. A step that only
   serves another (a page change, a wait) shares that one's line and label and says what it does in
-  `DESCRIPTIONS`, which the panel above the list shows while that line is current. 17 lines (and the file counts' column head) take the running view to 589px of the 600px cap: merge before adding one.
-  `docs/sections.md` maps each line to its steps, parts and files: update it with `STAGES`;
+  `DESCRIPTIONS`, which the panel above the list shows while that line is current. The running view is 589px of the 600px cap
+  (`npm run site-check -- popup` measures it): merge lines before adding one. `docs/sections.md` maps each line to its
+  steps, parts and files: update it with `STAGES` (`repoRules.test.ts` checks the lines, steps and parts);
 - add an entry to `OPENED_BY` if the step only works on a page an earlier step opened (`resumeIndex`
   rewinds a resume to that opener);
 - a stored run carries `nextStep` by name beside the index, so `alignToPlan` survives reordering across
@@ -194,7 +199,8 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   `MaccabiSession.request` — never a timer of its own beside it. The session's ended-session markers are the
   collector's (`signedOutUrl`, `LOGIN_ORIGIN` from `core/collector.ts`), its origins and legacy page are
   `MACCABI_ORIGIN` and `SUMMARY_PAGE` from `shared/state.ts`: the scripts take all of these from `core` and never
-  spell them again. A sign-in attempt (a password, an SMS code) is sent once and never resubmitted; what is refused
+  spell them again (`maccabi-browser.mjs`'s `ORIGIN` is the one copy, which a test holds to it). They are typed
+  with JSDoc, checked by `scripts/tsconfig.json`, never with a `.d.mts` beside them. A sign-in attempt (a password, an SMS code) is sent once and never resubmitted; what is refused
   before it is sent (an empty password, a code that is not six digits) leaves the sign-in open.
 - **Every request goes in `docs/endpoints/`**: the collector's (`src/core`, sent from the tab or from Node) in
   `endpoints.json` with the file it produces, and the ones the scripts send themselves (the sign-in chain, the token
@@ -205,7 +211,7 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
 - **Never write the member id into a path or a stored `endpoint` string**; `Collector.rec` keeps `{mid}`
   as a placeholder.
 - **Keep the policies in sync**: `docs/privacy.md` ↔ `public/privacy.html`, `docs/terms.md` ↔
-  `public/terms.html`, and change their effective date. For a material change also bump `TERMS_EFFECTIVE`
+  `public/terms.html` (`repoRules.test.ts` compares their words), and change their effective date. For a material change also bump `TERMS_EFFECTIVE`
   in `shared/state.ts`, which makes the popup ask everyone to accept again. `.github/workflows/pages.yml` publishes `public/` on GitHub Pages, so these pages are also public web pages.
 - **The guide to opening an export is on the website, not in the extension**: the landing page's last sections, from
   `#where` ("Open it in Claude or ChatGPT"). The popup's "See how" and "Open it in an AI", the "Export ready"
@@ -225,14 +231,14 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   `scripts/stage.mjs` resolves no host but this machine, so the checks and renders are never counted as visits. Its run clip is a
   slice of the promo film that the workflow renders and crops (see the workflow's header), so a change to the film's
   timing or layout has to be matched in the `clip` line there. The opened folder beside it is drawn in HTML
-  (`.fw-list`), from the film's `FOLDERS` in `store/src/parts.ts`: keep the two lists in step, and its open
+  (`.fw-list`), from the film's `FOLDERS` in `store/src/parts.ts` (`repoRules.test.ts` holds the two lists in step), and its open
   `test-results/` (a result's `details/` JSON beside its `files/` PDF of the same name, the film's earlier drill) in step
   with the export. Its copy follows `docs/positioning.md`, and must agree
   with the README's opening and its *Hand it to an AI assistant* on the facts they share.
 - **The landing page's motion is CSS, and it ends where the still page is**: the rules (scroll timelines, no
   `overflow: hidden` around them, reduced motion) are in `site/CLAUDE.md`; `npm run site-check` is the gate.
 - **Keep `public/third-party-notices.txt` current** when a runtime dependency changes (only `fflate`
-  today, plus Vite's module preload polyfill). The README's `docs/images/chrome-web-store-badge.png` isn't one of
+  today, plus Vite's module preload polyfill; `repoRules.test.ts` checks each one's name and version). The README's `docs/images/chrome-web-store-badge.png` isn't one of
   them: it is Google's own badge, committed byte for byte as it is served from
   [their branding page](https://developer.chrome.com/docs/webstore/branding), and their terms allow resizing
   it and nothing else. It has to keep linking to the listing. It is the bordered version, whose fill is opaque

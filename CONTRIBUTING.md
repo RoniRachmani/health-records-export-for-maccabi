@@ -22,14 +22,14 @@ You need Node.js 22 or newer and Chrome.
 ```sh
 npm install
 npm test               # unit tests (synthetic data only)
-npm run typecheck
+npm run typecheck      # the extension and tests, the scripts (JSDoc) and store/
 npm run dev            # development build in dist-dev/, rebuilt on change
 npm run build          # store build in dist/
 ```
 
 Load `dist-dev/` (or `dist/`) unpacked at `chrome://extensions`. The development build shows up as
 "Health Records Export for Maccabi (dev)". There is no linter or formatter: `typecheck` and `test` are the gate, and
-CI runs both.
+CI runs both, then `npm run site-check -- popup`, which measures every popup state against Chrome's 600px.
 
 ## How a run works
 
@@ -92,7 +92,7 @@ the guide to opening an export in an AI assistant, which the popup and every exp
 address, `ai-assistant.html`, is a redirect there. `popup.css` and `pages.css` both pin `color-scheme: light` —
 there is no dark theme, and pinning it keeps Chrome's auto-dark-mode from repainting controls and scrollbars
 against a light page. Every text colour meets WCAG AA on the surface it sits on. Chrome caps a popup at 600px
-tall, so keep the states that are not disclosures under it.
+tall, so keep the states that are not disclosures under it; `npm run site-check -- popup` checks.
 
 The store images use the same palette and typography; their layout and design rules are in
 [the artwork guide](store/README.md).
@@ -318,14 +318,14 @@ film, drawn by the same page: `npm run store-assets -- poster`.
   per sign-in, for the API token (the portal's own bootstrap, in `scripts-endpoints.json`). Nothing else is excepted:
   nothing ordered, nothing marked read, every request paced and one at a time, no credential or record printed.
 - **Keep the policies in sync.** `docs/privacy.md` goes with `public/privacy.html`, and `docs/terms.md` with
-  `public/terms.html`. Change the effective date when you change either. For a material change, also set
+  `public/terms.html`; `test/repoRules.test.ts` fails when their words differ. Change the effective date when you change either. For a material change, also set
   `TERMS_EFFECTIVE` in `src/extension/shared/state.ts` to the new date, so the popup asks users to accept again.
   The landing page's guide to opening an export (`site/index.html`, from `#where`), which the popup's "How to ask an
   AI" opens, must agree with the README's *Hand it to an AI assistant* on the facts that section keeps: the apps, the first
   message and the safeguards. The Privacy Policy lists the links the extension opens: add to it before adding another.
 - **Keep [public/third-party-notices.txt](public/third-party-notices.txt) current.** It carries the licenses of
   third-party code bundled into the package (fflate, and Vite's module preload polyfill). Update it when a runtime
-  dependency is added or upgraded.
+  dependency is added or upgraded; `test/repoRules.test.ts` checks the names and versions.
 - **Regenerate the store images** with `npm run store-assets` when their copy, illustrations or popup change.
   Inspect the eight canonical images and run `node scripts/check-store-assets.mjs` to validate the upload bundle.
 
