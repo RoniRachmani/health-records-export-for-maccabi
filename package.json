@@ -28,6 +28,8 @@
     "endpoints": "node tools/endpoint-scan/endpoint-scan.mjs",
     "store-assets": "node scripts/store-assets.mjs",
     "store-video": "node scripts/store-video.mjs",
+    "promo-film:third": "node scripts/store-video.mjs --third-film",
+    "promo-film:third:all": "npm run promo-film:third && npm run promo-film:third -- --captions",
     "site-check": "node scripts/site-check.mjs",
     "package": "npm run build && node scripts/package.mjs",
     "clean": "node -e \"for (const d of ['dist', 'dist-dev', 'dist-store', 'dist-cli', 'release']) require('node:fs').rmSync(d, { recursive: true, force: true })\"",

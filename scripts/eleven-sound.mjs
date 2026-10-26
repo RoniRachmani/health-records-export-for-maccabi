@@ -44,22 +44,22 @@ const PARTS = [
   ['close', '[Outro]', ['resolving on the tonic', 'final chord rings out', 'fading to silence']],
 ];
 
-/** The music's composition plan: a chunk per part, each as long as that part runs. */
-export function musicRequest(spec) {
+/** The music's composition plan: a chunk per part, each as long as that part runs. Another film passes its own tables. */
+export function musicRequest(spec, { style = STYLE, never = NEVER, parts = PARTS, seed = 20260917 } = {}) {
   const s = spec.scenes;
-  const edges = PARTS.map(([key]) => s[key] ?? (key === 'answer' ? 0 : undefined));
-  if (edges.some((e) => typeof e !== 'number')) throw new Error('The film has no part ' + PARTS[edges.findIndex((e) => typeof e !== 'number')][0]);
+  const edges = parts.map(([key]) => s[key] ?? (key === 'answer' ? 0 : undefined));
+  if (edges.some((e) => typeof e !== 'number')) throw new Error('The film has no part ' + parts[edges.findIndex((e) => typeof e !== 'number')][0]);
   const total = Math.round(spec.duration * 1000);
   const ms = edges.map((e) => Math.round(e * 1000)).concat(total);
-  const chunks = PARTS.map(([, text, styles], i) => ({
+  const chunks = parts.map(([, text, styles], i) => ({
     text,
     duration_ms: ms[i + 1] - ms[i],
-    positive_styles: [...STYLE, ...styles],
-    negative_styles: NEVER,
+    positive_styles: [...style, ...styles],
+    negative_styles: never,
     context_adherence: 'high',
   }));
   for (const c of chunks) if (c.duration_ms < 3000) throw new Error('A part of the film is under the 3 s a music chunk needs: ' + c.text);
-  return { model_id: MUSIC_MODEL, composition_plan: { chunks }, seed: 20260917 };
+  return { model_id: MUSIC_MODEL, composition_plan: { chunks }, seed };
 }
 
 /** What each kind of effect is asked for as: SOUNDS' kinds, which soundtrack.mjs synthesizes. */
@@ -118,18 +118,21 @@ function brought(name) {
     .map(([f]) => join(IMPORT, f));
 }
 
-export async function elevenSound(spec) {
-  const [own] = brought('music');
+export async function elevenSound(spec, options = {}) {
+  const imports = (name) => options.useImports === false ? [] : brought(name);
+  const definitions = Object.fromEntries(Object.entries(EFFECTS).map(([name, defaults]) =>
+    [name, { ...defaults, ...options.effects?.[name] }]));
+  const [own] = imports('music');
   if (own) console.log('  music: ' + own.slice(root.length));
-  const music = own ? readAudio(own) : await kept(musicRequest(spec), '/music', '?output_format=mp3_48000_192', 'the music (Eleven Music v2.5, ' + spec.duration.toFixed(1) + 's)');
+  const music = own ? readAudio(own) : await kept(options.music ?? musicRequest(spec), '/music', '?output_format=mp3_48000_192', 'the music (Eleven Music v2.5, ' + spec.duration.toFixed(1) + 's)');
   const takes = new Map();
   for (const s of spec.sounds) {
-    const kind = EFFECTS[s.kind];
+    const kind = definitions[s.kind];
     if (!kind) throw new Error('No ElevenLabs sound for the effect ' + s.kind + ': add it to EFFECTS in scripts/eleven-sound.mjs');
     const seconds = Math.max(0.5, Math.round((s.dur ?? kind.seconds) * 10) / 10);
     const id = s.kind + '@' + seconds;
     if (takes.has(id)) continue;
-    const mine = brought(s.kind);
+    const mine = imports(s.kind);
     if (mine.length) {
       takes.set(id, mine.map(readAudio));
       continue;
@@ -137,7 +140,7 @@ export async function elevenSound(spec) {
     const list = [];
     for (let take = 0; take < (kind.takes ?? 1); take++) {
       // `take` only tells the takes apart in the cache; it is not sent.
-      const request = { text: kind.text, duration_seconds: seconds, prompt_influence: 0.6, model_id: SFX_MODEL };
+      const request = { text: kind.text, duration_seconds: seconds, prompt_influence: 0.6, model_id: options.soundModel ?? SFX_MODEL };
       const out = file({ ...request, take }, 'mp3');
       if (!existsSync(out)) {
         console.log('  asking ElevenLabs for the ' + s.kind + ' (' + seconds + 's' + (kind.takes ? ', take ' + (take + 1) : '') + ')');
@@ -151,7 +154,7 @@ export async function elevenSound(spec) {
   return {
     music,
     effects: (kind, dur, n) => {
-      const seconds = Math.max(0.5, Math.round((dur ?? EFFECTS[kind].seconds) * 10) / 10);
+      const seconds = Math.max(0.5, Math.round((dur ?? definitions[kind].seconds) * 10) / 10);
       const list = takes.get(kind + '@' + seconds);
       return list[n % list.length];
     },

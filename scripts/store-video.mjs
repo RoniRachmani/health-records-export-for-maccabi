@@ -22,6 +22,8 @@
 //                   render, for trying a sound
 //   --synth         soundtrack.mjs's own synthesized music and effects instead of ElevenLabs': nothing to
 //                   bring in or pay for
+//   --third-film    the Before Thursday draft (store/src/film-story.ts) instead: every output above is named
+//                   before-thursday… rather than promo…
 //
 // The stage is laid out at 1920x1080 and drawn at twice that, so the film is 4K: text, the popup and
 // every line drawing are rendered at 3840x2160 rather than scaled up to it, and YouTube gives a 4K
@@ -34,6 +36,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
+import { THIRD_FILM_STEM, thirdFilmSoundOptions } from './film-three-audio.mjs';
 import { alignClips, importTake, script, speak } from './narration.mjs';
 import { elevenSound } from './eleven-sound.mjs';
 import { buildSoundtrack, writeWav } from './soundtrack.mjs';
@@ -42,9 +45,11 @@ import { isFile, openStage, root } from './stage.mjs';
 const WIDTH = 1920;
 const HEIGHT = 1080;
 const SCALE = 2;
-const OUT = join(root, 'store', 'assets', 'promo-video.mp4');
+const THIRD_FILM = process.argv.includes('--third-film');
+const STEM = THIRD_FILM ? THIRD_FILM_STEM : 'promo';
+const OUT = join(root, 'store', 'assets', THIRD_FILM ? STEM + '.mp4' : 'promo-video.mp4');
 // Written here and moved into place only once it is whole, so a failed render leaves the last good film.
-const PARTIAL = join(root, 'store', 'assets', 'promo-video.partial.mp4');
+const PARTIAL = join(root, 'store', 'assets', THIRD_FILM ? STEM + '.partial.mp4' : 'promo-video.partial.mp4');
 // Frames per browser. The stage draws frame n from n alone, so the browser can be replaced at any
 // point without the film changing — and a render of thousands of frames then doesn't rest on one
 // browser process staying healthy (and small) to the end.
@@ -56,9 +61,10 @@ const importAt = args.indexOf('--import');
 const take = importAt < 0 ? null : args.splice(importAt, 2)[1];
 if (take === undefined || take?.startsWith('--')) throw new Error('--import needs the take: --import <file>');
 const flags = new Set(args.filter((a) => a.startsWith('--')));
-const OPTIONS = ['--audio-only', '--no-narration', '--silent', '--script', '--captions', '--remux', '--clip', '--synth'];
+const OPTIONS = ['--audio-only', '--no-narration', '--silent', '--script', '--captions', '--remux', '--clip', '--synth', '--third-film'];
 for (const f of flags) if (!OPTIONS.includes(f)) throw new Error('Unknown option ' + f);
-const PAGE = '/store/src/video.html' + (flags.has('--clip') ? '?clip' : '');
+if (THIRD_FILM && flags.has('--clip')) throw new Error('--clip is only supported by the original film');
+const PAGE = (THIRD_FILM ? '/store/src/film-story.html' : '/store/src/video.html') + (flags.has('--clip') ? '?clip' : '');
 const [from, to] = args.filter((a) => !a.startsWith('--')).map(Number);
 if (flags.has('--remux') && (Number.isFinite(from) || Number.isFinite(to))) throw new Error('--remux takes the whole film; leave out the times');
 if (existsSync(join(root, '.env'))) process.loadEnvFile(join(root, '.env'));
@@ -92,7 +98,7 @@ function startEncoder(fps, work, wav) {
     // the conversion from RGB and the navy comes out a different navy.
     args = ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(fps), '-c:v', 'png', '-i', '-',
       ...(wav ? ['-i', wav, '-map', '0:v', '-map', '1:a', '-c:a', 'aac', '-b:a', '320k', '-shortest'] : []),
-      '-c:v', 'libx264', '-preset', 'slow', '-crf', '16', '-tune', 'animation',
+      '-c:v', 'libx264', '-preset', THIRD_FILM ? 'medium' : 'slow', '-crf', '16', '-tune', 'animation',
       '-vf', 'scale=out_color_matrix=bt709:out_range=tv', '-pix_fmt', 'yuv420p',
       '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv',
       '-movflags', '+faststart', PARTIAL];
@@ -130,7 +136,7 @@ let encoder;
  */
 function remux(wav, seconds) {
   const picture = OUT;
-  if (!existsSync(picture)) throw new Error('--remux needs a render to take the picture from: store/assets/promo-video.mp4');
+  if (!existsSync(picture)) throw new Error('--remux needs a render to take the picture from: ' + OUT.slice(root.length));
   if (!wav) throw new Error('--remux is for a new soundtrack; there is none with --silent');
   const ffmpeg = process.env.FFMPEG_PATH || onPath('ffmpeg');
   const res = ffmpeg
@@ -194,8 +200,8 @@ function captions(clips) {
 /** Scores the film, then draws it frame by frame into the encoder. */
 async function render() {
   let page = await stage.open(PAGE, WIDTH, HEIGHT, SCALE);
-  const { fps, frames: total, soundtrack } = await page.evaluate(
-    '({ fps: window.video.fps, frames: window.video.frames, soundtrack: window.video.soundtrack })');
+  const { fps, frames: total, soundtrack, holds = [] } = await page.evaluate(
+    '({ fps: window.video.fps, frames: window.video.frames, soundtrack: window.video.soundtrack, holds: window.video.holds })');
   const first = Number.isFinite(from) ? Math.max(0, Math.round(from * fps)) : 0;
   const last = Number.isFinite(to) ? Math.min(total, Math.round(to * fps)) : total;
   if (!(last > first)) throw new Error('Nothing to render between ' + from + 's and ' + to + 's.');
@@ -208,8 +214,8 @@ async function render() {
   }
   if (take) await importTake(take, soundtrack.narration);
   if (flags.has('--captions')) {
-    writeFileSync(join(root, 'store', 'assets', 'promo-captions.srt'), captions(await alignClips(await speak(soundtrack.narration))));
-    console.log('wrote store/assets/promo-captions.srt');
+    writeFileSync(join(root, 'store', 'assets', STEM + '-captions.srt'), captions(await alignClips(await speak(soundtrack.narration))));
+    console.log('wrote store/assets/' + STEM + '-captions.srt');
     await page.close();
     return;
   }
@@ -218,11 +224,11 @@ async function render() {
   if (!flags.has('--silent')) {
     const clips = flags.has('--no-narration') ? null : await speak(soundtrack.narration);
     const synth = flags.has('--synth');
-    const { track, summary } = buildSoundtrack(soundtrack, clips, synth ? null : await elevenSound(soundtrack));
+    const { track, summary } = buildSoundtrack(soundtrack, clips, synth ? null : await elevenSound(soundtrack, THIRD_FILM ? thirdFilmSoundOptions(soundtrack) : undefined));
     console.log(summary + (synth ? ', synthesized music and effects' : ', music and effects by ElevenLabs'));
     if (flags.has('--audio-only')) {
-      writeWav(join(root, 'store', 'assets', 'promo-soundtrack.wav'), track, first / fps, last / fps);
-      console.log('wrote store/assets/promo-soundtrack.wav (' + seconds + 's)');
+      writeWav(join(root, 'store', 'assets', STEM + '-soundtrack.wav'), track, first / fps, last / fps);
+      console.log('wrote store/assets/' + STEM + '-soundtrack.wav (' + seconds + 's)');
       await page.close();
       return;
     }
@@ -253,17 +259,22 @@ async function render() {
     });
   });
 
+  let shots = 0;
   const fresh = async () => {
+    shots = 0;
     await stage.restart();
     page = await stage.open(PAGE, WIDTH, HEIGHT, SCALE);
   };
 
   /** Draws frame n and photographs it. A browser that dies costs a restart, not the whole render. */
   const shoot = async (n) => {
+    if (shots >= PER_BROWSER) await fresh();
     for (let attempt = 1; ; attempt++) {
       try {
         await page.evaluate('window.video.at(' + n + ')');
-        return await page.screenshot({ fast: true });
+        const png = await page.screenshot({ fast: true });
+        shots++;
+        return png;
       } catch (e) {
         if (attempt === TRIES) throw e;
         console.log('  frame ' + n + ': ' + e.message + ' — starting a new browser');
@@ -272,10 +283,29 @@ async function render() {
     }
   };
 
+  let heldPng = null;
+  let heldUntil = -1;
   for (let n = first; n < last; n++) {
     const done = n - first;
-    if (done > 0 && done % PER_BROWSER === 0) await fresh();
-    await feed(await shoot(n));
+    // A declared reading hold is visually static. Reuse its PNG while still encoding every
+    // frame at the master frame rate; all motion frames are captured normally.
+    if (n >= heldUntil) {
+      heldPng = null;
+      const hold = holds.find(([a, b]) => n >= Math.ceil(a * fps) && n < Math.floor(b * fps));
+      if (hold) {
+        heldPng = await shoot(n);
+        heldUntil = Math.floor(hold[1] * fps);
+        // A hold is only declared, so check it: its last frame must draw what its first did. The page's
+        // markup, inline styles included, not the PNG, whose bytes differ between two shots of one frame.
+        const drawn = () => page.evaluate('document.body.innerHTML');
+        const held = await drawn();
+        await page.evaluate('window.video.at(' + (heldUntil - 1) + ')');
+        if (held !== await drawn()) {
+          throw new Error('The hold from ' + hold[0] + 's to ' + hold[1] + 's moves: shorten it or leave it out of window.video.holds');
+        }
+      }
+    }
+    await feed(heldPng ?? await shoot(n));
     if (failed) throw failed;
     if (done % fps === 0) console.log('  ' + (done / fps).toFixed(0) + 's of ' + seconds + 's');
   }
