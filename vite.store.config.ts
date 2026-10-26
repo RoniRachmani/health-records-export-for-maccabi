@@ -29,6 +29,7 @@ export default defineConfig({
         popup: 'src/extension/popup/popup.html',
         listing: 'store/src/listing.html',
         video: 'store/src/video.html',
+        filmStory: 'store/src/film-story.html',
       },
     },
   },
