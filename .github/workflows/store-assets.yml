@@ -1,5 +1,5 @@
-# Renders the approved store images (npm run store-assets) on Linux with Roboto installed, which the renders need and a
-# maintainer's machine may not have, and pushes changed images to a branch for a pull request. Run it by hand from the Actions tab
+# Renders the approved store images (npm run store-assets) on Linux, in the runner's own fonts (Roboto is not
+# installed), and pushes changed images to a branch for a pull request. Run it by hand from the Actions tab
 # after the popup's appearance changes; name shots to render only those (e.g. "start open"), or leave it empty for
 # all. The link previews (og, social) are drawn too but are gitignored: the Pages workflow publishes those.
 # The video is not rendered here: it takes 20 minutes and goes to YouTube, not the repo. The Store video workflow
@@ -33,14 +33,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Install Roboto
-        run: |
-          sudo apt-get update -q
-          sudo apt-get install -y --no-install-recommends fonts-roboto
-          fc-cache -f
-          fc-list | grep -qi roboto
-          # Ubuntu's AppArmor keeps Chrome's sandbox from starting without this.
-          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      # Ubuntu's AppArmor keeps Chrome's sandbox from starting without this.
+      - name: Let Chrome's sandbox start
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       - name: Render
         env:
           SHOTS: ${{ inputs.shots }}
