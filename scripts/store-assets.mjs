@@ -15,7 +15,8 @@ const marquee = LISTING_IMAGES.find(image => image.shot === 'marquee');
 const social = {
   ...marquee,
   file: 'social-1280x640.png', shot: 'social', className: 'marquee social', width: 1280, height: 640,
-  css: '.social .mq-copy{width:640px}.social .mq-copy h1{font-size:56px}.social .mq-art{left:736px;top:144px;width:480px;height:352px}',
+  // GitHub's repo card template keeps everything that matters 80px in from each edge, where nothing gets cropped.
+  css: '.social .listing-brand{left:80px;top:80px}.social .mq-copy{left:80px;width:640px}.social .mq-copy h1{font-size:56px}.social .mq-art{left:720px;top:144px;width:464px;height:352px}',
 };
 export const IMAGES = [...LISTING_IMAGES, ...AUXILIARY_IMAGES, social];
 export const SCALE = 2;
