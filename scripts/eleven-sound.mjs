@@ -32,6 +32,7 @@ const STYLE = ['instrumental', 'modern tech product film score', 'warm optimisti
 const NEVER = ['vocals', 'singing', 'choir', 'spoken word', 'lyrics', 'distorted guitar', 'aggressive drops'];
 
 /** Each part of the film (scenes in store/src/video.ts) and how the music moves in it. */
+/** @type {[string, string, string[]][]} */
 const PARTS = [
   ['answer', '[Intro]', ['sparse', 'gentle pads and a single mallet line', 'curious', 'no drums']],
   ['cards', '[Build]', ['plucks join', 'tension rising', 'filtered', 'building to a hit']],
@@ -112,9 +113,9 @@ function brought(name) {
   if (!existsSync(IMPORT)) return [];
   const pattern = new RegExp('^' + name + '(?:-(\\d+))?\\.(?:mp3|wav|m4a)$');
   return readdirSync(IMPORT)
-    .map((f) => [f, f.match(pattern)])
+    .map((f) => /** @type {[string, RegExpMatchArray | null]} */ ([f, f.match(pattern)]))
     .filter(([, m]) => m)
-    .sort(([, a], [, b]) => Number(a[1] ?? 0) - Number(b[1] ?? 0))
+    .sort(([, a], [, b]) => Number(a?.[1] ?? 0) - Number(b?.[1] ?? 0))
     .map(([f]) => join(IMPORT, f));
 }
 

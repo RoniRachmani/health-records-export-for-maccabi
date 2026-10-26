@@ -6,7 +6,20 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, s
 import { dirname, join } from 'node:path';
 import { call } from './in-page.mjs';
 
-const ORIGIN = 'https://online.maccabi4u.co.il';
+/** @import { HttpRequest, HttpResponse, Problem, Session, Sink } from '../src/core' */
+/**
+ * A page the script drives: an expression evaluated in it, or probed with a fallback for a page between documents.
+ * @typedef {{ evaluate(expression: string, timeoutMs?: number): Promise<any>; probe(expression: string, fallback: unknown): Promise<any> }} Page
+ */
+/**
+ * The export folder as the collector's Sink, with the problems it was told of and the root files it writes.
+ * @typedef {Sink & {
+ *   problems: (Problem & { step: string })[];
+ *   setStep(name: string): void;
+ *   writeRootFiles(startedAt: string, ran: readonly string[]): { files: Record<string, number>; errors: unknown[] };
+ * }} FolderSink
+ */
+/** What these take from core: the bundled src/cli/index.ts, or the sources in a test. @typedef {any} Core */
 
 // ---- the page as a Transport ------------------------------------------------------------------
 
@@ -14,9 +27,12 @@ const ORIGIN = 'https://online.maccabi4u.co.il';
  * Requests sent from inside the page, by the functions the extension runs in the tab (fetchInPage and
  * xhrInPage in src/extension/background/tab.ts), with its limits: a request is given up after STALL_MS
  * without a byte, a body over TAB_MAX_BYTES is left behind, and the page gets TAB_FETCH_TIMEOUT_MS in all.
+ * @param {Page} page
+ * @param {Core} core
+ * @returns {{ fetch(req: HttpRequest): Promise<HttpResponse>; xhr(req: HttpRequest): Promise<{ status: number; text: string }>; pagePath(): Promise<string> }}
  */
 export function pageTransport(page, core) {
-  const absolute = (req) => ({ ...req, url: new URL(req.url, ORIGIN).toString() });
+  const absolute = (/** @type {HttpRequest} */ req) => ({ ...req, url: new URL(req.url, core.MACCABI_ORIGIN).toString() });
   return {
     async fetch(req) {
       const r = await page.evaluate(call(core.fetchInPage, absolute(req), core.STALL_MS, core.TAB_MAX_BYTES), core.TAB_FETCH_TIMEOUT_MS);
@@ -31,16 +47,26 @@ export function pageTransport(page, core) {
   };
 }
 
-/** The click the site's idle timers listen for (activityInPage in tab.ts); a page between documents is left alone. */
+/**
+ * The click the site's idle timers listen for (activityInPage in tab.ts); a page between documents is left alone.
+ * @param {Page} page
+ * @param {Core} core
+ */
 export function keepAlive(page, core) {
   return page.probe(call(core.activityInPage), undefined);
 }
 
-/** The member's session as the page holds it (token and member id), or null when nobody is signed in. */
+/**
+ * The member's session as the page holds it (token and member id), or null when nobody is signed in.
+ * @param {Page} page
+ * @param {Core} core
+ * @param {number} [tries]
+ * @returns {Promise<Session | null>}
+ */
 export async function sessionOf(page, core, tries = 30) {
   for (let i = 0; i < tries; i++) {
     const s = await page.probe(call(core.snapshotInPage), null);
-    if (s && s.host === new URL(ORIGIN).hostname && s.jwt) {
+    if (s && s.host === new URL(core.MACCABI_ORIGIN).hostname && s.jwt) {
       const { mid, gender } = core.sessionFrom(s.cookieMid, s.jwt);
       if (mid) return { mid, jwt: s.jwt, gender };
     }
@@ -60,15 +86,26 @@ export const SINK_STATE = '.export-state.json';
 /** A file being written. It takes its name only once it is whole, so a run cut off mid-write leaves no half document. */
 const PART = '.part';
 
-/** The export folder, with the extension's write rules: JSON rewritten only when changed, documents kept. */
+/**
+ * The export folder, with the extension's write rules: JSON rewritten only when changed, documents kept.
+ * @param {Core} core
+ * @param {string} dir
+ * @param {string} version
+ * @returns {FolderSink}
+ */
 export function folderSink(core, dir, version) {
-  const shas = new Map(); // sha256 -> rel, of the documents already in the folder
+  /** @type {Map<string, string>} sha256 -> rel, of the documents already in the folder */
+  const shas = new Map();
+  /** @type {Map<string, string>} */
   const aliases = new Map();
+  /** @type {FolderSink['problems']} */
   const problems = [];
   let step = '';
   const sha = (bytes) => createHash('sha256').update(bytes).digest('hex');
   /** Every file of the export under d, as [rel, full]; the sink's own state is not one, and a leftover part is removed. */
+  /** @type {(d: string, rel?: string) => [string, string][]} */
   const files = (d, rel = '') => {
+    /** @type {[string, string][]} */
     const out = [];
     for (const name of existsSync(d) ? readdirSync(d) : []) {
       const full = join(d, name);
@@ -140,7 +177,9 @@ export function folderSink(core, dir, version) {
      * run took: the README says of the rest that they were not collected, not that the site had nothing.
      */
     writeRootFiles(startedAt, ran) {
+      /** @type {Record<string, number>} */
       const counts = {};
+      /** @type {string | null} */
       let medicalFile = null;
       for (const [r] of files(dir)) {
         if (r.includes('/')) counts[r.split('/')[0]] = (counts[r.split('/')[0]] || 0) + 1;

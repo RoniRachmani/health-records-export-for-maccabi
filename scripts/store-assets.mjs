@@ -18,6 +18,11 @@ const social = {
   // GitHub's repo card template keeps everything that matters 80px in from each edge, where nothing gets cropped.
   css: '.social .listing-brand{left:80px;top:80px}.social .mq-copy{left:80px;width:640px}.social .mq-copy h1{font-size:56px}.social .mq-art{left:720px;top:144px;width:464px;height:352px}',
 };
+/**
+ * One image to render: drawn from the listing's layout (`html`), or photographed from a page of the store build.
+ * @typedef {{ file: string; shot: string; width: number; height: number; html?: unknown; page?: string; prepare?: string; popupState?: string; [key: string]: any }} Shot
+ */
+/** @type {Shot[]} */
 export const IMAGES = [...LISTING_IMAGES, ...AUXILIARY_IMAGES, social];
 export const SCALE = 2;
 
@@ -98,7 +103,7 @@ export async function renderStoreAssets(names = [], scale = SCALE) {
       writeFileSync(join(out, image.file), bytes);
       console.log('wrote store/assets/' + image.file);
     }
-    if (images.some(image => LISTING_IMAGES.includes(image))) writeListingBundle(out);
+    if (images.some(image => /** @type {Shot[]} */ (LISTING_IMAGES).includes(image))) writeListingBundle(out);
   } finally {
     await stage.close();
   }

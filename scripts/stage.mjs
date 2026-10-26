@@ -44,7 +44,7 @@ export async function openStage() {
   await build({ root, configFile: join(root, 'store', 'vite.config.ts'), logLevel: 'warn' });
 
   const server = createServer((req, res) => {
-    const path = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+    const path = decodeURIComponent(new URL(/** @type {string} */ (req.url), 'http://localhost').pathname);
     // /site/ is the website as the Pages workflow lays it out: site/ over public/. Its images and clips are added
     // there and are not served here.
     const dirs = path.startsWith('/site/') ? [join(root, 'site'), join(root, 'public')] : [outDir];
@@ -56,8 +56,8 @@ export async function openStage() {
     }
     res.writeHead(200, { 'Content-Type': TYPES[extname(file)] || 'application/octet-stream' }).end(readFileSync(file));
   });
-  await new Promise((r) => server.listen(0, '127.0.0.1', r));
-  const base = 'http://127.0.0.1:' + server.address().port;
+  await new Promise((r) => server.listen(0, '127.0.0.1', () => r(undefined)));
+  const base = 'http://127.0.0.1:' + /** @type {import('node:net').AddressInfo} */ (server.address()).port;
 
   const exe = BROWSERS.find(isFile);
   if (!exe) throw new Error('No Chrome, Chromium or Edge found; set CHROME_PATH.');
@@ -82,7 +82,7 @@ export async function openStage() {
   async function launch() {
     stopping = false;
     profile = mkdtempSync(join(tmpdir(), 'hrem-store-'));
-    browser = spawn(exe, [
+    browser = spawn(/** @type {string} */ (exe), [
       '--headless=new',
       '--remote-debugging-port=0',
       '--user-data-dir=' + profile,
@@ -218,6 +218,7 @@ export async function openStage() {
          * The page as it looks now, as PNG bytes. `fast` trades file size for encoding time, for
          * frames that only pass through on their way to the video encoder. `clip` ({ x, y, width,
          * height }, in CSS pixels of the document, not the viewport) photographs only that part of it.
+         * @param {{ fast?: boolean; clip?: { x: number; y: number; width: number; height: number } }} [options]
          */
         async screenshot({ fast = false, clip } = {}) {
           const params = { format: 'png', optimizeForSpeed: fast };

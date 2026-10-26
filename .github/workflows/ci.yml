@@ -1,5 +1,5 @@
-# The gate that lives in this repo: the types check, the tests pass against the fake Maccabi, and the
-# store build comes out. There is no linter or formatter in this repo on purpose. CodeQL scans on top
+# The gate that lives in this repo: the types check, the tests pass against the fake Maccabi, the
+# store build comes out, and every popup state fits in Chrome's 600px (in the runner's own Chrome). There is no linter or formatter in this repo on purpose. CodeQL scans on top
 # of this, from GitHub's default setup, so it has no workflow file here.
 name: CI
 
@@ -24,6 +24,16 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      # The popup asks for Roboto first, so its height is measured in Roboto.
+      - name: Install Roboto
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y --no-install-recommends fonts-roboto
+          fc-cache -f
+          # Ubuntu's AppArmor keeps Chrome's sandbox from starting without this.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - name: Check that every popup state fits in 600px
+        run: npm run site-check -- popup
 
   # Dependabot's pull requests merge themselves once the gate above passes, squashed like any other.
   # Not fflate, the one dependency that ships in the extension, and not a major version of an action,
