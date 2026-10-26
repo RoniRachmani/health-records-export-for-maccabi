@@ -4,15 +4,17 @@ const STYLE = ['instrumental only', 'intimate narrative short film score', 'warm
   'subtle chamber strings', 'delicate organic textures', '92 BPM', 'D major',
   'restrained dynamics', 'space for narration'];
 const NEVER = ['vocals', 'singing', 'speech', 'lyrics', 'choir', 'trailer booms', 'aggressive drums',
-  'cheesy corporate jingle', 'dramatic EDM drops', 'busy lead melody'];
+  'cheesy corporate jingle', 'dramatic EDM drops', 'busy lead melody', 'early fade-out', 'silence', 'pauses'];
 const PARTS = [
   ['answer', '[Opening]', ['tentative intimate piano', 'curiosity before an appointment']],
   ['cards', '[Gather]', ['soft overlapping plucked patterns', 'years accumulating', 'gentle uncertainty']],
   ['browser', '[Collect]', ['precise muted pulse', 'steady practical forward movement']],
   ['open', '[Keep]', ['breath and space', 'a quiet deliberate choice']],
   ['uses', '[Understand]', ['interlocking piano phrases', 'discovery through connecting details']],
-  ['privacy', '[Reassure]', ['warm resolution', 'relief and personal confidence']],
-  ['close', '[Resolve]', ['simple resolved piano motif', 'natural unhurried ending']],
+  // The last two keep playing to the end: asked for a resolution and an ending, the music faded out from 46 s and
+  // left the film near-silent before its last line.
+  ['privacy', '[Reassure]', ['warm and continuous', 'relief and personal confidence', 'carries straight on into the next part']],
+  ['close', '[Resolve]', ['simple piano motif over sustained strings', 'full and warm under the last line', 'final chord rings out only in the last two seconds']],
 ];
 /** The draft's file names: before-thursday.mp4, before-thursday-captions.srt and the rest. */
 export const THIRD_FILM_STEM = 'before-thursday';
