@@ -31,6 +31,14 @@ Load `dist-dev/` (or `dist/`) unpacked at `chrome://extensions`. The development
 "Health Records Export for Maccabi (dev)". There is no linter or formatter: `typecheck` and `test` are the gate, and
 CI runs both, then `npm run site-check -- popup`, which measures every popup state against Chrome's 600px.
 
+`test/runner.test.ts` drives the run loop with `chrome.*` faked: a whole run, reconnecting, a rewind that does not
+order again, rate limits, Cancel, a worker restart at a checkpoint, and Save again. Some of it is not covered there:
+a worker that stops between the medical file's order and the step's checkpoint, a run found `saving` after a restart
+(`settleSave`), a hidden tab's pause and the heartbeat's `recover`, and the real Chrome parts the test fakes (the tab's
+navigation and `executeScript`, the offscreen ZIP, the download). A change to any of these, or to `runner.ts`, needs a
+run of the development build as well (`npm run live`, and a pause and Resume from the console), and a test here when
+one can be written.
+
 ## How a run works
 
 The README's [How it works](README.md#how-it-works) has the diagram of the parts and the table of where each lives.
