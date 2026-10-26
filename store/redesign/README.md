@@ -42,7 +42,8 @@ All paths below are relative to `store/assets/`.
 `store-artwork.zip` contains exactly these eight PNGs. `store-artwork.json` records their dimensions, shot names and
 SHA-256 hashes. Screenshots and promo tiles are opaque RGB; the icon is RGBA. Upload the images to their matching
 fields, with screenshots in the numbered order. The artwork ZIP is not an extension package. The *Store images*
-workflow validates the bundle, commits changed canonical files and offers the ZIP and hash manifest as an artifact.
+workflow validates the bundle, pushes changed canonical files to a `store-images/` branch and offers the ZIP and
+hash manifest as an artifact.
 See [the listing guide](../../docs/store-listing.md#graphic-assets) for content descriptions and store fields.
 
 ## Named renders and other images
@@ -59,8 +60,8 @@ npm run icons                         # packaged toolbar icons only; the store i
 
 A default render includes the eight listing PNGs, video poster and two link previews. A partial render updates only
 its selected images; when one of them is a listing image it rewrites the bundle, and stops if any of the eight is missing. Unknown shot names
-fail before launching Chrome, even if a valid name is also supplied. ZIP timestamps may change between renders;
-compare the PNGs or ZIP entries rather than the container's bytes.
+fail before launching Chrome, even if a valid name is also supplied. The ZIP is gitignored and its timestamps change
+between renders; compare the PNGs or ZIP entries rather than the container's bytes.
 
 The packaged icons in `public/icons/` retain their existing geometry and hand-tuned small sizes. `scripts/make-icons.mjs`
 generates those only, and `npm run icons` runs just that; the store icon is `npm run store-assets -- icon`, which needs Chrome.
@@ -68,13 +69,15 @@ The store icon and packaged icons share the same mark, with different canvas sca
 
 ## Source and design rules
 
-- `store/design/listing.mjs` holds the eight layouts and vector illustration. `listing.css` holds the approved CSS
-  cascade, including shared design tokens and the alignment grid.
+- `store/design/listing.mjs` holds the eight layouts and vector illustration. `listing.css` holds the approved CSS,
+  one rule per selector, including shared design tokens and the alignment grid. `store/src/listing.html` is the page
+  they are drawn on.
 - `scripts/store-assets.mjs` selects shots and writes canonical PNGs, the review page, manifest and ZIP.
   `scripts/store-listing.mjs` captures the approved layouts.
 - `scripts/store-auxiliary.mjs` retains the separate video-poster and landing-page-preview recipes. The social preview
   uses the approved marquee at its own dimensions.
-- `store/src/parts.ts` supplies the canonical outlined folder mark and distinct document/folder glyphs.
+- `store/design/glyphs.mjs` supplies the canonical outlined folder mark and distinct document/folder glyphs, shared
+  with the video through `store/src/parts.ts`.
 - The actual extension popup supplies the UI, with synthetic Chrome API states from `store/src/mock-chrome.ts`.
   Screenshot 4 is exporting at 47%; screenshot 5 is complete. No real account is used.
 - `scripts/stage.mjs` builds, serves and captures the local stage.
@@ -104,14 +107,10 @@ wait two animation frames, freezing the progress sheen and pulse without changin
 
 ## Historical review artifacts
 
-`mock-review.html` remains the three-column **Original → First redesign → Latest revision** comparison. Original
-images were preserved under `original/` before production files were replaced. Unsuffixed PNGs here are first-redesign
-snapshots; the comparison's latest column now links to canonical `store/assets/` images. Old `*-mock.png` files are
-review snapshots, not production outputs. The one-off `scripts/store-redesign.mjs` and `--mock` flag are retired.
-
-Earlier SVG drafts under `art/`, `icon.svg`, `overview.png`, `review.html` and the old local review ZIPs are historical
-artifacts and are no longer regenerated. The unused ImageGen concept `art/archive.png` and `generation-prompt.txt`
-are not inputs to production. The approved artwork is entirely code-generated.
+`mock-review.html` remains the three-column **Original → First redesign → Latest revision** comparison, and this
+folder holds only what it shows: the images from before the redesign under `original/`, and the first redesign's
+PNGs beside it. Its latest column links to the canonical `store/assets/` images. The approved artwork is entirely
+code-generated.
 
 Platform specifications were checked against [Chrome's image guide](https://developer.chrome.com/docs/webstore/images)
 on 22 October 2026. Rendering files locally does not upload a listing or publish an extension release.
