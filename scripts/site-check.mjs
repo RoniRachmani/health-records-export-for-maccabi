@@ -8,6 +8,10 @@
 //   - every animation is inside one of PICTURES, so a new one is checked too (add its picture to the list).
 // It exits non-zero on the first failing viewport, naming what failed.
 //
+// `npm run site-check -- popup` checks the popup instead (CI runs it on every pull request): each made-up state the
+// store renders (store/src/mock-chrome.ts) stays inside the 600px Chrome gives a popup, but the first-run notice, which
+// may scroll. It runs first in the default check too.
+//
 // `npm run site-check -- frames <selector> [time <from> <to> <step> | scroll <steps>] [<width>x<height>]` photographs
 // one picture instead, into a folder of its own under site-frames/ (gitignored): at moments of the time-based animations (the hero's loop, the
 // sweeps that play as the page opens), or as it is scrolled up from the foot of the screen to 40% from its top. Look at
@@ -16,7 +20,7 @@
 // Needs Chrome, Chromium or Edge, as the store images do (CHROME_PATH).
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { openStage, root } from './stage.mjs';
+import { openStage, root, sleep } from './stage.mjs';
 
 /** Everything on the page that moves, by the element that holds it. */
 const PICTURES = [
@@ -143,6 +147,24 @@ async function check(stage, [width, height]) {
   return fails;
 }
 
+/** Chrome cuts a popup off at 600px. The states store/src/mock-chrome.ts makes up, with every <details> closed. */
+const POPUP_MAX = 600;
+const POPUP_STATES = ['ready', 'login', 'running', 'paused', 'error', 'done', 'problems'];
+
+async function popup(stage) {
+  const fails = [];
+  for (const state of POPUP_STATES) {
+    // In a window taller than the cap, so what is measured is the popup's own height and not the window's.
+    const page = await stage.open('/src/extension/popup/popup.html?state=' + state, 800, 1200, 1, 'true');
+    await sleep(300); // the popup asks the (mock) service worker for its state, then draws
+    const height = await page.evaluate(`${settle}.then(() => Math.ceil(document.documentElement.getBoundingClientRect().height))`);
+    console.log('popup ' + state + ': ' + height + 'px');
+    if (height > POPUP_MAX) fails.push('the popup\'s ' + state + ' state is ' + height + 'px tall, over Chrome\'s ' + POPUP_MAX + 'px');
+    await page.close();
+  }
+  return fails;
+}
+
 async function frames(stage, [sel, mode = 'scroll', ...rest]) {
   const size = rest.find((a) => /^\d+x\d+$/.test(a)) || '1440x900';
   const nums = rest.filter((a) => !/x/.test(a)).map(Number);
@@ -190,7 +212,10 @@ try {
     if (!args[1]) throw new Error('frames needs a selector, e.g. frames .path scroll 10 375x812');
     await frames(stage, args.slice(1));
   } else {
-    for (const vp of VIEWPORTS) {
+    const tall = await popup(stage);
+    for (const f of tall) console.log('  - ' + f);
+    if (tall.length) failed = true;
+    for (const vp of args[0] === 'popup' ? [] : VIEWPORTS) {
       const fails = await check(stage, vp);
       console.log(vp.join('x') + ': ' + (fails.length ? fails.length + ' problem(s)' : 'ok'));
       for (const f of fails) console.log('  - ' + f);

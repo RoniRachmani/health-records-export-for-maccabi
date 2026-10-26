@@ -6,8 +6,6 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, s
 import { dirname, join } from 'node:path';
 import { call } from './in-page.mjs';
 
-const ORIGIN = 'https://online.maccabi4u.co.il';
-
 // ---- the page as a Transport ------------------------------------------------------------------
 
 /**
@@ -16,7 +14,7 @@ const ORIGIN = 'https://online.maccabi4u.co.il';
  * without a byte, a body over TAB_MAX_BYTES is left behind, and the page gets TAB_FETCH_TIMEOUT_MS in all.
  */
 export function pageTransport(page, core) {
-  const absolute = (req) => ({ ...req, url: new URL(req.url, ORIGIN).toString() });
+  const absolute = (req) => ({ ...req, url: new URL(req.url, core.MACCABI_ORIGIN).toString() });
   return {
     async fetch(req) {
       const r = await page.evaluate(call(core.fetchInPage, absolute(req), core.STALL_MS, core.TAB_MAX_BYTES), core.TAB_FETCH_TIMEOUT_MS);
@@ -40,7 +38,7 @@ export function keepAlive(page, core) {
 export async function sessionOf(page, core, tries = 30) {
   for (let i = 0; i < tries; i++) {
     const s = await page.probe(call(core.snapshotInPage), null);
-    if (s && s.host === new URL(ORIGIN).hostname && s.jwt) {
+    if (s && s.host === new URL(core.MACCABI_ORIGIN).hostname && s.jwt) {
       const { mid, gender } = core.sessionFrom(s.cookieMid, s.jwt);
       if (mid) return { mid, jwt: s.jwt, gender };
     }
