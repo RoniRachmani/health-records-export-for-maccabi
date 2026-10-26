@@ -29,6 +29,9 @@ const world = {
   stagingCleared: 0,
   notices: [] as string[],
   downloads: 0,
+  /** What chrome.downloads.search finds for the run's download: nothing, unless a test says. */
+  downloadItem: undefined as Partial<chrome.downloads.DownloadItem> | undefined,
+  revoked: [] as string[],
   local: {} as Record<string, unknown>,
   sessionStore: {} as Record<string, unknown>,
 };
@@ -95,7 +98,9 @@ vi.mock('../src/extension/background/offscreenClient', () => ({
   callOffscreen: async () => ({ url: 'blob:zip', bytes: 1000, files: 3 }),
   closeOffscreen: async () => {},
   offscreenHtml: {},
-  revokeBlob: async () => {},
+  revokeBlob: async (url: string) => {
+    world.revoked.push(url);
+  },
 }));
 
 vi.mock('../src/extension/background/rawDump', () => ({ capturingTransport: (t: unknown) => t, rawDumpOn: async () => false }));
@@ -120,7 +125,7 @@ function fakeChrome() {
     runtime: { getPlatformInfo: async () => ({}), getManifest: () => ({ version: '0.0.0' }) },
     downloads: {
       download: async () => ++world.downloads,
-      search: async () => [],
+      search: async () => (world.downloadItem ? [world.downloadItem] : []),
       show: () => {},
     },
     tabs: { get: async () => ({ id: TAB, url: 'https://online.maccabi4u.co.il/sonline/dashboard' }) },
@@ -152,7 +157,8 @@ const collected = (list: readonly PlanStep[]) => list.filter((s) => !['openLegac
 beforeEach(() => {
   Object.assign(world, {
     ran: [], step: {}, orders: 0, order: { ordered: true, to_date: '2026-10-26', from_date: '2016-10-26' }, session: MEMBER,
-    visible: true, sessionLookups: 0, navigations: [], path: '/sonline/', stagingCleared: 0, notices: [], downloads: 0, local: {}, sessionStore: {},
+    visible: true, sessionLookups: 0, navigations: [], path: '/sonline/', stagingCleared: 0, notices: [], downloads: 0, downloadItem: undefined, revoked: [],
+    local: {}, sessionStore: {},
   });
   vi.stubGlobal('chrome', fakeChrome());
   vi.stubGlobal('__DEV_BRIDGE__', false);
@@ -343,5 +349,113 @@ describe('the download', () => {
     expect((await settled())?.status).toBe('saving');
     expect(world.downloads).toBe(2);
     expect(world.ran.length).toBe(before); // nothing is collected again
+  });
+});
+
+describe('a download that settles while no worker watched it', () => {
+  /** A run handed to the download, then a fresh worker, as after Chrome closed with the ZIP on its way. */
+  async function savingThenRestart(item?: Partial<chrome.downloads.DownloadItem>): Promise<Runner> {
+    const first = await freshRunner();
+    await first.start(TAB);
+    const run = await settled();
+    expect(run?.status).toBe('saving');
+    world.downloadItem = item && { id: run!.downloadId!, ...item };
+    world.notices = [];
+    return freshRunner();
+  }
+
+  it('finishes the run when Chrome says the download completed', async () => {
+    const runner = await savingThenRestart({ state: 'complete' as chrome.downloads.State });
+    await runner.recover('startup');
+    expect(stored()).toMatchObject({ status: 'done', percent: 100, next: PLAN.length });
+    expect(stored()?.blobUrl).toBeUndefined();
+    expect(world.revoked).toEqual(['blob:zip']);
+    expect(world.notices).toEqual(['Export ready']);
+    expect(world.stagingCleared).toBe(2); // Start's, and the finish's
+  });
+
+  it('offers Save again when the download stopped, keeping the files', async () => {
+    const runner = await savingThenRestart({ state: 'interrupted' as chrome.downloads.State, error: 'FILE_NO_SPACE' as chrome.downloads.DownloadItem['error'] });
+    await runner.recover('heartbeat');
+    expect(stored()).toMatchObject({ status: 'error', next: PLAN.indexOf('save') });
+    expect(stored()?.message).toMatch(/FILE_NO_SPACE.*Save again/);
+    expect(world.notices).toEqual(['Export not saved']);
+    expect(world.stagingCleared).toBe(1);
+  });
+
+  it('treats a download Chrome no longer knows as stopped', async () => {
+    const runner = await savingThenRestart();
+    await runner.recover('startup');
+    expect(stored()?.status).toBe('error');
+    expect(stored()?.message).toMatch(/perhaps when Chrome closed/);
+  });
+
+  it('keeps waiting while the download is still going', async () => {
+    const runner = await savingThenRestart({ state: 'in_progress' as chrome.downloads.State });
+    await runner.recover('heartbeat');
+    expect(stored()?.status).toBe('saving');
+    expect(world.notices).toEqual([]);
+  });
+
+  it('finishes once when the download event and the check both arrive', async () => {
+    const runner = await savingThenRestart({ state: 'complete' as chrome.downloads.State });
+    const id = stored()!.downloadId!;
+    await Promise.all([
+      runner.recover('heartbeat'),
+      runner.onDownloadChanged({ id, state: { current: 'complete' } } as chrome.downloads.DownloadDelta),
+    ]);
+    expect(stored()?.status).toBe('done');
+    expect(world.notices).toEqual(['Export ready']);
+    expect(world.stagingCleared).toBe(2);
+  });
+
+  it('ignores another download’s events', async () => {
+    const runner = await savingThenRestart();
+    await runner.onDownloadChanged({ id: stored()!.downloadId! + 1, state: { current: 'complete' } } as chrome.downloads.DownloadDelta);
+    await runner.onDownloadChanged({ id: stored()!.downloadId!, state: { current: 'in_progress' } } as chrome.downloads.DownloadDelta);
+    expect(stored()?.status).toBe('saving');
+    expect(world.notices).toEqual([]);
+  });
+});
+
+describe('a hidden tab', () => {
+  /** A session that ends at visits while the tab is in the background: the reconnect waits for the tab. */
+  async function waitingForTab(): Promise<Runner> {
+    world.step.visits = (attempt) => {
+      if (attempt === 1) {
+        world.visible = false;
+        throw new SessionEndedError('gone');
+      }
+    };
+    const runner = await freshRunner();
+    await runner.start(TAB);
+    await vi.waitFor(() => expect(stored()?.status).toBe('paused_hidden'), { timeout: 5000, interval: 5 });
+    expect(stored()?.message).toMatch(/Bring the Maccabi Online tab back/);
+    expect(world.notices).toEqual(['Export paused']);
+    return runner;
+  }
+
+  it('holds the run until the tab is back, then reconnects and goes on', async () => {
+    const runner = await waitingForTab();
+    // Resume while the loop is still waiting is a no-op: the loop goes on by itself.
+    await runner.resume(TAB);
+    expect(world.sessionLookups).toBe(2); // Start's and returnToSonline's: no reconnect yet
+    world.visible = true;
+    await vi.waitFor(() => expect(stored()?.status).toBe('saving'), { timeout: 5000, interval: 5 });
+    expect(world.ran.filter((s) => s === 'visits')).toHaveLength(2);
+    expect(world.orders).toBe(1);
+  });
+
+  it('is cancelled by Cancel, which discards the run without reconnecting', async () => {
+    const runner = await waitingForTab();
+    await runner.cancel();
+    expect(stored()?.status).toBe('paused_hidden'); // the loop notices at its next look at the tab
+    await vi.waitFor(() => expect(stored()).toBeUndefined(), { timeout: 5000, interval: 5 });
+    expect(world.ran.at(-1)).toBe('visits');
+    expect(world.ran.filter((s) => s === 'visits')).toHaveLength(1);
+    expect(world.sessionLookups).toBe(2);
+    expect(world.stagingCleared).toBe(2); // Start's, and the discard's
+    expect(world.sessionStore.session).toBeUndefined();
+    expect(world.notices).toEqual(['Export paused']);
   });
 });
