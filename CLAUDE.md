@@ -60,8 +60,9 @@ on `main` first. It tags `v<version>`, uploads the packaged ZIP to a draft, then
 
 ## Git
 
-Branch from `main`, push the branch, and open a pull request. The `check` CI job must pass against the
-latest `main` before merging; direct pushes to `main` are blocked. No second-person approval is required.
+Repository admins can push straight to `main`: the `main` ruleset lets the admin role bypass it. Everyone
+else, Dependabot and the workflows included, branches from `main`, pushes the branch and opens a pull request,
+and the `check` CI job must pass against the latest `main` before merging. No second-person approval is required.
 Run `npm run typecheck` and `npm test` before every push, and resolve review conversations before merging.
 
 ## Architecture
