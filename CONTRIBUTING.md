@@ -264,6 +264,34 @@ GitHub releases are published from a draft after their ZIP has uploaded, so futu
 Published release tags and assets cannot be replaced; create a new version for corrections. Existing releases
 are not retroactively made immutable.
 
+A release, in order:
+
+1. **What's in it.** `git fetch`, then read every commit since the last tag (`git log v<last>..origin/main`), not just
+   the ones you remember: the notes are written from that list. Check that `check` is green on `main`'s head.
+2. **The bump and the notes.** `npm version <version> --no-git-tag-version` bumps `package.json` and its lock (the
+   manifest takes its version from there). Write `docs/releases/<version>.md` in the last release's shape: the first
+   line `# v<version> — <title>` (the release's name), what changed for a member, whether a paused export resumes
+   across the update (it doesn't if `FILE_LAYOUT` moved) and whether the policies changed (and if `TERMS_EFFECTIVE`
+   moved, so everyone accepts again), then the install, *Before you start* and privacy sections, with every link to the
+   repo pinned to `v<version>`. `repoRules.test.ts` holds the notes to the product's name too, so a rename is described
+   without its old one.
+3. **A live run.** The tests only meet the fake site, so when the run changed (`runner.ts`, `tab.ts`, `collector.ts`, a
+   section) run `npm run live` on your own account before releasing it. Then load `dist/` unpacked once and look at
+   the name, the version, the *Unofficial* chip and the policy pages.
+4. **Publish.** Push the bump and the notes to `main`, wait for `check`, then run the *Release* workflow from the
+   Actions tab with the version. It refuses a version whose notes are missing or whose tag exists, runs the gate,
+   packages, tags `main`'s head and publishes the release with the ZIP. This is the step that can't be undone.
+5. **The Chrome Web Store, by hand.** Download the ZIP from the release and upload it on the developer dashboard.
+   If the name, the copy or the art changed, update the listing from `docs/store-listing.md` and `store/assets/` (and
+   a re-rendered video and its captions on YouTube), then submit for review. A listing change can slow review.
+6. **After.** Check the website and its policy pages. Once the store approves the update, install it from the store
+   and run one export.
+
+There is no rollback. A published release can't be replaced and the store keeps serving the previous version until
+review approves the new one, so a fault is fixed forward, in the next version. Watch for a run that stops or loops on
+reconnect, a second SMS from one export, a missing medical file where the previous version got one, and a rejected
+review.
+
 ```sh
 npm run release        # all of it from clean: tests, dist-dev/, the release ZIP, the store images and the video
 npm run release:zip    # the same without the store images and the video
