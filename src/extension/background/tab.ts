@@ -6,7 +6,7 @@ import { MACCABI_ORIGIN, type TabInfo } from '../shared/state';
 
 const SCRIPT_TIMEOUT_MS = 60_000;
 
-export interface PageSnapshot {
+interface PageSnapshot {
   host: string;
   path: string;
   cookieMid: string | null;
@@ -440,8 +440,8 @@ async function readBody(r: Response, alive: () => void): Promise<Uint8Array> {
   return bytes;
 }
 
-export type Route = 'extension' | 'tab';
-export interface Routes {
+type Route = 'extension' | 'tab';
+interface Routes {
   /** REST API and its PDFs (/sonline/...). */
   sonline: Route;
   /** Legacy services (/online/...). */

@@ -264,7 +264,7 @@ export const SESSION_ENDED_MESSAGE =
   'Your Maccabi Online session ended. Log in again, then click the extension’s icon on the Maccabi Online tab and press Resume. Files collected so far are kept.';
 
 /** What the run does when a step throws: the runner carries it out, this only decides. */
-export type StepFailure =
+type StepFailure =
   | { action: 'cancel' }
   /** Do what Resume does and run the step again; if that fails, pause with SESSION_ENDED_MESSAGE. */
   | { action: 'reconnect' }

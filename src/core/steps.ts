@@ -9,7 +9,7 @@ import { vaccinations } from './sections/vaccinations';
 import { visits } from './sections/visits';
 import type { Ctx } from './types';
 
-export type Step = (c: Collector, ctx: Ctx) => Promise<unknown>;
+type Step = (c: Collector, ctx: Ctx) => Promise<unknown>;
 
 /**
  * Every collection step, in the order the extension's run plan (PLAN) takes them; the plan uses

@@ -96,7 +96,7 @@ function pdfFailure(b: { status: number; type: string; tooLarge?: boolean }): st
   return 'PDF download: HTTP ' + b.status + ' ' + b.type;
 }
 
-export interface ApiResult {
+interface ApiResult {
   status: number;
   /** undefined when the body was not JSON; null when empty. */
   data: Json;
@@ -105,7 +105,7 @@ export interface ApiResult {
 /** The problem a file too large to bring back from the tab files. Asking again would only fail the same way. */
 export const TOO_LARGE = 'too large for the extension to bring back from the Maccabi Online tab; download it from the site';
 
-export interface BinResult {
+interface BinResult {
   status: number;
   type: string;
   bytes: Uint8Array;

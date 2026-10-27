@@ -225,7 +225,7 @@ export async function keepListedMedicalFile(c: Collector, order?: OrderResult): 
     : 'a new medical file was not ordered, so ' + kept);
 }
 
-export interface WaitOptions {
+interface WaitOptions {
   toDate?: string;
   /** The order's startDate: a same-day file over another range is an earlier one, and is waited past. */
   fromDate?: string;

@@ -3,7 +3,7 @@ import type { Problem } from '../../core';
 import { countOf } from '../../core/util';
 import { LABELS, PLAN, WEIGHTS, type PlanStep, type Request, type RunState, type StateReply } from '../shared/state';
 
-export interface Stage {
+interface Stage {
   label: string;
   steps: PlanStep[];
   /**
@@ -50,7 +50,7 @@ export const STAGES: Stage[] = [
   { label: 'Saving the ZIP', steps: ['save'] },
 ];
 
-export type StageState = 'done' | 'current' | 'pending';
+type StageState = 'done' | 'current' | 'pending';
 
 type Position = Pick<RunState, 'next' | 'detail'>;
 
@@ -250,7 +250,7 @@ const FOLDER_LABELS: Record<string, string> = {
   'requests-approvals': 'Your requests to Maccabi',
 };
 
-export interface ProblemGroup {
+interface ProblemGroup {
   label: string;
   items: Problem[];
 }
@@ -319,7 +319,7 @@ export function keptConfirm(confirm: Confirm | null, run: RunState | null): Conf
 }
 
 /** The one full-width button on the paused and error views: what gets the run going again from here. */
-export interface NextAction {
+interface NextAction {
   label: string;
   req: Request;
   busyLabel: string;
