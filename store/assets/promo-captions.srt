@@ -87,9 +87,9 @@ Every answer names its source.
 You and your doctor decide.
 
 23
-00:00:57,630 --> 00:00:59,750
-Health Records Export for Maccabi.
+00:00:57,630 --> 00:00:59,730
+Maccabi Health Records Takeout.
 
 24
-00:00:59,950 --> 00:01:01,870
+00:00:59,850 --> 00:01:01,869
 Free, on the Chrome Web Store.

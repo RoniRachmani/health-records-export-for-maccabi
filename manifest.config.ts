@@ -1,9 +1,10 @@
 import { defineManifest } from '@crxjs/vite-plugin';
 import pkg from './package.json' with { type: 'json' };
+import { PRODUCT_NAME, STORE_NAME } from './src/extension/shared/name';
 
 export default defineManifest(({ mode }) => ({
   manifest_version: 3,
-  name: mode === 'development' ? 'Health Records Export for Maccabi (dev)' : 'Health Records Export for Maccabi',
+  name: mode === 'development' ? STORE_NAME + ' (dev)' : STORE_NAME,
   version: pkg.version,
   description: "Your whole Maccabi history, and a genius friend who's read all of it: save your records, then ask Claude or ChatGPT. Unofficial.",
   minimum_chrome_version: '120',
@@ -14,7 +15,7 @@ export default defineManifest(({ mode }) => ({
     128: 'icons/icon-128.png',
   },
   action: {
-    default_title: 'Health Records Export for Maccabi',
+    default_title: PRODUCT_NAME,
     default_popup: 'src/extension/popup/popup.html',
     default_icon: { 16: 'icons/icon-16.png', 32: 'icons/icon-32.png' },
   },

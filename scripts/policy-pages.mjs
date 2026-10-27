@@ -16,11 +16,11 @@ const WIDTH = 120;
 export const PAGES = {
   privacy: {
     description:
-      'How Health Records Export for Maccabi handles your information: your records go from Maccabi Online to your own computer, and nothing is sent to the developer.',
+      'How Maccabi Health Records Takeout handles your information: your records go from Maccabi Online to your own computer, and nothing is sent to the developer.',
   },
   terms: {
     description:
-      'The terms for using Health Records Export for Maccabi, a free, open-source, unofficial Chrome extension that saves your Maccabi Online records to your computer.',
+      'The terms for using Maccabi Health Records Takeout, a free, open-source, unofficial Chrome extension that saves your Maccabi Online records to your computer.',
   },
 };
 
@@ -117,7 +117,7 @@ export function renderPolicy(name, md) {
     '    <meta charset="utf-8" />',
     '    <meta name="viewport" content="width=device-width, initial-scale=1" />',
     '    <meta name="color-scheme" content="light" />',
-    `    <title>${escape(title)} - Health Records Export for Maccabi</title>`,
+    `    <title>${escape(title)} - Maccabi Health Records Takeout</title>`,
     `    <meta name="description" content="${escape(page.description).replace(/"/g, '&quot;')}" />`,
     `    <link rel="canonical" href="${SITE}${name}.html" />`,
     '    <link rel="stylesheet" href="pages.css" />',

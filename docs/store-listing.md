@@ -26,7 +26,7 @@ a version bump or a new package. The steps below apply when releasing an extensi
 
 ### Product details
 
-**Title** comes from the manifest's `name`: Health Records Export for Maccabi
+**Title** comes from the manifest's `name`: Maccabi Health Records Takeout - Ready for AI
 
 **Summary** comes from the manifest's `description` in `manifest.config.ts`. It has 128 characters, and the limit is 132:
 
@@ -220,7 +220,7 @@ Save everything from Maccabi Online to your computer, then ask anything: what ch
 
 Maccabi Online shows your records one page at a time, within date limits. This puts every record in one place on your computer, where an assistant can read all of it.
 
-▶ Find it on the Chrome Web Store: Health Records Export for Maccabi
+▶ Find it on the Chrome Web Store: Maccabi Health Records Takeout - Ready for AI
 
 0:00 Your whole Maccabi history, and a genius friend who's read all of it
 0:19 The export, start to finish (sped up)

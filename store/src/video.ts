@@ -15,6 +15,7 @@
    date, id and file name around it is made up here. */
 import '@fontsource-variable/heebo';
 import { formatBytes } from '../../src/extension/popup/model';
+import { PRODUCT_NAME } from '../../src/extension/shared/name';
 import { type PlanStep, type RunState } from '../../src/extension/shared/state';
 import { doneRun as demoDoneRun, runAt as demoRunAt, ZIP } from './demo-run';
 import {
@@ -363,7 +364,7 @@ const NARRATION: { at: number; text: string }[] = [
   { at: T.keep + 0.3, text: 'It’s yours to keep, and to add to as you go.' },
   { at: T.uses + 0.4, text: 'Open it in the Claude or ChatGPT desktop app, and ask anything.' },
   { at: T.ask + 0.4, text: 'Every answer names its source. You and your doctor decide.' },
-  { at: T.close + 0.4, text: 'Health Records Export for Maccabi. Free, on the Chrome Web Store.' },
+  { at: T.close + 0.4, text: PRODUCT_NAME + '. Free, on the Chrome Web Store.' },
 ];
 
 /** The sound effects, by kind (scripts/soundtrack.mjs draws each one) and second. */
@@ -416,7 +417,7 @@ async function main(): Promise<void> {
 
   // 2 · the name and the headline
   const art = artwork();
-  const lockName = h('p', 'lock-name', 'Health Records Export for Maccabi');
+  const lockName = h('p', 'lock-name', PRODUCT_NAME);
   const promise = kinetic('h1', 'lock-title', 'Your whole Maccabi history,\nand a genius friend who’s read all of it', [6, 7]);
   const lockSub = h('p', 'lock-sub', 'Save everything from Maccabi Online to your computer, then ask anything: what changed, what stands out, what to do next.');
   const lockNote = h('p', 'disclaimer', DISCLAIMER);
@@ -483,7 +484,7 @@ async function main(): Promise<void> {
 
   // 8 · where to get it
   const endArt = artwork();
-  const endName = kinetic('h1', 'end-title', 'Health Records Export for Maccabi');
+  const endName = kinetic('h1', 'end-title', PRODUCT_NAME);
   // The one line on privacy, beside where to get it (docs/positioning.md: say it once, lightly).
   const endSub = h('p', 'end-sub', 'Free on the Chrome Web Store  ·  Stays on your computer');
   const endLink = h('p', 'end-link', 'maccabi.ronirachmani.com');

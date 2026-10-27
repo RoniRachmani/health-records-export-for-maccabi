@@ -1,12 +1,12 @@
 # Privacy Policy
 
-[Health Records Export for Maccabi](https://maccabi.ronirachmani.com/)
+[Maccabi Health Records Takeout](https://maccabi.ronirachmani.com/)
 
-Effective 14 October 2026
+Effective 27 October 2026
 
 <!-- public/privacy.html, which ships in the extension at chrome-extension://<id>/privacy.html, is written from this: run `node scripts/policy-pages.mjs` after editing. -->
 
-This policy explains how Health Records Export for Maccabi ("the extension") handles your information. The
+This policy explains how Maccabi Health Records Takeout ("the extension") handles your information. The
 extension is developed by Roni Rachmani ("the developer"). It is unofficial and is not affiliated with, endorsed
 by or sponsored by Maccabi Healthcare Services.
 

@@ -1,4 +1,4 @@
-# Health Records Export for Maccabi
+# Maccabi Health Records Takeout - Ready for AI
 
 **Your whole Maccabi history, and a genius friend who's read all of it.**
 
@@ -283,7 +283,7 @@ npm run dev            # development build in dist-dev/, rebuilt on change
 npm run build          # store build in dist/
 ```
 
-Load `dist-dev/` unpacked at `chrome://extensions`. It shows up as "Health Records Export for Maccabi (dev)".
+Load `dist-dev/` unpacked at `chrome://extensions`. It shows up as "Maccabi Health Records Takeout - Ready for AI (dev)".
 
 ### How it works
 

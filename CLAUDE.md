@@ -180,6 +180,9 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   each is built, and what a frame must never do, is in the `store-media` skill.
 - **Dev bridge**: `__DEV_BRIDGE__` (a Vite `define`) and the `mode === 'development'` branch in
   `manifest.config.ts` keep `background/dev.ts` and the content script out of the store build.
+- **The product's name** is in `shared/name.ts` in its three forms (the store's, the everyday one, the short one): code
+  imports it, and HTML, Markdown and the scripts spell it out. `repoRules.test.ts` holds every spelling in the repo to
+  one of them, so a rename starts there and the test lists the rest. The YouTube channel keeps the name it was opened with.
 - File names are `<date>_<id>_<title>`, built with `stem`/`iso`/`safe`/`titleOf` from `core/util.ts`;
   `_` is the segment separator, so `safe()` and `title()` never emit one.
 

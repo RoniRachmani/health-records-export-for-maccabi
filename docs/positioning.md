@@ -6,7 +6,7 @@ and link previews. Update it when a decision below changes.
 
 ## Positioning statement
 
-For **Maccabi members who want to understand and take charge of their health**, Health Records Export for Maccabi is
+For **Maccabi members who want to understand and take charge of their health**, Maccabi Health Records Takeout is
 **the way to get your whole medical history out of Maccabi Online and into an AI assistant**. Maccabi Online shows
 records one page at a time, within date limits, and the AI health tools only reach U.S. providers. This puts every
 record in one place on your own computer, where an assistant can read all of it and act as a **genius friend who's

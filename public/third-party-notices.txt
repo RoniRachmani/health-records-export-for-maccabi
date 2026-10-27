@@ -1,4 +1,4 @@
-Health Records Export for Maccabi includes the following third-party software.
+Maccabi Health Records Takeout includes the following third-party software.
 Its own license is in LICENSE, in the project's repository:
 https://github.com/RoniRachmani/health-records-export-for-maccabi
 

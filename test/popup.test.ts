@@ -90,7 +90,7 @@ describe('popup', () => {
     // Without its stylesheet, which happy-dom would try to fetch.
     const html = readFileSync('src/extension/popup/popup.html', 'utf8').replace(/<link [^>]*>/g, '');
     const page = new DOMParser().parseFromString(html, 'text/html');
-    expect(page.querySelector('header h1')?.textContent).toBe('Health Records Export');
+    expect(page.querySelector('header h1')?.textContent).toBe('Health Records Takeout');
     const chip = page.querySelector('header .chip') as HTMLElement;
     expect(chip.firstChild?.textContent).toBe('Unofficial');
     expect(chip.title).toBe('Not affiliated with Maccabi Healthcare Services');

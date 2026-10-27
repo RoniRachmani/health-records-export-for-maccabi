@@ -10,6 +10,7 @@
    join keys -- and leaves the field names to the JSON, which carries them already. Before adding a
    line, ask whether a record would be read wrongly without it; if not, leave it out. */
 import { israelToday } from '../../core/util';
+import { PRODUCT_NAME } from './name';
 import { SITE_OPEN, type PlanStep } from './state';
 import template from './export-readme.md?raw';
 
@@ -335,6 +336,7 @@ export function exportReadme(
   return fill(TEMPLATE, {
     site: AI_PAGE,
     exported: exportedOn + (started !== exportedOn ? ' (collected from ' + started + ')' : ''),
+    product: PRODUCT_NAME,
     version,
     medicalFile: medicalFileSection(medicalFile, failedIn.has(MEDICAL_FILE) || !skipped.includes(MEDICAL_FILE)),
     absent,

@@ -1,12 +1,14 @@
 // The repo's "keep these two in step" rules (CLAUDE.md), checked instead of remembered. Each pair is a copy a
 // reader sees in two places: the policies as Markdown and as the shipped page (which a script writes from it), the popup's lines and their map in
 // docs/sections.md, the film's folders and the landing page's, the notices and the shipped dependencies, and the
-// one origin the terminal scripts spell for themselves. The popup's 600px is checked in Chrome instead
+// one origin the terminal scripts spell for themselves, and the product's name wherever it is written out. The popup's 600px is checked in Chrome instead
 // (npm run site-check -- popup), since it takes a layout.
+import { execFileSync } from 'node:child_process';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { STAGES } from '../src/extension/popup/model';
+import { PRODUCT_NAME, SHORT_NAME, STORE_NAME } from '../src/extension/shared/name';
 import { STEP_FOLDERS } from '../src/extension/shared/readme';
 import { MACCABI_ORIGIN } from '../src/extension/shared/state';
 import { FOLDERS } from '../store/src/parts';
@@ -129,5 +131,36 @@ describe('scripts/', () => {
 
   it("spells it in maccabi-browser.mjs as the extension's MACCABI_ORIGIN", () => {
     expect(read('scripts/maccabi-browser.mjs')).toContain(`export const ORIGIN = '${MACCABI_ORIGIN}';`);
+  });
+});
+
+// ---- the product's name ---------------------------------------------------------------------------
+
+describe("the product's name", () => {
+  // Any form it has had, the old "… Export for Maccabi" too, with or without the store's " - Ready for AI".
+  const NAME = /(?:Maccabi )?Health Records (?:Export|Takeout)(?: for Maccabi)?(?: - Ready for AI)?/g;
+  const TEXT = /\.(md|html|ts|mjs|js|json|css|txt|srt|yml|swift)$/;
+  // The YouTube channel keeps the name it was opened with: an account's name, not a spelling of the product's.
+  const channel = (line: string) => line.includes('youtube.com/@Health-Records-Export');
+
+  it('is spelled, everywhere in the repo, as one of the forms in src/extension/shared/name.ts', () => {
+    const allowed = new Set([PRODUCT_NAME, STORE_NAME, SHORT_NAME]);
+    const files = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'], { encoding: 'utf8' })
+      .split('\n')
+      .filter((f) => TEXT.test(f) && f !== 'package-lock.json');
+    const wrong: string[] = [];
+    for (const f of files) {
+      let text: string;
+      try {
+        text = read(f);
+      } catch {
+        continue; // listed, but deleted in the working tree
+      }
+      text.split('\n').forEach((line, i) => {
+        if (channel(line)) return;
+        for (const [m] of line.matchAll(NAME)) if (!allowed.has(m)) wrong.push(f + ':' + (i + 1) + ': ' + m);
+      });
+    }
+    expect(wrong).toEqual([]);
   });
 });

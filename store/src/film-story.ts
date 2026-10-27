@@ -2,6 +2,7 @@
    doctor, drawn a frame at a time like video.ts (scripts/store-video.mjs --before-thursday asks for frame n and
    photographs it). The popup in it is the real one, driven through a run by demo-run.ts. Every record and assistant
    answer is synthetic. */
+import { PRODUCT_NAME } from '../../src/extension/shared/name';
 import { type RunState } from '../../src/extension/shared/state';
 import { doneRun, FILES, runAt as demoRunAt } from './demo-run';
 import { clamp01, lerp } from './motion';
@@ -19,7 +20,7 @@ const narration = [
   { at: 29.2, text: 'A follow-up worth checking. An approval about to expire. A note from years ago.' },
   { at: 37.4, text: 'Each question names its source, so you can check it.' },
   { at: 43, text: 'Now you have a starting point. You and your doctor decide what comes next.' },
-  { at: 49.3, text: 'Health Records Export for Maccabi. Free, on the Chrome Web Store.' },
+  { at: 49.3, text: PRODUCT_NAME + '. Free, on the Chrome Web Store.' },
 ];
 
 const sounds = [
@@ -127,7 +128,7 @@ const BRIEF =
 
 const END_COPY =
   '<div class="actor end-copy"><h1>Walk in with<br><em>better questions.</em></h1>' +
-  `<div class="end-product">${mark}Health Records Export for Maccabi</div>` +
+  `<div class="end-product">${mark}${PRODUCT_NAME}</div>` +
   '<div class="cta">Free on the Chrome Web Store ↗</div><div class="url">maccabi.ronirachmani.com</div></div>';
 
 const POINTER =

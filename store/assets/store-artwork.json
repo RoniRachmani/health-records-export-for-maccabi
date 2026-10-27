@@ -4,35 +4,35 @@
     "shot": "ask",
     "width": 1280,
     "height": 800,
-    "sha256": "f954c03325e224c98a350c3bdc97748ffdbadf11e10b12dd5d7dc882a7d4c5db"
+    "sha256": "c0ffcc08b5e06b7bda187ad3f2508fd438bb3052cc66b1d82a14a28e90cc72d3"
   },
   {
     "file": "screenshot-2-whole.png",
     "shot": "whole",
     "width": 1280,
     "height": 800,
-    "sha256": "53c22da9a226f464333af45ef038df31548772fe9e454f397a58ec9d68b69711"
+    "sha256": "75e9515cb6c0b85ac48f894a6c4daf97e1b6e9b5dff8820b0d7eb077bb19fe7c"
   },
   {
     "file": "screenshot-3-advice.png",
     "shot": "advice",
     "width": 1280,
     "height": 800,
-    "sha256": "88e4845873d4c96ac550682dec40db44b293a8953808380587f72f02e6baff5e"
+    "sha256": "e55c62b35fbb6b97441bfb00c0c0f1d1ac53bd2762a2e902e4f58a314f98d6b7"
   },
   {
     "file": "screenshot-4-start.png",
     "shot": "start",
     "width": 1280,
     "height": 800,
-    "sha256": "1303db6156adb5a88b973af155e101e37f79e6eca8de0e91abce76f13af9e111"
+    "sha256": "c11337352fcdb83bc76be899f7a2ad699e436ac2c4e4270293c71b2e0b04f19d"
   },
   {
     "file": "screenshot-5-open.png",
     "shot": "open",
     "width": 1280,
     "height": 800,
-    "sha256": "736a38da685e9b6d8671526b9d07043c372a91091c24bbe0ce0708dc6e506bc0"
+    "sha256": "091ff8c25a267df2035dbf679d86f9ba67ed2731cbda1641aca728aa63aa6d04"
   },
   {
     "file": "promo-small-440x280.png",
@@ -46,7 +46,7 @@
     "shot": "marquee",
     "width": 1400,
     "height": 560,
-    "sha256": "8faf817e6748fdae3b578113d30fd38d14f957b847e4c3e4939a560a883c844e"
+    "sha256": "df3d2e74ee24052e6664df9f7df3aba610039ef0330d7452619f4f0e7d73c25d"
   },
   {
     "file": "icon-128.png",

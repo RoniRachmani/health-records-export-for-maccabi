@@ -115,7 +115,7 @@ describe('exportReadme', () => {
 
   it('names the version and file layout that made the export, and when collection began', () => {
     const md = readme().replace(/\s+/g, ' ');
-    expect(md).toContain('Exported 2026-09-18 from online.maccabi4u.co.il with the Health Records Export for Maccabi browser extension, version 0.6.1, file layout 2;');
+    expect(md).toContain('Exported 2026-09-18 from online.maccabi4u.co.il with the Maccabi Health Records Takeout browser extension, version 0.6.1, file layout 2;');
     expect(md).not.toContain('collected from');
     expect(md).not.toContain('development build');
     // A paused run can span days; the day is Israel's, as the export's own name is.

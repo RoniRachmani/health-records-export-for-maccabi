@@ -1,3 +1,4 @@
+import { SHORT_NAME } from '../shared/name';
 import { SITE_OPEN, type RunState } from '../shared/state';
 
 export async function updateBadge(run: RunState | null): Promise<void> {
@@ -36,7 +37,7 @@ export async function updateBadge(run: RunState | null): Promise<void> {
   await chrome.action.setBadgeBackgroundColor({ color });
   await chrome.action.setBadgeTextColor({ color: textColor });
   // An empty title restores the manifest's default_title.
-  await chrome.action.setTitle({ title: title && 'Health Records Export: ' + title });
+  await chrome.action.setTitle({ title: title && SHORT_NAME + ': ' + title });
 }
 
 /**

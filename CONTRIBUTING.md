@@ -29,7 +29,7 @@ npm run build          # store build in dist/
 ```
 
 Load `dist-dev/` (or `dist/`) unpacked at `chrome://extensions`. The development build shows up as
-"Health Records Export for Maccabi (dev)". There is no linter or formatter: `typecheck` and `test` are the gate, and
+"Maccabi Health Records Takeout - Ready for AI (dev)". There is no linter or formatter: `typecheck` and `test` are the gate, and
 CI runs both, then `npm run site-check -- popup`, which measures every popup state against Chrome's 600px.
 
 `test/runner.test.ts` drives the run loop with `chrome.*` faked: a whole run, reconnecting, a rewind that does not

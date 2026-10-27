@@ -63,9 +63,9 @@ Now you have a starting point. You and
 your doctor decide what comes next.
 
 17
-00:00:49,380 --> 00:00:51,500
-Health Records Export for Maccabi.
+00:00:49,380 --> 00:00:51,480
+Maccabi Health Records Takeout.
 
 18
-00:00:51,700 --> 00:00:53,620
+00:00:51,600 --> 00:00:53,619
 Free, on the Chrome Web Store.
