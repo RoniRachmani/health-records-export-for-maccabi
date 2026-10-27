@@ -14,3 +14,8 @@ house rules (no script, no fetched font, the one GoatCounter request).
   page measures its range in pixels of scroll, not in shares of the screen: on a tall screen there isn't that much
   page left below it. `npm run site-check` checks all of this at five sizes (and is the Pages workflow's gate); look
   at a change with its `frames` mode, since the check only says where the motion ends, not how it gets there.
+- **One rule per selector in each media query.** `site.css` is kept in its review rounds, but a selector's own rule is
+  where it first appears: change that rule rather than restate it further down (the file's header names the three
+  that come back on purpose). A tidy-up that should change nothing on screen is proved with
+  `npm run site-check -- styles save` before it and `npm run site-check -- styles` after: every element's computed
+  style, in every state of the page and the popup, must come out the same.
