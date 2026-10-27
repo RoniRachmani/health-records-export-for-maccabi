@@ -3163,6 +3163,7 @@ h2 {
   /* Nine pills wrap to rows of one and two: from the left edge they read as a list, centred as a ragged stack. */
   .ask-band .tab-list {
     justify-content: flex-start;
+    display: none;
   }
 }
 
@@ -3700,9 +3701,6 @@ h2 {
   display: none;
 }
 @media (max-width: 640px) {
-  .ask-band .tab-list {
-    display: none;
-  }
   .tab-step {
     display: block;
     grid-row: 1;
