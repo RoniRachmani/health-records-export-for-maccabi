@@ -6,6 +6,14 @@
 
 :root {
   --glow: linear-gradient(135deg, #e6f0ff 0%, #f3f0fb 50%, #fde9ef 100%);
+  --good: #0e7c5a;
+  --watch: #a35c08;
+  --watch-bg: #fdf1e1;
+  --good-bg: #e7f6f0;
+  --ctx: #9aa6bd;
+  --q2: #a9c4f7;
+  --late: #b42318;
+  --late-mark: #d92d20;
 }
 body {
   overflow-x: hidden;
@@ -34,10 +42,12 @@ h2 {
 /* ---- hero ---- */
 .hero {
   padding-block: 64px 72px;
+  gap: 56px;
 }
 .hero h1 {
   line-height: 1.08;
   letter-spacing: -0.01em;
+  font-size: clamp(34px, 4.4vw, 50px);
 }
 .hero h1 em {
   font-style: normal;
@@ -68,12 +78,23 @@ h2 {
   padding: 28px;
   border-radius: 28px;
   background: var(--glow);
+  /* The Ask panels share one grid cell, so the section is always as tall as its tallest panel and keeps its size
+     whichever tab is chosen. The others are there but invisible. */
+  display: grid;
 }
 .ask-band .tab-list {
   margin-bottom: 22px;
+  grid-row: 1;
+  justify-content: center;
 }
 .ask-band .panel {
   background: rgb(255 255 255 / 0.72);
+  display: grid;
+  grid-column: 1;
+  visibility: hidden;
+  /* Every tab's chat box fills the panel, so the box keeps one position and size and only its contents change. */
+  align-items: stretch;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 /* ---- a section with a clip on one side ---- */
@@ -150,6 +171,9 @@ h2 {
   grid-row: span 6;
   grid-template-rows: subgrid;
   row-gap: 16px;
+  background: none;
+  border: 0;
+  padding: 0;
 }
 .app-card h3 {
   font-size: 22px;
@@ -222,20 +246,9 @@ h2 {
 /* Round 3: docs/positioning.md made into a page. On top of r2.css: the dashboard hero, the Build gallery, and a
    lighter privacy strip. Every record drawn here belongs to one made-up member. */
 
-:root {
-  --good: #0e7c5a;
-  --watch: #a35c08;
-  --watch-bg: #fdf1e1;
-  --good-bg: #e7f6f0;
-}
-
 /* ---- hero: what the friend hands you ---- */
 .hero {
   grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-  gap: 56px;
-}
-.hero h1 {
-  font-size: clamp(34px, 4.4vw, 50px);
 }
 .dash-stage {
   position: relative;
@@ -607,20 +620,6 @@ h2 {
   width: 40px;
   height: 40px;
 }
-
-/* The Ask panels share one grid cell, so the section is always as tall as its tallest panel and keeps its size
-   whichever tab is chosen. The others are there but invisible. */
-.ask-band .tabs {
-  display: grid;
-}
-.ask-band .tab-list {
-  grid-row: 1;
-}
-.ask-band .panel {
-  display: grid;
-  grid-column: 1;
-  visibility: hidden;
-}
 #uc-summary:checked ~ #p-summary,
 #uc-labs:checked ~ #p-labs,
 #uc-trend:checked ~ #p-trend,
@@ -629,12 +628,11 @@ h2 {
 #uc-find:checked ~ #p-find {
   visibility: visible;
 }
-/* Every tab's chat box fills the panel, so the box keeps one position and size and only its contents change. */
-.ask-band .panel {
-  align-items: stretch;
-}
 .ask-band .panel .chat {
   justify-content: flex-start;
+  width: 100%;
+  max-width: 640px;
+  justify-self: center;
 }
 /* Narrow screens stack the copy over the chat. Each panel then shares its two rows with the others (subgrid), so the
    copy row and the chat row each take their tallest member and the box sits still across tabs. */
@@ -739,11 +737,6 @@ h2 {
 
 /* ---- where to open it: each app as a small light desktop window, copied from its own home screen, floating on the
    page with no card around it; the control to use is ringed and the first message is typed into the box ---- */
-.app-card {
-  background: none;
-  border: 0;
-  padding: 0;
-}
 .appwin {
   overflow: hidden;
   border-radius: 12px;
@@ -1523,6 +1516,8 @@ h2 {
   top: 6px;
   bottom: 6px;
   width: 2px;
+  /* Explain a result: every row on the same three columns, so the range bars start and end level. */
+  background: #b9cbe6;
 }
 @media (max-width: 640px) {
   .tiles3 {
@@ -1534,10 +1529,6 @@ h2 {
   .page-mini {
     width: 140px;
   }
-}
-/* Explain a result: every row on the same three columns, so the range bars start and end level. */
-.life::before {
-  background: #b9cbe6;
 }
 
 /* The hero's story, on a 13s timeline of which the page plays the last 69%, once: the finished dashboard; it clears to a clean slate; the question is asked; the assistant reads (a bar,
@@ -1574,8 +1565,10 @@ h2 {
   /* The page opens on the story's first beat: a clean slate (31%), and then the question (36%). */
   animation-delay: -4.03s;
 }
-.anim > .asked { transform-origin: 100% 100%; }
-.anim .spark circle { transform-box: fill-box; transform-origin: center; }
+.anim > .asked { transform-origin: 100% 100%;
+  animation-name: hero-asked; }
+.anim .spark circle { transform-box: fill-box; transform-origin: center;
+  animation-name: hero-dot; }
 
 @keyframes hero-asked {
   0%, 26% { opacity: 1; transform: translateY(0) scale(1); }
@@ -1583,7 +1576,6 @@ h2 {
   32%, 36% { opacity: 0; transform: translateY(8px) scale(0.96); }
   39%, 100% { opacity: 1; transform: translateY(0) scale(1); }
 }
-.anim > .asked { animation-name: hero-asked; }
 @keyframes hero-scene {
   0%, 39% { opacity: 0; transform: translateY(6px); }
   42%, 55% { opacity: 1; transform: translateY(0); }
@@ -1676,7 +1668,6 @@ h2 {
   32%, 78% { opacity: 0; transform: scale(0); }
   81%, 100% { opacity: 1; transform: scale(1); }
 }
-.anim .spark circle { animation-name: hero-dot; }
 @keyframes hero-num {
   0%, 31% { opacity: 1; transform: translateY(0); }
   32%, 80% { opacity: 0; transform: translateY(10px); }
@@ -1715,13 +1706,6 @@ h2 {
    the timeline band under the hero, four new Ask answers, and the spending card. Colour keeps one meaning throughout:
    blue is the member's own records, gray is context, magenta is the one thing to notice, and a state colour always
    comes with its icon and word. */
-
-:root {
-  --ctx: #9aa6bd;
-  --q2: #a9c4f7;
-  --late: #b42318;
-  --late-mark: #d92d20;
-}
 
 /* ---- Everything since 1981, in the style of your example: one evenly spaced dot for each year that holds a record of
    that kind, a colour for each kind, a pale axis with the years under it, and the stretch the site shows as a soft
@@ -2168,16 +2152,7 @@ h2 {
 }
 .ask-band .panel {
   grid-row: 2;
-  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: none;
-}
-.ask-band .panel .chat {
-  width: 100%;
-  max-width: 640px;
-  justify-self: center;
-}
-.ask-band .tab-list {
-  justify-content: center;
 }
 
 /* Build's three, now Ask tabs: shown when chosen, the chosen pill in navy. What the assistant made sits straight in its
