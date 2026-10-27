@@ -1889,6 +1889,8 @@ h2 {
   display: grid;
   margin: 0;
   padding: 0;
+  /* Loose ends: eight rows, a little closer. */
+  gap: 7px;
 }
 .ends li,
 .drift li {
@@ -2139,6 +2141,7 @@ h2 {
   .ask-band .tab-list {
     display: grid;
     gap: 8px;
+    grid-template-columns: repeat(5, max-content);
   }
   .ask-band .tab-list label {
     text-align: center;
@@ -2229,11 +2232,6 @@ h2 {
 }
 
 /* Round 4: Round 3B without the two plan tabs. Nine tabs: five over four on wide screens. */
-@media (min-width: 861px) {
-  .ask-band .tab-list {
-    grid-template-columns: repeat(5, max-content);
-  }
-}
 
 /* What stands out: blood pressure read out of visit notes, the eye exams that stopped, and one childhood note. */
 .tile3 .bp {
@@ -2342,11 +2340,6 @@ h2 {
 }
 .worked .mail {
   fill: var(--good);
-}
-
-/* Loose ends: eight rows, a little closer. */
-.ends {
-  gap: 7px;
 }
 
 /* Quiet changes: three kinds of record side by side. */
