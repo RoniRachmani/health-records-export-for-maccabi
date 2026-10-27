@@ -160,14 +160,15 @@ the film. Each recorded effect starts on its second and is brought to the loudne
 for it; `--synth` plays those synthesized music and effects instead, with nothing to bring in or pay for. ElevenLabs'
 paid plans license their output for commercial use, which a YouTube promo is; the free plan does not. `--clip` draws the popup over a white page instead of the film's ground, with no pointer, which is how the Pages
 workflow renders the landing page's clip. The MP4 is not committed — the store's video
-field takes a YouTube link, so upload it there and paste the link on the dashboard. The README's poster is one frame of the same
-film, drawn by the same page: `npm run store-assets -- poster`.
+field takes a YouTube link, so upload it there and paste the link on the dashboard. The README's poster is one frame of the film
+it links, drawn by that film's own page: `npm run store-assets -- poster` (the recipe in `scripts/store-auxiliary.mjs`
+names which; it is Before Thursday while the README links that film).
 
 ### The main promo and the retained draft
 
 The main promo is `store/assets/promo-video.mp4`, authored in `store/src/video.ts`, `video.css` and
-`video.html`. `npm run store-video` renders it, and the site clip, poster, captions and release workflow all
-come from it.
+`video.html`. `npm run store-video` renders it, and the site clip, captions and release workflow all come from it
+(the poster too, whenever the README links the promo).
 
 The only retained draft is **Before Thursday**, a 56-second continuous story about
 preparing for a new doctor's appointment. Its sources are `store/src/film-story.ts`,

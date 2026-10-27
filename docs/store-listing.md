@@ -172,8 +172,10 @@ the closing card, with the one line on privacy ("Stays on your computer") beside
 the website's address. The disclaimer is on the title and closing cards, and the popup's own *Unofficial* chip (the
 whole disclaimer is its tooltip) is on screen whenever the popup is.
 
-The README shows the video as a poster that links to it: `store/assets/video-poster.png`, one frame of the same film
-with a play badge over it, drawn by `npm run store-assets -- poster`. Re-render it whenever the video changes.
+The README shows the video as a poster that links to it: `store/assets/video-poster.png`, one frame of the linked film
+with a play badge over it, drawn by `npm run store-assets -- poster`. Re-render it whenever the video changes. For now
+the README, the landing page and the link above point at an upload of the Before Thursday draft, so the poster recipe
+in `scripts/store-auxiliary.mjs` takes its frame from `film-story.html?poster`; the promo's is `video.html?poster`.
 
 The soundtrack is mixed from the same timeline (`scripts/soundtrack.mjs`). The music is Eleven Music v2.5 and the
 effects ElevenLabs Sound Effects (`scripts/eleven-sound.mjs`), used under ElevenLabs' commercial licence, which its paid

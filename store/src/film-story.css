@@ -96,3 +96,7 @@ iframe { position: absolute; top: 107px; right: 24px; width: 360px; height: 1px;
 .click-ring { position: absolute; width: 58px; height: 58px; border: 3px solid #296bed; border-radius: 50%; z-index: 29; }
 #caption { position: absolute; left: 80px; right: 80px; bottom: 62px; text-align: center; color: #5b6785; font-size: 21px; z-index: 40; }
 #disclaimer { position: absolute; bottom: 23px; left: 70px; right: 70px; display: flex; justify-content: space-between; color: #5b6785; font-size: 17px; z-index: 40; }
+
+/* The poster (?poster), only ever on a still: video.css's play badge, over the film's light ground. */
+.play { position: absolute; left: 50%; top: 50%; width: 170px; height: 170px; margin: -85px 0 0 -85px; display: grid; place-items: center; border-radius: 999px; background: #296bed; box-shadow: 0 0 0 9px rgba(255, 255, 255, 0.94), 0 20px 52px rgba(5, 38, 88, 0.3); z-index: 50; }
+.play svg { display: block; }

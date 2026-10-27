@@ -6,7 +6,7 @@ import { PRODUCT_NAME } from '../../src/extension/shared/name';
 import { type RunState } from '../../src/extension/shared/state';
 import { doneRun, FILES, runAt as demoRunAt } from './demo-run';
 import { clamp01, lerp } from './motion';
-import { DOC, FOLDER, MARK } from './parts';
+import { DOC, FOLDER, h, MARK, svg } from './parts';
 
 const FPS = 60;
 const END = 56;
@@ -40,8 +40,12 @@ const sounds = [
 /** When each part of the film starts, for the soundtrack's music (scripts/before-thursday-audio.mjs). */
 const scenes = { answer: 0, cards: 6, browser: 11, runFrom: 13.2, open: 21, uses: 27, ask: 37.9, privacy: 41, close: 49, end: END };
 
+/** The second the README's poster is taken from: the brief for Thursday, its questions each with a source. */
+const POSTER_AT = 40.5;
+
 // ---- the stage ----------------------------------------------------------
 const mark = `<svg viewBox="0 0 24 24">${MARK}</svg>`;
+const PLAY = '<svg viewBox="0 0 48 48" width="74" height="74"><path d="M18.5 13.5l17 10.5-17 10.5z" fill="#ffffff" stroke="#ffffff" stroke-width="3.5" stroke-linejoin="round"/></svg>';
 
 /** The records gathered in the opening: title, year, and where each lands (x, y, tilt). */
 const records = [
@@ -348,7 +352,21 @@ async function main(): Promise<void> {
       await new Promise((r) => requestAnimationFrame(r));
     },
   };
-  draw(0);
+  // The poster the README shows, as video.ts draws the promo's: one frame of the film with a play badge over it.
+  // `?poster` is the second above, which is what scripts/store-assets.mjs asks for; `?poster=12` is that second
+  // instead, for looking at candidates.
+  const poster = new URLSearchParams(location.search).get('poster');
+  if (poster === null) {
+    draw(0);
+  } else {
+    // Twice, a moment apart, so the popup has laid out the state the first one gave it.
+    const at = poster === '' ? POSTER_AT : Number(poster);
+    draw(at);
+    await new Promise((r) => setTimeout(r, 40));
+    draw(at);
+    document.body.append(h('div', 'play', svg(PLAY)));
+    await new Promise((r) => requestAnimationFrame(r));
+  }
   document.documentElement.dataset.ready = '1';
 }
 

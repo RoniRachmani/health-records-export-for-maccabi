@@ -39,7 +39,7 @@ must not get wrong:
   everywhere: every value is a function of the second, shaped by the helpers in `motion.ts`). It is built
   around the **real popup** in an iframe, fed made-up states by `mock-chrome.ts`; the video drives a whole run
   through it with `demoRun`, which fires the popup's own `storage.onChanged` listener with states built from
-  `PLAN` and `WEIGHTS`. The README's poster is that page again, asked for one frame with a play badge over it
+  `PLAN` and `WEIGHTS`. The promo's poster is that page again, asked for one frame with a play badge over it
   (`?poster=`, taken by `store-assets` as the `poster` shot). The landing page's link preview is
   the `og-site` shot, a photograph of its hero, which the Pages workflow renders on each deploy, with Roboto installed, and which is not committed. What all of them draw lives in
   `store/src/parts.ts` and `parts.css`; `scripts/stage.mjs` builds, serves and photographs them in headless
@@ -61,7 +61,7 @@ must not get wrong:
   narration pipeline. `npm run film:before-thursday` is `store-video --before-thursday`, and takes the same flags
   (`--captions`, `--remux`, `--synth`…, but not `--clip`); its outputs are `store/assets/before-thursday*`. Its music
   and effects are asked of ElevenLabs with the prompts in `scripts/before-thursday-audio.mjs` (cached by request, like
-  the promo's), and never taken from the promo's `.cache/elevenlabs-sound/import/`. The poster, the site clip and the *Store video* workflow stay with the promo.
+  the promo's), and never taken from the promo's `.cache/elevenlabs-sound/import/`. The site clip and the *Store video* workflow stay with the promo; the README's poster follows whichever film the README links (Before Thursday for now, `film-story.html?poster`).
 - **The mark** is a folder with a download arrow, drawn in Maccabi Online's own illustration register:
   a navy (`#083f92`) outline of even weight with round joins, and a pale-pink (`#f1c1cd`) echo of that
   outline offset up and left, so it reads as slightly off-register print. The folder is filled white so

@@ -1,7 +1,8 @@
 // The video poster and landing-page preview retain their dedicated renderers.
 export const AUXILIARY_IMAGES = [
-  // Not a store field: the README's poster, drawn by the video's own page at the size it plays.
-  { file: 'video-poster.png', shot: 'poster', page: '/store/src/video.html?poster', width: 1920, height: 1080 },
+  // Not a store field: the README's poster, drawn by the linked video's own page at the size it plays. The README
+  // links the Before Thursday film for now; the promo draws one too, at /store/src/video.html?poster.
+  { file: 'video-poster.png', shot: 'poster', page: '/store/src/film-story.html?poster', width: 1920, height: 1080 },
   // Not a store field either, and not committed: the landing page's link preview, which .github/workflows/pages.yml
   // renders on each deploy (with Roboto installed) and publishes as og-site.png. It is a photograph of the page's own
   // hero, so the two cannot drift apart.
