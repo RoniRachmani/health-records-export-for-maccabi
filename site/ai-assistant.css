@@ -193,11 +193,6 @@ code {
   stroke-width: 1.4;
   stroke-linejoin: round;
 }
-.big {
-  font-size: 24px;
-  font-weight: 500;
-  color: var(--heading);
-}
 .facts {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
@@ -258,49 +253,6 @@ code {
 }
 .ranges .high .val {
   color: var(--warn);
-  font-weight: 500;
-}
-.trend {
-  width: 100%;
-  max-width: 420px;
-  height: auto;
-}
-.trend .grid {
-  stroke: var(--line);
-  stroke-width: 1;
-}
-.trend .normal {
-  fill: var(--ok-bg);
-}
-.trend .tick {
-  fill: var(--muted);
-  font-size: 11px;
-}
-.trend .line {
-  fill: none;
-  stroke: var(--primary);
-  stroke-width: 2.5;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-.trend .dots circle {
-  fill: var(--bg);
-  stroke: var(--primary);
-  stroke-width: 2;
-}
-.trend .dots .end {
-  fill: var(--primary);
-}
-.checklist {
-  margin: 0;
-  padding-left: 20px;
-  font-size: 14px;
-}
-.checklist li {
-  margin-bottom: 6px;
-}
-.checklist li::marker {
-  color: var(--accent);
   font-weight: 500;
 }
 
@@ -365,13 +317,6 @@ code {
 #uc-find:checked ~ #p-find {
   display: grid;
 }
-.panel-copy h3 {
-  font-size: 22px;
-  margin-bottom: 8px;
-}
-.panel-copy p {
-  margin: 0;
-}
 .more {
   display: flex;
   flex-wrap: wrap;
@@ -379,7 +324,6 @@ code {
   gap: 10px 14px;
   margin-top: 24px;
 }
-.more-label,
 .first-label {
   margin: 0;
   font-size: 12px;
@@ -402,7 +346,6 @@ code {
   height: 48px;
   margin-bottom: 12px;
   fill: none;
-  stroke: var(--heading);
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;

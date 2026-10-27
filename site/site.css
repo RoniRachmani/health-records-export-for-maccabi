@@ -5,10 +5,6 @@
    Every record shown is made up. */
 
 :root {
-  --navy-1: #06306f;
-  --navy-2: #0b4296;
-  --navy-3: #2462dc;
-  --pink: #f1c1cd;
   --glow: linear-gradient(135deg, #e6f0ff 0%, #f3f0fb 50%, #fde9ef 100%);
 }
 body {
@@ -37,11 +33,9 @@ h2 {
 
 /* ---- hero ---- */
 .hero {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
   padding-block: 64px 72px;
 }
 .hero h1 {
-  font-size: clamp(34px, 4.8vw, 54px);
   line-height: 1.08;
   letter-spacing: -0.01em;
 }
@@ -149,10 +143,7 @@ h2 {
   display: grid;
   gap: 16px;
   align-content: start;
-  padding: 26px;
   border-radius: 24px;
-  background: var(--bg);
-  border: 1px solid var(--line-soft);
 }
 .app-card h3 {
   font-size: 22px;
@@ -634,7 +625,6 @@ h2 {
 }
 .ask-band .panel {
   display: grid;
-  grid-row: 2;
   grid-column: 1;
   visibility: hidden;
 }
@@ -669,7 +659,6 @@ h2 {
 .film-run {
   position: relative;
   isolation: isolate;
-  overflow: hidden;
   background: linear-gradient(180deg, #0e2e5e 0%, #143c80 28%, #1a4b9e 50%, #143c80 72%, #0e2e5e 100%);
 }
 /* The abstract layer: soft glows (brighter blue behind each window, a faint pink echo of the mark) and the film's own
@@ -1541,7 +1530,6 @@ h2 {
   top: 6px;
   bottom: 6px;
   width: 2px;
-  background: var(--line-soft);
 }
 @media (max-width: 640px) {
   .tiles3 {
@@ -1737,7 +1725,6 @@ h2 {
 
 :root {
   --ctx: #9aa6bd;
-  --ctx-soft: #e4e8ef;
   --q2: #a9c4f7;
   --late: #b42318;
   --late-mark: #d92d20;
@@ -1923,7 +1910,6 @@ h2 {
 .ends {
   list-style: none;
   display: grid;
-  gap: 10px;
   margin: 0;
   padding: 0;
 }
@@ -2175,7 +2161,6 @@ h2 {
 @media (min-width: 861px) {
   .ask-band .tab-list {
     display: grid;
-    grid-template-columns: repeat(4, max-content);
     gap: 8px;
   }
   .ask-band .tab-list label {
@@ -3221,11 +3206,6 @@ h2 {
   /* Nine pills wrap to rows of one and two: from the left edge they read as a list, centred as a ragged stack. */
   .ask-band .tab-list {
     justify-content: flex-start;
-  }
-  /* Two tiles across leave a label 100px: a little less tracking keeps CHOLESTEROL clear of the tile's edge. */
-  #p-summary .t-k {
-    font-size: 11px;
-    letter-spacing: 0.02em;
   }
 }
 
