@@ -46,7 +46,7 @@ jobs:
           fi
       - run: npm ci
       - run: npm run typecheck
-      - run: npm test
+      - run: npm run coverage
       - run: npm run package
       - name: Tag and publish
         env:

@@ -5,8 +5,9 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     include: ['test/**/*.test.ts', 'tools/**/*.test.ts'],
-    // `npm run coverage`: a report to read, not a gate. The entry points that only wire chrome.* together
-    // (and the dev build's own files) are left out, so the numbers are about code a test can reach.
+    // `npm run coverage`: the report, and CI's gate. The entry points that only wire chrome.* together
+    // (and the dev build's own files) are left out, so the numbers are about code a test can reach. The
+    // floors sit a little under today's numbers: they catch a part that loses its tests, not a line or two.
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
@@ -18,6 +19,14 @@ export default defineConfig({
         'src/extension/offscreen/**',
       ],
       reporter: ['text', 'html'],
+      thresholds: {
+        lines: 90,
+        statements: 87,
+        functions: 86,
+        branches: 79,
+        'src/core/**': { lines: 95, statements: 93, functions: 100, branches: 84 },
+        'src/extension/popup/model.ts': { lines: 100, statements: 98, functions: 100, branches: 96 },
+      },
     },
   },
 });

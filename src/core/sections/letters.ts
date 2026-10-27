@@ -61,6 +61,10 @@ export const MEDICAL_FILE = 'medical-file';
 /** The order's startDate: the whole history. */
 const FULL_HISTORY = '1900-01-01';
 
+/** A 202 is the PDF still being rendered: ask again this often, up to this many times (35 s in all). */
+const PDF_READY_WAIT_MS = 5000;
+const PDF_READY_TRIES = 8;
+
 // Full medical file (letter_type 2). Maccabi delivers it as a letter, but it is the export's main
 // document, so it is saved at the root, beside README.md, not in letters/files/.
 // replace=true overwrites a same-day file from an earlier order.
@@ -69,8 +73,8 @@ async function medicalFilePdf(c: Collector, x: Letter, replace: boolean): Promis
   if (!replace && (await c.exists(rel))) return 'kept_existing';
   const url = c.apiUrl('MainAppAPI/v2/members/0/{mid}/pdf') + '?file_path=' + x.link + '&timestamp=' + x.timestamp;
   let b = await c.fetchBin(url);
-  for (let tries = 1; tries < 8 && b.status === 202; tries++) {
-    await c.sleep(5000);
+  for (let tries = 1; tries < PDF_READY_TRIES && b.status === 202; tries++) {
+    await c.sleep(PDF_READY_WAIT_MS);
     b = await c.fetchBin(url);
   }
   if (b.status === 200 && isPdf(b.bytes)) return c.saveBin(rel, b.bytes, replace);

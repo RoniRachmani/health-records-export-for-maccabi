@@ -151,6 +151,10 @@ async function reusableSession(tabId: number): Promise<Session | null> {
  * reuse keeps a token that is already the current member's and still works, so pressing Start on
  * a tab in normal use costs no reload; the run's own reconnects always take a fresh one.
  */
+/** How often, and how many times, to look for the token a fresh /sonline/ page is issued: 15 s in all. */
+const TOKEN_POLL_MS = 500;
+const TOKEN_POLLS = 30;
+
 export async function currentSession(tabId: number, sonlineUrl: string, reuse = false): Promise<Session | null> {
   try {
     if (reuse) {
@@ -159,10 +163,10 @@ export async function currentSession(tabId: number, sonlineUrl: string, reuse = 
     }
     await inTab(tabId, clearTokenInPage, []);
     await navigate(tabId, sonlineUrl, /^\/sonline\//i);
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < TOKEN_POLLS; i++) {
       const s = sessionOf(await snapshot(tabId));
       if (s.mid && s.jwt) return s;
-      await new Promise((r) => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, TOKEN_POLL_MS));
     }
   } catch (e) {
     if (!(e as SessionEndedError).sessionEnded) throw e;
@@ -221,13 +225,17 @@ export async function isVisible(tabId: number): Promise<boolean> {
   return win.state !== 'minimized';
 }
 
+const PAGE_LOAD_TIMEOUT_MS = 90_000;
+const LEGACY_PATH = /^\/online\//i;
+const LEGACY_SETTLE_MS = 1500;
+
 /** Loads url in the tab and checks where it ended up; a redirect elsewhere (the login page) ends the session. */
 export async function navigate(tabId: number, url: string, expectPath: RegExp): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     const timer = setTimeout(() => {
       chrome.tabs.onUpdated.removeListener(listener);
       reject(new SessionEndedError('the page ' + url + ' did not finish loading'));
-    }, 90_000);
+    }, PAGE_LOAD_TIMEOUT_MS);
     let started = false;
     function listener(id: number, info: chrome.tabs.OnUpdatedInfo) {
       if (id !== tabId) return;
@@ -249,8 +257,9 @@ export async function navigate(tabId: number, url: string, expectPath: RegExp): 
   if (s.host !== new URL(MACCABI_ORIGIN).hostname || !expectPath.test(s.path)) {
     throw new SessionEndedError('opening ' + new URL(url).pathname + ' led to ' + s.path + ' (logged out?)');
   }
-  // Let the legacy page register itself in the server session before its services are called.
-  await new Promise((r) => setTimeout(r, 1500));
+  // Let a legacy page register itself in the server session before its services are called. A /sonline/
+  // page needs no such wait: currentSession polls for the token it is issued.
+  if (LEGACY_PATH.test(s.path)) await new Promise((r) => setTimeout(r, LEGACY_SETTLE_MS));
 }
 
 interface PageResult {

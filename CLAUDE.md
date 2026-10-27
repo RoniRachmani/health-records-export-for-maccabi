@@ -11,7 +11,7 @@ behaviour changes. `tools/endpoint-scan/README.md` describes the endpoint scan.
 
 ```sh
 npm test                          # vitest run (synthetic fixtures only)
-npm run coverage                  # the same, with a v8 coverage report of src/ (a report, not a gate)
+npm run coverage                  # the same, held to the coverage floors in vitest.config.ts (CI runs this)
 npx vitest run test/zip.test.ts   # one file
 npx vitest run -t "round-trips"   # one test by name
 npm run typecheck                 # tsc: the extension and tests, then scripts/ (JSDoc, checkJs) and store/
@@ -49,8 +49,8 @@ npm run site-check -- popup       # just the popup's height (CI runs this)
 npm run site-check -- frames .path scroll 10 375x812   # photograph one picture as it scrolls in (or `time 0 13 0.5`)
 ```
 
-There is no linter or formatter configured; `typecheck` and `test` are the whole gate you can run
-here, and CI adds `site-check -- popup` in its own Chrome. GitHub adds one more: CodeQL default setup
+There is no linter or formatter configured; `typecheck` and `coverage` (the tests, and the floors in
+`vitest.config.ts`) are the whole gate you can run here, and CI adds `site-check -- popup` in its own Chrome. GitHub adds one more: CodeQL default setup
 scans pull requests and runs weekly, and it has no workflow file in the repo — it is configured in the
 repository's settings. Load `dist-dev/` (or `dist/`) unpacked at `chrome://extensions` to run it; the dev
 build is named "… (dev)" and can be driven from the Maccabi page's console (see *Driving a run from the

@@ -513,3 +513,45 @@ describe('a hidden tab', () => {
     expect(world.notices).toEqual(['Export paused']);
   });
 });
+
+describe("the popup's ways to the export", () => {
+  it('shows the saved ZIP in its folder, and nothing before there is one', async () => {
+    const shown: number[] = [];
+    vi.stubGlobal('chrome', { ...fakeChrome(), downloads: { ...fakeChrome().downloads, show: (id: number) => void shown.push(id) } });
+    world.local.run = { status: 'paused_session', next: 3, nextStep: PLAN[3], layout: FILE_LAYOUT } as RunState;
+    await (await freshRunner()).showFile();
+    world.local.run = { ...stored()!, status: 'done', downloadId: 42 };
+    await (await freshRunner()).showFile();
+    expect(shown).toEqual([42]);
+  });
+
+  it("brings the run's tab to the front, unminimizing its window, or opens the site when the tab is gone", async () => {
+    const calls: string[] = [];
+    let tab: chrome.tabs.Tab | undefined = { id: TAB, windowId: 3 } as chrome.tabs.Tab;
+    let state = 'minimized';
+    vi.stubGlobal('chrome', {
+      ...fakeChrome(),
+      tabs: {
+        get: async () => tab ?? Promise.reject(new Error('No tab')),
+        update: async (id: number, p: object) => void calls.push('tab ' + id + ' ' + JSON.stringify(p)),
+        create: async (p: { url: string }) => void calls.push('open ' + p.url),
+      },
+      windows: {
+        get: async () => ({ state }),
+        update: async (id: number, p: object) => void calls.push('window ' + id + ' ' + JSON.stringify(p)),
+      },
+    });
+    world.local.run = { status: 'paused_hidden', tabId: TAB, next: 3, nextStep: PLAN[3], layout: FILE_LAYOUT } as RunState;
+    const runner = await freshRunner();
+    await runner.focusRunTab();
+    state = 'normal';
+    await runner.focusRunTab();
+    tab = undefined;
+    await runner.focusRunTab();
+    expect(calls).toEqual([
+      'tab 7 {"active":true}', 'window 3 {"focused":true,"state":"normal"}',
+      'tab 7 {"active":true}', 'window 3 {"focused":true}',
+      'open https://online.maccabi4u.co.il/',
+    ]);
+  });
+});

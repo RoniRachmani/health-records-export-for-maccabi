@@ -551,6 +551,31 @@ describe('problems', () => {
     const s = await runAll(makeCollector(t).c, newCtx(), ['emptySections']);
     expect(s.problems).toEqual(['allergies-sensitivity/list.json PROBLEM: HTTP 204, no list']);
   });
+
+  // The rule the whole run rests on: one bad record never ends an export.
+  it('files a step that throws as a problem against it, and goes on to the next', async () => {
+    class BrokenSink extends MemorySink {
+      async putJson(rel: string, obj: Parameters<MemorySink['putJson']>[1]) {
+        if (rel === 'visit-summaries/list.json') throw new TypeError('disk full');
+        return super.putJson(rel, obj);
+      }
+    }
+    const { c } = makeCollector(fakeTransport(fakeMaccabi().routes), new BrokenSink());
+    const s = await runAll(c, newCtx(), ['visits', 'letters']);
+    expect(s.stoppedAt).toBeUndefined();
+    expect(s.problems).toEqual(['visits PROBLEM: disk full']);
+    expect(c.log.some(([where]) => where.startsWith('letters/'))).toBe(true);
+  });
+
+  it('files a visits list that fails, and a visit whose details carry no summary link', async () => {
+    const site = fakeMaccabi();
+    const down = fakeTransport([(_req, url) => (url.pathname.endsWith('/visits/history') ? jsonResp({}, 403) : undefined), ...site.routes]);
+    expect((await runAll(makeCollector(down).c, newCtx(), ['visits'])).problems).toEqual(['visit-summaries/list.json PROBLEM: HTTP 403']);
+    const noLink = fakeTransport([(_req, url) => (url.pathname.endsWith('/visits/A1') ? jsonResp({ text: 'synthetic' }) : undefined), ...site.routes]);
+    expect((await runAll(makeCollector(noLink).c, newCtx(), ['visits'])).problems).toEqual([
+      expect.stringMatching(/^visit-summaries\/files\/2026-02-01_A1_.*\.pdf PROBLEM: visit details have no visit_summary_pdf_link$/),
+    ]);
+  });
 });
 
 describe('references between files', () => {

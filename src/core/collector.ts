@@ -7,6 +7,18 @@ export const PACE_MS = 300;
 export const RATE_LIMIT_WAIT_MS = 30_000;
 export const RATE_LIMIT_MAX_MS = 120_000;
 
+/**
+ * api() and fetchBin() send a request up to TRIES times when no response comes or the server answers
+ * 500/503, RETRY_WAIT_MS apart.
+ */
+const TRIES = 4;
+const RETRY_WAIT_MS = 2500;
+
+/** The answers that say the server is struggling for a moment, not that the request is wrong. */
+function isBusy(status: number): boolean {
+  return status === 500 || status === 503;
+}
+
 export class SessionEndedError extends Error {
   readonly sessionEnded = true;
   constructor(msg: string) {
@@ -156,37 +168,35 @@ export class Collector {
     return '/sonline/' + svc + '/webapi/mac/' + path.slice(svc.length + 1).split('{mid}').join(this.session.mid ?? '');
   }
 
-  async api(method: string, path: string, body?: Json, tries = 4): Promise<ApiResult> {
+  async api(method: string, path: string, body?: Json): Promise<ApiResult> {
     if (!this.session.jwt || !this.session.mid) {
       throw new SessionEndedError('no session token on this page -- run API steps from a /sonline/ page');
     }
-    this.checkStop();
     let r: HttpResponse;
-    try {
-      r = await this.deps.transport.fetch({
-        url: this.apiUrl(path),
-        method,
-        redirect: 'manual',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.session.jwt },
-        body: body === undefined ? undefined : JSON.stringify(body),
-      });
-    } catch (e) {
-      if (isControl(e)) throw e;
-      // No response at all is usually momentary: retry like a 503 before calling the session ended.
-      if (tries > 1) {
-        await this.sleep(2500);
-        return this.api(method, path, body, tries - 1);
+    for (let tries = TRIES; ; tries--) {
+      this.checkStop();
+      try {
+        r = await this.deps.transport.fetch({
+          url: this.apiUrl(path),
+          method,
+          redirect: 'manual',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.session.jwt },
+          body: body === undefined ? undefined : JSON.stringify(body),
+        });
+      } catch (e) {
+        if (isControl(e)) throw e;
+        // No response at all is usually momentary: retry like a 503 before calling the session ended.
+        if (await this.again(tries)) continue;
+        throw new SessionEndedError('request failed (' + errMessage(e) + ')');
       }
-      throw new SessionEndedError('request failed (' + errMessage(e) + ')');
-    }
-    if (r.redirected || r.status === 401) throw new SessionEndedError('HTTP ' + (r.status || 'redirect to login'));
-    if (r.status === 429) {
-      await this.rateLimitPause(r, tries);
-      return this.api(method, path, body, tries - 1);
-    }
-    if ((r.status === 500 || r.status === 503) && tries > 1) {
-      await this.sleep(2500);
-      return this.api(method, path, body, tries - 1);
+      if (r.redirected || r.status === 401) throw new SessionEndedError('HTTP ' + (r.status || 'redirect to login'));
+      // A 429 spends one of the tries, so the last one stops the run instead of waiting again.
+      if (r.status === 429) {
+        await this.rateLimitPause(r, tries);
+        continue;
+      }
+      if (isBusy(r.status) && (await this.again(tries))) continue;
+      break;
     }
     const text = new TextDecoder().decode(r.bytes);
     let data: Json = null;
@@ -248,6 +258,13 @@ export class Collector {
    * A 429 is Maccabi asking the extension to slow down: wait exactly as long as it says and try once
    * more, and stop the whole run rather than keep knocking if it asks again or asks for a long wait.
    */
+  /** One more try when any are left: after the wait a dropped request or a 500/503 gets. */
+  private async again(tries: number): Promise<boolean> {
+    if (tries <= 1) return false;
+    await this.sleep(RETRY_WAIT_MS);
+    return true;
+  }
+
   private async rateLimitPause(r: HttpResponse, tries: number): Promise<void> {
     const waitMs = retryAfterMs(r.retryAfter, this.now(), RATE_LIMIT_WAIT_MS);
     if (tries <= 1 || waitMs > RATE_LIMIT_MAX_MS) throw new RateLimitedError(Math.round(waitMs / 1000));
@@ -262,17 +279,14 @@ export class Collector {
   async fetchBin(url: string, headers?: Record<string, string>): Promise<BinResult> {
     const req = { url, method: 'GET', headers: headers || { Authorization: 'Bearer ' + this.session.jwt } };
     let waited = false;
-    for (let tries = 4; ; tries--) {
+    for (let tries = TRIES; ; tries--) {
       this.checkStop();
       let r: HttpResponse;
       try {
         r = await this.deps.transport.fetch(req);
       } catch (e) {
         if (isControl(e)) throw e;
-        if (tries > 1) {
-          await this.sleep(2500);
-          continue;
-        }
+        if (await this.again(tries)) continue;
         throw new SessionEndedError('request failed (' + errMessage(e) + ')');
       }
       const out = signedOut(r);
@@ -287,10 +301,7 @@ export class Collector {
         waited = true;
         continue;
       }
-      if ((r.status === 500 || r.status === 503) && tries > 1) {
-        await this.sleep(2500);
-        continue;
-      }
+      if (isBusy(r.status) && (await this.again(tries))) continue;
       await this.sleep(PACE_MS);
       return { status: r.status, type: mimeType(r.contentType), bytes: r.bytes };
     }

@@ -22,7 +22,7 @@ You need Node.js 22 or newer and Chrome.
 ```sh
 npm install
 npm test               # unit tests (synthetic data only)
-npm run coverage       # the same, with a coverage report (text, and coverage/index.html); not a gate
+npm run coverage       # the same, with a coverage report (text, and coverage/index.html), held to its floors as CI is
 npm run typecheck      # the extension and tests, the scripts (JSDoc) and store/
 npm run dev            # development build in dist-dev/, rebuilt on change
 npm run build          # store build in dist/

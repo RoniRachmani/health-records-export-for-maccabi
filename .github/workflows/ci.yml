@@ -22,7 +22,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
-      - run: npm test
+      # The tests, held to the coverage floors in vitest.config.ts.
+      - run: npm run coverage
       - run: npm run build
       # The popup asks for Roboto first, so its height is measured in Roboto.
       - name: Install Roboto

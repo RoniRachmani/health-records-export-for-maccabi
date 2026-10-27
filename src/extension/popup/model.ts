@@ -1,6 +1,6 @@
 /* What the popup shows, as pure functions of the run state (unit-tested, no DOM). */
 import type { Problem } from '../../core';
-import { LABELS, PLAN, WEIGHTS, type PlanStep, type RunState, type StateReply } from '../shared/state';
+import { LABELS, PLAN, WEIGHTS, type PlanStep, type Request, type RunState, type StateReply } from '../shared/state';
 
 export interface Stage {
   label: string;
@@ -309,4 +309,85 @@ export function viewKey(st: StateReply, ui: UiFlags): string {
     ? ['run', r.id, r.status, r.message ?? '', r.status === 'error' ? r.next : '', st.tab.onMaccabi]
     : ['idle', st.noticeAccepted, st.tab.onMaccabi, st.tab.loggedIn, st.tab.name ?? ''];
   return [...base, ui.busy ?? '', ui.confirm ?? '', ui.stopping, ui.error].join('|');
+}
+
+/**
+ * A confirmation still open, or null when the run has moved past what it asks about: Cancel only while the run can be
+ * cancelled, deleting the files only on the error view.
+ */
+export function keptConfirm(confirm: Confirm | null, run: RunState | null): Confirm | null {
+  if (confirm === 'cancel' && !(run && (run.status === 'running' || run.status === 'paused_hidden' || run.status === 'paused_session'))) return null;
+  if (confirm === 'discard' && run?.status !== 'error') return null;
+  return confirm;
+}
+
+/** The one full-width button on the paused and error views: what gets the run going again from here. */
+export interface NextAction {
+  label: string;
+  req: Request;
+  busyLabel: string;
+}
+
+/**
+ * Saving again when only the ZIP failed; resuming when the popup is on the Maccabi tab and nothing else is in the way;
+ * otherwise going to that tab, since a run is only resumed from it (and a hidden one only by bringing it to the front).
+ */
+export function nextAction(run: RunState, onMaccabi: boolean): NextAction {
+  const focus: NextAction = { label: 'Go to the Maccabi Online tab', req: { type: 'focusTab' }, busyLabel: 'Go to the Maccabi Online tab' };
+  if (run.status === 'error' && run.next === PLAN.indexOf('save')) return { label: 'Save again', req: { type: 'retrySave' }, busyLabel: 'Saving…' };
+  if (run.status === 'paused_hidden' || !onMaccabi) return focus;
+  return { label: run.status === 'error' ? 'Try again' : 'Resume', req: { type: 'resume' }, busyLabel: 'Reconnecting…' };
+}
+
+/** The bar's band: from the fill to the end of the current line, in percent (nothing once the run is past the last). */
+export function bandSpan(run: RunState): { left: number; width: number } {
+  const at = currentStage(run);
+  const end = at < STAGES.length ? stageSpan(at).end : run.percent;
+  return { left: run.percent, width: Math.max(0, end - run.percent) };
+}
+
+/** The running panel's pill, and what a screen reader hears as the bar's value. */
+export function progressTexts(run: RunState): { pill: string; valueText: string } {
+  const { title, detail } = stepText(run);
+  const count = countText(run);
+  return {
+    pill: run.status === 'saving' ? 'Saving' : 'Exporting · ' + run.percent + '%',
+    valueText: run.percent + '%' + (title ? ', ' + title : '') + (detail ? ': ' + detail : '') + (count ? ', ' + count : ''),
+  };
+}
+
+/** The finished export's line under its name: files, size, how long it took, where it is. */
+export function doneSummary(run: RunState): string {
+  const took = run.finishedAt ? 'took ' + formatDuration(Date.parse(run.finishedAt) - Date.parse(run.startedAt)) : '';
+  return [countOf(run.fileCount ?? 0, 'file', 'files'), run.zipBytes !== undefined && formatBytes(run.zipBytes), took, 'in your Downloads folder']
+    .filter(Boolean)
+    .join(' · ');
+}
+
+/** How many items could not be exported: the total kept beside the first few, never fewer than are shown. */
+export function problemCount(run: RunState): number {
+  return Math.max(run.problemCount ?? 0, (run.problems || []).length);
+}
+
+/** The status a screen reader is told about: a run's, the winding down of a cancelled one, or none. */
+export type Announced = RunState['status'] | 'stopping' | 'idle';
+
+const ANNOUNCEMENTS: Record<Exclude<Announced, 'idle'>, string> = {
+  running: 'Export running',
+  saving: 'Saving the ZIP',
+  paused_session: 'Export paused',
+  paused_hidden: 'Export waiting for the Maccabi Online tab',
+  done: 'Export saved',
+  error: 'Export stopped',
+  stopping: 'Stopping the export',
+};
+
+/**
+ * What to tell a screen reader when the status changes from prev to now: null when it has not changed, or when the
+ * popup has only just opened (prev null), since its content is read then anyway.
+ */
+export function announcement(prev: Announced | null, now: Announced): string | null {
+  if (prev === now || prev === null) return null;
+  if (now === 'idle') return prev === 'stopping' ? 'Export cancelled' : '';
+  return ANNOUNCEMENTS[now];
 }

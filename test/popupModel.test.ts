@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  announcement, bandSpan, doneSummary, keptConfirm, nextAction, problemCount, progressTexts,
   countText, currentStage, DESCRIPTIONS, formatBytes, formatDuration, groupProblems, hintText, problemText, STAGES, stageFileCounts, stageSpan, stageStates, statsText,
   stepText, viewKey, waitingForFile, type UiFlags,
 } from '../src/extension/popup/model';
@@ -276,5 +277,75 @@ describe('problemText', () => {
 
   it('leaves a problem already in words as it is', () => {
     expect(problemText('the vaccination booklet was not available')).toBe('the vaccination booklet was not available');
+  });
+});
+
+describe('what the paused and error views offer', () => {
+  const run = (status: RunState['status'], more: Partial<RunState> = {}) => ({ status, next: 3, percent: 40, ...more }) as RunState;
+
+  it('resumes from the Maccabi tab, and otherwise sends the member to it', () => {
+    expect(nextAction(run('paused_session'), true)).toEqual({ label: 'Resume', req: { type: 'resume' }, busyLabel: 'Reconnecting…' });
+    expect(nextAction(run('paused_session'), false).req).toEqual({ type: 'focusTab' });
+    // A hidden tab comes back by being brought to the front, wherever the popup is.
+    expect(nextAction(run('paused_hidden'), true).req).toEqual({ type: 'focusTab' });
+    expect(nextAction(run('error'), true)).toEqual({ label: 'Try again', req: { type: 'resume' }, busyLabel: 'Reconnecting…' });
+    expect(nextAction(run('error'), false).label).toBe('Go to the Maccabi Online tab');
+  });
+
+  it('saves again, from anywhere, when only the ZIP failed', () => {
+    for (const on of [true, false]) expect(nextAction(run('error', { next: PLAN.indexOf('save') }), on)).toEqual({ label: 'Save again', req: { type: 'retrySave' }, busyLabel: 'Saving…' });
+  });
+
+  it('closes a question the run has moved past', () => {
+    expect(keptConfirm('cancel', run('running'))).toBe('cancel');
+    expect(keptConfirm('cancel', run('paused_hidden'))).toBe('cancel');
+    expect(keptConfirm('cancel', run('saving'))).toBeNull();
+    expect(keptConfirm('cancel', null)).toBeNull();
+    expect(keptConfirm('discard', run('error'))).toBe('discard');
+    expect(keptConfirm('discard', run('done'))).toBeNull();
+    expect(keptConfirm(null, run('running'))).toBeNull();
+  });
+});
+
+describe('the running panel', () => {
+  const run = (more: Partial<RunState>) => ({ status: 'running', next: 0, percent: 0, ...more }) as RunState;
+
+  it('bands the rest of the current line, and nothing once past the last', () => {
+    const span = stageSpan(0);
+    expect(bandSpan(run({ percent: span.start }))).toEqual({ left: span.start, width: span.end - span.start });
+    expect(bandSpan(run({ next: PLAN.length, percent: 100 }))).toEqual({ left: 100, width: 0 });
+  });
+
+  it('says how far in the pill, and the line, its activity and count in the bar\'s value', () => {
+    const r = run({ percent: 12, next: PLAN.indexOf('testResults'), items: { done: 3, total: 9 } });
+    const { title, detail } = stepText(r);
+    expect(progressTexts(r)).toEqual({ pill: 'Exporting · 12%', valueText: '12%, ' + title + ': ' + detail + ', ' + countText(r) });
+    expect(progressTexts({ ...r, status: 'saving' }).pill).toBe('Saving');
+  });
+});
+
+describe('the done view', () => {
+  it('sums up the ZIP, leaving out what it does not know', () => {
+    const done = { status: 'done', startedAt: '2026-10-01T10:00:00Z', finishedAt: '2026-10-01T10:07:00Z', fileCount: 812, zipBytes: 3_200_000 } as RunState;
+    expect(doneSummary(done)).toBe('812 files · 3.2 MB · took ' + formatDuration(7 * 60_000) + ' · in your Downloads folder');
+    expect(doneSummary({ status: 'done', startedAt: '2026-10-01T10:00:00Z' } as RunState)).toBe('0 files · in your Downloads folder');
+  });
+
+  it('counts the problems as the total kept, never fewer than are listed', () => {
+    const p = { where: 'x', what: 'HTTP 500', at: '' };
+    expect(problemCount({ problems: [p, p], problemCount: 30 } as RunState)).toBe(30);
+    expect(problemCount({ problems: [p, p] } as RunState)).toBe(2);
+    expect(problemCount({} as RunState)).toBe(0);
+  });
+});
+
+describe('announcement', () => {
+  it('speaks a change of status only, never when the popup has just opened', () => {
+    expect(announcement(null, 'running')).toBeNull();
+    expect(announcement('running', 'running')).toBeNull();
+    expect(announcement('running', 'paused_hidden')).toBe('Export waiting for the Maccabi Online tab');
+    expect(announcement('running', 'stopping')).toBe('Stopping the export');
+    expect(announcement('stopping', 'idle')).toBe('Export cancelled');
+    expect(announcement('done', 'idle')).toBe('');
   });
 });

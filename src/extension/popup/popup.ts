@@ -1,8 +1,7 @@
-import { PLAN, SITE_ASK, SITE_OPEN, type Request, type RunState, type StateReply } from '../shared/state';
+import { SITE_ASK, SITE_OPEN, type Request, type RunState, type StateReply } from '../shared/state';
 import {
-  countOf, countText, currentStage, formatBytes, formatDuration, groupProblems, hintText, problemText, STAGES, stageFileCounts, stageSpan, stageStates, statsText,
-  waitingForFile,
-  stepText, viewKey, type Confirm, type UiFlags,
+  announcement, bandSpan, countText, doneSummary, groupProblems, hintText, keptConfirm, nextAction, problemCount, problemText, progressTexts, STAGES,
+  stageFileCounts, stageStates, statsText, stepText, viewKey, waitingForFile, type Announced, type Confirm, type UiFlags,
 } from './model';
 
 const view = document.getElementById('view') as HTMLElement;
@@ -15,7 +14,7 @@ const ui: UiFlags = { busy: null, confirm: null, stopping: false, error: '' };
 /** The run a successful Cancel applies to, until it disappears. */
 let stoppingRunId: string | null = null;
 let renderedKey = '';
-let announced: string | null = null;
+let announced: Announced | null = null;
 
 /** Nodes that progress updates write to in place. */
 let live: {
@@ -297,9 +296,8 @@ function progressView(run: RunState): Child[] {
 function pausedView(run: RunState, st: StateReply): Child[] {
   const hidden = run.status === 'paused_hidden';
   const stage = STAGES[stageStates(run).indexOf('current')]?.label;
-  let primary: HTMLElement;
-  if (!hidden && st.tab.onMaccabi) primary = actionButton('Resume', { type: 'resume' }, 'primary block', 'Reconnecting…');
-  else primary = actionButton('Go to the Maccabi Online tab', { type: 'focusTab' }, 'primary block');
+  const next = nextAction(run, st.tab.onMaccabi);
+  const primary = actionButton(next.label, next.req, 'primary block', next.busyLabel);
   const done = run.percent + '% done';
   return [
     h('h2', {}, hidden ? 'Waiting for the Maccabi Online tab' : 'Export paused'),
@@ -347,8 +345,7 @@ function askLink(): HTMLElement {
 
 function doneView(run: RunState): Child[] {
   const shown = run.problems || [];
-  const count = Math.max(run.problemCount ?? 0, shown.length);
-  const took = run.finishedAt ? 'took ' + formatDuration(Date.parse(run.finishedAt) - Date.parse(run.startedAt)) : '';
+  const count = problemCount(run);
   const icon = h('span', { class: 'file-icon', 'aria-hidden': 'true' });
   icon.innerHTML = ZIP_ICON;
   const caution = h('p', { class: 'caution' }, h('span', {}, 'The ZIP contains sensitive health information. Store and share it with care.'));
@@ -367,8 +364,7 @@ function doneView(run: RunState): Child[] {
       icon,
       h('div', {},
         h('strong', { class: 'filename' }, run.zipName || 'The ZIP'),
-        h('div', { class: 'small muted' },
-          [countOf(run.fileCount ?? 0, 'file', 'files'), run.zipBytes !== undefined && formatBytes(run.zipBytes), took, 'in your Downloads folder'].filter(Boolean).join(' · ')))),
+        h('div', { class: 'small muted' }, doneSummary(run)))),
     count > 0 && h('details', { class: 'problems' },
       h('summary', {}, count + (count === 1 ? ' item' : ' items') + ' could not be exported'),
       h('p', { class: 'small' }, 'Everything else was saved. A new export tries these again; this list is shown until it starts.'),
@@ -389,11 +385,9 @@ function doneView(run: RunState): Child[] {
  * one full-width button; deleting is quiet, and asks first.
  */
 function errorView(run: RunState, st: StateReply): Child[] {
-  const atSave = run.next === PLAN.indexOf('save');
-  let retry: HTMLElement;
-  if (atSave) retry = actionButton('Save again', { type: 'retrySave' }, 'primary block', 'Saving…');
-  else if (st.tab.onMaccabi) retry = actionButton('Try again', { type: 'resume' }, 'primary block', 'Reconnecting…');
-  else retry = actionButton('Go to the Maccabi Online tab', { type: 'focusTab' }, 'primary block');
+  const next = nextAction(run, st.tab.onMaccabi);
+  const atSave = next.req.type === 'retrySave';
+  const retry = actionButton(next.label, next.req, 'primary block', next.busyLabel);
   // What went wrong in the code's own words: no use to the member, and what a report needs.
   const detail = run.errorDetail ? h('span', {}, run.errorDetail) : null;
   const report = h('a', { href: REPORT, target: '_blank', rel: 'noreferrer' }, 'Report the problem');
@@ -433,9 +427,10 @@ function setText(el: HTMLElement | undefined, text: string): void {
 
 /** Applies progress to the current view without rebuilding it. */
 function updateLive(run: RunState): void {
-  const { title, detail } = stepText(run);
+  const { detail } = stepText(run);
   const count = countText(run);
-  setText(live.status, run.status === 'saving' ? 'Saving' : 'Exporting · ' + run.percent + '%');
+  const texts = progressTexts(run);
+  setText(live.status, texts.pill);
   if (live.activity && live.activity.textContent !== detail) {
     live.activity.textContent = detail;
     live.activity.title = detail;
@@ -443,15 +438,13 @@ function updateLive(run: RunState): void {
   setText(live.count, count);
   if (live.fill) live.fill.style.width = run.percent + '%';
   if (live.band) {
-    const at = currentStage(run);
-    const end = at < STAGES.length ? stageSpan(at).end : run.percent;
-    live.band.style.left = run.percent + '%';
-    live.band.style.width = Math.max(0, end - run.percent) + '%';
+    const band = bandSpan(run);
+    live.band.style.left = band.left + '%';
+    live.band.style.width = band.width + '%';
   }
   if (live.bar) {
     live.bar.setAttribute('aria-valuenow', String(run.percent));
-    live.bar.setAttribute('aria-valuetext',
-      run.percent + '%' + (title ? ', ' + title : '') + (detail ? ': ' + detail : '') + (count ? ', ' + count : ''));
+    live.bar.setAttribute('aria-valuetext', texts.valueText);
   }
   if (live.stages) {
     const states = stageStates(run);
@@ -480,24 +473,12 @@ function updateLive(run: RunState): void {
   updateStats();
 }
 
-const ANNOUNCEMENTS: Record<string, string> = {
-  running: 'Export running',
-  saving: 'Saving the ZIP',
-  paused_session: 'Export paused',
-  paused_hidden: 'Export waiting for the Maccabi Online tab',
-  done: 'Export saved',
-  error: 'Export stopped',
-  stopping: 'Stopping the export',
-};
-
 /** Tells screen readers about status changes only; the popup's content is read when it opens. */
 function announce(): void {
-  const status = ui.stopping ? 'stopping' : last?.run?.status ?? 'idle';
-  if (status === announced) return;
-  const prev = announced;
+  const status: Announced = ui.stopping ? 'stopping' : last?.run?.status ?? 'idle';
+  const text = announcement(announced, status);
   announced = status;
-  if (prev === null) return;
-  announcer.textContent = status === 'idle' ? (prev === 'stopping' ? 'Export cancelled' : '') : ANNOUNCEMENTS[status];
+  if (text !== null) announcer.textContent = text;
 }
 
 function render(): void {
@@ -515,8 +496,7 @@ function render(): void {
   const run = last.run;
   if (!run || run.id !== stoppingRunId) stoppingRunId = null;
   ui.stopping = stoppingRunId !== null;
-  if (ui.confirm === 'cancel' && !(run && ['running', 'paused_hidden', 'paused_session'].includes(run.status))) ui.confirm = null;
-  if (ui.confirm === 'discard' && run?.status !== 'error') ui.confirm = null;
+  ui.confirm = keptConfirm(ui.confirm, run);
   announce();
 
   const key = viewKey(last, ui);
