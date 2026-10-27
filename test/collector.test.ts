@@ -593,7 +593,7 @@ describe('full run against the fake site', () => {
     const site = fakeMaccabi();
     let n = 0;
     const redirect: HttpResponse = { status: 0, redirected: true, contentType: '', bytes: new Uint8Array() };
-    const t = fakeTransport([(req, url) => (url.pathname.includes('/visits/') && ++n > 0 ? redirect : undefined), ...site.routes]);
+    const t = fakeTransport([(_req, url) => (url.pathname.includes('/visits/') && ++n > 0 ? redirect : undefined), ...site.routes]);
     const { c, sink } = makeCollector(t);
     const s = await runAll(c, newCtx(), ['visits', 'letters']);
     expect(s.stoppedAt).toBe('visits');

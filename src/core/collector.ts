@@ -4,10 +4,10 @@ import { charset, isPdf, mimeType, retryAfterMs, sha256Hex } from './util';
 export const PACE_MS = 300;
 
 /** How a 'shape' problem begins (Collector.listIn): what the member reads in the popup and in export-errors.json. */
-export const SHAPE_CHANGED = 'Maccabi answered in a shape the extension does not know, so the site may have changed';
+const SHAPE_CHANGED = 'Maccabi answered in a shape the extension does not know, so the site may have changed';
 
 /** How long to wait on a 429 that carries no Retry-After, and the longest wait the run sits through. */
-export const RATE_LIMIT_WAIT_MS = 30_000;
+const RATE_LIMIT_WAIT_MS = 30_000;
 export const RATE_LIMIT_MAX_MS = 120_000;
 
 /**
@@ -90,7 +90,7 @@ export function errMessage(e: unknown): string {
  * member is told that, and the status stays for whoever reads export-errors.json. Anything else is the extension's
  * to explain, so it keeps the details.
  */
-export function pdfFailure(b: { status: number; type: string; tooLarge?: boolean }): string {
+function pdfFailure(b: { status: number; type: string; tooLarge?: boolean }): string {
   if (b.tooLarge) return TOO_LARGE;
   if (b.status === 404) return 'Maccabi has no PDF for this, and the site cannot open it either (HTTP 404)';
   return 'PDF download: HTTP ' + b.status + ' ' + b.type;

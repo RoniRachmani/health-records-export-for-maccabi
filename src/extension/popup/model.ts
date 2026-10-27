@@ -54,7 +54,7 @@ export type StageState = 'done' | 'current' | 'pending';
 type Position = Pick<RunState, 'next' | 'detail'>;
 
 /** The part of the current step the collector last reported ('' before its first report). */
-export function partOf(run: Position): string {
+function partOf(run: Position): string {
   if (run.next >= PLAN.length) return '';
   const title = LABELS[PLAN[run.next]];
   const part = run.detail?.startsWith(title + ': ') ? run.detail.slice(title.length + 2) : '';
@@ -137,7 +137,7 @@ export function formatBytes(n: number): string {
   return (v < 9.95 ? v.toFixed(1) : String(Math.round(v))) + ' ' + units[u];
 }
 
-export function countOf(n: number, one: string, many: string): string {
+function countOf(n: number, one: string, many: string): string {
   return n.toLocaleString('en-US') + ' ' + (n === 1 ? one : many);
 }
 

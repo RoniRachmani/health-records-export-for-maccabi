@@ -40,7 +40,7 @@ export async function medications(c: Collector, _ctx: Ctx): Promise<void> {
 }
 
 /** A visit's drugs as a title: one drug by its whole name, several by the first word of each ("XATRAL-SIMVASTATIN"). */
-export function drugsTitle(entries: Json[]): string {
+function drugsTitle(entries: Json[]): string {
   const names: string[] = [];
   for (const x of entries) {
     const t = titleOf(x, DRUG_TITLE);
