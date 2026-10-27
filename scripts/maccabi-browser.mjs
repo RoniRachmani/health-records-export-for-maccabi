@@ -21,7 +21,7 @@ if (existsSync(join(root, '.env'))) process.loadEnvFile(join(root, '.env'));
 
 export const ORIGIN = 'https://online.maccabi4u.co.il';
 export const START = ORIGIN + '/sonline/';
-export const PROFILE = process.env.LIVE_PROFILE || join(homedir(), '.hrem-live-profile');
+const PROFILE = process.env.LIVE_PROFILE || join(homedir(), '.hrem-live-profile');
 
 const ITEM = process.env.MACCABI_OP_ITEM || 'Maccabi';
 const SIGN_IN_WAIT_MS = 3 * 60_000;

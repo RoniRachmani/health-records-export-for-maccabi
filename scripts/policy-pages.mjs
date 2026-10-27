@@ -13,7 +13,7 @@ const SITE = 'https://maccabi.ronirachmani.com/';
 const WIDTH = 120;
 
 /** What each page's head says that its Markdown does not. */
-export const PAGES = {
+const PAGES = {
   privacy: {
     description:
       'How Maccabi Health Records Takeout handles your information: your records go from Maccabi Online to your own computer, and nothing is sent to the developer.',
