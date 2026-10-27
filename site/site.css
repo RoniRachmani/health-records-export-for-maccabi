@@ -651,6 +651,7 @@ h2 {
   position: relative;
   isolation: isolate;
   background: linear-gradient(180deg, #0e2e5e 0%, #143c80 28%, #1a4b9e 50%, #143c80 72%, #0e2e5e 100%);
+  overflow: clip;
 }
 /* The abstract layer: soft glows (brighter blue behind each window, a faint pink echo of the mark) and the film's own
    fine dot grid, all behind the content. The glows sit away from the text, and are faint where they reach it. */
@@ -2761,9 +2762,6 @@ h2 {
    The band of blue behind the two windows, like the timeline, clipped with overflow: hidden, which made it the scroll
    container those timelines would follow; clip clips the same. The ring is inside its window, which clips too, so it
    follows the card's timeline by name. */
-.film-run {
-  overflow: clip;
-}
 #p-summary .tile3:nth-child(1) { --d: 0%; --t: 0s; }
 #p-summary .tile3:nth-child(2) { --d: 2%; --t: 0.1s; }
 #p-summary .tile3:nth-child(3) { --d: 4%; --t: 0.2s; }
