@@ -3,7 +3,7 @@
    worker can pick it up); the member's session token lives only in
    chrome.storage.session; exported files live in IndexedDB staging. */
 import {
-  CancelledError, Collector, countOf, LEGACY_STEPS, MEDICAL_FILE, newCtx, orderSettled, placeOrder, runStep,
+  apiPath, CancelledError, Collector, countOf, LEGACY_STEPS, MEDICAL_FILE, newCtx, orderSettled, placeOrder, runStep,
   SessionEndedError, sha256Hex, waitMedicalFile, keepListedMedicalFile, type Session, type StepName, type Transport,
 } from '../../core';
 import {
@@ -345,7 +345,7 @@ async function renewSession(): Promise<void> {
   if (!s) return;
   try {
     await extensionFetch({
-      url: '/sonline/MainAppAPI/webapi/mac/v1/members/0/' + s.mid + '/alive',
+      url: apiPath('MainAppAPI/v1/members/0/{mid}/alive', s.mid),
       method: 'GET',
       redirect: 'manual',
       headers: { Authorization: 'Bearer ' + s.jwt },

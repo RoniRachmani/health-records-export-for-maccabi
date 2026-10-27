@@ -212,10 +212,8 @@ export class Collector {
   }
 
   // ---- Maccabi --------------------------------------------------------
-  // "MedicalFileAPI/v1/members/0/{mid}/x" -> "/sonline/MedicalFileAPI/webapi/mac/v1/members/0/<mid>/x"
   apiUrl(path: string): string {
-    const svc = path.split('/')[0];
-    return '/sonline/' + svc + '/webapi/mac/' + path.slice(svc.length + 1).split('{mid}').join(this.session.mid ?? '');
+    return apiPath(path, this.session.mid);
   }
 
   async api(method: string, path: string, body?: Json): Promise<ApiResult> {
@@ -429,6 +427,12 @@ export class Collector {
       throw new Error('response is not valid ' + cs + ' (' + (r.contentType || 'no content type') + ')');
     }
   }
+}
+
+/** A REST path as endpoints.json writes it, on the site: "MedicalFileAPI/v1/members/0/{mid}/x" -> "/sonline/MedicalFileAPI/webapi/mac/v1/members/0/<mid>/x". */
+export function apiPath(path: string, mid: string | null): string {
+  const svc = path.split('/')[0];
+  return '/sonline/' + svc + '/webapi/mac/' + path.slice(svc.length + 1).split('{mid}').join(mid ?? '');
 }
 
 /** 12 hex digits of a record's file name: a chance of two names in a run of 2,000 meeting about 1 in 10^8. */
