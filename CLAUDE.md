@@ -5,7 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Chrome MV3 extension (TypeScript, Vite, no framework) that exports a member's Maccabi Online medical
 records as one ZIP. `README.md` is the user-facing document and `CONTRIBUTING.md` the contributor-facing one, and
 both are kept current: read `CONTRIBUTING.md`'s *How a run works* before changing the run, and update them when
-behaviour changes. `tools/endpoint-scan/README.md` describes the endpoint scan.
+behaviour changes. `docs/README.md` says what each file in `docs/` is for; `tools/endpoint-scan/README.md` describes the
+endpoint scan.
 
 ## Commands
 
@@ -27,22 +28,15 @@ node scripts/discover-login.mjs   # record the browser sign-in's request shapes 
 npm run endpoints                 # the site's own calls that docs/endpoints/endpoints.json lacks, and mapped ones it dropped (same .env; calls no API)
 npm run endpoints -- --from DIR   # the same on scripts a --save DIR kept, with no sign-in; --rea adds REA's parser
 npm run env                       # write .env from 1Password, by the references in .env.tpl (op inject)
-npm run clean                     # remove dist/, dist-dev/, dist-store/, dist-cli/, release/
+npm run clean                     # remove dist/, dist-dev/, dist-store/, dist-cli/, release/, coverage/
 npm run release:zip               # clean, test, build:dev, package
 npm run release                   # release:zip, then store-assets, store-video
 npm run store-assets              # approved store/assets/ images at store size, upload ZIP, poster and link previews (Chrome; CHROME_PATH)
 node scripts/check-store-assets.mjs # verify PNG dimensions, hashes, colour types and ZIP contents
 npm run store-assets -- marquee   # just one, by shot name
 npm run store-video               # re-render store/assets/promo-video.mp4 (not committed; ffmpeg or macOS)
-npm run store-video -- 8 12       # just those seconds of it, while working on a scene
-npm run store-video -- --audio-only   # just the soundtrack, to store/assets/promo-soundtrack.wav
-npm run store-video -- --remux        # a changed soundtrack on the last render's picture, in seconds
-npm run store-video -- --synth        # the synthesized music and effects instead of ElevenLabs'
-npm run store-video -- --script       # the narration as one take's text, for ElevenLabs
-npm run store-video -- --captions     # the narration as subtitles, to store/assets/promo-captions.srt, for YouTube
-npm run store-video -- --import take.mp3 --audio-only   # cut that take into the narration's lines
+npm run store-video -- 8 12       # just those seconds of it; --remux, --captions, --audio-only and the rest: the store-media skill
 npm run film:before-thursday      # the Before Thursday draft film instead (store-video --before-thursday, same flags but --clip)
-npm run film:before-thursday:all  # that film, then its captions
 npm run icons                     # hand-tuned public/icons/ (the store icon is `npm run store-assets -- icon`)
 npm run site-check                # the popup's states under 600px, then the landing page's motion at five screen sizes
 npm run site-check -- popup       # just the popup's height (CI runs this)
@@ -50,7 +44,7 @@ npm run site-check -- frames .path scroll 10 375x812   # photograph one picture 
 ```
 
 There is no linter or formatter configured; `typecheck` and `coverage` (the tests, and the floors in
-`vitest.config.ts`) are the whole gate you can run here, and CI adds `site-check -- popup` in its own Chrome. GitHub adds one more: CodeQL default setup
+`vitest.config.ts`) are the whole gate you can run here, and CI adds `build` and `site-check -- popup` in its own Chrome. GitHub adds one more: CodeQL default setup
 scans pull requests and runs weekly, and it has no workflow file in the repo — it is configured in the
 repository's settings. Load `dist-dev/` (or `dist/`) unpacked at `chrome://extensions` to run it; the dev
 build is named "… (dev)" and can be driven from the Maccabi page's console (see *Driving a run from the
@@ -68,7 +62,8 @@ on `main` first. It tags `v<version>`, uploads the packaged ZIP to a draft, then
 Repository admins can push straight to `main`: the `main` ruleset lets the admin role bypass it. Everyone
 else, Dependabot and the workflows included, branches from `main`, pushes the branch and opens a pull request,
 and the `check` CI job must pass against the latest `main` before merging. No second-person approval is required.
-Run `npm run typecheck` and `npm test` before every push, and resolve review conversations before merging.
+Run `npm run typecheck` and `npm test` (or `npm run coverage`, which CI runs) before every push, and resolve review
+conversations before merging. CONTRIBUTING.md's *Pull requests* says the same for contributors; keep the two in step.
 
 ## Architecture
 
@@ -228,9 +223,9 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   its output, and also compares their words), and change their effective date. For a material change also bump `TERMS_EFFECTIVE`
   in `shared/state.ts`, which makes the popup ask everyone to accept again. `.github/workflows/pages.yml` publishes `public/` on GitHub Pages, so these pages are also public web pages.
 - **The guide to opening an export is on the website, not in the extension**: the landing page's last sections, from
-  `#where` ("Open it in Claude or ChatGPT"). The popup's "See how" and "Open it in an AI", the "Export ready"
+  `#where` ("Open it in Claude or ChatGPT"). The popup's "Open it in an AI", the "Export ready"
   notification's button and every export's README link there (`SITE_OPEN` in `shared/state.ts`), and the popup's
-  reminder while the medical file is prepared opens `#ask` (`SITE_ASK`) in a window of its own: a tab would hide the
+  "what to ask your AI assistant" while the medical file is prepared opens `#ask` (`SITE_ASK`) in a window of its own: a tab would hide the
   Maccabi one and pause the run. So those two ids stay, and so does `site/ai-assistant.html`, a redirect at the
   guide's old address, which exports made before the move name. The sections must agree with the README's short
   *Hand it to an AI assistant* on the facts it keeps (the apps, the first message, the safeguards). These links only

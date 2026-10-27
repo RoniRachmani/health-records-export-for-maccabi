@@ -8,7 +8,8 @@ documents is for.
 [Driving a run from the console](#driving-a-run-from-the-console) ·
 [A live run from the terminal](#a-live-run-from-the-terminal) ·
 [An export from the terminal](#an-export-from-the-terminal-without-the-extension) ·
-[The endpoint scan](tools/endpoint-scan/README.md) · [Releasing](#releasing) · [Ground rules](#ground-rules)
+[Finding what the export could add](#finding-what-the-export-could-add) · [Releasing](#releasing) ·
+[Ground rules](#ground-rules)
 
 ## Pull requests
 
@@ -30,8 +31,10 @@ npm run build          # store build in dist/
 ```
 
 Load `dist-dev/` (or `dist/`) unpacked at `chrome://extensions`. The development build shows up as
-"Maccabi Health Records Takeout - Ready for AI (dev)". There is no linter or formatter: `typecheck` and `test` are the gate, and
-CI runs both, then `npm run site-check -- popup`, which measures every popup state against Chrome's 600px.
+"Maccabi Health Records Takeout - Ready for AI (dev)". There is no linter or formatter. The gate is `typecheck` and
+`coverage` (the tests, held to the floors in `vitest.config.ts`): CI runs both and `build`, then
+`npm run site-check -- popup`, which measures every popup state against Chrome's 600px. Run `typecheck` and `test` (or
+`coverage`) before every push.
 
 `test/runner.test.ts` drives the run loop with `chrome.*` faked: a whole run, reconnecting, a rewind that does not
 order again, rate limits, Cancel, a worker restart at a checkpoint or while the medical file is being ordered, Save
@@ -148,20 +151,16 @@ and drives the run through the commands above, printing the step, file count and
 turns on `dev:skipOrder` first, and will not start unless the extension confirms it, so a test never orders the
 medical file or makes Maccabi send an SMS; the script itself never orders, with or without `--export` below. It stops before `save`, prints the
 files collected per folder and the time and requests of each step and part (the run's `timings`, which
-`docs/sections.md` tabulates), and discards the run, so nothing is downloaded. `npm run live -- --export` starts
-nothing: it turns both test switches off and waits for you to press Start in the popup, then follows that export,
-which is a real one (it orders the medical file, so Maccabi sends an SMS, and downloads the ZIP), and prints its
-timings with what the order did (placed, or skipped because today's file was already ready), the time from the
-order to the file being ready, and the ZIP's size. With `--reorder` beside it, that
-export orders even when today's file is already ready, to time a real order again the same day (`dev:reorder`, turned
-off again at the end). `npm run live -- --keep` leaves the
-browser and the paused run in place, to look at them. `npm run live -- --root-files` also writes the ZIP's root
-files before discarding the run (`dev:rootFiles`), and prints the README's version line, what it says failed, and
-`export-errors.json` beside the popup's problem count. `npm run live -- --names` prints every staged file's path
-(`dev:names`), to check how files are named. `npm run live -- --screenshots` photographs the popup
-before the start and at every step, into `.cache/live-screenshots/` (gitignored, since the problems it lists come
-from your records): it opens the toolbar popup itself, photographs it and closes it, so leave the browser window
-in front while it runs.
+`docs/sections.md` tabulates), and discards the run, so nothing is downloaded.
+
+| `npm run live -- …` | Does |
+|---|---|
+| `--export` | Starts nothing: turns both test switches off, waits for you to press Start in the popup, then follows that export. It is a real one: it orders the medical file, so Maccabi sends an SMS, and downloads the ZIP. Prints its timings, what the order did (placed, or skipped because today's file was already ready), the time from the order to the file being ready, and the ZIP's size. |
+| `--export --reorder` | The same, ordering even when today's file is already ready, to time a real order again the same day (`dev:reorder`, turned off again at the end). |
+| `--keep` | Leaves the browser and the paused run in place, to look at them. |
+| `--root-files` | Also writes the ZIP's root files before discarding the run (`dev:rootFiles`), and prints the README's version line, what it says failed, and `export-errors.json` beside the popup's problem count. |
+| `--names` | Prints every staged file's path (`dev:names`), to check how files are named. |
+| `--screenshots` | Photographs the popup before the start and at every step, into `.cache/live-screenshots/` (gitignored, since the problems it lists come from your records). It opens the toolbar popup itself, so leave the browser window in front while it runs. |
 
 The username and password come from 1Password through its CLI (`brew install 1password-cli`, then
 *Settings > Developer > Integrate with 1Password CLI* in the app), and only when the page asks for them. Put
@@ -268,9 +267,9 @@ are not retroactively made immutable.
 ```sh
 npm run release        # all of it from clean: tests, dist-dev/, the release ZIP, the store images and the video
 npm run release:zip    # the same without the store images and the video
-npm run clean          # remove dist/, dist-dev/, dist-store/, dist-cli/ and release/
+npm run clean          # remove dist/, dist-dev/, dist-store/, dist-cli/, release/ and coverage/
 npm run package        # release/health-records-export-for-maccabi-<version>.zip for the Chrome Web Store and GitHub release
-npm run store-assets   # approved store/assets/ images at 2x and store size, upload bundle, video poster and web link previews (Chrome; CHROME_PATH)
+npm run store-assets   # approved store/assets/ images at store size, upload bundle, video poster and web link previews (Chrome; CHROME_PATH)
 node scripts/check-store-assets.mjs # validate eight listing PNGs, dimensions, manifest and ZIP
 npm run store-video    # store/assets/promo-video.mp4, the promo video (same browser; ffmpeg if you have it)
 npm run icons          # hand-tuned public/icons/; the store icon is `npm run store-assets -- icon`
@@ -281,42 +280,8 @@ poster and the link previews (rendering them on a Mac without Roboto, the output
 images* workflow, checking them) is in [the artwork guide](store/README.md); [docs/store-listing.md](docs/store-listing.md)
 has everything to fill in on the store dashboard.
 
-The image and video renderers build the local store stage with Vite and photograph it in headless Chrome
-(`scripts/stage.mjs`): a local listening port, Node.js 22 or newer, installed dependencies, and Chrome, Chromium or
-Edge (`CHROME_PATH` overrides discovery). Both show the real popup with made-up states. Both are rendered locally, on
-the same Mac without Roboto, so the video's popup is drawn in the same San Francisco as the images, and its soundtrack
-comes from your own narration cache in the same run. The *Store images* and *Store video* workflows are optional
-checks that a render still works on Linux, not the source of anything uploaded: if you do take the video's picture
-from one (`gh workflow run store-video.yml`; silent, and in Roboto), download it with
-`gh run download <run id> -n promo-video -D store/assets`, then `npm run store-video -- --remux` puts the soundtrack
-on it.
-
-The video is drawn frame by frame in the same headless browser (`store/src/video.ts`), so nothing depends on the
-speed of the machine rendering it: the export it plays is the real popup, driven through a whole run by states
-built from the real plan and its weights. It comes out in 4K at 60 fps — the 1920×1080 stage drawn at twice its
-size — and each frame is piped straight into the encoder: `ffmpeg` when that is on `PATH`, and otherwise, on
-macOS, `scripts/encode-mp4.swift`, compiled on the spot. A full render takes about 20 minutes; give two times in
-seconds to render one part of it while working on it, e.g. `npm run store-video -- 8 12`.
-
-Its soundtrack is mixed from the same timeline by `scripts/soundtrack.mjs`: music from Eleven Music v2.5, effects from
-ElevenLabs Sound Effects (`scripts/eleven-sound.mjs`, below), and narration spoken by ElevenLabs (`scripts/narration.mjs`). The voice comes from one
-take of the whole script, made in ElevenLabs with the text `--script` prints and brought in with
-`--import <take>`, which cuts it into lines at the pauses; or, with `ELEVENLABS_API_KEY` in the environment or a
-gitignored `.env`, line by line over the API. With the key, `--import` cuts on the words instead: ElevenLabs' forced
-alignment times each word of the script in the take, so a pause that came out short doesn't matter, and each clip
-keeps its words' times, which `--captions` cues the subtitles by, a phrase at a time (without them, a line a cue). `ELEVENLABS_MODEL` picks the model (Eleven v4, `eleven_v4`, unless
-set; set it for `--script` and `--import` too). Spoken lines are cached in `.cache/narration/` by voice, model and
-words, so only a changed line costs anything. `--audio-only` writes the soundtrack alone, to listen to; `--remux` puts a changed soundtrack
-on the last render's picture in seconds, without drawing it again; `--no-narration` leaves the voice out, and
-`--silent` the sound. The music and each effect in `SOUNDS` are either brought in by hand as
-`.cache/elevenlabs-sound/import/music.mp3` and `<kind>.mp3` (or `<kind>-1.mp3`… for several takes), made in ElevenLabs'
-app or its connector, or, with the key, asked for over the API, the music then composed to a plan with a chunk per part of
-the film. Each recorded effect starts on its second and is brought to the loudness of the one `soundtrack.mjs` synthesizes
-for it; `--synth` plays those synthesized music and effects instead, with nothing to bring in or pay for. ElevenLabs'
-paid plans license their output for commercial use, which a YouTube promo is; the free plan does not. `--clip` draws the popup over a white page instead of the film's ground, with no pointer, which is how the Pages
-workflow renders the landing page's clip. The MP4 is not committed — the store's video
-field takes a YouTube link, so upload it there and paste the link on the dashboard. The README's poster is one frame of the same
-film, drawn by the same page: `npm run store-assets -- poster`.
+The promo video, its soundtrack and the *Before Thursday* draft film are in
+[the artwork guide's *The promo video*](store/README.md#the-promo-video).
 
 ## Ground rules
 
@@ -342,7 +307,7 @@ film, drawn by the same page: `npm run store-assets -- poster`.
   writes `public/privacy.html` and `public/terms.html` from them, and `test/repoRules.test.ts` fails while a page differs from
   what it writes. Change the effective date when you change either. For a material change, also set
   `TERMS_EFFECTIVE` in `src/extension/shared/state.ts` to the new date, so the popup asks users to accept again.
-  The landing page's guide to opening an export (`site/index.html`, from `#where`), which the popup's "How to ask an
+  The landing page's guide to opening an export (`site/index.html`, from `#where`), which the popup's "Open it in an
   AI" opens, must agree with the README's *Hand it to an AI assistant* on the facts that section keeps: the apps, the first
   message and the safeguards. The Privacy Policy lists the links the extension opens: add to it before adding another.
 - **Keep [public/third-party-notices.txt](public/third-party-notices.txt) current.** It carries the licenses of
@@ -350,31 +315,3 @@ film, drawn by the same page: `npm run store-assets -- poster`.
   dependency is added or upgraded; `test/repoRules.test.ts` checks the names and versions.
 - **Regenerate the store images** with `npm run store-assets` when their copy, illustrations or popup change.
   Inspect the eight canonical images and run `node scripts/check-store-assets.mjs` to validate the upload bundle.
-
-### Main promo and retained draft
-
-Claude's original is the main promo: `store/assets/promo-video.mp4`, authored in
-`store/src/video.ts`, `video.css` and `video.html`. `npm run store-video` remains the default
-renderer, and the existing site clips, poster, captions and release workflow stay with this video.
-
-The only retained draft is **Before Thursday**, a 56-second continuous story about
-preparing for a new doctor's appointment. Its sources are `store/src/film-story.ts`,
-`film-story.css` and `film-story.html`. It uses synthetic records, an illustrative assistant,
-and the actual extension popup at its native 360px width and content-driven height.
-The draft is separate from the main promo; review the exported files directly.
-
-- `npm run film:before-thursday`: render the 3840×2160 / 60 fps master, `before-thursday.mp4`.
-- `npm run film:before-thursday -- --captions`: create word-aligned SubRip captions.
-- `npm run film:before-thursday:all`: both above, in order.
-- `npm run film:before-thursday -- --remux`: revise sound while preserving the picture.
-
-Narration, music and effects use ElevenLabs with the existing ignored credentials and shared
-caches. Draft music and effects are configured in `scripts/before-thursday-audio.mjs`.
-`--synth` uses the shared local synthesizer instead. Like the main promo, it draws in the machine's
-Roboto, or the system face without it; no font is shipped. Keep rendered MP4s and WAVs local. Like the main
-promo it encodes with `ffmpeg` when it is on PATH and with macOS's AVFoundation otherwise, and the 4K master and
-its SubRip captions are all it makes: YouTube serves the smaller sizes.
-
-Open the exported MP4 directly to review it. The HTML stage files are rendering inputs, not a
-review site. Static reading holds reuse a captured image while still encoding every
-frame at 60 fps.

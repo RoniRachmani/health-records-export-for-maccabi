@@ -1,6 +1,6 @@
 # Renders the promo video's picture (npm run store-video -- --silent) on Linux with Roboto installed, and keeps it as
 # the run's artifact: the MP4 is gitignored, since it goes to YouTube, not the repo. This is not the default route: the
-# video is rendered on a Mac, with its sound, by `npm run store-video`, beside the store images (CONTRIBUTING.md). Run
+# video is rendered on a Mac, with its sound, by `npm run store-video`, beside the store images (store/README.md). Run
 # this by hand from the Actions tab to check that a render still works, or when no Mac is at hand.
 #
 # It renders no sound. The narration lives in a maintainer's .cache/narration/ (gitignored), cut from a take, so the

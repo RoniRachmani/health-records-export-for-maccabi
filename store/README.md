@@ -1,8 +1,8 @@
 # Chrome Web Store artwork
 
-How the listing images, the video poster and the link previews are made, checked and uploaded. This is the one guide
-to them: [CONTRIBUTING.md](../CONTRIBUTING.md) and [the listing guide](../docs/store-listing.md) link here, and the
-listing guide says what goes in each store field. The promo video has its own section in CONTRIBUTING.md.
+How the listing images, the video poster, the link previews and the promo video are made, checked and uploaded. This
+is the one guide to them: [CONTRIBUTING.md](../CONTRIBUTING.md) and [the listing guide](../docs/store-listing.md) link
+here, and the listing guide says what goes in each store field. The video is in [The promo video](#the-promo-video).
 
 [Review the production images](assets/review.html) · [Download eight PNGs](assets/store-artwork.zip) (after a local
 render; not committed) · [Dimensions and SHA-256 hashes](assets/store-artwork.json) ·
@@ -120,10 +120,76 @@ steps. Extension popups appear over a synthetic browser page.
    browser/font/OS environment, and compare them. Cross-platform pixel identity is not guaranteed.
 4. Check the poster and link previews when changing their recipes. They are not part of the eight-image upload ZIP.
 
-All eight PNGs matched byte for byte across two consecutive renders on 25 October 2026, and again, with their 2x
-drawings, on 26 October. The video poster does not: drawn at 4K, its pixels differ by a level or two from run to run,
+All eight PNGs matched byte for byte across two consecutive renders on 25 October 2026, and again on 26 October. The video poster does not: drawn at 4K, its pixels differ by a level or two from run to run,
 so leave it out of a commit that is not about it. Static captures use the popup's existing reduced-motion styles and
 wait two animation frames, freezing the progress sheen and pulse without changing normal extension animations.
+
+## The promo video
+
+The image and video renderers build the local store stage with Vite and photograph it in headless Chrome
+(`scripts/stage.mjs`): a local listening port, Node.js 22 or newer, installed dependencies, and Chrome, Chromium or
+Edge (`CHROME_PATH` overrides discovery). Both show the real popup with made-up states. Both are rendered locally, on
+the same Mac without Roboto, so the video's popup is drawn in the same San Francisco as the images, and its soundtrack
+comes from your own narration cache in the same run. The *Store images* and *Store video* workflows are optional
+checks that a render still works on Linux, not the source of anything uploaded: if you do take the video's picture
+from one (`gh workflow run store-video.yml`; silent, and in Roboto), download it with
+`gh run download <run id> -n promo-video -D store/assets`, then `npm run store-video -- --remux` puts the soundtrack
+on it.
+
+The video is drawn frame by frame in the same headless browser (`store/src/video.ts`), so nothing depends on the
+speed of the machine rendering it: the export it plays is the real popup, driven through a whole run by states
+built from the real plan and its weights. It comes out in 4K at 60 fps — the 1920×1080 stage drawn at twice its
+size — and each frame is piped straight into the encoder: `ffmpeg` when that is on `PATH`, and otherwise, on
+macOS, `scripts/encode-mp4.swift`, compiled on the spot. A full render takes about 20 minutes; give two times in
+seconds to render one part of it while working on it, e.g. `npm run store-video -- 8 12`.
+
+Its soundtrack is mixed from the same timeline by `scripts/soundtrack.mjs`: music from Eleven Music v2.5, effects from
+ElevenLabs Sound Effects (`scripts/eleven-sound.mjs`), and narration spoken by ElevenLabs (`scripts/narration.mjs`). The voice comes from one
+take of the whole script, made in ElevenLabs with the text `--script` prints and brought in with
+`--import <take>`, which cuts it into lines at the pauses; or, with `ELEVENLABS_API_KEY` in the environment or a
+gitignored `.env`, line by line over the API. With the key, `--import` cuts on the words instead: ElevenLabs' forced
+alignment times each word of the script in the take, so a pause that came out short doesn't matter, and each clip
+keeps its words' times, which `--captions` cues the subtitles by, a phrase at a time (without them, a line a cue). `ELEVENLABS_MODEL` picks the model (Eleven v4, `eleven_v4`, unless
+set; set it for `--script` and `--import` too). Spoken lines are cached in `.cache/narration/` by voice, model and
+words, so only a changed line costs anything. `--audio-only` writes the soundtrack alone, to listen to; `--remux` puts a changed soundtrack
+on the last render's picture in seconds, without drawing it again; `--no-narration` leaves the voice out, and
+`--silent` the sound. The music and each effect in `SOUNDS` are either brought in by hand as
+`.cache/elevenlabs-sound/import/music.mp3` and `<kind>.mp3` (or `<kind>-1.mp3`… for several takes), made in ElevenLabs'
+app or its connector, or, with the key, asked for over the API, the music then composed to a plan with a chunk per part of
+the film. Each recorded effect starts on its second and is brought to the loudness of the one `soundtrack.mjs` synthesizes
+for it; `--synth` plays those synthesized music and effects instead, with nothing to bring in or pay for. ElevenLabs'
+paid plans license their output for commercial use, which a YouTube promo is; the free plan does not. `--clip` draws the popup over a white page instead of the film's ground, with no pointer, which is how the Pages
+workflow renders the landing page's clip. The MP4 is not committed — the store's video
+field takes a YouTube link, so upload it there and paste the link on the dashboard. The README's poster is one frame of the same
+film, drawn by the same page: `npm run store-assets -- poster`.
+
+### The main promo and the retained draft
+
+The main promo is `store/assets/promo-video.mp4`, authored in `store/src/video.ts`, `video.css` and
+`video.html`. `npm run store-video` renders it, and the site clip, poster, captions and release workflow all
+come from it.
+
+The only retained draft is **Before Thursday**, a 56-second continuous story about
+preparing for a new doctor's appointment. Its sources are `store/src/film-story.ts`,
+`film-story.css` and `film-story.html`. It uses synthetic records, an illustrative assistant,
+and the actual extension popup at its native 360px width and content-driven height.
+The draft is separate from the main promo; review the exported files directly.
+
+- `npm run film:before-thursday`: render the 3840×2160 / 60 fps master, `before-thursday.mp4`.
+- `npm run film:before-thursday -- --captions`: create word-aligned SubRip captions.
+- `npm run film:before-thursday:all`: both above, in order.
+- `npm run film:before-thursday -- --remux`: revise sound while preserving the picture.
+
+Narration, music and effects use ElevenLabs with the existing ignored credentials and shared
+caches. Draft music and effects are configured in `scripts/before-thursday-audio.mjs`.
+`--synth` uses the shared local synthesizer instead. Like the main promo, it draws in the machine's
+Roboto, or the system face without it; no font is shipped. Keep rendered MP4s and WAVs local. Like the main
+promo it encodes with `ffmpeg` when it is on PATH and with macOS's AVFoundation otherwise, and the 4K master and
+its SubRip captions are all it makes: YouTube serves the smaller sizes.
+
+Open the exported MP4 directly to review it. The HTML stage files are rendering inputs, not a
+review site. Static reading holds reuse a captured image while still encoding every
+frame at 60 fps.
 
 ## Historical review artifacts
 
