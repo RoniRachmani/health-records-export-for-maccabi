@@ -1,6 +1,6 @@
 // The approved store design is the default. Name shots to render a subset, e.g. -- start open.
-// Each image is drawn at SCALE times its size (--scale N, default 2) and kept as <name>@<N>x.png, and the file at the
-// size the store asks for is that drawing scaled down, so its edges are sharper too. --scale 1 draws only that file.
+// Each image is drawn at the size the store asks for (SCALE, 1). --scale N draws it N times larger as well, kept as
+// <name>@<N>x.png, and the store's file is then that drawing scaled down, so its edges are sharper too.
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -24,7 +24,9 @@ const social = {
  */
 /** @type {Shot[]} */
 export const IMAGES = [...LISTING_IMAGES, ...AUXILIARY_IMAGES, social];
-export const SCALE = 2;
+export const SCALE = 1;
+/** The larger drawing `--scale 2` keeps beside a store image, which check-store-assets checks when it is there. */
+export const LARGE_SCALE = 2;
 
 /** The file an image is kept in when drawn `scale` times its size: screenshot-1-ask@2x.png. */
 export const scaledFile = (file, scale) => file.replace(/\.png$/, `@${scale}x.png`);

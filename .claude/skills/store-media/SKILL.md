@@ -10,7 +10,7 @@ Moved out of the root `CLAUDE.md` so it loads only for this work; the root keeps
 ## Rendering
 
 **Read `store/README.md` before rendering or changing the store images**: it is the one guide to their outputs, the
-upload bundle, the named shots, the @2x drawings, the *Store images* workflow and how to check them. What a session
+upload bundle, the named shots, the store sizes (and the opt-in @2x drawings), the *Store images* workflow and how to check them. What a session
 must not get wrong:
 
 - The store images are rendered on a Mac **without** Roboto installed, so the Roboto-first stacks fall back to San

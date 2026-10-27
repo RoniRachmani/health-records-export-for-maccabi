@@ -29,8 +29,8 @@ npm run env                       # write .env from 1Password, by the references
 npm run clean                     # remove dist/, dist-dev/, dist-store/, dist-cli/, release/
 npm run release:zip               # clean, test, build:dev, package
 npm run release                   # release:zip, then store-assets, store-video
-npm run store-assets              # approved store/assets/ images at 2x and store size, upload ZIP, poster and link previews (Chrome; CHROME_PATH)
-npm run store-assets -- --scale 1 # store sizes only, no @2x drawings
+npm run store-assets              # approved store/assets/ images at store size, upload ZIP, poster and link previews (Chrome; CHROME_PATH)
+npm run store-assets -- --scale 2 # @2x drawings too, and the store sizes scaled down from them
 node scripts/check-store-assets.mjs # verify PNG dimensions, hashes, colour types and ZIP contents
 npm run store-assets -- marquee   # just one, by shot name
 npm run store-video               # re-render store/assets/promo-video.mp4 (not committed; ffmpeg or macOS)

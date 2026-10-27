@@ -45,9 +45,10 @@ All paths below are relative to `store/assets/`.
 | Small promo tile | `promo-small-440x280.png` | 440 × 280 |
 | Marquee promo tile | `promo-marquee-1400x560.png` | 1400 × 560 |
 
-Every image is drawn at twice its size and kept, committed, as `<name>@2x.png` (the README's hero is
-`screenshot-1-ask@2x.png`); the file at its own size, the one the store takes, is that drawing scaled down by the
-browser. `--scale 1` draws only the store sizes, and `--scale 3` a larger drawing.
+Every image is drawn at the size the store takes, and only that: the store icon at 128 × 128, the screenshots at
+1280 × 800, the promo tiles at 440 × 280 and 1400 × 560 (the README's hero is `screenshot-1-ask.png`). `--scale 2`
+also draws each one at twice its size, kept as `<name>@2x.png`, and makes the store's file that drawing scaled down by
+the browser.
 
 Each render also writes `review.html` and `store-artwork.json` (both committed) and `store-artwork.zip` (gitignored).
 The ZIP contains exactly the eight PNGs above; upload one rendered on a Mac, not the *Store images* workflow's
@@ -64,7 +65,7 @@ npm run store-assets -- icon           # approved padded store icon
 npm run store-assets -- poster         # video poster, drawn by the video's own page
 npm run store-assets -- og-site social # landing-page preview and approved marquee at GitHub size
 npm run store-assets -- --list         # available shot names, filenames and dimensions; no browser needed
-npm run store-assets -- --scale 1      # store sizes only, with no @2x drawings
+npm run store-assets -- --scale 2      # @2x drawings too, and the store sizes scaled down from them
 npm run icons                         # packaged toolbar icons only; the store icon is the `icon` shot
 ```
 
