@@ -83,6 +83,7 @@ in the store:
 | Link | Tags |
 |---|---|
 | The page's badge in the hero | `utm_source=site&utm_medium=landing&utm_campaign=hero` |
+| The page's badge under *One button*, beside the film | `utm_source=site&utm_medium=landing&utm_campaign=collect` |
 | The page's badge under *Get the extension* | `utm_source=site&utm_medium=landing&utm_campaign=get` |
 | The page's footer | `utm_source=site&utm_medium=landing&utm_campaign=footer` |
 | The README's badge and install link | `utm_source=github&utm_medium=readme` |

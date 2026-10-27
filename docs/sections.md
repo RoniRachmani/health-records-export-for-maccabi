@@ -117,33 +117,39 @@ A second export the same day found today's file over the same range already read
 one request, not two (0.7 s after the page change), line 16 went straight to the download with no status part (8.6 s,
 3 requests), and the run took 2 min 53 s and 252 requests.
 
-On 2026-09-29, after that day's export, with `--export --reorder` (`dev:reorder`: order even though today's file is ready), the run took
-5 min 2 s and 262 requests. Line 1 was 13.0 s, of which the order request took 8.9 s, against 1.5 s in the export
-before it. Line 16 was 2 min 15 s, and the run had the new PDF 4 min 49 s after the order. That wait is the run's own
-rule, not Maccabi's pace. Maccabi swaps the new file into the list's one medical-file entry in place, without listing
-it pending first, and nothing in the entry but its range tells a new file from an earlier one (`timestamp`, `hash`
-and `link` change on every read). So with a ready file from earlier that day over the same range, which only
-`--reorder` orders past, the wait takes a ready file as the new one only after it has seen the new order pending
-(`mustSeePending`), or after 2 minutes (`appearMs`). Those 2 minutes were then counted from the start of the wait.
-Here every check showed a ready file, so the run waited them out. The new file may have been ready when the wait
-began, 2 min 35 s after the order. The ZIP's PDF did differ from the earlier one. Two such runs on 2026-10-10 were the
-same: 2 min 5 s on line 16, and the new PDF 4 min 47 s and 4 min 53 s after the order. Since then the 2 minutes count
-from the order (`orderedAt`), which the rest of the run has usually used up, so the first check takes the file. That
-rests on Maccabi having swapped the new file in by then: an order with no same-day file has been found ready 2 min
-43 s after it at the earliest check, and nothing measures how much sooner it is. A reorder that got the old file
-would show in the PDF, which is byte for byte the same when a file is used again and differs after each order. The
-first reorder under the new rule, the same day, took 2 min 48 s and 254 requests: the first check, 2 min 34 s after
-the order, took the file, the run had the PDF 2 min 42 s after the order, and it was a new one. A same-day file over another range (the site's own order form asks for a narrower one) is waited
-past for as long as the new one takes, up to 15 minutes, since its range shows it is not the new one.
+How the wait tells the new file from an earlier one: Maccabi swaps the new file into the list's one medical-file
+entry in place, without listing it pending first, and nothing in the entry but its range tells a new file from an
+earlier one (`timestamp`, `hash` and `link` change on every read). So `waitMedicalFile`:
 
-An earlier day's file is waited past the same way. Until 2026-10-26 the wait gave it 2 minutes (`appearMs`, then also
-the time allowed for a file to appear where none was listed), counted from the start of the wait, as if the order had
-not been taken. That day's first export ordered, Maccabi confirmed it, and the list still showed the file from eight
-days before at every check: the wait gave up 127 s in, and the export had no medical file at all, since a run that
-orders leaves the listed one out while it collects the letters. Since then only an empty list gives up after
-`appearMs`; any other listed file is waited past for up to 15 minutes. A wait that gives up keeps the file Maccabi
-still lists and names it in `export-errors.json` (with its range when that is narrower than the whole history), and
-says to export again once Maccabi Online lists today's, which that export takes without ordering.
+- takes a ready file from today over the export's whole range as soon as it sees it. When such a file was already ready
+  before the order (only `--reorder`, `dev:reorder`, orders past one), it takes a ready file as the new one only after
+  it has seen the new order pending (`mustSeePending`), or once 2 minutes (`appearMs`) have passed since the order
+  (`orderedAt`). The rest of the run has usually used those up, so the first check takes the file.
+- waits past any other listed file, an earlier day's or today's over a narrower range (the site's own order form asks
+  for one), for up to 15 minutes: while it is listed, Maccabi has not swapped the new one in.
+- gives up after `appearMs` only when the list is empty.
+- when it gives up, keeps the file Maccabi still lists and names it in `export-errors.json` (with its range when that is
+  narrower than the whole history), and says to export again once Maccabi Online lists today's, which that export takes
+  without ordering.
+
+The runs behind those rules:
+
+- On 2026-09-29, after that day's export, `--export --reorder` took 5 min 2 s and 262 requests. Line 1 was 13.0 s, of
+  which the order request took 8.9 s, against 1.5 s in the export before it. Line 16 was 2 min 15 s, and the run had
+  the new PDF 4 min 49 s after the order. The 2 minutes were then counted from the start of the wait, and every check
+  showed a ready file, so the run waited them out, though the new file may have been ready when the wait began, 2 min
+  35 s after the order. The ZIP's PDF did differ from the earlier one. Two such runs on 2026-10-10 were the same: 2 min
+  5 s on line 16, and the new PDF 4 min 47 s and 4 min 53 s after the order.
+- The first reorder with the 2 minutes counted from the order, on 2026-10-10 too, took 2 min 48 s and 254 requests: the
+  first check, 2 min 34 s after the order, took the file, the run had the PDF 2 min 42 s after the order, and it was a
+  new one. That rests on Maccabi having swapped the new file in by then: an order with no same-day file has been found
+  ready 2 min 43 s after it at the earliest check, and nothing measures how much sooner it is. A reorder that got the
+  old file would show in the PDF, which is byte for byte the same when a file is used again and differs after each
+  order.
+- Until 2026-10-26 an earlier day's file was given only `appearMs` too, counted from the start of the wait. That day's
+  first export ordered, Maccabi confirmed it, and the list still showed the file from eight days before at every
+  check: the wait gave up 127 s in, and the export had no medical file at all, since a run that orders leaves the
+  listed one out while it collects the letters. That is why only an empty list gives up early now.
 
 The next day's first export (2026-09-30, `--export`, no same-day file) ordered in 1.5 s, and line 16's first check,
 2 min 43 s after the order, found the file ready: the run had the PDF 2 min 51 s after the order, in 2 min 58 s and
@@ -165,4 +171,5 @@ What the text says, and the sign-in codes Maccabi texts from another sender, are
 A live test without `--export` never orders (`dev:skipOrder`) and stops before `save`: its line 1 is only the page
 change, and its line 16 collects whatever medical file Maccabi already has.
 
-Nineteen lines is what fits under Chrome's 600px popup cap; there are seventeen. Keep this table in step with `STAGES` and the collectors.
+There are seventeen lines, and the running view is 589px of Chrome's 600px popup cap (`npm run site-check -- popup`
+measures it): merge lines before adding one. Keep this table in step with `STAGES` and the collectors.

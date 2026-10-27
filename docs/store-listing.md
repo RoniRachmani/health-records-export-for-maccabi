@@ -1,6 +1,6 @@
 # Chrome Web Store listing
 
-What to enter on the Chrome Web Store developer dashboard for each tab. The text below matches version 0.8.9. When
+What to enter on the Chrome Web Store developer dashboard for each tab. The text below matches version 0.8.13. When
 the extension changes, update this file along with it (see [Keeping it true](#keeping-it-true)).
 
 ## Before each upload
@@ -398,14 +398,14 @@ The same policy ships in the extension as `privacy.html`.
 **Additional instructions:**
 
 ```
-Works only for Maccabi Healthcare Services (Israel) members logged in to https://online.maccabi4u.co.il. Login needs an Israeli ID number and an SMS code, so we can't provide a test account.
+Works only for Maccabi Healthcare Services (Israel) members logged in to https://online.maccabi4u.co.il. Login needs an Israeli ID number and an SMS code or password, so we can't provide a test account.
 
 Without a login, the popup shows "How the export works" and reads nothing until you press "Agree and continue". Then it shows "Log in to Maccabi Online".
 
 Source: https://github.com/RoniRachmani/health-records-export-for-maccabi (docs/endpoints/ lists every request). The package isn't minified.
 ```
 
-The store allows 500 characters here. This text has 487.
+The store allows 500 characters here. This text has 499.
 
 ## Keeping it true
 

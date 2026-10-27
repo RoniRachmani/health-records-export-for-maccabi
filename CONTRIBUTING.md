@@ -1,7 +1,8 @@
 # Contributing
 
 How the extension is built, run, tested and released. The [README](README.md) is for people who use it; `CLAUDE.md`
-is the short version of this page for an AI coding assistant.
+is the short version of this page for an AI coding assistant. [docs/](docs/README.md) says what each of the other
+documents is for.
 
 [Setup](#setup) · [How a run works](#how-a-run-works) · [The look](#the-look) ·
 [Driving a run from the console](#driving-a-run-from-the-console) ·
