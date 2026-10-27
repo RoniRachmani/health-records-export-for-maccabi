@@ -40,7 +40,7 @@ const pageHref = (href) =>
     .replace(/^\.\.\//, REPO);
 
 /** One block's text, its lines joined, as HTML. @param {string} text */
-export function inline(text) {
+function inline(text) {
   let out = '';
   // A link, an autolink, a code span, an escape, or a run of anything else.
   const token = /\[([^\]]*)\]\(([^)\s]*)\)|<((?:https?:\/\/|mailto:)?[^\s<>]+[.@][^\s<>]+)>|`([^`]*)`|\\(.)|([^[<`\\]+|.)/gs;

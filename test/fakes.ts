@@ -31,7 +31,7 @@ export function bytesResp(bytes: Uint8Array, contentType = 'application/pdf', st
 export type Route = (req: HttpRequest, url: URL) => HttpResponse | undefined;
 
 /** Latin-1 view of a byte string: each char is one byte. */
-export function latin1(s: string): Uint8Array {
+function latin1(s: string): Uint8Array {
   return Uint8Array.from(s, (ch) => ch.charCodeAt(0));
 }
 
@@ -46,7 +46,7 @@ export function win1255(s: string): Uint8Array {
 }
 
 /** JSON the way the legacy .asmx services send it: windows-1255 bytes, declared in the header. */
-export function win1255JsonResp(obj: Json): HttpResponse {
+function win1255JsonResp(obj: Json): HttpResponse {
   return bytesResp(win1255(JSON.stringify(obj)), 'application/json; charset=windows-1255');
 }
 
