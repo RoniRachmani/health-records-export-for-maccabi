@@ -1,8 +1,9 @@
 /* The landing page's own layout, on top of pages.css (tokens, type) and ai-assistant.css (tabs, chats, safeguards).
-   It was built in review rounds, and each round's rules are kept in the order they were added, under a comment
-   naming the round: a later rule may refine an earlier one, so add a new rule after the ones it changes. There is
-   no script: the Ask tabs are radio buttons, and every animation is CSS that prefers-reduced-motion turns off.
-   Every record shown is made up. */
+   It was built in review rounds, kept in order under a comment naming each round. A selector has one rule of its
+   own in each media query, where it first appears: change that rule rather than add one below it. Beside it, a rule
+   it shares with others holds what they have in common. Three come back later on purpose, after a media query they
+   must override: .hero and .ask-band's .tabs and .panel. There is no script: the Ask tabs are radio buttons, and
+   every animation is CSS that prefers-reduced-motion turns off. Every record shown is made up. */
 
 :root {
   --glow: linear-gradient(135deg, #e6f0ff 0%, #f3f0fb 50%, #fde9ef 100%);
