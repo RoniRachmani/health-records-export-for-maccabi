@@ -8,6 +8,7 @@ import { tmpdir } from 'node:os';
 import { extname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'vite';
+import { connect, devToolsUrl } from './devtools.mjs';
 
 export const root = fileURLToPath(new URL('..', import.meta.url));
 const outDir = join(root, 'dist-store');
@@ -102,67 +103,18 @@ export async function openStage() {
       'about:blank',
     ]);
 
-    const wsUrl = await new Promise((resolveUrl, reject) => {
-      let log = '';
-      const timer = setTimeout(() => reject(new Error('browser did not start:\n' + log)), 30_000);
-      browser.stderr.on('data', (d) => {
-        log += d;
-        const m = log.match(/DevTools listening on (ws:\/\/\S+)/);
-        if (m) {
-          clearTimeout(timer);
-          resolveUrl(m[1]);
-        }
-      });
-    });
-
-    // A minimal DevTools Protocol client.
-    ws = new WebSocket(wsUrl);
-    await new Promise((r, j) => {
-      ws.onopen = r;
-      ws.onerror = j;
-    });
-    let lastId = 0;
-    const pending = new Map();
+    const wsUrl = await devToolsUrl(browser, 'browser did not start:');
+    const client = await connect(wsUrl, { gone: '; the headless browser is gone or wedged' });
+    ws = client.ws;
+    send = client.send;
     // A browser that dies mid-shoot must not leave the script waiting for a reply that can no
     // longer come: fail everything outstanding, loudly.
     const abandon = (why) => {
-      if (stopping) return;
-      for (const p of pending.values()) p.reject(new Error('the headless browser ' + why));
-      pending.clear();
+      if (!stopping) client.abandon('the headless browser ' + why);
     };
     ws.onclose = () => abandon('closed the DevTools connection');
     ws.onerror = () => abandon('broke the DevTools connection');
     browser.on('exit', (code, signal) => abandon('exited (' + (signal || 'code ' + code) + ')'));
-    ws.onmessage = (e) => {
-      const m = JSON.parse(e.data);
-      const p = m.id && pending.get(m.id);
-      if (!p) return;
-      pending.delete(m.id);
-      if (m.error) p.reject(new Error(m.error.message));
-      else p.resolve(m.result);
-    };
-    send = (method, params = {}, sessionId) => {
-      const id = ++lastId;
-      ws.send(JSON.stringify({ id, method, params, sessionId }));
-      return new Promise((res, rej) => {
-        // A browser can die without closing its end of the socket, and then a reply simply never
-        // comes. Without this the script would wait for it for ever, looking like slow progress.
-        const timer = setTimeout(() => {
-          pending.delete(id);
-          rej(new Error(method + ': no reply in 30s; the headless browser is gone or wedged'));
-        }, 30_000);
-        pending.set(id, {
-          resolve: (v) => {
-            clearTimeout(timer);
-            res(v);
-          },
-          reject: (e) => {
-            clearTimeout(timer);
-            rej(e);
-          },
-        });
-      });
-    };
   }
 
   async function kill() {
