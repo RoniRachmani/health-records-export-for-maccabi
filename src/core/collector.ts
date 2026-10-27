@@ -359,12 +359,16 @@ export class Collector {
 
   async pdfIfMissing(rel: string, url: string, headers?: Record<string, string>): Promise<SaveResult | null | undefined> {
     if (await this.exists(rel)) return 'kept_existing';
+    const bytes = await this.fetchPdf(rel, url, headers);
+    return bytes && this.saveBin(rel, bytes);
+  }
+
+  /** A PDF's bytes, or null with a problem filed against rel when the answer is not one. */
+  private async fetchPdf(rel: string, url: string, headers?: Record<string, string>): Promise<Uint8Array | null> {
     const b = await this.fetchBin(url, headers);
-    if (b.status !== 200 || !isPdf(b.bytes)) {
-      await this.problem(rel, pdfFailure(b));
-      return null;
-    }
-    return this.saveBin(rel, b.bytes);
+    if (b.status === 200 && isPdf(b.bytes)) return b.bytes;
+    await this.problem(rel, pdfFailure(b));
+    return null;
   }
 
   /**
@@ -400,12 +404,8 @@ export class Collector {
   async pdfOnce(rel: string, url: string, headers?: Record<string, string>): Promise<DocRef | null> {
     const had = await this.docAlready(rel);
     if (had) return had;
-    const b = await this.fetchBin(url, headers);
-    if (b.status !== 200 || !isPdf(b.bytes)) {
-      await this.problem(rel, pdfFailure(b));
-      return null;
-    }
-    return this.saveOnce(rel, b.bytes);
+    const bytes = await this.fetchPdf(rel, url, headers);
+    return bytes && this.saveOnce(rel, bytes);
   }
 
   /** A legacy /online/ request: session cookies only, no Bearer, redirects followed. */
