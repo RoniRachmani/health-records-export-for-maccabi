@@ -2,7 +2,8 @@
 // and maccabi-browser.mjs (a browser on the member's own account) both drive the browser they start.
 
 /**
- * The browser's DevTools address, once it prints it on stderr. `hint` follows the error when it never does.
+ * The browser's DevTools address, once it prints it on stderr. `hint` follows the error when it never does, or when
+ * the browser exits first (as Chrome does at once when its profile is already open in another window).
  * @param {import('node:child_process').ChildProcess} browser
  * @param {string} hint
  * @returns {Promise<string>}
@@ -13,11 +14,17 @@ export function devToolsUrl(browser, hint) {
   return new Promise((resolveUrl, reject) => {
     let log = '';
     const timer = setTimeout(() => reject(new Error(hint + '\n' + log)), 30_000);
+    const exited = (code, signal) => {
+      clearTimeout(timer);
+      reject(new Error(hint + ' (it exited, ' + (signal || 'code ' + code) + ')\n' + log));
+    };
+    browser.once('exit', exited);
     stderr.on('data', (d) => {
       log += d;
       const m = log.match(/DevTools listening on (ws:\/\/\S+)/);
       if (m) {
         clearTimeout(timer);
+        browser.off('exit', exited);
         resolveUrl(m[1]);
       }
     });
@@ -25,14 +32,16 @@ export function devToolsUrl(browser, hint) {
 }
 
 /**
- * Connects to the browser at `wsUrl`. `send` answers with a command's result, or fails when the browser sends
+ * Connects to `browser` at `wsUrl`. `send` answers with a command's result, or fails when the browser sends
  * nothing back in `replyMs` (or the call's own `timeoutMs`): a browser can die without closing its end of the
- * socket, and then a reply simply never comes. `on` subscribes to a protocol event and returns the unsubscribe.
- * `abandon` fails every command still waiting, for a browser that went away. `gone` ends a timeout's message.
+ * socket, and then a reply simply never comes. One that exits or drops the connection fails every command still
+ * waiting, and every one sent after, at once and saying so, named `name`; except while `stopping()` says it was
+ * asked to go. `on` subscribes to a protocol event and returns the unsubscribe. `gone` ends a timeout's message.
  * @param {string} wsUrl
- * @param {{ replyMs?: number; gone?: string }} [options]
+ * @param {import('node:child_process').ChildProcess} browser
+ * @param {{ name?: string; replyMs?: number; gone?: string; stopping?: () => boolean }} [options]
  */
-export async function connect(wsUrl, { replyMs = 30_000, gone = '' } = {}) {
+export async function connect(wsUrl, browser, { name = 'the browser', replyMs = 30_000, gone = '', stopping = () => false } = {}) {
   const ws = new WebSocket(wsUrl);
   await new Promise((r, j) => {
     ws.onopen = r;
@@ -63,6 +72,7 @@ export async function connect(wsUrl, { replyMs = 30_000, gone = '' } = {}) {
    * @returns {Promise<any>}
    */
   const send = (method, params = {}, sessionId, timeoutMs = replyMs) => {
+    if (dead) return Promise.reject(new Error(method + ': ' + dead));
     const id = ++lastId;
     ws.send(JSON.stringify({ id, method, params, sessionId }));
     return new Promise((res, rej) => {
@@ -91,10 +101,16 @@ export async function connect(wsUrl, { replyMs = 30_000, gone = '' } = {}) {
     listeners.get(method)?.add(handler);
     return () => listeners.get(method)?.delete(handler);
   };
+  let dead = '';
   /** @param {string} why */
-  const abandon = (why) => {
-    for (const p of pending.values()) p.reject(new Error(why));
+  const died = (why) => {
+    if (dead || stopping()) return;
+    dead = name + ' ' + why;
+    for (const p of pending.values()) p.reject(new Error(dead));
     pending.clear();
   };
-  return { ws, send, on, abandon };
+  ws.onclose = () => died('closed the DevTools connection');
+  ws.onerror = () => died('broke the DevTools connection');
+  browser.on('exit', (code, signal) => died('exited (' + (signal || 'code ' + code) + ')'));
+  return { ws, send, on };
 }

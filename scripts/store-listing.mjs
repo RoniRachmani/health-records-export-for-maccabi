@@ -1,15 +1,6 @@
 // Capture an approved listing layout on store/src/listing.html, using the real popup with synthetic Chrome APIs.
 import { BROWSER_HTML } from '../store/design/listing.mjs';
 
-export async function renderListingImage(stage, image) {
-  const page = await openListingImage(stage, image);
-  try {
-    return await page.screenshot();
-  } finally {
-    await page.close();
-  }
-}
-
 /** The listing layout laid out and still, as it is photographed; the caller closes the page. */
 export async function openListingImage(stage, image) {
   const page = await stage.open('/store/src/listing.html', image.width, image.height);

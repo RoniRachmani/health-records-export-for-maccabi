@@ -26,8 +26,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { openStage, root } from './stage.mjs';
-import { IMAGES } from './store-assets.mjs';
-import { openListingImage } from './store-listing.mjs';
+import { IMAGES, openImage } from './store-assets.mjs';
 
 /** Everything on the page that moves, by the element that holds it. */
 const PICTURES = [
@@ -265,22 +264,27 @@ async function styles(stage, action) {
   for (const { name, path, w, h } of pages) {
     for (const motion of ['no-preference', 'reduce']) {
       const page = await stage.open(path, w, h, 1, 'true');
-      if (path !== PAGE) await page.evaluate(drawn);
-      await page.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: motion }] });
-      const radios = await page.evaluate(`[...document.querySelectorAll('input[type=radio]')].map((r) => r.id)`);
-      for (const id of [null, ...radios]) {
-        if (id) await page.evaluate(`document.getElementById(${JSON.stringify(id)}).checked = true`);
-        now[name + ' ' + motion + ' ' + (id || 'initial')] = await page.evaluate(STYLES);
+      try {
+        if (path !== PAGE) await page.evaluate(drawn);
+        await page.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: motion }] });
+        const radios = await page.evaluate(`[...document.querySelectorAll('input[type=radio]')].map((r) => r.id)`);
+        for (const id of [null, ...radios]) {
+          if (id) await page.evaluate(`document.getElementById(${JSON.stringify(id)}).checked = true`);
+          now[name + ' ' + motion + ' ' + (id || 'initial')] = await page.evaluate(STYLES);
+        }
+      } finally {
+        await page.close();
       }
-      await page.close();
     }
   }
   // The store images, each as it is photographed: their CSS (listing.css, parts.css) is folded the same way.
   for (const image of IMAGES) {
-    const page = image.html ? await openListingImage(stage, image)
-      : await stage.open(image.page, image.width, image.height, 1, image.prepare);
-    now['store ' + image.shot] = await page.evaluate(STYLES);
-    await page.close();
+    const page = await openImage(stage, image);
+    try {
+      now['store ' + image.shot] = await page.evaluate(STYLES);
+    } finally {
+      await page.close();
+    }
   }
   const states = Object.keys(now).length;
   if (action === 'save') {

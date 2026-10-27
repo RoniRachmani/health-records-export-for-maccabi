@@ -104,17 +104,10 @@ export async function openStage() {
     ]);
 
     const wsUrl = await devToolsUrl(browser, 'browser did not start:');
-    const client = await connect(wsUrl, { gone: '; the headless browser is gone or wedged' });
-    ws = client.ws;
-    send = client.send;
-    // A browser that dies mid-shoot must not leave the script waiting for a reply that can no
-    // longer come: fail everything outstanding, loudly.
-    const abandon = (why) => {
-      if (!stopping) client.abandon('the headless browser ' + why);
-    };
-    ws.onclose = () => abandon('closed the DevTools connection');
-    ws.onerror = () => abandon('broke the DevTools connection');
-    browser.on('exit', (code, signal) => abandon('exited (' + (signal || 'code ' + code) + ')'));
+    // A browser that dies mid-shoot fails everything outstanding, loudly, unless kill() asked it to go.
+    ({ ws, send } = await connect(wsUrl, browser, {
+      name: 'the headless browser', gone: '; the headless browser is gone or wedged', stopping: () => stopping,
+    }));
   }
 
   async function kill() {
