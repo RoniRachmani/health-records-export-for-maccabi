@@ -284,7 +284,7 @@ h2 {
   z-index: 2;
   padding: 12px 16px;
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--bg);
   box-shadow: var(--shadow-lift);
   transform: rotate(-3deg);
   font-size: 13px;
@@ -306,7 +306,7 @@ h2 {
   gap: 14px;
   padding: 22px;
   border-radius: 22px;
-  background: #ffffff;
+  background: var(--bg);
   border: 1px solid var(--line-soft);
   box-shadow: 0 24px 60px rgb(8 40 110 / 0.16);
   font-size: 14px;
@@ -470,7 +470,7 @@ h2 {
   align-content: start;
   padding: 16px;
   border-radius: 16px;
-  background: #ffffff;
+  background: var(--bg);
   box-shadow: var(--shadow);
   font-size: 13px;
 }
@@ -556,7 +556,7 @@ h2 {
   margin: 0;
   padding: 14px 20px;
   border-radius: 16px;
-  background: #ffffff;
+  background: var(--bg);
   border: 1px solid var(--line-soft);
   box-shadow: var(--shadow-lift);
   font-size: 14px;
@@ -695,7 +695,7 @@ h2 {
 }
 .film-band h2,
 .film-band .numbered strong {
-  color: #ffffff;
+  color: var(--on-primary);
 }
 .film-band .sub,
 .film-band p,
@@ -704,14 +704,14 @@ h2 {
   color: #e3ebfc;
 }
 .film-band a {
-  color: #ffffff;
+  color: var(--on-primary);
 }
 .film-band a:focus-visible {
-  outline-color: #ffffff;
+  outline-color: var(--on-primary);
 }
 .film-band .numbered li::before {
   background: rgb(255 255 255 / 0.16);
-  color: #ffffff;
+  color: var(--on-primary);
 }
 
 /* The film, one click from the hero: a play button beside the store badge (a link to YouTube, not an embed, so the
@@ -819,7 +819,7 @@ h2 {
   gap: 10px;
   padding: 11px 13px 9px;
   border-radius: 14px;
-  background: #ffffff;
+  background: var(--bg);
   border: 1px solid #e3e3e3;
   box-shadow: 0 2px 8px rgb(0 0 0 / 0.04);
 }
@@ -906,7 +906,7 @@ h2 {
   height: 20px;
   border-radius: 50%;
   background: #8e9a9a;
-  color: #ffffff;
+  color: var(--on-primary);
   font-size: 8px;
   display: grid;
   place-items: center;
@@ -916,7 +916,7 @@ h2 {
   gap: 10px;
   padding: 10px 18px 22px;
   border-radius: 10px 0 0 0;
-  background: #ffffff;
+  background: var(--bg);
 }
 .appwin.gpt .toggle {
   justify-self: center;
@@ -931,7 +931,7 @@ h2 {
   border-radius: 999px;
 }
 .appwin.gpt .toggle .on {
-  background: #ffffff;
+  background: var(--bg);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
 }
 .appwin.gpt .ask-h {
@@ -982,7 +982,7 @@ h2 {
 .browserwin {
   overflow: hidden;
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--bg);
   box-shadow: 0 0 0 1px rgb(0 0 0 / 0.08), 0 24px 56px rgb(2 14 40 / 0.4);
 }
 .bw-bar {
@@ -1017,7 +1017,7 @@ h2 {
   min-width: 0;
   padding: 5px 12px;
   border-radius: 999px;
-  background: #ffffff;
+  background: var(--bg);
   color: #4a5568;
   font-size: 12px;
   white-space: nowrap;
@@ -1126,7 +1126,7 @@ h2 {
   padding: 11px 20px;
   border-radius: 999px;
   background: #1f2328;
-  color: #ffffff;
+  color: var(--on-primary);
   font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
@@ -1138,7 +1138,7 @@ h2 {
 }
 .oss-btn:hover {
   background: #32383f;
-  color: #ffffff;
+  color: var(--on-primary);
 }
 .oss-btn:focus-visible {
   outline: 2px solid var(--focus);
@@ -1280,10 +1280,10 @@ h2 {
   grid-template-columns: minmax(0, 1fr);
   overflow: hidden;
   border-radius: 14px;
-  background: #ffffff;
+  background: var(--bg);
   box-shadow: 0 0 0 1px rgb(0 0 0 / 0.08), 0 24px 56px rgb(2 14 40 / 0.4);
   font-size: 12px;
-  color: #24283f;
+  color: var(--fg);
 }
 .appwin .dim {
   display: inline-flex;
@@ -1321,7 +1321,7 @@ h2 {
   white-space: nowrap;
   font-size: 13px;
   font-weight: 600;
-  color: #24283f;
+  color: var(--fg);
 }
 /* Like the browser window, the Finder window gets the wider column (it sits first here: the section is flipped). */
 @media (min-width: 861px) {
@@ -1422,7 +1422,7 @@ h2 {
   flex: none;
   padding: 6px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--bg);
   fill: none;
   stroke: var(--good);
   stroke-width: 1.8;
@@ -1495,7 +1495,7 @@ h2 {
   gap: 6px;
   padding: 12px 11px 16px;
   border-radius: 6px;
-  background: #ffffff;
+  background: var(--bg);
   border: 1px solid var(--line);
   box-shadow: 0 6px 16px rgb(8 40 110 / 0.12);
   transform: rotate(2deg);
@@ -1750,7 +1750,7 @@ h2 {
   margin: 28px 0 0;
   padding: 24px 26px 20px;
   border-radius: 24px;
-  background: #ffffff;
+  background: var(--bg);
   border: 1px solid var(--line-soft);
   box-shadow: var(--shadow);
 }
@@ -1798,13 +1798,13 @@ h2 {
   transform: translate(-50%, -50%);
 }
 .tl-lane.v {
-  --c: #296bed;
+  --c: var(--primary);
 }
 .tl-lane.t {
-  --c: #083f92;
+  --c: var(--heading);
 }
 .tl-lane.m {
-  --c: #b83b7c;
+  --c: var(--accent);
 }
 .tl-lane.x {
   --c: #0e7c5a;
@@ -2373,7 +2373,7 @@ h2 {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--bg);
   border: 1.5px solid #d92d20;
   color: var(--late);
   font-weight: 600;
@@ -2970,7 +2970,7 @@ h2 {
   padding: 2px 0 8px;
   list-style: none;
   overflow: clip;
-  background: #ffffff;
+  background: var(--bg);
   font-size: clamp(11px, calc(100cqi / 52), 13px);
 }
 .fw-list li {
@@ -2998,7 +2998,7 @@ h2 {
 }
 .fw-name {
   font-weight: 600;
-  color: #083f92;
+  color: var(--heading);
 }
 .fw-what,
 .fw-dir {
@@ -3006,10 +3006,10 @@ h2 {
 }
 .fw-kinds {
   padding: 2px 8px;
-  border: 1px solid #c4e5f8;
+  border: 1px solid var(--line-soft);
   border-radius: 999px;
   background: #f1f9fe;
-  color: #083f92;
+  color: var(--heading);
   font-size: 0.85em;
   white-space: nowrap;
 }
@@ -3017,7 +3017,7 @@ h2 {
   background: #fbe9ef;
 }
 .fw-list li.added .fw-what {
-  color: #b83b7c;
+  color: var(--accent);
   font-weight: 500;
 }
 /* The open folder, selected, and its contents under it on a paler blue, with no lines between them. */
@@ -3030,17 +3030,17 @@ h2 {
   height: var(--ih);
   padding-left: 44px;
   border-bottom: 0;
-  background: #fafdff;
+  background: var(--surface);
 }
 .fw-list li.fw-in.fw-last {
-  border-bottom: 1px solid #e4eaf2;
+  border-bottom: 1px solid var(--line);
 }
 .fw-list li.fw-in > svg {
   width: 15px;
   height: 15px;
 }
 .fw-stem {
-  color: #083f92;
+  color: var(--heading);
   font-weight: 500;
 }
 /* One result's data and its PDF: the name they share, marked in both. */
@@ -3096,7 +3096,7 @@ h2 {
     100% { transform: translateY(0); }
   }
   @keyframes fw-select {
-    from { background-color: #ffffff; }
+    from { background-color: var(--bg); }
   }
   @keyframes fw-same {
     from { background-color: rgb(248 217 225 / 0); }
@@ -3108,7 +3108,7 @@ h2 {
     100% { opacity: 1; transform: translateX(0) rotate(0deg); }
   }
   @keyframes fw-pink {
-    from { background-color: #ffffff; }
+    from { background-color: var(--bg); }
   }
   @supports (animation-timeline: view()) {
     /* In pixels of scroll from when the window first shows, not in shares of the screen: the window is taller than a
@@ -3418,7 +3418,7 @@ h2 {
   position: relative;
   padding: 28px;
   border-radius: 22px;
-  background: #ffffff;
+  background: var(--bg);
   border: 1px solid var(--line-soft);
   box-shadow: 0 24px 60px rgb(8 40 110 / 0.16);
   font-size: 14px;
@@ -3642,7 +3642,7 @@ h2 {
   padding: 1px 9px;
   border: 1px solid var(--line-soft);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--bg);
   color: var(--fg);
   white-space: nowrap;
 }

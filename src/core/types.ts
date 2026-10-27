@@ -4,8 +4,10 @@
 
 export type SaveResult = 'written' | 'updated' | 'unchanged' | 'kept_existing';
 
-/** API responses are used as the server sends them; their shape is not typed. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+/**
+ * API responses are used as the server sends them, so their shape is not typed here. A section that decides
+ * something from a response names the fields it reads (letters.ts's Letter) instead of reading them off a Json.
+ */
 export type Json = any;
 
 export interface HttpRequest {

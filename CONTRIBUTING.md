@@ -22,6 +22,7 @@ You need Node.js 22 or newer and Chrome.
 ```sh
 npm install
 npm test               # unit tests (synthetic data only)
+npm run coverage       # the same, with a coverage report (text, and coverage/index.html); not a gate
 npm run typecheck      # the extension and tests, the scripts (JSDoc) and store/
 npm run dev            # development build in dist-dev/, rebuilt on change
 npm run build          # store build in dist/
@@ -336,8 +337,9 @@ film, drawn by the same page: `npm run store-assets -- poster`.
   with one exception: the extension never calls anything that returns credentials, and the no-browser export must, once
   per sign-in, for the API token (the portal's own bootstrap, in `scripts-endpoints.json`). Nothing else is excepted:
   nothing ordered, nothing marked read, every request paced and one at a time, no credential or record printed.
-- **Keep the policies in sync.** `docs/privacy.md` goes with `public/privacy.html`, and `docs/terms.md` with
-  `public/terms.html`; `test/repoRules.test.ts` fails when their words differ. Change the effective date when you change either. For a material change, also set
+- **Keep the policies in sync.** Edit `docs/privacy.md` and `docs/terms.md`, never their pages: `node scripts/policy-pages.mjs`
+  writes `public/privacy.html` and `public/terms.html` from them, and `test/repoRules.test.ts` fails while a page differs from
+  what it writes. Change the effective date when you change either. For a material change, also set
   `TERMS_EFFECTIVE` in `src/extension/shared/state.ts` to the new date, so the popup asks users to accept again.
   The landing page's guide to opening an export (`site/index.html`, from `#where`), which the popup's "How to ask an
   AI" opens, must agree with the README's *Hand it to an AI assistant* on the facts that section keeps: the apps, the first

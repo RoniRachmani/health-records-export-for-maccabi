@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { STEP_ORDER } from '../src/core';
-import { alignToPlan, FILE_LAYOUT, PLAN, resumeIndex, sameLayout, savingOutcome } from '../src/extension/shared/state';
+import { CancelledError, RateLimitedError, SessionEndedError, STEP_ORDER } from '../src/core';
+import {
+  alignToPlan, FILE_LAYOUT, LABELS, MAX_RECONNECTS, PLAN, resumeIndex, sameLayout, savingOutcome, SESSION_ENDED_MESSAGE, stepFailure,
+} from '../src/extension/shared/state';
 
 describe('PLAN', () => {
   it('runs every collection step once, in the order core lists them', () => {
@@ -96,5 +98,35 @@ describe('savingOutcome', () => {
     // Chrome restarted mid-download marks it interrupted; one it never started, or forgot, is not there at all.
     expect(savingOutcome('interrupted')).toBe('interrupted');
     expect(savingOutcome(undefined)).toBe('interrupted');
+  });
+});
+
+describe('stepFailure', () => {
+  const at = (reconnects = 0, cancelRequested = false) => ({ step: 'visits' as const, cancelRequested, reconnects });
+
+  it('stops for a cancel, whatever was thrown', () => {
+    expect(stepFailure(new CancelledError(), at())).toEqual({ action: 'cancel' });
+    expect(stepFailure(new Error('boom'), at(0, true))).toEqual({ action: 'cancel' });
+    expect(stepFailure(new SessionEndedError('gone'), at(0, true))).toEqual({ action: 'cancel' });
+  });
+
+  it('reconnects after an ended session until the allowance is used, then pauses', () => {
+    for (let n = 0; n < MAX_RECONNECTS; n++) expect(stepFailure(new SessionEndedError('gone'), at(n))).toEqual({ action: 'reconnect' });
+    expect(stepFailure(new SessionEndedError('gone'), at(MAX_RECONNECTS))).toEqual({ action: 'pause', message: SESSION_ENDED_MESSAGE });
+  });
+
+  it('stops without a detail when the site asks to slow down', () => {
+    const f = stepFailure(new RateLimitedError(60), at());
+    expect(f).toMatchObject({ action: 'stop' });
+    expect(f.action === 'stop' && f.detail).toBeFalsy();
+  });
+
+  it('stops on anything else, naming the step and keeping the error for the details', () => {
+    expect(stepFailure(new Error('boom'), at())).toEqual({
+      action: 'stop',
+      message: 'Something unexpected stopped the export during “' + LABELS.visits + '”.',
+      detail: 'boom',
+    });
+    expect(stepFailure('a string', at())).toMatchObject({ action: 'stop', detail: 'a string' });
   });
 });

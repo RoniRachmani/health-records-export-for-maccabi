@@ -11,6 +11,7 @@ behaviour changes. `tools/endpoint-scan/README.md` describes the endpoint scan.
 
 ```sh
 npm test                          # vitest run (synthetic fixtures only)
+npm run coverage                  # the same, with a v8 coverage report of src/ (a report, not a gate)
 npx vitest run test/zip.test.ts   # one file
 npx vitest run -t "round-trips"   # one test by name
 npm run typecheck                 # tsc: the extension and tests, then scripts/ (JSDoc, checkJs) and store/
@@ -140,7 +141,8 @@ instead of staging both names.
 ### Errors
 
 `SessionEndedError`, `CancelledError` and `RateLimitedError` are *control* errors (`isControl`): they
-propagate out of a step and the runner decides (reconnect twice, then pause; stop; discard). Anything
+propagate out of a step and the runner acts on `stepFailure` in `shared/state.ts`, which decides (reconnect
+twice, then pause; stop; discard) and is unit-tested apart from `chrome.*`. Anything
 else thrown inside a step is recorded as a problem against that step and the run continues — so a single
 bad record never ends an export. Problems are filed under the current step and cleared when that step
 re-runs. Legacy steps don't get a 401: an ended session answers them with a followed redirect to
@@ -152,7 +154,7 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
 - **Offscreen document** (`extension/offscreen/`) does the two things a service worker cannot: `DOMParser`
   for the two legacy HTML responses, and a `blob:` URL for the finished ZIP. Talk to it only through
   `offscreenClient.ts`.
-- **The export's `README.md`** (`shared/readme.ts`) is written for an AI assistant: the ZIP is made to be
+- **The export's `README.md`** (its fixed text in `shared/export-readme.md`, filled in by `shared/readme.ts`) is written for an AI assistant: the ZIP is made to be
   opened in the Claude desktop app (formerly Claude Cowork), Claude Code, ChatGPT Work or Codex, with the README as the assistant's saved
   instructions and the records as its project files. After one line for the member (the website's section on opening an
   export, for whoever opens the export with no popup at hand), it opens with how to work with the records, then is
@@ -218,8 +220,9 @@ from the response's final URL, and `runner.ts` also treats "Failed to fetch" in 
   `scripts/maccabi-session.mjs` isn't in its file.
 - **Never write the member id into a path or a stored `endpoint` string**; `Collector.rec` keeps `{mid}`
   as a placeholder.
-- **Keep the policies in sync**: `docs/privacy.md` ↔ `public/privacy.html`, `docs/terms.md` ↔
-  `public/terms.html` (`repoRules.test.ts` compares their words), and change their effective date. For a material change also bump `TERMS_EFFECTIVE`
+- **Keep the policies in sync**: edit `docs/privacy.md` and `docs/terms.md` only, then run `node scripts/policy-pages.mjs`,
+  which writes `public/privacy.html` and `public/terms.html` from them (`repoRules.test.ts` fails while a page differs from
+  its output, and also compares their words), and change their effective date. For a material change also bump `TERMS_EFFECTIVE`
   in `shared/state.ts`, which makes the popup ask everyone to accept again. `.github/workflows/pages.yml` publishes `public/` on GitHub Pages, so these pages are also public web pages.
 - **The guide to opening an export is on the website, not in the extension**: the landing page's last sections, from
   `#where` ("Open it in Claude or ChatGPT"). The popup's "See how" and "Open it in an AI", the "Export ready"

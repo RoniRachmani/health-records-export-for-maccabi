@@ -3,11 +3,12 @@
    worker can pick it up); the member's session token lives only in
    chrome.storage.session; exported files live in IndexedDB staging. */
 import {
-  CancelledError, Collector, errMessage, LEGACY_STEPS, MEDICAL_FILE, newCtx, orderSettled, placeOrder, RateLimitedError, runStep,
+  CancelledError, Collector, LEGACY_STEPS, MEDICAL_FILE, newCtx, orderSettled, placeOrder, runStep,
   SessionEndedError, sha256Hex, waitMedicalFile, keepListedMedicalFile, type Session, type StepName, type Transport,
 } from '../../core';
 import {
-  alignToPlan, exportName, FILE_LAYOUT, LABELS, MACCABI_ORIGIN, percentOf, PLAN, resumeIndex, sameLayout, savingOutcome, SONLINE_PAGE, SUMMARY_PAGE, type PlanStep, type RunState,
+  alignToPlan, exportName, FILE_LAYOUT, LABELS, MACCABI_ORIGIN, percentOf, PLAN, resumeIndex, sameLayout, savingOutcome, SESSION_ENDED_MESSAGE, SONLINE_PAGE, stepFailure,
+  SUMMARY_PAGE, type PlanStep, type RunState,
 } from '../shared/state';
 import {
   clearProblemsOfStep, clearStaging, listMeta, listProblems, putTextDirect, setCurrentPart, setCurrentStep, stagedTotals, stagingKey, stagingSink,
@@ -226,37 +227,27 @@ function loop(): Promise<void> {
           if (state && state.next >= reconnectedAt) reconnects = 0;
         } catch (e) {
           timeUnder(null); // before anything below saves the state, so a pause or an error keeps the time too
-          if (cancelRequested || (e as CancelledError).cancelled) break;
-          if ((e as SessionEndedError).sessionEnded) {
-            // The member is often still logged in: a token is good for about 10 h (measured 2026-09-18), so a
-            // run never outlives one and what ended is the site's session. Do what Resume does, then try again.
-            if (reconnects < 2 && state) {
-              reconnectedAt = state.next;
-              if (await reconnect()) {
-                reconnects++;
-                continue;
-              }
+          const failure = stepFailure(e, { step, cancelRequested, reconnects });
+          if (failure.action === 'cancel') break;
+          if (failure.action === 'reconnect' && state) {
+            reconnectedAt = state.next;
+            if (await reconnect()) {
+              reconnects++;
+              continue;
             }
             if (cancelRequested) break;
-            await pause('paused_session', 'Your Maccabi Online session ended. Log in again, then click the extension’s icon on the Maccabi Online tab and press Resume. Files collected so far are kept.');
-            return;
           }
-          if ((e as RateLimitedError).rateLimited) {
+          if (failure.action === 'stop') {
             if (state) {
               state.status = 'error';
-              state.message = 'Maccabi Online asked the extension to slow down, so the export stopped. Files collected so far are kept: wait a few minutes, then press “Try again”.';
+              state.message = failure.message;
+              state.errorDetail = failure.detail;
               await save();
               await notify('attention', 'Export stopped', state.message);
             }
             return;
           }
-          if (state) {
-            state.status = 'error';
-            state.message = 'Something unexpected stopped the export during “' + LABELS[step] + '”.';
-            state.errorDetail = errMessage(e);
-            await save();
-            await notify('attention', 'Export stopped', state.message);
-          }
+          await pause('paused_session', failure.action === 'pause' ? failure.message : SESSION_ENDED_MESSAGE);
           return;
         }
         if (state && state.status === 'running') {

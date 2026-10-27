@@ -4,7 +4,7 @@
 
 Effective 13 October 2026
 
-<!-- Keep in sync with public/terms.html, which ships in the extension at chrome-extension://<id>/terms.html. -->
+<!-- public/terms.html, which ships in the extension at chrome-extension://<id>/terms.html, is written from this: run `node scripts/policy-pages.mjs` after editing. -->
 
 By installing or using Health Records Export for Maccabi ("the extension"), you agree to these terms. If you do not
 agree, do not use the extension, and remove it from Chrome. The extension is developed by Roni Rachmani ("the

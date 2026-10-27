@@ -1,13 +1,46 @@
 import { PACE_MS, type Collector } from '../collector';
-import { newCtx, type Ctx, type Json, type SaveResult } from '../types';
+import { newCtx, type Ctx, type SaveResult } from '../types';
 import { END_DATE, iso, israelToday, isPdf, safe, stem, titleOf } from '../util';
 
 // name_document is a storage name with the member's ID number inside it, so it is never a candidate.
 const LETTER_TITLE = ['letter_desc', 'subject', 'letter_name', 'letter_type_name', 'title', 'description'];
 
-export async function letters(c: Collector, ctx: Ctx): Promise<Json[]> {
+/**
+ * The fields of a letters_for_member entry that the run reads. The entry is saved as the site sent it; this names
+ * only what decides a request or a file name, so a misspelt field is a type error rather than a silent undefined.
+ * letter_type 1 is a letter with a PDF, 2 the full medical file (status 1 when it is ready).
+ */
+interface Letter {
+  letter_type?: number;
+  status?: number;
+  reference_id?: string;
+  recipient_id_code?: string | number;
+  recipient_id?: string | number;
+  name_document?: string;
+  timestamp?: string | number;
+  hash?: string;
+  link?: string;
+  item_date?: string;
+  original_item_date?: string;
+  from_date?: string;
+  to_date?: string;
+  [field: string]: unknown;
+}
+
+/** The entries of a letters_for_member answer; anything that is not an object is not an entry. */
+function lettersOf(data: unknown): Letter[] {
+  const list = data && typeof data === 'object' ? (data as { letters?: unknown }).letters : undefined;
+  return Array.isArray(list) ? list.filter((x): x is Letter => !!x && typeof x === 'object') : [];
+}
+
+/** The order's answer, once its `d` is parsed: Success '1' or '2' ordered, '3' refused. */
+interface OrderAnswer {
+  Success?: string;
+}
+
+export async function letters(c: Collector, ctx: Ctx): Promise<Letter[]> {
   const l = await c.getSave('letters/list.json', 'GET', 'DirectorshipAPI/v1/members/0/{mid}/letters_for_member?from_date=1900-01-01&to_date=' + END_DATE);
-  const list: Json[] = (l.r.data && l.r.data.letters) || [];
+  const list = lettersOf(l.r.data);
   for (let i = 0; i < list.length; i++) {
     const x = list[i];
     c.progress(i, list.length, 'letters', { done: i, total: list.length });
@@ -31,7 +64,7 @@ const FULL_HISTORY = '1900-01-01';
 // Full medical file (letter_type 2). Maccabi delivers it as a letter, but it is the export's main
 // document, so it is saved at the root, beside README.md, not in letters/files/.
 // replace=true overwrites a same-day file from an earlier order.
-async function medicalFilePdf(c: Collector, x: Json, replace: boolean): Promise<SaveResult | null | undefined> {
+async function medicalFilePdf(c: Collector, x: Letter, replace: boolean): Promise<SaveResult | null | undefined> {
   const rel = iso(x.original_item_date || x.item_date) + '_medical-file.pdf';
   if (!replace && (await c.exists(rel))) return 'kept_existing';
   const url = c.apiUrl('MainAppAPI/v2/members/0/{mid}/pdf') + '?file_path=' + x.link + '&timestamp=' + x.timestamp;
@@ -45,11 +78,10 @@ async function medicalFilePdf(c: Collector, x: Json, replace: boolean): Promise<
   return null;
 }
 
-async function medicalFileLetter(c: Collector): Promise<{ http: number; letter: Json }> {
+async function medicalFileLetter(c: Collector): Promise<{ http: number; letter: Letter | null }> {
   const r = await c.api('GET', 'DirectorshipAPI/v1/members/0/{mid}/letters_for_member?from_date=1900-01-01&to_date=' + END_DATE);
   if (r.status !== 200) return { http: r.status, letter: null };
-  const list: Json[] = (r.data && r.data.letters) || [];
-  return { http: 200, letter: list.find((l) => l.letter_type === 2) || null };
+  return { http: 200, letter: lettersOf(r.data).find((l) => l.letter_type === 2) || null };
 }
 
 export interface OrderResult {
@@ -125,7 +157,7 @@ export async function placeOrder(c: Collector, opts: { reorder?: boolean; before
   } catch {
     res = { status: 0, text: '' };
   }
-  let data: Json = null;
+  let data: OrderAnswer | null = null;
   try {
     data = JSON.parse(JSON.parse(res.text).d);
   } catch {
@@ -151,7 +183,7 @@ export async function placeOrder(c: Collector, opts: { reorder?: boolean; before
  * (timestamp, hash and link change on every read), so the range is all that tells an order's file from an earlier
  * one; an entry without a from_date is taken to match, as before the field was checked.
  */
-function coversFrom(letter: Json, fromDate: string): boolean {
+function coversFrom(letter: Letter, fromDate: string): boolean {
   return !letter.from_date || iso(letter.from_date) === fromDate;
 }
 
@@ -163,7 +195,7 @@ async function keepListed(c: Collector): Promise<string> {
   const list = await letters(c, newCtx());
   const x = list.find((l) => l.letter_type === 2 && l.link);
   const rel = x ? iso(x.original_item_date || x.item_date) + '_medical-file.pdf' : '';
-  if (!rel || !(await c.exists(rel))) return 'this export has no medical file';
+  if (!x || !(await c.exists(rel))) return 'this export has no medical file';
   // Today's file over a narrower range is named for today: its range is what tells it from the whole history.
   const partial = x.from_date && iso(x.from_date) !== FULL_HISTORY ? ', which covers only ' + iso(x.from_date) + ' to ' + iso(x.to_date) : '';
   return 'this export has the earlier medical file, ' + rel + partial;
@@ -218,12 +250,12 @@ export async function waitMedicalFile(c: Collector, opts: WaitOptions = {}): Pro
   const started = c.now();
   let polls = 0;
   let sawPending = false;
-  let x: Json = null;
+  let x: Letter | null = null;
   while (true) {
     polls++;
     const m = await medicalFileLetter(c);
-    const listed: Json = m.letter;
-    const sameDay: Json = listed && listed.to_date === toDate ? listed : null;
+    const listed = m.letter;
+    const sameDay = listed && listed.to_date === toDate ? listed : null;
     // Maccabi swaps the order's file into the list's one entry in place, so any other file still listed (an earlier
     // day's, or today's over another range, ordered on the site) means it has not swapped this one in yet: being prepared.
     x = sameDay && coversFrom(sameDay, fromDate) ? sameDay : null;
@@ -251,7 +283,7 @@ export async function waitMedicalFile(c: Collector, opts: WaitOptions = {}): Pro
   }
   const ready = Math.round((c.now() - started) / 1000);
   c.progress(0, 1, 'letters'); // the download is its own part, as in a run that ordered nothing
-  await medicalFilePdf(c, x, true);
+  await medicalFilePdf(c, x!, true); // the loop leaves only with x ready
   await letters(c, newCtx()); // letters/list.json; the PDF is saved now, so not fetched twice
   return { polls, ready: true, ready_after_s: ready };
 }

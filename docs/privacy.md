@@ -4,7 +4,7 @@
 
 Effective 14 October 2026
 
-<!-- Keep in sync with public/privacy.html, which ships in the extension at chrome-extension://<id>/privacy.html. -->
+<!-- public/privacy.html, which ships in the extension at chrome-extension://<id>/privacy.html, is written from this: run `node scripts/policy-pages.mjs` after editing. -->
 
 This policy explains how Health Records Export for Maccabi ("the extension") handles your information. The
 extension is developed by Roni Rachmani ("the developer"). It is unofficial and is not affiliated with, endorsed

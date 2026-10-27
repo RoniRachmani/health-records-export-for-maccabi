@@ -1,5 +1,5 @@
 // The repo's "keep these two in step" rules (CLAUDE.md), checked instead of remembered. Each pair is a copy a
-// reader sees in two places: the policies as Markdown and as the shipped page, the popup's lines and their map in
+// reader sees in two places: the policies as Markdown and as the shipped page (which a script writes from it), the popup's lines and their map in
 // docs/sections.md, the film's folders and the landing page's, the notices and the shipped dependencies, and the
 // one origin the terminal scripts spell for themselves. The popup's 600px is checked in Chrome instead
 // (npm run site-check -- popup), since it takes a layout.
@@ -11,6 +11,7 @@ import { STEP_FOLDERS } from '../src/extension/shared/readme';
 import { MACCABI_ORIGIN } from '../src/extension/shared/state';
 import { FOLDERS } from '../store/src/parts';
 import pkg from '../package.json';
+import { renderPolicy } from '../scripts/policy-pages.mjs';
 
 const read = (path: string) => readFileSync(path, 'utf8');
 
@@ -57,6 +58,11 @@ describe('the policies', () => {
       const at = md.findIndex((w, i) => w !== html[i]);
       const where = (list: string[]) => list.slice(Math.max(0, at - 5), at + 10).join(' ');
       expect(at < 0 && md.length === html.length ? '' : `md: …${where(md)}…\nhtml: …${where(html)}…`).toBe('');
+    });
+
+    it(`public/${name}.html is what scripts/policy-pages.mjs writes from docs/${name}.md`, () => {
+      // Edit the Markdown, then run `node scripts/policy-pages.mjs`: the page is never edited by hand.
+      expect(read(`public/${name}.html`)).toBe(renderPolicy(name, read(`docs/${name}.md`)));
     });
   }
 });

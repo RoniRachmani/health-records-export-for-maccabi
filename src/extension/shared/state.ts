@@ -1,4 +1,4 @@
-import type { Ctx, OrderResult, Problem } from '../../core';
+import { errMessage, type Ctx, type OrderResult, type Problem } from '../../core';
 import { israelToday } from '../../core/util';
 
 export const MACCABI_ORIGIN = 'https://online.maccabi4u.co.il';
@@ -283,6 +283,42 @@ export function sameLayout(run: { next: number; layout?: number }): boolean {
 export function savingOutcome(downloadState: string | undefined): 'wait' | 'complete' | 'interrupted' {
   if (downloadState === 'in_progress') return 'wait';
   return downloadState === 'complete' ? 'complete' : 'interrupted';
+}
+
+export const SESSION_ENDED_MESSAGE =
+  'Your Maccabi Online session ended. Log in again, then click the extension’s icon on the Maccabi Online tab and press Resume. Files collected so far are kept.';
+
+/** What the run does when a step throws: the runner carries it out, this only decides. */
+export type StepFailure =
+  | { action: 'cancel' }
+  /** Do what Resume does and run the step again; if that fails, pause with SESSION_ENDED_MESSAGE. */
+  | { action: 'reconnect' }
+  | { action: 'pause'; message: string }
+  | { action: 'stop'; message: string; detail?: string };
+
+/** The run allows this many reconnects in a row before it pauses for the member. */
+export const MAX_RECONNECTS = 2;
+
+export function stepFailure(
+  e: unknown,
+  { step, cancelRequested, reconnects }: { step: PlanStep; cancelRequested: boolean; reconnects: number },
+): StepFailure {
+  const flags = (e && typeof e === 'object' ? e : {}) as { cancelled?: boolean; sessionEnded?: boolean; rateLimited?: boolean };
+  if (cancelRequested || flags.cancelled) return { action: 'cancel' };
+  // The member is often still logged in: a token is good for about 10 h (measured 2026-09-18), so a run never
+  // outlives one and what ended is the site's session. Do what Resume does, then try again.
+  if (flags.sessionEnded) return reconnects < MAX_RECONNECTS ? { action: 'reconnect' } : { action: 'pause', message: SESSION_ENDED_MESSAGE };
+  if (flags.rateLimited) {
+    return {
+      action: 'stop',
+      message: 'Maccabi Online asked the extension to slow down, so the export stopped. Files collected so far are kept: wait a few minutes, then press “Try again”.',
+    };
+  }
+  return {
+    action: 'stop',
+    message: 'Something unexpected stopped the export during “' + LABELS[step] + '”.',
+    detail: errMessage(e),
+  };
 }
 
 /** Where a resumed run continues: Resume reloads the tab, so a step that needs a page opens it again. */

@@ -5,5 +5,19 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     include: ['test/**/*.test.ts', 'tools/**/*.test.ts'],
+    // `npm run coverage`: a report to read, not a gate. The entry points that only wire chrome.* together
+    // (and the dev build's own files) are left out, so the numbers are about code a test can reach.
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.ts'],
+      exclude: [
+        'src/extension/background/index.ts',
+        'src/extension/background/dev.ts',
+        'src/extension/background/rawDump.ts',
+        'src/extension/dev/**',
+        'src/extension/offscreen/**',
+      ],
+      reporter: ['text', 'html'],
+    },
   },
 });
