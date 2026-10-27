@@ -108,7 +108,11 @@ export async function openBrowser({ startUrl = START, extension = null, keep = f
 
   const wsUrl = await devToolsUrl(browser, 'The browser did not start. Is a window on '
     + PROFILE + ' already open? Close it and run again.');
-  const { send, on } = await connect(wsUrl, { replyMs: REPLY_MS });
+  const { ws, send, on, abandon } = await connect(wsUrl, { replyMs: REPLY_MS });
+  // A browser closed or crashed mid-run: fail what is still waiting now, saying so, rather than after REPLY_MS.
+  ws.onclose = () => abandon('the browser closed the DevTools connection');
+  ws.onerror = () => abandon('the browser broke the DevTools connection');
+  browser.on('exit', (code, signal) => abandon('the browser exited (' + (signal || 'code ' + code) + ')'));
 
   let target;
   for (let i = 0; !target; i++) {

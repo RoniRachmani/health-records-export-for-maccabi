@@ -8,10 +8,12 @@
  * @returns {Promise<string>}
  */
 export function devToolsUrl(browser, hint) {
+  const { stderr } = browser;
+  if (!stderr) return Promise.reject(new Error('the browser was started without a piped stderr, where it prints its DevTools address'));
   return new Promise((resolveUrl, reject) => {
     let log = '';
     const timer = setTimeout(() => reject(new Error(hint + '\n' + log)), 30_000);
-    browser.stderr?.on('data', (d) => {
+    stderr.on('data', (d) => {
       log += d;
       const m = log.match(/DevTools listening on (ws:\/\/\S+)/);
       if (m) {

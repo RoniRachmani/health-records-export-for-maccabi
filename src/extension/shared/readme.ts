@@ -9,7 +9,7 @@
    It says only what a reader cannot get by opening a file -- the layout, the gaps, the traps, the
    join keys -- and leaves the field names to the JSON, which carries them already. Before adding a
    line, ask whether a record would be read wrongly without it; if not, leave it out. */
-import { israelToday } from '../../core/util';
+import { countOf, israelToday } from '../../core/util';
 import { PRODUCT_NAME } from './name';
 import { SITE_OPEN, type PlanStep } from './state';
 import template from './export-readme.md?raw';
@@ -229,7 +229,7 @@ function inWords(items: string[]): string {
 }
 
 function count(n: number, what: string): string {
-  return n + ' ' + what + (n === 1 ? '' : 's');
+  return countOf(n, what, what + 's');
 }
 
 /** One line per folder something failed in, in reading order, and one for the rest. */

@@ -2,6 +2,16 @@
 import { BROWSER_HTML } from '../store/design/listing.mjs';
 
 export async function renderListingImage(stage, image) {
+  const page = await openListingImage(stage, image);
+  try {
+    return await page.screenshot();
+  } finally {
+    await page.close();
+  }
+}
+
+/** The listing layout laid out and still, as it is photographed; the caller closes the page. */
+export async function openListingImage(stage, image) {
   const page = await stage.open('/store/src/listing.html', image.width, image.height);
   try {
     await page.evaluate(`(async () => {
@@ -53,8 +63,9 @@ export async function renderListingImage(stage, image) {
     if (image.shot === 'icon') {
       await page.send('Emulation.setDefaultBackgroundColorOverride', { color: { r: 0, g: 0, b: 0, a: 0 } });
     }
-    return await page.screenshot();
-  } finally {
+    return page;
+  } catch (e) {
     await page.close();
+    throw e;
   }
 }

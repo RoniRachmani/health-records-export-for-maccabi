@@ -18,4 +18,4 @@ house rules (no script, no fetched font, the one GoatCounter request).
   where it first appears: change that rule rather than restate it further down. A tidy-up that should change nothing
   on screen is proved with
   `npm run site-check -- styles save` before it and `npm run site-check -- styles` after: every element's computed
-  style, in every state of the page and the popup, must come out the same.
+  style, in every state of the page and the popup and in every store image, must come out the same.

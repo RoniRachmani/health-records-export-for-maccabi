@@ -19,12 +19,15 @@
 //
 // `npm run site-check -- styles save`, then `npm run site-check -- styles` after a change, proves a CSS change that
 // should change nothing on screen (rules folded together, dead ones removed) changed nothing: every element's computed
-// style, in every state of the landing page and the popup, against the ones save kept in site-styles.json (gitignored).
+// style, in every state of the landing page and the popup and in every store image, against the ones save kept in
+// site-styles.json (gitignored).
 //
 // Needs Chrome, Chromium or Edge, as the store images do (CHROME_PATH).
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { openStage, root, sleep } from './stage.mjs';
+import { openStage, root } from './stage.mjs';
+import { IMAGES } from './store-assets.mjs';
+import { openListingImage } from './store-listing.mjs';
 
 /** Everything on the page that moves, by the element that holds it. */
 const PICTURES = [
@@ -45,6 +48,12 @@ const PAGE = '/site/index.html';
 
 /** Waits for the page to draw twice, so a scroll or a paused animation has been applied. */
 const settle = '(new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))';
+/** In the popup: once it has drawn its (mock) state in place of "Checking this tab…", and a frame has gone by. */
+const drawn = `(async () => {
+  for (let i = 0; i < 200 && !document.querySelector('#view > :not(.loading)'); i++) await new Promise((r) => setTimeout(r, 25));
+  if (!document.querySelector('#view > :not(.loading)')) throw new Error('the popup did not draw its state');
+  await ${settle};
+})()`;
 
 /** In the page: plays every time-based animation to its end. A loop's end is the end of an iteration, wherever its
  * delay makes it start (the hero's opens a third of the way in). */
@@ -161,8 +170,8 @@ async function popup(stage) {
   for (const state of POPUP_STATES) {
     // In a window taller than the cap, so what is measured is the popup's own height and not the window's.
     const page = await stage.open('/src/extension/popup/popup.html?state=' + state, 800, 1200, 1, 'true');
-    await sleep(300); // the popup asks the (mock) service worker for its state, then draws
-    const height = await page.evaluate(`${settle}.then(() => Math.ceil(document.documentElement.getBoundingClientRect().height))`);
+    await page.evaluate(drawn); // the popup asks the (mock) service worker for its state, then draws
+    const height = await page.evaluate(`Math.ceil(document.documentElement.getBoundingClientRect().height)`);
     console.log('popup ' + state + ': ' + height + 'px');
     if (height > POPUP_MAX) fails.push('the popup\'s ' + state + ' state is ' + height + 'px tall, over Chrome\'s ' + POPUP_MAX + 'px');
     await page.close();
@@ -242,7 +251,7 @@ const STYLES_FILE = join(root, 'site-styles.json');
 
 /**
  * The computed styles of the landing page (at each of VIEWPORTS, with and without reduced motion, in every state of
- * its radio buttons) and of the popup's made-up states. `save` keeps them; otherwise they are compared with what was
+ * its radio buttons), of the popup's made-up states, and of each store image as it is photographed. `save` keeps them; otherwise they are compared with what was
  * kept, for a change to the CSS that should change nothing on screen (folding rules together, removing dead ones).
  * @param {any} stage @param {string | undefined} action
  */
@@ -256,7 +265,7 @@ async function styles(stage, action) {
   for (const { name, path, w, h } of pages) {
     for (const motion of ['no-preference', 'reduce']) {
       const page = await stage.open(path, w, h, 1, 'true');
-      if (path !== PAGE) await sleep(300); // the popup asks the (mock) service worker for its state, then draws
+      if (path !== PAGE) await page.evaluate(drawn);
       await page.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: motion }] });
       const radios = await page.evaluate(`[...document.querySelectorAll('input[type=radio]')].map((r) => r.id)`);
       for (const id of [null, ...radios]) {
@@ -265,6 +274,13 @@ async function styles(stage, action) {
       }
       await page.close();
     }
+  }
+  // The store images, each as it is photographed: their CSS (listing.css, parts.css) is folded the same way.
+  for (const image of IMAGES) {
+    const page = image.html ? await openListingImage(stage, image)
+      : await stage.open(image.page, image.width, image.height, 1, image.prepare);
+    now['store ' + image.shot] = await page.evaluate(STYLES);
+    await page.close();
   }
   const states = Object.keys(now).length;
   if (action === 'save') {
