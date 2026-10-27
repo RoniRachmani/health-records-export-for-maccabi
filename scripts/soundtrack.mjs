@@ -11,7 +11,7 @@
 // plays at) under a limiter that keeps peaks below -1 dBFS.
 import { writeFileSync } from 'node:fs';
 
-export const RATE = 48000;
+const RATE = 48000;
 const TAU = Math.PI * 2;
 const dB = (d) => 10 ** (d / 20);
 const hz = (midi) => 440 * 2 ** ((midi - 69) / 12);

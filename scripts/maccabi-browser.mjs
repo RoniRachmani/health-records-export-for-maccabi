@@ -12,6 +12,7 @@ import { existsSync, mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { lit } from './in-page.mjs';
+import { connect, devToolsUrl } from './devtools.mjs';
 import { BROWSERS, isFile, root, sleep } from './stage.mjs';
 
 export { lit };
@@ -20,7 +21,7 @@ if (existsSync(join(root, '.env'))) process.loadEnvFile(join(root, '.env'));
 
 export const ORIGIN = 'https://online.maccabi4u.co.il';
 export const START = ORIGIN + '/sonline/';
-export const PROFILE = process.env.LIVE_PROFILE || join(homedir(), '.hrem-live-profile');
+const PROFILE = process.env.LIVE_PROFILE || join(homedir(), '.hrem-live-profile');
 
 const ITEM = process.env.MACCABI_OP_ITEM || 'Maccabi';
 const SIGN_IN_WAIT_MS = 3 * 60_000;
@@ -105,55 +106,10 @@ export async function openBrowser({ startUrl = START, extension = null, keep = f
   ]);
   process.once('exit', () => { if (!keep) browser.kill(); });
 
-  const wsUrl = await new Promise((resolveUrl, reject) => {
-    let log = '';
-    const timer = setTimeout(() => reject(new Error('The browser did not start. Is a window on '
-      + PROFILE + ' already open? Close it and run again.\n' + log)), 30_000);
-    browser.stderr.on('data', (d) => {
-      log += d;
-      const m = log.match(/DevTools listening on (ws:\/\/\S+)/);
-      if (m) {
-        clearTimeout(timer);
-        resolveUrl(m[1]);
-      }
-    });
-  });
-
-  // A minimal DevTools Protocol client, as in stage.mjs.
-  const ws = new WebSocket(wsUrl);
-  await new Promise((r, j) => {
-    ws.onopen = r;
-    ws.onerror = j;
-  });
-  let lastId = 0;
-  const pending = new Map();
-  const listeners = new Map(); // protocol event -> handlers, for a script that watches the page (on())
-  ws.onmessage = (e) => {
-    const m = JSON.parse(e.data);
-    if (m.method) {
-      for (const f of listeners.get(m.method) || []) f(m.params, m.sessionId);
-      return;
-    }
-    const p = m.id && pending.get(m.id);
-    if (!p) return;
-    pending.delete(m.id);
-    if (m.error) p.reject(new Error(m.error.message));
-    else p.resolve(m.result);
-  };
-  const send = (method, params = {}, sessionId, timeoutMs = REPLY_MS) => {
-    const id = ++lastId;
-    ws.send(JSON.stringify({ id, method, params, sessionId }));
-    return new Promise((res, rej) => {
-      const timer = setTimeout(() => {
-        pending.delete(id);
-        rej(new Error(method + ': no reply in ' + timeoutMs / 1000 + ' s'));
-      }, timeoutMs);
-      pending.set(id, {
-        resolve: (v) => { clearTimeout(timer); res(v); },
-        reject: (e) => { clearTimeout(timer); rej(e); },
-      });
-    });
-  };
+  const wsUrl = await devToolsUrl(browser, 'The browser did not start. Is a window on '
+    + PROFILE + ' already open? Close it and run again.');
+  // A browser closed or crashed mid-run fails what is waiting, and what is sent after, at once and saying so.
+  const { send, on } = await connect(wsUrl, browser, { replyMs: REPLY_MS });
 
   let target;
   for (let i = 0; !target; i++) {
@@ -195,11 +151,7 @@ export async function openBrowser({ startUrl = START, extension = null, keep = f
     sessionId,
     targetId: target0.targetId,
     /** Subscribes to a protocol event (enable its domain with send() first); returns the unsubscribe. */
-    on(method, handler) {
-      if (!listeners.has(method)) listeners.set(method, new Set());
-      listeners.get(method).add(handler);
-      return () => listeners.get(method).delete(handler);
-    },
+    on,
   };
   return page;
 }

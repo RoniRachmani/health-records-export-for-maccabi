@@ -173,7 +173,7 @@ function argsAt(text, open) {
   return inner.trim() ? splitTop(inner, ',') : [];
 }
 
-const unescape = (s) => s.replace(/\\u\{?([0-9a-fA-F]{4,6})\}?|\\x([0-9a-fA-F]{2})|\\(.)/g, (m, u, x, c) =>
+const unescape = (s) => s.replace(/\\u\{?([0-9a-fA-F]{4,6})\}?|\\x([0-9a-fA-F]{2})|\\(.)/g, (_m, u, x, c) =>
   (u || x ? String.fromCodePoint(parseInt(u || x, 16)) : c));
 
 /** A template's text, each ${...} as {}. */

@@ -9,7 +9,7 @@
    It says only what a reader cannot get by opening a file -- the layout, the gaps, the traps, the
    join keys -- and leaves the field names to the JSON, which carries them already. Before adding a
    line, ask whether a record would be read wrongly without it; if not, leave it out. */
-import { israelToday } from '../../core/util';
+import { countOf, israelToday } from '../../core/util';
 import { PRODUCT_NAME } from './name';
 import { SITE_OPEN, type PlanStep } from './state';
 import template from './export-readme.md?raw';
@@ -228,10 +228,6 @@ function inWords(items: string[]): string {
   return items.length < 2 ? items.join('') : items.slice(0, -1).join(', ') + ' and ' + items[items.length - 1];
 }
 
-function count(n: number, what: string): string {
-  return n + ' ' + what + (n === 1 ? '' : 's');
-}
-
 /** One line per folder something failed in, in reading order, and one for the rest. */
 function failedSection(errors: ExportError[]): string {
   if (!errors.length) return 'Every request in this run was answered: `' + EXPORT_ERRORS + '` is empty.';
@@ -250,7 +246,7 @@ function failedSection(errors: ExportError[]): string {
     const rest = mine.filter((e) => e.kind !== 'shape');
     const records = rest.filter((e) => ext(e) === 'json').length;
     const documents = rest.filter((e) => ext(e) && ext(e) !== 'json').length;
-    const parts = [records && count(records, 'record'), documents && count(documents, 'document')].filter(Boolean) as string[];
+    const parts = [records && countOf(records, 'record', 'records'), documents && countOf(documents, 'document', 'documents')].filter(Boolean) as string[];
     let line = parts.length ? inWords(parts) + ' could not be collected' : '';
     if (records + documents < rest.length) line = line ? line + ', and collecting the rest stopped partway' : 'collecting it stopped partway';
     if (shape.length) {
@@ -260,7 +256,7 @@ function failedSection(errors: ExportError[]): string {
     lines.push('- `' + name + '/`: ' + line + '.');
   }
   const loose = errors.filter((e) => !e.folders.length).length;
-  if (loose) lines.push('- ' + count(loose, 'other failure') + ', not tied to a folder.');
+  if (loose) lines.push('- ' + countOf(loose, 'other failure', 'other failures') + ', not tied to a folder.');
   return lines.join('\n') + '\n\n`' + EXPORT_ERRORS + '` lists each, with where it happened and the error it gave.';
 }
 
@@ -339,7 +335,7 @@ export function exportReadme(
   const started = israelToday(Date.parse(made.startedAt));
   const version = 'version ' + made.version + ', file layout ' + made.layout + (made.dev ? ' (development build)' : '');
   const folders = here
-    .map((f) => '**`' + f.name + '/`** · ' + present[f.name] + (present[f.name] === 1 ? ' file — ' : ' files — ') + f.summary + '.' +
+    .map((f) => '**`' + f.name + '/`** · ' + countOf(present[f.name], 'file', 'files') + ' — ' + f.summary + '.' +
       (f.detail ? '\n' + f.detail : ''))
     .join('\n\n');
   return fill(TEMPLATE, {

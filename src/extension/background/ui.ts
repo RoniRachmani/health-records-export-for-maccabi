@@ -44,7 +44,7 @@ export async function updateBadge(run: RunState | null): Promise<void> {
  * 'ready' notifications open the saved ZIP when clicked, and carry READY_BUTTONS; 'attention' ones bring the Maccabi tab
  * to the front.
  */
-export type NoticeKind = 'ready' | 'attention';
+type NoticeKind = 'ready' | 'attention';
 
 export function noticeKind(notificationId: string): NoticeKind | null {
   const m = /^hrem-(ready|attention)-/.exec(notificationId);

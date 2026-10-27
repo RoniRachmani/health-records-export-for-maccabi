@@ -17,10 +17,16 @@
 // sweeps that play as the page opens), or as it is scrolled up from the foot of the screen to 40% from its top. Look at
 // the frames before trusting a change to the motion; the checks above only say that it ends where it should.
 //
+// `npm run site-check -- styles save`, then `npm run site-check -- styles` after a change, proves a CSS change that
+// should change nothing on screen (rules folded together, dead ones removed) changed nothing: every element's computed
+// style, in every state of the landing page and the popup and in every store image, against the ones save kept in
+// site-styles.json (gitignored).
+//
 // Needs Chrome, Chromium or Edge, as the store images do (CHROME_PATH).
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { openStage, root, sleep } from './stage.mjs';
+import { openStage, root } from './stage.mjs';
+import { IMAGES, openImage } from './store-assets.mjs';
 
 /** Everything on the page that moves, by the element that holds it. */
 const PICTURES = [
@@ -41,6 +47,12 @@ const PAGE = '/site/index.html';
 
 /** Waits for the page to draw twice, so a scroll or a paused animation has been applied. */
 const settle = '(new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))';
+/** In the popup: once it has drawn its (mock) state in place of "Checking this tab…", and a frame has gone by. */
+const drawn = `(async () => {
+  for (let i = 0; i < 200 && !document.querySelector('#view > :not(.loading)'); i++) await new Promise((r) => setTimeout(r, 25));
+  if (!document.querySelector('#view > :not(.loading)')) throw new Error('the popup did not draw its state');
+  await ${settle};
+})()`;
 
 /** In the page: plays every time-based animation to its end. A loop's end is the end of an iteration, wherever its
  * delay makes it start (the hero's opens a third of the way in). */
@@ -157,8 +169,8 @@ async function popup(stage) {
   for (const state of POPUP_STATES) {
     // In a window taller than the cap, so what is measured is the popup's own height and not the window's.
     const page = await stage.open('/src/extension/popup/popup.html?state=' + state, 800, 1200, 1, 'true');
-    await sleep(300); // the popup asks the (mock) service worker for its state, then draws
-    const height = await page.evaluate(`${settle}.then(() => Math.ceil(document.documentElement.getBoundingClientRect().height))`);
+    await page.evaluate(drawn); // the popup asks the (mock) service worker for its state, then draws
+    const height = await page.evaluate(`Math.ceil(document.documentElement.getBoundingClientRect().height)`);
     console.log('popup ' + state + ': ' + height + 'px');
     if (height > POPUP_MAX) fails.push('the popup\'s ' + state + ' state is ' + height + 'px tall, over Chrome\'s ' + POPUP_MAX + 'px');
     await page.close();
@@ -206,11 +218,101 @@ async function frames(stage, [sel, mode = 'scroll', ...rest]) {
   await page.close();
 }
 
+/** In the page: every element's computed style, ::before and ::after included, each as a hash. Animations are held
+ * still first (a transition at its end, a time-based one at its start; scroll-driven ones stay at the top), and the
+ * declarations are sorted, since Chrome lists custom properties in no fixed order. */
+const STYLES = `(() => {
+  for (const a of document.getAnimations()) {
+    if (a instanceof CSSTransition) a.finish();
+    else if (a.timeline === document.timeline) { a.pause(); a.currentTime = 0; }
+  }
+  const hash = (s) => {
+    let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+  };
+  const out = {};
+  [...document.querySelectorAll('*')].forEach((e, i) => {
+    const parts = [];
+    for (const pseudo of ['', '::before', '::after']) {
+      const cs = getComputedStyle(e, pseudo || null);
+      if (pseudo && cs.content === 'none') continue;
+      for (let k = 0; k < cs.length; k++) parts.push(pseudo + cs[k] + ':' + cs.getPropertyValue(cs[k]));
+    }
+    const cls = e.className && e.className.baseVal === undefined ? '.' + e.className.trim().replace(/\\s+/g, '.') : '';
+    out[i + ' ' + e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + cls] = hash(parts.sort().join(';'));
+  });
+  return out;
+})()`;
+const STYLES_FILE = join(root, 'site-styles.json');
+
+/**
+ * The computed styles of the landing page (at each of VIEWPORTS, with and without reduced motion, in every state of
+ * its radio buttons), of the popup's made-up states, and of each store image as it is photographed. `save` keeps them; otherwise they are compared with what was
+ * kept, for a change to the CSS that should change nothing on screen (folding rules together, removing dead ones).
+ * @param {any} stage @param {string | undefined} action
+ */
+async function styles(stage, action) {
+  /** @type {Record<string, Record<string, string>>} */
+  const now = {};
+  const pages = [
+    ...VIEWPORTS.map(([w, h]) => ({ name: w + 'x' + h, path: PAGE, w, h })),
+    ...POPUP_STATES.map((s) => ({ name: 'popup ' + s, path: '/src/extension/popup/popup.html?state=' + s, w: 800, h: 1200 })),
+  ];
+  for (const { name, path, w, h } of pages) {
+    for (const motion of ['no-preference', 'reduce']) {
+      const page = await stage.open(path, w, h, 1, 'true');
+      try {
+        if (path !== PAGE) await page.evaluate(drawn);
+        await page.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: motion }] });
+        const radios = await page.evaluate(`[...document.querySelectorAll('input[type=radio]')].map((r) => r.id)`);
+        for (const id of [null, ...radios]) {
+          if (id) await page.evaluate(`document.getElementById(${JSON.stringify(id)}).checked = true`);
+          now[name + ' ' + motion + ' ' + (id || 'initial')] = await page.evaluate(STYLES);
+        }
+      } finally {
+        await page.close();
+      }
+    }
+  }
+  // The store images, each as it is photographed: their CSS (listing.css, parts.css) is folded the same way.
+  for (const image of IMAGES) {
+    const page = await openImage(stage, image);
+    try {
+      now['store ' + image.shot] = await page.evaluate(STYLES);
+    } finally {
+      await page.close();
+    }
+  }
+  const states = Object.keys(now).length;
+  if (action === 'save') {
+    writeFileSync(STYLES_FILE, JSON.stringify(now));
+    console.log('kept the computed styles of ' + states + ' states in ' + STYLES_FILE);
+    return [];
+  }
+  if (!existsSync(STYLES_FILE)) throw new Error('nothing kept to compare with: run site-check -- styles save first');
+  const kept = JSON.parse(readFileSync(STYLES_FILE, 'utf8'));
+  const fails = [];
+  for (const state of new Set([...Object.keys(kept), ...Object.keys(now)])) {
+    if (!kept[state] || !now[state]) { fails.push(state + ': only in ' + (kept[state] ? 'the kept styles' : 'this run')); continue; }
+    const differ = [...new Set([...Object.keys(kept[state]), ...Object.keys(now[state])])].filter((e) => kept[state][e] !== now[state][e]);
+    if (differ.length) fails.push(state + ': ' + differ.length + ' element(s), first ' + differ.slice(0, 3).join(', '));
+  }
+  console.log(fails.length ? fails.length + ' of ' + states + ' states differ' : 'the same in all ' + states + ' states');
+  return fails;
+}
+
 const args = process.argv.slice(2);
 const stage = await openStage();
 let failed = false;
 try {
-  if (args[0] === 'frames') {
+  if (args[0] === 'styles') {
+    const fails = await styles(stage, args[1]);
+    for (const f of fails.slice(0, 20)) console.log('  - ' + f);
+    if (fails.length) failed = true;
+  } else if (args[0] === 'frames') {
     if (!args[1]) throw new Error('frames needs a selector, e.g. frames .path scroll 10 375x812');
     await frames(stage, args.slice(1));
   } else {

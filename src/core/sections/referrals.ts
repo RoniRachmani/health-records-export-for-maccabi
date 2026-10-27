@@ -13,7 +13,7 @@ const REFERRAL_TITLE = ['referral_type_name', 'specialization_description', 'tit
  * displaying_name "התייעצות מומחה- אורולוגיה" (measured 2026-09-30); but displaying_name can also be
  * vaguer ("בדיקות מעבדה" for a "בדיקה מיקולוגית"), and then the kind stays.
  */
-export function referralTitle(x: Json): string {
+function referralTitle(x: Json): string {
   const kind = titleOf(x, REFERRAL_TITLE);
   const shown = title(x && x.displaying_name);
   return kind && shown.length > kind.length && shown.startsWith(kind) ? shown : kind;

@@ -7,7 +7,7 @@ import { pathToFileURL } from 'node:url';
 import { zipSync } from 'fflate';
 import { LISTING_IMAGES } from '../store/design/listing.mjs';
 import { AUXILIARY_IMAGES } from './store-auxiliary.mjs';
-import { renderListingImage } from './store-listing.mjs';
+import { openListingImage } from './store-listing.mjs';
 import { openStage, root } from './stage.mjs';
 
 const marquee = LISTING_IMAGES.find(image => image.shot === 'marquee');
@@ -23,6 +23,15 @@ const social = {
  */
 /** @type {Shot[]} */
 export const IMAGES = [...LISTING_IMAGES, ...AUXILIARY_IMAGES, social];
+
+/**
+ * A shot's page, laid out and ready to photograph: a listing layout on listing.html, or its own page. The caller
+ * closes it. site-check's styles mode opens them the same way, so what it compares is what is photographed.
+ * @param {any} stage @param {Shot} image
+ */
+export function openImage(stage, image) {
+  return image.html ? openListingImage(stage, image) : stage.open(image.page, image.width, image.height, 1, image.prepare);
+}
 
 export function selectImages(names) {
   const unknown = names.filter(name => !IMAGES.some(image => image.shot === name));
@@ -63,13 +72,9 @@ export async function renderStoreAssets(names = []) {
   const stage = await openStage();
   try {
     for (const image of images) {
+      const page = await openImage(stage, image);
       let bytes;
-      if (image.html) {
-        bytes = await renderListingImage(stage, image);
-      } else {
-        const page = await stage.open(image.page, image.width, image.height, 1, image.prepare);
-        try { bytes = await page.screenshot(); } finally { await page.close(); }
-      }
+      try { bytes = await page.screenshot(); } finally { await page.close(); }
       writeFileSync(join(out, image.file), bytes);
       console.log('wrote store/assets/' + image.file);
     }

@@ -3,7 +3,7 @@
    worker can pick it up); the member's session token lives only in
    chrome.storage.session; exported files live in IndexedDB staging. */
 import {
-  CancelledError, Collector, LEGACY_STEPS, MEDICAL_FILE, newCtx, orderSettled, placeOrder, runStep,
+  apiPath, CancelledError, Collector, countOf, LEGACY_STEPS, MEDICAL_FILE, newCtx, orderSettled, placeOrder, runStep,
   SessionEndedError, sha256Hex, waitMedicalFile, keepListedMedicalFile, type Session, type StepName, type Transport,
 } from '../../core';
 import {
@@ -110,6 +110,11 @@ async function midHash(mid: string | null): Promise<string> {
   return sha256Hex(new TextEncoder().encode('hrem|' + (mid || '')));
 }
 
+/** Whether a session is the member the run was started for (a run stored without a hash takes anyone). */
+async function sameMember(run: RunState, s: Session): Promise<boolean> {
+  return !run.memberHash || run.memberHash === (await midHash(s.mid));
+}
+
 // ---- entry points (popup / dev bridge) ---------------------------------
 export class UserError extends Error {}
 
@@ -153,7 +158,7 @@ export async function resume(tabId: number): Promise<void> {
   if (!run || !['paused_session', 'paused_hidden', 'running', 'error'].includes(run.status)) throw new UserError('There is no paused export to resume.');
   if (run.planMismatch) throw new UserError(OLD_VERSION_MESSAGE);
   const s = await loggedInSession(tabId);
-  if (run.memberHash && run.memberHash !== (await midHash(s.mid))) {
+  if (!(await sameMember(run, s))) {
     throw new UserError('This export belongs to a different member. Log in as them to resume it, or cancel it to start a new one.');
   }
   await setSession(s);
@@ -176,6 +181,11 @@ export async function cancel(): Promise<void> {
 async function discard(): Promise<void> {
   state = null;
   await save();
+  await release();
+}
+
+/** Lets go of what only a run in progress needs: the staged files, the session token, the heartbeat, the offscreen document. */
+async function release(): Promise<void> {
   await clearStaging();
   await chrome.storage.session.remove('session');
   await chrome.alarms.clear(HEARTBEAT);
@@ -299,7 +309,7 @@ async function reconnect(): Promise<boolean> {
     await waitVisible();
     if (!state) return false;
     const s = await currentSession(state.tabId, SONLINE_PAGE);
-    if (!s || !state || (state.memberHash && state.memberHash !== (await midHash(s.mid)))) return false;
+    if (!s || !state || !(await sameMember(state, s))) return false;
     await setSession(s);
     // The tab is on /sonline/ now: a step that needs another page opens it again.
     state.next = resumeIndex(state.next);
@@ -335,7 +345,7 @@ async function renewSession(): Promise<void> {
   if (!s) return;
   try {
     await extensionFetch({
-      url: '/sonline/MainAppAPI/webapi/mac/v1/members/0/' + s.mid + '/alive',
+      url: apiPath('MainAppAPI/v1/members/0/{mid}/alive', s.mid),
       method: 'GET',
       redirect: 'manual',
       headers: { Authorization: 'Bearer ' + s.jwt },
@@ -429,7 +439,7 @@ async function orderMedicalFile(run: RunState): Promise<void> {
 /** Takes the tab back to /sonline/ and its fresh token, refusing another member's session. */
 async function backToSonline(run: RunState, ended: string): Promise<void> {
   const s = await currentSession(run.tabId, SONLINE_PAGE);
-  if (!s || (run.memberHash && run.memberHash !== (await midHash(s.mid)))) throw new SessionEndedError(ended);
+  if (!s || !(await sameMember(run, s))) throw new SessionEndedError(ended);
   await setSession(s);
 }
 
@@ -595,12 +605,9 @@ export async function onDownloadChanged(delta: chrome.downloads.DownloadDelta): 
     run.errorDetail = undefined;
     await dropBlob(run);
     await save();
-    await clearStaging();
-    await chrome.storage.session.remove('session');
-    await chrome.alarms.clear(HEARTBEAT);
-    await closeOffscreen();
+    await release();
     const p = run.problemCount;
-    await notify('ready', 'Export ready', run.zipName + ': ' + (run.fileCount ?? 0).toLocaleString('en-US') + ' files.' + (p ? ' ' + p + (p === 1 ? ' item' : ' items') + ' couldn’t be exported.' : ''));
+    await notify('ready', 'Export ready', run.zipName + ': ' + countOf(run.fileCount ?? 0, 'file', 'files') + '.' + (p ? ' ' + countOf(p, 'item', 'items') + ' couldn’t be exported.' : ''));
   } else if (delta.state?.current === 'interrupted') {
     await saveFailed(run, delta.error?.current || 'interrupted');
   }

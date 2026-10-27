@@ -112,10 +112,12 @@ body {
 .nav i,
 .side i {
   display: block;
-  width: 56px;
-  height: 10px;
   border-radius: 5px;
   background: #eceff1;
+}
+.nav i {
+  width: 56px;
+  height: 10px;
 }
 .page-body {
   display: flex;

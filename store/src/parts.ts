@@ -4,11 +4,11 @@
    Nothing here decides a layout — each page's own CSS places these. */
 
 // The mark and the two file icons are shared with the listing images (store/design/listing.mjs), which run in Node.
-import { DOC, FOLDER, MARK, MARK_PATH } from '../design/glyphs.mjs';
+import { DOC, FOLDER, MARK } from '../design/glyphs.mjs';
 
-export { DOC, FOLDER, MARK, MARK_PATH };
+export { DOC, FOLDER, MARK };
 
-export type Child = Node | string | null | undefined | false;
+type Child = Node | string | null | undefined | false;
 
 export function h(tag: string, cls = '', ...children: Child[]): HTMLElement {
   const e = document.createElement(tag);
@@ -103,7 +103,7 @@ const SPARK = '<svg viewBox="0 0 20 20" width="18" height="18"><path d="M10 1.5c
 const FOLLOW_UPS = ['What might I be due for?', 'What changed in my latest blood test?', 'What should I raise with my doctor on Thursday?'];
 
 /** A question put to the assistant, and its answer: paragraphs, then the file it names as its source. */
-export interface Exchange {
+interface Exchange {
   question: string;
   answer: () => HTMLElement[];
 }

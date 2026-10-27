@@ -6,7 +6,7 @@ import { clamp01 } from './motion';
 
 // What a long-standing member's export comes to, the same numbers the store images show.
 export const FILES = 486;
-export const BYTES = 38_400_000;
+const BYTES = 38_400_000;
 export const ZIP = 'maccabi-export-2026-09-17.zip';
 
 const TOTAL_WEIGHT = PLAN.reduce((sum, step) => sum + WEIGHTS[step], 0);

@@ -13,6 +13,11 @@ export function israelToday(now: number): string {
   return new Date(now).toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
 }
 
+/** "1 file", "1,234 files": a count with its noun, for what the member reads. */
+export function countOf(n: number, one: string, many: string): string {
+  return n.toLocaleString('en-US') + ' ' + (n === 1 ? one : many);
+}
+
 // "2026-02-25T00:00:00", "25/02/26", "25/02/2026" -> "2026-02-25"
 export function iso(s: Json): string {
   if (!s) return 'undated';

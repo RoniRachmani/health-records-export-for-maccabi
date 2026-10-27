@@ -194,6 +194,7 @@ h2 {
   font-weight: 500;
   color: var(--heading);
   margin: 0 0 4px;
+  text-wrap: balance;
 }
 h3 {
   font-size: 12.5px;
@@ -208,9 +209,6 @@ p {
 p,
 li {
   text-wrap: pretty;
-}
-h2 {
-  text-wrap: balance;
 }
 .muted {
   color: var(--muted);
@@ -344,15 +342,6 @@ summary:focus-visible {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 11.5px;
   user-select: all;
-}
-/* A note's own action, under its text. */
-.note-action {
-  margin-top: 8px;
-}
-/* The small button, not the note's small print (.note .small). */
-.note-action button.small {
-  margin-top: 0;
-  color: var(--heading);
 }
 
 /* ---- buttons: pills ---- */

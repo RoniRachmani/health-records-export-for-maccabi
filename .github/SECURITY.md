@@ -21,7 +21,7 @@ The things worth reporting, roughly in order:
 - Anything that sends record data, a session token or a member id anywhere other than `online.maccabi4u.co.il`.
 - A way for a page other than Maccabi Online to reach the extension's messages, its IndexedDB staging or the token in
   `chrome.storage.session`.
-- A request the extension makes that isn't in [docs/endpoints/endpoints.json](docs/endpoints/endpoints.json), or one that writes to the
+- A request the extension makes that isn't in [docs/endpoints/endpoints.json](../docs/endpoints/endpoints.json), or one that writes to the
   account. Only the medical-file order may write, and it's documented.
 - Collected files surviving after a ZIP is saved or an export is stopped.
 - A member id written into a file path or a stored `endpoint` string.

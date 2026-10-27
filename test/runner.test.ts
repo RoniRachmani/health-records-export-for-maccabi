@@ -5,7 +5,7 @@
 // What is real is runner.ts itself, PLAN and its resume rules (shared/state.ts), and core's errors and order rules.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FILE_LAYOUT, PLAN, type PlanStep, type RunState } from '../src/extension/shared/state';
-import { RateLimitedError, SessionEndedError, type OrderResult, type Session } from '../src/core';
+import { RateLimitedError, SessionEndedError, type Collector, type OrderResult, type Session } from '../src/core';
 
 const MEMBER: Session = { mid: '123456789', jwt: 'jwt', gender: 'F' };
 const TAB = 7;
@@ -16,8 +16,8 @@ const TAB = 7;
 const world = {
   /** Steps run through core's runStep, in order, including re-runs. */
   ran: [] as string[],
-  /** What a step does when it runs: throw, wait, or nothing (the default). */
-  step: {} as Partial<Record<PlanStep, (attempt: number) => Promise<void> | void>>,
+  /** What a step does when it runs: throw, wait, use the collector it was given, or nothing (the default). */
+  step: {} as Partial<Record<PlanStep, (attempt: number, c: Collector) => Promise<void> | void>>,
   orders: 0,
   order: { ordered: true, to_date: '2026-10-26', from_date: '2016-10-26' } as OrderResult,
   session: MEMBER as Session | null,
@@ -54,16 +54,16 @@ vi.mock('../src/core', async (importOriginal) => {
   const core = await importOriginal<typeof import('../src/core')>();
   return {
     ...core,
-    runStep: vi.fn(async (_c: unknown, _ctx: unknown, step: PlanStep) => {
+    runStep: vi.fn(async (c: Collector, _ctx: unknown, step: PlanStep) => {
       world.ran.push(step);
       const attempt = world.ran.filter((s) => s === step).length;
-      await world.step[step]?.(attempt);
+      await world.step[step]?.(attempt, c);
     }),
-    placeOrder: vi.fn(async (_c: unknown, opts?: { beforeSend?: () => Promise<void> }) => {
+    placeOrder: vi.fn(async (c: Collector, opts?: { beforeSend?: () => Promise<void> }) => {
       await opts?.beforeSend?.();
       world.ran.push('orderMedicalFile');
       world.orders++;
-      await world.step.orderMedicalFile?.(world.orders);
+      await world.step.orderMedicalFile?.(world.orders, c);
       return world.order;
     }),
     waitMedicalFile: vi.fn(async () => {
@@ -206,6 +206,33 @@ describe('a run', () => {
     expect(stored()).toMatchObject({ status: 'done', percent: 100, next: PLAN.length, zipBytes: 1000 });
     expect(world.notices).toEqual(['Export ready']);
     expect(world.sessionStore.session).toBeUndefined();
+  });
+
+  it('times each part a step reports, and counts its requests under that part', async () => {
+    world.step.visits = async (_attempt, c) => {
+      const get = { url: '/x', method: 'GET' };
+      await c.deps.transport.fetch(get);
+      c.deps.progress?.({ done: 1, total: 4, detail: 'summaries' });
+      await c.deps.transport.fetch(get);
+      await c.deps.transport.xhr(get);
+    };
+    const runner = await freshRunner();
+    await runner.start(TAB);
+    const timings = (await settled())?.timings;
+    expect(timings?.visits).toMatchObject({ requests: 1 });
+    expect(timings?.['visits:summaries']).toMatchObject({ requests: 2 });
+    expect(timings?.referrals).toMatchObject({ requests: 0 });
+  });
+
+  it('is dismissed once it is done, and not while it is still going', async () => {
+    const runner = await freshRunner();
+    await runner.start(TAB);
+    const run = await settled();
+    await runner.dismiss();
+    expect(stored()?.status).toBe('saving');
+    await runner.onDownloadChanged({ id: run!.downloadId!, state: { current: 'complete' } } as chrome.downloads.DownloadDelta);
+    await runner.dismiss();
+    expect(stored()).toBeUndefined();
   });
 
   it('refuses to start beside one that is still going', async () => {

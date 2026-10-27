@@ -80,7 +80,7 @@ export async function getFile(rel: string): Promise<Uint8Array | undefined> {
   return request(tx.objectStore('files').get(rel) as IDBRequest<Uint8Array | undefined>);
 }
 
-export interface StagedTotals {
+interface StagedTotals {
   files: number;
   bytes: number;
   byKey: Record<string, number>;
@@ -126,7 +126,7 @@ export async function stagedTotals(): Promise<StagedTotals> {
   return { ...totals, byKey: { ...totals.byKey } };
 }
 
-export type StagedProblem = Problem & { step: string };
+type StagedProblem = Problem & { step: string };
 
 export async function listProblems(): Promise<StagedProblem[]> {
   const tx = (await db()).transaction('problems');

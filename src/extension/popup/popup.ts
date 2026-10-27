@@ -1,3 +1,4 @@
+import { countOf } from '../../core/util';
 import { SITE_ASK, SITE_OPEN, type Request, type RunState, type StateReply } from '../shared/state';
 import {
   announcement, bandSpan, countText, doneSummary, groupProblems, hintText, keptConfirm, nextAction, problemCount, problemText, progressTexts, STAGES,
@@ -366,7 +367,7 @@ function doneView(run: RunState): Child[] {
         h('strong', { class: 'filename' }, run.zipName || 'The ZIP'),
         h('div', { class: 'small muted' }, doneSummary(run)))),
     count > 0 && h('details', { class: 'problems' },
-      h('summary', {}, count + (count === 1 ? ' item' : ' items') + ' could not be exported'),
+      h('summary', {}, countOf(count, 'item', 'items') + ' could not be exported'),
       h('p', { class: 'small' }, 'Everything else was saved. A new export tries these again; this list is shown until it starts.'),
       h('div', { class: 'problem-list' },
         ...groupProblems(shown).map((g) => h('section', {},

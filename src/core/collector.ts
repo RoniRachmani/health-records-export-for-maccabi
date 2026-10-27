@@ -4,11 +4,11 @@ import { charset, isPdf, mimeType, retryAfterMs, sha256Hex } from './util';
 export const PACE_MS = 300;
 
 /** How a 'shape' problem begins (Collector.listIn): what the member reads in the popup and in export-errors.json. */
-export const SHAPE_CHANGED = 'Maccabi answered in a shape the extension does not know, so the site may have changed';
+const SHAPE_CHANGED = 'Maccabi answered in a shape the extension does not know, so the site may have changed';
 
 /** How long to wait on a 429 that carries no Retry-After, and the longest wait the run sits through. */
-export const RATE_LIMIT_WAIT_MS = 30_000;
-export const RATE_LIMIT_MAX_MS = 120_000;
+const RATE_LIMIT_WAIT_MS = 30_000;
+const RATE_LIMIT_MAX_MS = 120_000;
 
 /**
  * api() and fetchBin() send a request up to TRIES times when no response comes or the server answers
@@ -90,13 +90,13 @@ export function errMessage(e: unknown): string {
  * member is told that, and the status stays for whoever reads export-errors.json. Anything else is the extension's
  * to explain, so it keeps the details.
  */
-export function pdfFailure(b: { status: number; type: string; tooLarge?: boolean }): string {
+function pdfFailure(b: { status: number; type: string; tooLarge?: boolean }): string {
   if (b.tooLarge) return TOO_LARGE;
   if (b.status === 404) return 'Maccabi has no PDF for this, and the site cannot open it either (HTTP 404)';
   return 'PDF download: HTTP ' + b.status + ' ' + b.type;
 }
 
-export interface ApiResult {
+interface ApiResult {
   status: number;
   /** undefined when the body was not JSON; null when empty. */
   data: Json;
@@ -105,7 +105,7 @@ export interface ApiResult {
 /** The problem a file too large to bring back from the tab files. Asking again would only fail the same way. */
 export const TOO_LARGE = 'too large for the extension to bring back from the Maccabi Online tab; download it from the site';
 
-export interface BinResult {
+interface BinResult {
   status: number;
   type: string;
   bytes: Uint8Array;
@@ -212,10 +212,8 @@ export class Collector {
   }
 
   // ---- Maccabi --------------------------------------------------------
-  // "MedicalFileAPI/v1/members/0/{mid}/x" -> "/sonline/MedicalFileAPI/webapi/mac/v1/members/0/<mid>/x"
   apiUrl(path: string): string {
-    const svc = path.split('/')[0];
-    return '/sonline/' + svc + '/webapi/mac/' + path.slice(svc.length + 1).split('{mid}').join(this.session.mid ?? '');
+    return apiPath(path, this.session.mid);
   }
 
   async api(method: string, path: string, body?: Json): Promise<ApiResult> {
@@ -359,12 +357,16 @@ export class Collector {
 
   async pdfIfMissing(rel: string, url: string, headers?: Record<string, string>): Promise<SaveResult | null | undefined> {
     if (await this.exists(rel)) return 'kept_existing';
+    const bytes = await this.fetchPdf(rel, url, headers);
+    return bytes && this.saveBin(rel, bytes);
+  }
+
+  /** A PDF's bytes, or null with a problem filed against rel when the answer is not one. */
+  private async fetchPdf(rel: string, url: string, headers?: Record<string, string>): Promise<Uint8Array | null> {
     const b = await this.fetchBin(url, headers);
-    if (b.status !== 200 || !isPdf(b.bytes)) {
-      await this.problem(rel, pdfFailure(b));
-      return null;
-    }
-    return this.saveBin(rel, b.bytes);
+    if (b.status === 200 && isPdf(b.bytes)) return b.bytes;
+    await this.problem(rel, pdfFailure(b));
+    return null;
   }
 
   /**
@@ -400,12 +402,8 @@ export class Collector {
   async pdfOnce(rel: string, url: string, headers?: Record<string, string>): Promise<DocRef | null> {
     const had = await this.docAlready(rel);
     if (had) return had;
-    const b = await this.fetchBin(url, headers);
-    if (b.status !== 200 || !isPdf(b.bytes)) {
-      await this.problem(rel, pdfFailure(b));
-      return null;
-    }
-    return this.saveOnce(rel, b.bytes);
+    const bytes = await this.fetchPdf(rel, url, headers);
+    return bytes && this.saveOnce(rel, bytes);
   }
 
   /** A legacy /online/ request: session cookies only, no Bearer, redirects followed. */
@@ -429,6 +427,12 @@ export class Collector {
       throw new Error('response is not valid ' + cs + ' (' + (r.contentType || 'no content type') + ')');
     }
   }
+}
+
+/** A REST path as endpoints.json writes it, on the site: "MedicalFileAPI/v1/members/0/{mid}/x" -> "/sonline/MedicalFileAPI/webapi/mac/v1/members/0/<mid>/x". */
+export function apiPath(path: string, mid: string | null): string {
+  const svc = path.split('/')[0];
+  return '/sonline/' + svc + '/webapi/mac/' + path.slice(svc.length + 1).split('{mid}').join(mid ?? '');
 }
 
 /** 12 hex digits of a record's file name: a chance of two names in a run of 2,000 meeting about 1 in 10^8. */

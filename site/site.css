@@ -1,15 +1,19 @@
 /* The landing page's own layout, on top of pages.css (tokens, type) and ai-assistant.css (tabs, chats, safeguards).
-   It was built in review rounds, and each round's rules are kept in the order they were added, under a comment
-   naming the round: a later rule may refine an earlier one, so add a new rule after the ones it changes. There is
-   no script: the Ask tabs are radio buttons, and every animation is CSS that prefers-reduced-motion turns off.
-   Every record shown is made up. */
+   It was built in review rounds, kept in order under a comment naming each round. A selector has one rule of its
+   own in each media query, where it first appears: change that rule rather than add one below it. Beside it, a rule
+   it shares with others holds what they have in common. There is no script: the Ask tabs are radio buttons, and
+   every animation is CSS that prefers-reduced-motion turns off. Every record shown is made up. */
 
 :root {
-  --navy-1: #06306f;
-  --navy-2: #0b4296;
-  --navy-3: #2462dc;
-  --pink: #f1c1cd;
   --glow: linear-gradient(135deg, #e6f0ff 0%, #f3f0fb 50%, #fde9ef 100%);
+  --good: #0e7c5a;
+  --watch: #a35c08;
+  --watch-bg: #fdf1e1;
+  --good-bg: #e7f6f0;
+  --ctx: #9aa6bd;
+  --q2: #a9c4f7;
+  --late: #b42318;
+  --late-mark: #d92d20;
 }
 body {
   overflow-x: hidden;
@@ -37,13 +41,14 @@ h2 {
 
 /* ---- hero ---- */
 .hero {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
   padding-block: 64px 72px;
+  gap: 56px;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
 }
 .hero h1 {
-  font-size: clamp(34px, 4.8vw, 54px);
   line-height: 1.08;
   letter-spacing: -0.01em;
+  font-size: clamp(34px, 4.4vw, 50px);
 }
 .hero h1 em {
   font-style: normal;
@@ -74,12 +79,28 @@ h2 {
   padding: 28px;
   border-radius: 28px;
   background: var(--glow);
+  /* The Ask panels share one grid cell, so the section is always as tall as its tallest panel and keeps its size
+     whichever tab is chosen. The others are there but invisible. */
+  display: grid;
+  /* The Ask answers stand alone: no title or description beside them, so each panel is just the chat, centred, at a
+     width that keeps the pictures at their drawn size. */
+  grid-template-rows: auto auto;
 }
 .ask-band .tab-list {
   margin-bottom: 22px;
+  grid-row: 1;
+  justify-content: center;
 }
 .ask-band .panel {
   background: rgb(255 255 255 / 0.72);
+  display: grid;
+  grid-column: 1;
+  visibility: hidden;
+  /* Every tab's chat box fills the panel, so the box keeps one position and size and only its contents change. */
+  align-items: stretch;
+  grid-template-columns: minmax(0, 1fr);
+  grid-row: 2;
+  grid-template-rows: none;
 }
 
 /* ---- a section with a clip on one side ---- */
@@ -144,15 +165,21 @@ h2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
   margin-top: 28px;
+  /* The two cards share rows, so their pictures, folder lines and words line up. */
+  grid-template-rows: repeat(6, auto);
+  row-gap: 0;
 }
 .app-card {
   display: grid;
   gap: 16px;
   align-content: start;
-  padding: 26px;
   border-radius: 24px;
-  background: var(--bg);
-  border: 1px solid var(--line-soft);
+  grid-row: span 6;
+  grid-template-rows: subgrid;
+  row-gap: 16px;
+  background: none;
+  border: 0;
+  padding: 0;
 }
 .app-card h3 {
   font-size: 22px;
@@ -182,7 +209,6 @@ h2 {
 /* ---- the last call: the film's navy ---- */
 
 @media (max-width: 860px) {
-  .hero,
   .feature,
   .where {
     grid-template-columns: minmax(0, 1fr);
@@ -214,19 +240,6 @@ h2 {
 .then b {
   color: var(--heading);
   font-weight: 500;
-}
-
-/* The two cards share rows, so their pictures, folder lines and words line up. */
-.where {
-  grid-template-rows: repeat(6, auto);
-  row-gap: 0;
-}
-.app-card {
-  grid-row: span 6;
-  grid-template-rows: subgrid;
-  row-gap: 16px;
-}
-.then b {
   overflow-wrap: anywhere;
 }
 @media (max-width: 860px) {
@@ -238,21 +251,7 @@ h2 {
 /* Round 3: docs/positioning.md made into a page. On top of r2.css: the dashboard hero, the Build gallery, and a
    lighter privacy strip. Every record drawn here belongs to one made-up member. */
 
-:root {
-  --good: #0e7c5a;
-  --watch: #a35c08;
-  --watch-bg: #fdf1e1;
-  --good-bg: #e7f6f0;
-}
-
 /* ---- hero: what the friend hands you ---- */
-.hero {
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-  gap: 56px;
-}
-.hero h1 {
-  font-size: clamp(34px, 4.4vw, 50px);
-}
 .dash-stage {
   position: relative;
   margin: 0;
@@ -623,21 +622,6 @@ h2 {
   width: 40px;
   height: 40px;
 }
-
-/* The Ask panels share one grid cell, so the section is always as tall as its tallest panel and keeps its size
-   whichever tab is chosen. The others are there but invisible. */
-.ask-band .tabs {
-  display: grid;
-}
-.ask-band .tab-list {
-  grid-row: 1;
-}
-.ask-band .panel {
-  display: grid;
-  grid-row: 2;
-  grid-column: 1;
-  visibility: hidden;
-}
 #uc-summary:checked ~ #p-summary,
 #uc-labs:checked ~ #p-labs,
 #uc-trend:checked ~ #p-trend,
@@ -646,22 +630,15 @@ h2 {
 #uc-find:checked ~ #p-find {
   visibility: visible;
 }
-/* Every tab's chat box fills the panel, so the box keeps one position and size and only its contents change. */
-.ask-band .panel {
-  align-items: stretch;
-}
 .ask-band .panel .chat {
   justify-content: flex-start;
+  width: 100%;
+  max-width: 640px;
+  justify-self: center;
 }
-/* Narrow screens stack the copy over the chat. Each panel then shares its two rows with the others (subgrid), so the
-   copy row and the chat row each take their tallest member and the box sits still across tabs. */
+/* Narrow screens leave more room between the rows of a panel. */
 @media (max-width: 860px) {
-  .ask-band .tabs {
-    grid-template-rows: auto auto auto;
-  }
   .ask-band .panel {
-    grid-row: 2 / span 2;
-    grid-template-rows: subgrid;
     row-gap: 28px;
   }
 }
@@ -669,8 +646,8 @@ h2 {
 .film-run {
   position: relative;
   isolation: isolate;
-  overflow: hidden;
   background: linear-gradient(180deg, #0e2e5e 0%, #143c80 28%, #1a4b9e 50%, #143c80 72%, #0e2e5e 100%);
+  overflow: clip;
 }
 /* The abstract layer: soft glows (brighter blue behind each window, a faint pink echo of the mark) and the film's own
    fine dot grid, all behind the content. The glows sit away from the text, and are faint where they reach it. */
@@ -757,11 +734,6 @@ h2 {
 
 /* ---- where to open it: each app as a small light desktop window, copied from its own home screen, floating on the
    page with no card around it; the control to use is ringed and the first message is typed into the box ---- */
-.app-card {
-  background: none;
-  border: 0;
-  padding: 0;
-}
 .appwin {
   overflow: hidden;
   border-radius: 12px;
@@ -1334,8 +1306,10 @@ h2 {
 .tiles3,
 .because {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
+}
+.tiles3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .because {
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1541,7 +1515,8 @@ h2 {
   top: 6px;
   bottom: 6px;
   width: 2px;
-  background: var(--line-soft);
+  /* Explain a result: every row on the same three columns, so the range bars start and end level. */
+  background: #b9cbe6;
 }
 @media (max-width: 640px) {
   .tiles3 {
@@ -1553,10 +1528,6 @@ h2 {
   .page-mini {
     width: 140px;
   }
-}
-/* Explain a result: every row on the same three columns, so the range bars start and end level. */
-.life::before {
-  background: #b9cbe6;
 }
 
 /* The hero's story, on a 13s timeline of which the page plays the last 69%, once: the finished dashboard; it clears to a clean slate; the question is asked; the assistant reads (a bar,
@@ -1593,8 +1564,10 @@ h2 {
   /* The page opens on the story's first beat: a clean slate (31%), and then the question (36%). */
   animation-delay: -4.03s;
 }
-.anim > .asked { transform-origin: 100% 100%; }
-.anim .spark circle { transform-box: fill-box; transform-origin: center; }
+.anim > .asked { transform-origin: 100% 100%;
+  animation-name: hero-asked; }
+.anim .spark circle { transform-box: fill-box; transform-origin: center;
+  animation-name: hero-dot; }
 
 @keyframes hero-asked {
   0%, 26% { opacity: 1; transform: translateY(0) scale(1); }
@@ -1602,7 +1575,6 @@ h2 {
   32%, 36% { opacity: 0; transform: translateY(8px) scale(0.96); }
   39%, 100% { opacity: 1; transform: translateY(0) scale(1); }
 }
-.anim > .asked { animation-name: hero-asked; }
 @keyframes hero-scene {
   0%, 39% { opacity: 0; transform: translateY(6px); }
   42%, 55% { opacity: 1; transform: translateY(0); }
@@ -1695,7 +1667,6 @@ h2 {
   32%, 78% { opacity: 0; transform: scale(0); }
   81%, 100% { opacity: 1; transform: scale(1); }
 }
-.anim .spark circle { animation-name: hero-dot; }
 @keyframes hero-num {
   0%, 31% { opacity: 1; transform: translateY(0); }
   32%, 80% { opacity: 0; transform: translateY(10px); }
@@ -1734,14 +1705,6 @@ h2 {
    the timeline band under the hero, four new Ask answers, and the spending card. Colour keeps one meaning throughout:
    blue is the member's own records, gray is context, magenta is the one thing to notice, and a state colour always
    comes with its icon and word. */
-
-:root {
-  --ctx: #9aa6bd;
-  --ctx-soft: #e4e8ef;
-  --q2: #a9c4f7;
-  --late: #b42318;
-  --late-mark: #d92d20;
-}
 
 /* ---- Everything since 1981, in the style of your example: one evenly spaced dot for each year that holds a record of
    that kind, a colour for each kind, a pale axis with the years under it, and the stretch the site shows as a soft
@@ -1923,18 +1886,21 @@ h2 {
 .ends {
   list-style: none;
   display: grid;
-  gap: 10px;
   margin: 0;
   padding: 0;
+  /* Loose ends: eight rows, a little closer. */
+  gap: 7px;
 }
 .ends li,
 .drift li {
   display: grid;
-  grid-template-columns: 136px minmax(0, 1fr) 96px;
   gap: 12px;
   align-items: center;
   margin: 0;
   font-size: 13.5px;
+}
+.ends li {
+  grid-template-columns: 136px minmax(0, 1fr) 96px;
 }
 .le-k {
   color: var(--heading);
@@ -2175,31 +2141,12 @@ h2 {
 @media (min-width: 861px) {
   .ask-band .tab-list {
     display: grid;
-    grid-template-columns: repeat(4, max-content);
     gap: 8px;
+    grid-template-columns: repeat(5, max-content);
   }
   .ask-band .tab-list label {
     text-align: center;
   }
-}
-
-/* The Ask answers stand alone: no title or description beside them, so each panel is just the chat, centred, at a
-   width that keeps the pictures at their drawn size. */
-.ask-band .tabs {
-  grid-template-rows: auto auto;
-}
-.ask-band .panel {
-  grid-row: 2;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: none;
-}
-.ask-band .panel .chat {
-  width: 100%;
-  max-width: 640px;
-  justify-self: center;
-}
-.ask-band .tab-list {
-  justify-content: center;
 }
 
 /* Build's three, now Ask tabs: shown when chosen, the chosen pill in navy. What the assistant made sits straight in its
@@ -2276,11 +2223,6 @@ h2 {
 }
 
 /* Round 4: Round 3B without the two plan tabs. Nine tabs: five over four on wide screens. */
-@media (min-width: 861px) {
-  .ask-band .tab-list {
-    grid-template-columns: repeat(5, max-content);
-  }
-}
 
 /* What stands out: blood pressure read out of visit notes, the eye exams that stopped, and one childhood note. */
 .tile3 .bp {
@@ -2391,11 +2333,6 @@ h2 {
   fill: var(--good);
 }
 
-/* Loose ends: eight rows, a little closer. */
-.ends {
-  gap: 7px;
-}
-
 /* Quiet changes: three kinds of record side by side. */
 .quiet {
   display: grid;
@@ -2467,6 +2404,9 @@ h2 {
   border-radius: 0;
   background: none;
   box-shadow: none;
+  /* The strip inherits Round 2's .mini window, whose overflow: hidden makes it a scroll container: a scroll timeline would
+     then follow that box, which never scrolls, instead of the page. Clip clips the same and scrolls nothing. */
+  overflow: clip;
 }
 .tl.mini .tl-plot {
   --label: 0px;
@@ -2693,11 +2633,6 @@ h2 {
    - The path a record takes: Maccabi Online; the extension's hop draws to your computer; then, slower and dashed, the
      hop to an assistant only if you choose it. Each arrowhead arrives with its line, uncut. A clip starts a pixel past
      empty, or its edge, on a fraction of a pixel, leaves a hairline before anything has drawn. */
-/* The strip inherits Round 2's .mini window, whose overflow: hidden makes it a scroll container: a scroll timeline would
-   then follow that box, which never scrolls, instead of the page. Clip clips the same and scrolls nothing. */
-.tl.mini {
-  overflow: clip;
-}
 @media (prefers-reduced-motion: no-preference) {
   @keyframes tl-sweep {
     from { clip-path: inset(-8px calc(100% + 9px) -8px -8px); }
@@ -2817,9 +2752,6 @@ h2 {
    The band of blue behind the two windows, like the timeline, clipped with overflow: hidden, which made it the scroll
    container those timelines would follow; clip clips the same. The ring is inside its window, which clips too, so it
    follows the card's timeline by name. */
-.film-run {
-  overflow: clip;
-}
 #p-summary .tile3:nth-child(1) { --d: 0%; --t: 0s; }
 #p-summary .tile3:nth-child(2) { --d: 2%; --t: 0.1s; }
 #p-summary .tile3:nth-child(3) { --d: 4%; --t: 0.2s; }
@@ -3221,11 +3153,7 @@ h2 {
   /* Nine pills wrap to rows of one and two: from the left edge they read as a list, centred as a ragged stack. */
   .ask-band .tab-list {
     justify-content: flex-start;
-  }
-  /* Two tiles across leave a label 100px: a little less tracking keeps CHOLESTEROL clear of the tile's edge. */
-  #p-summary .t-k {
-    font-size: 11px;
-    letter-spacing: 0.02em;
+    display: none;
   }
 }
 
@@ -3763,9 +3691,6 @@ h2 {
   display: none;
 }
 @media (max-width: 640px) {
-  .ask-band .tab-list {
-    display: none;
-  }
   .tab-step {
     display: block;
     grid-row: 1;

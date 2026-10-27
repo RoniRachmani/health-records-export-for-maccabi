@@ -7,7 +7,7 @@ import { errMessage, isPdf, mimeType, type HttpResponse, type Json, type Transpo
 import { getFile, putBinDirect, putTextDirect } from '../shared/staging';
 
 /** Where the captures go inside the export. Not one of the export's own folders, so README.md ignores it. */
-export const RAW_DIR = '_raw';
+const RAW_DIR = '_raw';
 const INDEX = RAW_DIR + '/index.jsonl';
 const FLAG_KEY = 'devRawDump';
 const SEQ_KEY = 'devRawSeq';

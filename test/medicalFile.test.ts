@@ -227,7 +227,7 @@ describe('waitMedicalFile', () => {
     const state = { medicalFile: { letter_type: 2, status: 1, to_date: '2026-09-17', item_date: '2026-09-17', link: 'mf.pdf', timestamp: 'ts' } };
     const site = fakeMaccabi(state);
     let n = 0;
-    const t = fakeTransport([(req, url) => (url.pathname.includes('MainAppAPI/webapi/mac/v2') ? (++n < 8 ? bytesResp(new Uint8Array(), 'text/plain', 202) : undefined) : undefined), ...site.routes]);
+    const t = fakeTransport([(_req, url) => (url.pathname.includes('MainAppAPI/webapi/mac/v2') ? (++n < 8 ? bytesResp(new Uint8Array(), 'text/plain', 202) : undefined) : undefined), ...site.routes]);
     const { c, sink } = makeCollector(t);
     expect(await waitMedicalFile(c, { toDate: '2026-09-17' })).toMatchObject({ ready: true });
     expect(n).toBe(8);

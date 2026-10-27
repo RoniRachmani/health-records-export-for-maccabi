@@ -1,12 +1,12 @@
 /* The Maccabi tab: reading its session, moving it between pages, and sending
    requests from inside it. Functions passed to executeScript run in the page
    and must be self-contained. */
-import { b64bytes, jwtClaims, memberFirstName, SessionEndedError, sessionFrom, type HttpRequest, type HttpResponse, type Session, type Transport } from '../../core';
+import { apiPath, b64bytes, jwtClaims, memberFirstName, SessionEndedError, sessionFrom, type HttpRequest, type HttpResponse, type Session, type Transport } from '../../core';
 import { MACCABI_ORIGIN, type TabInfo } from '../shared/state';
 
 const SCRIPT_TIMEOUT_MS = 60_000;
 
-export interface PageSnapshot {
+interface PageSnapshot {
   host: string;
   path: string;
   cookieMid: string | null;
@@ -105,7 +105,7 @@ async function fetchMember(s: Session, timeoutMs: number): Promise<HttpResponse>
   try {
     return await Promise.race([
       extensionFetch({
-        url: '/sonline/MainAppAPI/webapi/mac/v1/members/0/' + s.mid,
+        url: apiPath('MainAppAPI/v1/members/0/{mid}', s.mid),
         method: 'GET',
         redirect: 'manual',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + s.jwt },
@@ -440,8 +440,8 @@ async function readBody(r: Response, alive: () => void): Promise<Uint8Array> {
   return bytes;
 }
 
-export type Route = 'extension' | 'tab';
-export interface Routes {
+type Route = 'extension' | 'tab';
+interface Routes {
   /** REST API and its PDFs (/sonline/...). */
   sonline: Route;
   /** Legacy services (/online/...). */

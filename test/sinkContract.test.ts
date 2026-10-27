@@ -8,7 +8,9 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { sha256Hex, type Sink } from '../src/core';
 import * as core from '../src/cli/index';
-import { clearStaging, getFile, listMeta, setCurrentPart, setCurrentStep, stagedTotals, stagingSink } from '../src/extension/shared/staging';
+import {
+  clearProblemsOfStep, clearStaging, getFile, listMeta, listProblems, putBinDirect, putTextDirect, setCurrentPart, setCurrentStep, stagedTotals, stagingSink,
+} from '../src/extension/shared/staging';
 import { folderSink } from '../scripts/headless-lib.mjs';
 import { MemorySink } from './fakes';
 
@@ -137,5 +139,33 @@ describe('stagingSink, beyond the contract', () => {
     expect(await stagingSink.findBySha256(await sha256Hex(bytes(1)))).toBeNull();
     expect(await stagingSink.aliasOf('inquiries/b.pdf')).toBeNull();
     expect(await stagedTotals()).toEqual({ files: 0, bytes: 0, byKey: {} });
+  });
+
+  it('files each problem under its step, and a step that runs again clears only its own', async () => {
+    await clearStaging();
+    setCurrentStep('visits');
+    await stagingSink.problem({ where: 'visits/a.pdf', what: 'HTTP 500', at: 't1' });
+    setCurrentStep('referrals');
+    await stagingSink.problem({ where: 'referrals', what: 'no list', at: 't2', kind: 'shape' });
+    expect(await listProblems()).toEqual([
+      { where: 'visits/a.pdf', what: 'HTTP 500', at: 't1', step: 'visits' },
+      { where: 'referrals', what: 'no list', at: 't2', kind: 'shape', step: 'referrals' },
+    ]);
+    await clearProblemsOfStep('visits');
+    expect((await listProblems()).map((p) => p.step)).toEqual(['referrals']);
+    await clearStaging();
+    expect(await listProblems()).toEqual([]);
+  });
+
+  it('stages the root files past the write rules, counted under no line, and indexes none of them by content', async () => {
+    await clearStaging();
+    setCurrentStep('save');
+    await putTextDirect('README.md', '# א\n');
+    await putTextDirect('README.md', '# ב\n');
+    await putBinDirect('_raw/1.pdf', bytes(7, 8));
+    expect(new TextDecoder().decode(await getFile('README.md'))).toBe('# ב\n');
+    expect(await getFile('_raw/1.pdf')).toEqual(bytes(7, 8));
+    expect(await stagedTotals()).toEqual({ files: 2, bytes: new TextEncoder().encode('# ב\n').length + 2, byKey: {} });
+    expect(await stagingSink.findBySha256(await sha256Hex(bytes(7, 8)))).toBeNull();
   });
 });

@@ -16,16 +16,11 @@ p {
   line-height:1.55;
   letter-spacing:-.25px;
   margin:24px 0 0}
-body.ask,body.start,body.marquee,body.promo {
-  background:#083f92;
-  color:#fff}
 .hero-copy {
   position:absolute;
   left:56px;
   top:151px;
   z-index:2}
-.hero-copy p {
-  color:#d0def1}
 .tags {
   display:flex;
   gap:8px;
@@ -62,13 +57,11 @@ h3 {
 .file-row svg {
   flex-shrink:0}
 .file-row>span {
-  color:#637792;
   flex:1;
   font-size:12px}
 .more-files {
   padding:19px 20px;
-  font-size:12px;
-  color:#637792}
+  font-size:12px}
 .bottom-note strong {
   font-size:22px;
   line-height:1.3;
@@ -93,7 +86,6 @@ h3 {
 .fine-note {
   font-size:13px;
   line-height:1.6;
-  color:#6c7c94;
   margin-top:25px}
 .response {
   padding:3px 6px 0 43px;
@@ -115,7 +107,6 @@ h3 {
 .start-copy h1 {
   font-size:65px}
 .start-copy p {
-  color:#cfddf0;
   font-size:18px}
 .start-copy ol {
   list-style:none;
@@ -127,10 +118,7 @@ h3 {
   gap:13px;
   margin:15px 0;
   font-size:17px}
-.start-copy .fine-note {
-  color:#aac0dd}
 .browser-label {
-  color:#506e97;
   font-size:13px;
   display:flex;
   justify-content:space-between;
@@ -145,7 +133,6 @@ h3 {
   font-size:10px;
   letter-spacing:1.4px;
   text-align:center;
-  color:#647d9c;
   margin-top:18px}
 .open-copy {
   position:absolute;
@@ -167,8 +154,7 @@ h3 {
   margin-bottom:7px}
 .steps span {
   font-size:13px;
-  line-height:1.5;
-  color:#64758e}
+  line-height:1.5}
 .done {
   top:160px;
   box-shadow:0 25px 80px #113c6815}
@@ -361,9 +347,6 @@ body.ask,body.start {
 .browser-label,.under-popup {
   color:#5b6785;
   opacity:1}
-body.marquee,body.promo {
-  background:linear-gradient(135deg,#052658 0%,#083f92 55%,#296bed 100%);
-  color:white}
 .marquee h1 {
   color:white}
 .mq-copy h1 {
@@ -438,8 +421,6 @@ body.marquee,body.promo {
 .result-arrow {
   font-size:25px;
   color:#b83b7c}
-.start .popup-stage {
-  top:105px}
 .start .browser-label {
   letter-spacing:0}
 .open .browser-label {
@@ -454,7 +435,8 @@ body.marquee,body.promo {
   object-fit:contain;
   background:transparent}
 body.promo {
-  background:#f1f9fe}
+  background:#f1f9fe;
+  color:white}
 .promo #design>svg {
   display:block;
   width:440px;
@@ -752,7 +734,6 @@ body.marquee {
   color:#5b6785;
   margin-top:24px}
 .marquee .mq-art {
-  border:0;
   left:824px;
   top:104px;
   width:512px;

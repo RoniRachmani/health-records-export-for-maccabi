@@ -1,8 +1,9 @@
 /* What the popup shows, as pure functions of the run state (unit-tested, no DOM). */
 import type { Problem } from '../../core';
+import { countOf } from '../../core/util';
 import { LABELS, PLAN, WEIGHTS, type PlanStep, type Request, type RunState, type StateReply } from '../shared/state';
 
-export interface Stage {
+interface Stage {
   label: string;
   steps: PlanStep[];
   /**
@@ -49,12 +50,12 @@ export const STAGES: Stage[] = [
   { label: 'Saving the ZIP', steps: ['save'] },
 ];
 
-export type StageState = 'done' | 'current' | 'pending';
+type StageState = 'done' | 'current' | 'pending';
 
 type Position = Pick<RunState, 'next' | 'detail'>;
 
 /** The part of the current step the collector last reported ('' before its first report). */
-export function partOf(run: Position): string {
+function partOf(run: Position): string {
   if (run.next >= PLAN.length) return '';
   const title = LABELS[PLAN[run.next]];
   const part = run.detail?.startsWith(title + ': ') ? run.detail.slice(title.length + 2) : '';
@@ -135,10 +136,6 @@ export function formatBytes(n: number): string {
     u++;
   } while (v >= 999.95 && u < units.length - 1);
   return (v < 9.95 ? v.toFixed(1) : String(Math.round(v))) + ' ' + units[u];
-}
-
-export function countOf(n: number, one: string, many: string): string {
-  return n.toLocaleString('en-US') + ' ' + (n === 1 ? one : many);
 }
 
 /**
@@ -253,7 +250,7 @@ const FOLDER_LABELS: Record<string, string> = {
   'requests-approvals': 'Your requests to Maccabi',
 };
 
-export interface ProblemGroup {
+interface ProblemGroup {
   label: string;
   items: Problem[];
 }
@@ -322,7 +319,7 @@ export function keptConfirm(confirm: Confirm | null, run: RunState | null): Conf
 }
 
 /** The one full-width button on the paused and error views: what gets the run going again from here. */
-export interface NextAction {
+interface NextAction {
   label: string;
   req: Request;
   busyLabel: string;

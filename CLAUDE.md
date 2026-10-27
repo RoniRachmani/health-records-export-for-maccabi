@@ -41,6 +41,7 @@ npm run icons                     # hand-tuned public/icons/ (the store icon is 
 npm run site-check                # the popup's states under 600px, then the landing page's motion at five screen sizes
 npm run site-check -- popup       # just the popup's height (CI runs this)
 npm run site-check -- frames .path scroll 10 375x812   # photograph one picture as it scrolls in (or `time 0 13 0.5`)
+npm run site-check -- styles save   # keep every computed style of the page, popup and store images; `-- styles` after a CSS change proves nothing moved
 ```
 
 There is no linter or formatter configured; `typecheck` and `coverage` (the tests, and the floors in
