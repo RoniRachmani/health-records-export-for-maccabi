@@ -342,10 +342,12 @@ code {
 
 /* ---- the first message, and why a folder and not an upload ---- */
 .why-not svg {
+  flex: none;
   width: 48px;
   height: 48px;
-  margin-bottom: 12px;
+  margin: 0;
   fill: none;
+  stroke: var(--accent);
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -381,11 +383,6 @@ code {
   display: flex;
   gap: 20px;
   align-items: flex-start;
-}
-.why-not svg {
-  flex: none;
-  stroke: var(--accent);
-  margin: 0;
 }
 .why-not p {
   margin: 0;
