@@ -130,7 +130,7 @@ in [the artwork guide](../store/README.md); this section says what goes in each 
 | Screenshot 5 | `store/assets/screenshot-5-open.png` | "Your history. Yours to explore." The completed popup over a browser page, beside numbered Unzip, Open and Ask steps |
 | Small promo tile (440×280) | `store/assets/promo-small-440x280.png` | Two understated document shapes behind the folder mark, on a full pale-blue background, with no text |
 | Marquee promo tile (1400×560) | `store/assets/promo-marquee-1400x560.png` | "Your whole history. Now in your hands." Navy and magenta text on white, beside the same simplified illustration without a background panel |
-| Global promo video | https://youtu.be/xcy8fo-PjHc | Existing optional video; its separate renderer is described below |
+| Global promo video | https://youtu.be/ypmsdEyAXS8 | Existing optional video; its separate renderer is described below |
 
 Upload screenshots in the numbered order above. They are opaque, full-bleed 1280×800 PNGs; the icon retains alpha.
 They are drawn at exactly those sizes, and at no other.
@@ -145,7 +145,7 @@ All current illustrations, copy and layout are composed in code; no AI image gen
 ### Promo video
 
 The store's video field takes a **YouTube link**, not a file. The one to paste is
-**https://youtu.be/xcy8fo-PjHc**, on the [Health Records Export for Maccabi](https://www.youtube.com/@Health-Records-Export) channel, with the title
+**https://youtu.be/ypmsdEyAXS8**, on the [Health Records Export for Maccabi](https://www.youtube.com/@Health-Records-Export) channel, with the title
 and description [below](#on-youtube). `npm run store-video` renders the video to `store/assets/promo-video.mp4`
 (3840×2160, 60 fps, 64 seconds, with narration). YouTube can't swap the file under a link, so a re-render is a
 new upload with a new link: paste it on the dashboard and put it in the README, in place of the one above.
@@ -201,7 +201,7 @@ nothing is suggested over the last frame.
 **Title** (the version in brackets is the release the film shows; change it with a new upload):
 
 ```
-Ask Claude or ChatGPT about your Maccabi Online medical records – free Chrome extension [v0.8.9]
+Ask Claude or ChatGPT about your Maccabi Online medical records – free Chrome extension [v0.8.13]
 ```
 
 **Description** (plain text with no links; the chapter times are the film's parts, `runFrom`, `saved` and `uses` in `T` in
