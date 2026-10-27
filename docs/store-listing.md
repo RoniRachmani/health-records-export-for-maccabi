@@ -137,7 +137,7 @@ in [the artwork guide](../store/README.md); this section says what goes in each 
 | Global promo video | https://youtu.be/xcy8fo-PjHc | Existing optional video; its separate renderer is described below |
 
 Upload screenshots in the numbered order above. They are opaque, full-bleed 1280×800 PNGs; the icon retains alpha.
-They are drawn at exactly those sizes; `--scale 2` adds `@2x.png` drawings, which the store does not take.
+They are drawn at exactly those sizes, and at no other.
 The images follow the existing design system and [positioning](positioning.md), with a small **Unofficial** chip
 beside the product title instead of a full disclaimer footer. Screenshots 1 and 3 label illustrative assistant output;
 screenshot 2 labels its export folder; screenshots 4 and 5 use the actual popup with synthetic states from
