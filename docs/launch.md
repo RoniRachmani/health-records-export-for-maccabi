@@ -18,7 +18,7 @@ readers in four are with another fund and can't use the extension at all. The ca
 
 - **Primary:** the curious, tech-comfortable Maccabi member of positioning.md: uses Claude or ChatGPT, installs
   extensions, reads English.
-- **A test, in week 4:** English-speaking olim on Maccabi. The extension and the page are English only, and for them
+- **A test, in the week of 8–14 November:** English-speaking olim on Maccabi. The extension and the page are English only, and for them
   "it reads the Hebrew" is the pitch and not a proof point. If they install at a better rate than the primary
   audience, positioning.md's point 6 needs a second look.
 - **Not yet:** patient and chronic-condition groups. They come back for trends, but they are less at home with a
@@ -46,7 +46,7 @@ One channel in each window, because that is the only way to tell them apart (see
 | Week | What | Where | Notes | Status |
 |---|---|---|---|---|
 | 14–17 Oct | Baselines, tagged store links, this log | | Before any post | Done |
-| 18–24 Oct | [A message](#a-message-to-someone-you-know) to 30–40 Maccabi members | WhatsApp, direct messages | About one contact in four is a member, so that is some 150 people, or the groups you're in. Aim: 10 installs, 3 reviews, 5 conversations, and a word with 5 who stopped | |
+| 18–24 Oct | [A message](#a-message-to-someone-you-know) to 30–40 Maccabi members | WhatsApp, direct messages | About one contact in four is a member, so reaching them means writing to some 150 contacts, or to the groups you're in. Aim: 10 installs, 3 reviews, 5 conversations, and a word with 5 who stopped | |
 | 25–31 Oct | [The founder's post](#linkedin), and a comment on day 3 | LinkedIn | Needs nothing before it | |
 | 1–7 Nov | [*Loose ends*, in Hebrew](#hebrew-ai-groups) | 2 or 3 AI groups on Facebook, two days apart | Ask each admin first. Needs the first reviews on the listing | |
 | 8–14 Nov | [Ask in English](#english-speaking-groups) | Olim groups, r/Israel | The test above | |
@@ -259,8 +259,8 @@ Day 3, as a comment, answering the question that came up most. If it was about s
 If it was about cost:
 
 > A few people asked what this costs. The extension is free, and nothing in it is for sale. To ask questions, you open
-> the folder in the desktop app of Claude, which needs a paid plan, or of ChatGPT, whose free plan includes Work with
-> limited usage. The export is yours either way: the PDFs in it open without any assistant, to keep or to take to
+> the folder in the desktop app of Claude, which needs a paid plan, or of ChatGPT, whose free plan includes Work where
+> it has rolled out, with limited usage. The export is yours either way: the PDFs in it open without any assistant, to keep or to take to
 > another doctor.
 
 If it was whether this is Maccabi's:
@@ -384,7 +384,7 @@ Body:
 > - It's unofficial, and has nothing to do with Maccabi Healthcare Services.
 > - It installs in Chrome on a computer, not a phone.
 > - You log in yourself. The records go from Maccabi Online to your computer, and from there only where you take them.
-> - Claude's desktop app needs a paid plan. ChatGPT's free plan includes Work, with limited usage.
+> - Claude's desktop app needs a paid plan. ChatGPT's free plan includes Work where it has rolled out, with limited usage.
 > - The assistant explains and suggests. You and your doctor decide.
 > - It's Maccabi only, which I know rules out most of you. If you're with Clalit, Meuhedet or Leumit and would want
 >   one, say so: I'm counting.

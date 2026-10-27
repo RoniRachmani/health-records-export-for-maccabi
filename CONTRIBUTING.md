@@ -4,7 +4,7 @@ How the extension is built, run, tested and released. The [README](README.md) is
 is the short version of this page for an AI coding assistant. [docs/](docs/README.md) says what each of the other
 documents is for.
 
-[Setup](#setup) · [How a run works](#how-a-run-works) · [The look](#the-look) ·
+[Pull requests](#pull-requests) · [Setup](#setup) · [How a run works](#how-a-run-works) · [The look](#the-look) ·
 [Driving a run from the console](#driving-a-run-from-the-console) ·
 [A live run from the terminal](#a-live-run-from-the-terminal) ·
 [An export from the terminal](#an-export-from-the-terminal-without-the-extension) ·
@@ -291,6 +291,8 @@ There is no rollback. A published release can't be replaced and the store keeps 
 review approves the new one, so a fault is fixed forward, in the next version. Watch for a run that stops or loops on
 reconnect, a second SMS from one export, a missing medical file where the previous version got one, and a rejected
 review.
+
+Locally, these build and check a release, and render what the store needs:
 
 ```sh
 npm run release        # all of it from clean: tests, dist-dev/, the release ZIP, the store images and the video

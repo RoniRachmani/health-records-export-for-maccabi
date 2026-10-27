@@ -54,7 +54,7 @@ read your whole file**.
 2. **A genius friend who's read all of it.** It answers any question, spots what stands out, and helps you find your
    way through the health system. It advises; you and your doctor decide.
 3. **Yours to keep, and to grow.** After the first export, you can keep adding files (a private clinic's letter, a new
-   result, notes from abroad), and it becomes a health dashboard you maintain rather than a one-time snapshot.
+   result, notes from abroad), and it becomes a health record you keep, not a one-time snapshot.
 
 **Conditions, not benefits:** it stays on your computer, and it's free. The landing page's hero leaves both out and
 ends on the install button and the film. The button comes again under the three steps of "One button", where a
@@ -171,7 +171,7 @@ curious first question. It would still read what the app's screens show, and lea
 | "Does the AI log in to my Maccabi account?" | No. You log in yourself, in your own browser. The assistant only reads the folder on your computer, and never sees your ID number, a login code or the site. |
 | "Is this official?" | No. It's unofficial and says so everywhere. It uses your own logged-in session, like you would. |
 | "Will the AI give me medical advice?" | It explains and suggests, and names the record behind every answer. You and your doctor decide. |
-| "Do I need to pay for an AI?" | The extension is free. Opening the folder takes the desktop app of Claude, on a paid plan, or of ChatGPT, whose free plan includes Work with limited usage. |
+| "Do I need to pay for an AI?" | The extension is free. Opening the folder takes the desktop app of Claude, on a paid plan, or of ChatGPT, whose free plan includes Work, where it has rolled out, with limited usage. |
 | "Is it complicated?" | Log in, press Start export, and open the folder in your assistant. The page shows each step as it looks. |
 
 ## Getting started, as the customer sees it
@@ -293,7 +293,8 @@ Nothing shown comes from a real account.
   read off the medical file lost their page numbers. The README has asked for them since 13 October 2026.
 
 **Not yet:**
-- **A "living dashboard":** promise a dashboard you grow by adding files, not more, until the product does more. The
+- **A "living dashboard":** promise a health record you keep growing by adding files, not a dashboard that updates
+  itself, until the product does more. The
   12 October dashboard shows the gap. The assistant named it HealthOS itself, but it is a snapshot: "due soon" was
   worked out on the day it was built and stays that way, and a new export means building it again. Since 13 October
   2026 the page shows that dashboard under its name (`#healthos`, redrawn with the demo persona's records), as what

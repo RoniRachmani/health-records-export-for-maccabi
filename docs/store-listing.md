@@ -1,26 +1,22 @@
 # Chrome Web Store listing
 
-What to enter on the Chrome Web Store developer dashboard for each tab. The text below matches version 0.8.13. When
+What to enter on the Chrome Web Store developer dashboard for each tab. The text below matches version 0.9.0. When
 the extension changes, update this file along with it (see [Keeping it true](#keeping-it-true)).
 
 ## Before each upload
 
-For an image-only listing update, regenerate the selected images with `npm run store-assets`,
-review `store/assets/review.html`, and upload the eight PNGs in `store/assets/store-artwork.zip` to their
-matching graphic fields. Do not upload this artwork ZIP as an extension package. Image-only updates do not require
-a version bump or a new package. The steps below apply when releasing an extension package as well.
+A new package follows [CONTRIBUTING.md's *Releasing*](../CONTRIBUTING.md#releasing): the version bump, the notes, the
+*Release* workflow, then the ZIP from the release uploaded on the **Package** tab. The store rejects a package whose
+version isn't higher than the published one.
 
-1. Raise `version` in `package.json`. The store rejects a package whose version isn't higher than the published one.
-2. `npm test` and `npm run typecheck`.
-3. If the popup changed, re-render the images as [the artwork guide](../store/README.md) says, on a Mac without
-   Roboto. The promo video shows the popup too: re-render it with
-   `npm run store-video`, refresh its poster with `npm run store-assets -- poster`, and re-upload the video to YouTube
-   (see [Promo video](#promo-video)).
-4. `npm run package`, which builds `dist/` and writes `release/health-records-export-for-maccabi-<version>.zip`.
-   Upload that file on the **Package** tab. The script refuses to package a development build.
-5. For the GitHub release, write its notes in `docs/releases/<version>.md` (the first line, `# <title>`, names it),
-   push them and the bump to `main`, and run the **Release** workflow from the Actions tab with the version. It runs the
-   gate, packages the same ZIP, tags `main` as `v<version>` and publishes the release with the ZIP attached.
+If the popup changed, re-render the images as [the artwork guide](../store/README.md) says, on a Mac without Roboto.
+The promo video shows the popup too: re-render it with `npm run store-video`, refresh its poster with
+`npm run store-assets -- poster`, and re-upload the video to YouTube (see [Promo video](#promo-video)).
+
+For an image-only listing update, regenerate the selected images with `npm run store-assets`, review
+`store/assets/review.html`, and upload the eight PNGs in `store/assets/store-artwork.zip` to their matching graphic
+fields. Do not upload this artwork ZIP as an extension package. Image-only updates need neither a version bump nor a
+new package.
 
 ## Store listing tab
 
@@ -69,7 +65,7 @@ Ask about you, not the internet's average person:
 
 Or ask it to make something:
 • A chart of your cholesterol, blood sugar or blood pressure over the years
-• A weekly meal plan or fitness plan, fitted to what's in your file
+• A chart of what you've spent on medicines, and what insurance covered
 • A one-page summary for a new doctor
 
 Every answer names the record it came from, so you can check it. The assistant advises; you and your doctor decide. For urgent symptoms, call a doctor or emergency services, not an assistant.
@@ -181,7 +177,7 @@ with a play badge over it, drawn by `npm run store-assets -- poster`. Re-render 
 
 The soundtrack is mixed from the same timeline (`scripts/soundtrack.mjs`). The music is Eleven Music v2.5 and the
 effects ElevenLabs Sound Effects (`scripts/eleven-sound.mjs`), used under ElevenLabs' commercial licence, which its paid
-plans carry. `--synth` plays the score and effects that script synthesizes from oscillators and noise instead, which
+plans carry. `--synth` plays the score and effects that script synthesises from oscillators and noise instead, which
 need no licence and which the film was first timed to: that score is twenty bars
 from the start to the closing card (`BARS`): two under the opening answer (`INTRO`, which is `OPEN` in
 `store/src/video.ts`), and two under the assistant's part at the end. Lengthen or shorten a part and the tempo follows,
@@ -421,5 +417,5 @@ of this page:
 | A link the popup or a notification opens on the web | The privacy policy's line on the links the extension opens (`docs/privacy.md`, `public/privacy.html`) |
 | The manifest's `description` | Summary here (132 characters at most) |
 | What the export's README asks of the assistant (`shared/readme.ts`) | The description's "What the assistant is asked to do" and "Yours to keep, and to grow", the README's *Hand it to an AI assistant*, the assistant examples in `store/design/listing.mjs`, and `STANDS_OUT` and `ONE_THING` in `store/src/parts.ts` for the original images and video |
-| The questions to start with, or the Ask and Build use cases in [positioning.md](positioning.md) | The description's "A friend who's read it all", YouTube's "Things to ask", the README's list, the prompt examples in `store/design/listing.mjs`, and `FOLLOW_UPS` and `BUILDS` in `store/src/parts.ts` for the original images and video |
+| The questions to start with, or the Ask and Build use cases in [positioning.md](positioning.md) | The description's "A friend who's read it all", YouTube's "Things to ask", the README's list, the prompt examples in `store/design/listing.mjs`, and `FOLLOW_UPS` in `store/src/parts.ts` for the original images and video |
 | Health in ChatGPT, or another assistant's medical-record connection, reaches Maccabi or opens to Israel | *Alternatives the customer has* and the positioning statement in [positioning.md](positioning.md). Customer-facing copy doesn't mention those tools, so nothing else changes |

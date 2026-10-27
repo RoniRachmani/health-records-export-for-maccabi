@@ -312,7 +312,7 @@ the Maccabi Online tab, where the site requires them to originate.
 | `src/extension/popup/` | The popup |
 | `src/extension/dev/` | The bridge content script, injected by the development build only |
 | `test/` | Vitest tests against a fake Maccabi Online (`fakes.ts`) |
-| `docs/` | The endpoint maps in `endpoints/`, privacy policy, terms, store listing, the positioning the copy follows, the popup's sections with their steps and timings (`sections.md`), a short list of commands; each release's notes in `releases/`; the README's images in `images/` |
+| `docs/` | The endpoint maps, the privacy policy and terms, the store listing, the positioning the copy follows, the popup's sections with their steps and timings, and each release's notes: [docs/README.md](docs/README.md) says what each file is for |
 | `public/` | Icons, and the privacy policy, terms and third-party notices that ship in the extension |
 | `site/` | The landing page, for the web only: published by the Pages workflow, never shipped in the extension |
 | `store/` | Chrome Web Store images in `assets/`, and the pages they're rendered from in `src/` |
