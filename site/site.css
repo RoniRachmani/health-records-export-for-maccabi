@@ -204,7 +204,6 @@ h2 {
 /* ---- the last call: the film's navy ---- */
 
 @media (max-width: 860px) {
-  .hero,
   .feature,
   .where {
     grid-template-columns: minmax(0, 1fr);
@@ -635,15 +634,9 @@ h2 {
   max-width: 640px;
   justify-self: center;
 }
-/* Narrow screens stack the copy over the chat. Each panel then shares its two rows with the others (subgrid), so the
-   copy row and the chat row each take their tallest member and the box sits still across tabs. */
+/* Narrow screens leave more room between the rows of a panel. */
 @media (max-width: 860px) {
-  .ask-band .tabs {
-    grid-template-rows: auto auto auto;
-  }
   .ask-band .panel {
-    grid-row: 2 / span 2;
-    grid-template-rows: subgrid;
     row-gap: 28px;
   }
 }
