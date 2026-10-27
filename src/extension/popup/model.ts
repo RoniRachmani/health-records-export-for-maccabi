@@ -1,5 +1,6 @@
 /* What the popup shows, as pure functions of the run state (unit-tested, no DOM). */
 import type { Problem } from '../../core';
+import { countOf } from '../../core/util';
 import { LABELS, PLAN, WEIGHTS, type PlanStep, type Request, type RunState, type StateReply } from '../shared/state';
 
 export interface Stage {
@@ -135,10 +136,6 @@ export function formatBytes(n: number): string {
     u++;
   } while (v >= 999.95 && u < units.length - 1);
   return (v < 9.95 ? v.toFixed(1) : String(Math.round(v))) + ' ' + units[u];
-}
-
-function countOf(n: number, one: string, many: string): string {
-  return n.toLocaleString('en-US') + ' ' + (n === 1 ? one : many);
 }
 
 /**

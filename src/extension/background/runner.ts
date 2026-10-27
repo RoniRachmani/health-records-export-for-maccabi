@@ -3,7 +3,7 @@
    worker can pick it up); the member's session token lives only in
    chrome.storage.session; exported files live in IndexedDB staging. */
 import {
-  CancelledError, Collector, LEGACY_STEPS, MEDICAL_FILE, newCtx, orderSettled, placeOrder, runStep,
+  CancelledError, Collector, countOf, LEGACY_STEPS, MEDICAL_FILE, newCtx, orderSettled, placeOrder, runStep,
   SessionEndedError, sha256Hex, waitMedicalFile, keepListedMedicalFile, type Session, type StepName, type Transport,
 } from '../../core';
 import {
@@ -607,7 +607,7 @@ export async function onDownloadChanged(delta: chrome.downloads.DownloadDelta): 
     await save();
     await release();
     const p = run.problemCount;
-    await notify('ready', 'Export ready', run.zipName + ': ' + (run.fileCount ?? 0).toLocaleString('en-US') + ' files.' + (p ? ' ' + p + (p === 1 ? ' item' : ' items') + ' couldn’t be exported.' : ''));
+    await notify('ready', 'Export ready', run.zipName + ': ' + countOf(run.fileCount ?? 0, 'file', 'files') + '.' + (p ? ' ' + countOf(p, 'item', 'items') + ' couldn’t be exported.' : ''));
   } else if (delta.state?.current === 'interrupted') {
     await saveFailed(run, delta.error?.current || 'interrupted');
   }
