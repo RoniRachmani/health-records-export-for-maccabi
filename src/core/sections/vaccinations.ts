@@ -1,5 +1,5 @@
 import { changed, type Collector } from '../collector';
-import type { Ctx, Json } from '../types';
+import type { Ctx } from '../types';
 import { safe, stem, titleOf } from '../util';
 import { reportPdf } from './medications';
 
@@ -9,7 +9,7 @@ export async function vaccinations(c: Collector, ctx: Ctx): Promise<void> {
   let changedAny = false;
   const g = await c.getSave('vaccinations/list.json', 'GET', 'MedicalFileAPI/v1/members/0/{mid}/vaccinations_grouped');
   changedAny = changed(g.result);
-  const groups: Json[] = (g.r.data && g.r.data.timeline) || [];
+  const groups = await c.listIn('vaccinations', g.r, 'timeline');
   if (!ctx.birthDate && groups.length) await c.problem('vaccinations/details', 'no birth date from profile; per-group details skipped');
   for (let i = 0; ctx.birthDate && i < groups.length; i++) {
     // The booklet is the + 1: a step, not a record, so the count leaves it out.

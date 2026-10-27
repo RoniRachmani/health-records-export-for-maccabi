@@ -9,7 +9,7 @@ export async function medications(c: Collector, _ctx: Ctx): Promise<void> {
   const r = await c.api('POST', 'MedicalFileAPI/v1/members/0/{mid}/prescriptions', body);
   if (r.status !== 200) await c.problem('medications-and-prescriptions/list.json', 'HTTP ' + r.status);
   else await c.save('medications-and-prescriptions/list.json', c.rec('POST', 'MedicalFileAPI/v1/members/0/{mid}/prescriptions', r, { request_body: { members: [{ member_id_code: '0', member_id: '{mid}' }] } }));
-  const items: Json[] = (r.data && r.data.results) || [];
+  const items = await c.listIn('medications-and-prescriptions', r, 'results');
   // A prescription's PDF is its visit's page: every drug prescribed at that visit, with each monthly
   // part's dates ("דף זה אינו מרשם", this page is not a prescription). Every entry of one visit
   // (clicks_visit_number) returned the same bytes: 30 entries, 9 visits (measured 2026-09-30). So a

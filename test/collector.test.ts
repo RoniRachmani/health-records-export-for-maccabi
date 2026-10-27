@@ -138,6 +138,104 @@ describe('fetchBin()', () => {
   });
 });
 
+describe('listIn()', () => {
+  const at = (data: unknown, status = 200) => ({ status, data });
+
+  it('reads the list under its key, and takes an answer that is plainly no list as an empty one', async () => {
+    const { c, sink } = makeCollector(fakeTransport([]));
+    expect(await c.listIn('referrals', at({ referrals: [1, 2] }), 'referrals')).toEqual([1, 2]);
+    for (const data of [null, undefined, {}, { referrals: null }]) expect(await c.listIn('referrals', at(data), 'referrals')).toEqual([]);
+    // A failed request filed its own problem already.
+    expect(await c.listIn('referrals', at({ error: 'x' }, 500), 'referrals')).toEqual([]);
+    expect((sink as MemorySink).problems).toEqual([]);
+  });
+
+  it('files a shape problem, naming the keys and never their values, when the list is not where it was', async () => {
+    const { c, sink } = makeCollector(fakeTransport([]));
+    expect(await c.listIn('referrals', at({ items: [{ secret: MID }], count: 1 }), 'referrals')).toEqual([]);
+    expect(await c.listIn('approvals', at({ approval: 'none' }), 'approval')).toEqual([]);
+    expect(await c.listIn('visit-summaries', at([1]), 'results')).toEqual([]);
+    const problems = (sink as MemorySink).problems;
+    expect(problems.map((p) => [p.where, p.kind])).toEqual([['referrals', 'shape'], ['approvals', 'shape'], ['visit-summaries', 'shape']]);
+    expect(problems[0].what).toMatch(/site may have changed: expected a `referrals` list, found only items, count$/);
+    expect(problems[1].what).toMatch(/found `approval` as string$/);
+    expect(problems[2].what).toMatch(/found a list$/);
+    expect(JSON.stringify(problems)).not.toContain(MID);
+  });
+
+  it('turns a renamed list key into a problem in the section, not an empty folder', async () => {
+    const site = fakeMaccabi();
+    const t = fakeTransport([
+      (_req, url) => (url.pathname.endsWith('/referrals') ? jsonResp({ referral_list: [{ referral_id: 'R1' }] }) : undefined),
+      ...site.routes,
+    ]);
+    const { c } = makeCollector(t);
+    const run = await runAll(c, newCtx(), ['referrals']);
+    expect(run.problems).toEqual([expect.stringMatching(/^referrals PROBLEM: Maccabi answered in a shape .* found only referral_list$/)]);
+  });
+});
+
+describe('a long step run again', () => {
+  /**
+   * Runs the two long steps, cancelled once `stopAt` requests to `path` have gone out (so the record that sent the last
+   * of them is cut off at its next request), then again to the end. `fail` answers the first pass's requests it matches 404.
+   */
+  async function interrupted(path: string, stopAt: number, fail?: string) {
+    const site = fakeMaccabi();
+    const sink = new MemorySink();
+    const ctx = newCtx();
+    const sent = () => site.calls.filter((x) => x.includes(path)).length;
+    const failing: Route = (_req, url) => (fail && (url.pathname + url.search).includes(fail) ? jsonResp({}, 404) : undefined);
+    const first = makeCollector(fakeTransport([failing, ...site.routes]), sink, undefined, { shouldStop: () => sent() >= stopAt });
+    expect((await runAll(first.c, ctx, ['testResults', 'doctorCommunications'])).stoppedAt).toBeDefined();
+    const before = sent();
+    const again = makeCollector(fakeTransport(site.routes), sink);
+    const run = await runAll(again.c, ctx, ['testResults', 'doctorCommunications']);
+    return { sink, ctx, run, again: sent() - before };
+  }
+
+  async function whole(path: string) {
+    const site = fakeMaccabi();
+    const { c, sink } = makeCollector(fakeTransport(site.routes));
+    await runAll(c, newCtx(), ['testResults', 'doctorCommunications']);
+    return { sink: sink as MemorySink, sent: site.calls.filter((x) => x.includes(path)).length };
+  }
+
+  const same = (a: MemorySink, b: MemorySink) => {
+    expect([...b.files.keys()].sort()).toEqual([...a.files.keys()].sort());
+    for (const k of a.files.keys()) if (k.endsWith('.json')) expect(canon(b.json(k))).toBe(canon(a.json(k)));
+  };
+
+  it('does not ask again for the tests it collected whole, and writes what an uninterrupted run writes', async () => {
+    const all = await whole('/getresultsbyid');
+    // The first two tests (a lab result and its PDF, an imaging study with none) went through; the third was cut off.
+    const r = await interrupted('/getresultsbyid', 2);
+    expect(r.again).toBe(all.sent - 2);
+    expect(r.run).toMatchObject({ stoppedAt: undefined, problems: [] });
+    same(all.sink, r.sink);
+    expect(r.ctx.marks).toEqual({}); // a finished step keeps no marks: the next pass asks for everything
+  });
+
+  it('asks again for a test that filed a problem, and the re-run collects it', async () => {
+    const all = await whole('/getresultsbyid');
+    // The first test's PDF failed, so only the second is marked.
+    const r = await interrupted('/getresultsbyid', 2, 'data=D%2F1');
+    expect(r.again).toBe(all.sent - 1);
+    expect(r.run.problems).toEqual([]);
+    same(all.sink, r.sink);
+  });
+
+  it('does not ask again for the doctor messages it collected whole', async () => {
+    const all = await whole('/details');
+    // The first inquiry, its form and linked visit went through; the second was cut off after its details.
+    const r = await interrupted('/details', 2);
+    expect(r.again).toBe(all.sent - 1);
+    expect(r.run.problems).toEqual([]);
+    same(all.sink, r.sink);
+    expect(r.ctx.marks).toEqual({});
+  });
+});
+
 describe('progress', () => {
   it('reports a record count only where a step counts records', async () => {
     const events: (ProgressEvent & { step: string })[] = [];

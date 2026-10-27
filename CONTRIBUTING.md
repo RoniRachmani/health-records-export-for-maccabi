@@ -58,18 +58,29 @@ through that step skips it, even when Maccabi Healthcare Services' answer was lo
 A step that continues is run again from its start, so every step is safe to repeat: JSON is rewritten only when
 its content changed, and a document already staged is not asked for again. Staging also keeps a SHA-256 index of the
 documents it holds: `Collector.pdfOnce` saves a form, an upload or a linked visit's summary only when no staged file
-has its bytes, and otherwise records it as a copy of that file, so a repeat makes no request for it either. `test/sinkContract.test.ts` runs these write rules against the staging itself, on `fake-indexeddb`, beside the
+has its bytes, and otherwise records it as a copy of that file, so a repeat makes no request for it either. The two
+longest steps, test results and the doctor messages, also mark each record they collect whole, with no problem filed,
+in the run's `ctx.marks` (`Collector.markDone`, a 12-digit digest of the record's file name): a step run again skips
+those instead of asking for each one's details again, reading a test's values back from its staged file
+(`Sink.readJson`) for the lab histories, and clears its marks once it gets through its list. `test/sinkContract.test.ts` runs these write rules against the staging itself, on `fake-indexeddb`, beside the
 tests' in-memory sink and the terminal export's folder, so the three cannot drift apart. Each staged
 file also keeps the step, and the part of it, that first wrote it: the popup counts the files each finished section
 collected from those, so a resumed run's sections still show what they hold. A run
 paused before an update that renames files (`FILE_LAYOUT`) can't be continued, only discarded, or it would stage the
-same records twice under two names.
+same records twice under two names. A run nobody comes back to is discarded, as Cancel would, a week after it was last
+saved (`STAGING_TTL_MS`, `abandoned` in `shared/state.ts`): the staged files are health records at rest in the browser
+profile. Any worker that loads the run checks, and an `hrem-expiry` alarm set for the day it is due wakes one if none
+starts sooner; the member gets an *Export deleted* notification.
 
 A request that fails inside a step is filed as a problem under that step (and cleared when the step runs again), with
 the member id written as `{mid}`. Every section writes its folder whenever the site answers, and files a problem when
 it doesn't, so when the ZIP is written the problems become `export-errors.json`, each put against the folder it is
 about (`STEP_FOLDERS` in `src/extension/shared/readme.ts`), and the export's `README.md` says of each missing folder
-whether it failed or had nothing on record. A test walks every record a fake run writes and checks that each file it
+whether it failed or had nothing on record. A section reads the list it collects from with `Collector.listIn`, which
+takes an empty answer (204, `{}`, the key null) as an empty list but files a `kind: 'shape'` problem, naming the keys
+the answer has and never their values, when the list's key is missing or not a list. A renamed field then reads as
+"the site may have changed" in the popup, `export-errors.json` and the export's `README.md`, not as a section with
+nothing on record. A test walks every record a fake run writes and checks that each file it
 names (`file`, `same_as`, `visit`, `linked_from`) is in the export, with and without failures, and across a resume.
 
 The tab visits a single legacy page, `/online/medicalfile/summary/`. The legacy services answer only after some

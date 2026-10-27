@@ -53,10 +53,14 @@ export interface Problem {
   where: string;
   what: string;
   at: string;
+  /** 'shape': the site answered, but not in the shape the collector reads (Collector.listIn), so it may have changed. */
+  kind?: 'shape';
 }
 
 export interface Sink {
   exists(rel: string): Promise<boolean>;
+  /** A JSON file as parsed, or undefined when there is none (or it does not parse). */
+  readJson(rel: string): Promise<Json | undefined>;
   putJson(rel: string, obj: Json): Promise<SaveReply>;
   /** replace=false keeps an existing file (kept_existing); replace=true rewrites it unless identical. */
   putBin(rel: string, bytes: Uint8Array, replace: boolean): Promise<SaveReply>;
@@ -114,6 +118,12 @@ export interface Ctx {
   birthDate?: string | null;
   /** The letters step leaves the existing medical file alone because a new one is ordered after it. */
   skipExistingMedicalFile?: boolean;
+  /**
+   * The records a long step collected whole earlier in this run (no problem filed while it did), by a digest of each
+   * record's file name, with 1 when it changed a file: a step that runs again (a reconnect, a resume) skips them
+   * rather than ask for each again. Kept only while the step runs (Collector.finishMarks).
+   */
+  marks?: Record<string, Record<string, 0 | 1>>;
 }
 
 export function newCtx(): Ctx {

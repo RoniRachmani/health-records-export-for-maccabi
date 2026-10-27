@@ -1,12 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { CancelledError, RateLimitedError, SessionEndedError, STEP_ORDER } from '../src/core';
 import {
-  alignToPlan, FILE_LAYOUT, LABELS, MAX_RECONNECTS, PLAN, resumeIndex, sameLayout, savingOutcome, SESSION_ENDED_MESSAGE, stepFailure,
+  abandoned, alignToPlan, FILE_LAYOUT, LABELS, MAX_RECONNECTS, PLAN, resumeIndex, sameLayout, savingOutcome, SESSION_ENDED_MESSAGE, STAGING_TTL_MS, stepFailure, WEIGHTS,
 } from '../src/extension/shared/state';
 
 describe('PLAN', () => {
   it('runs every collection step once, in the order core lists them', () => {
     expect(PLAN.filter((s) => (STEP_ORDER as string[]).includes(s))).toEqual(STEP_ORDER);
+  });
+
+  it('names each step once, so WEIGHTS and LABELS, read off the same rows, have one entry per step', () => {
+    expect(new Set(PLAN).size).toBe(PLAN.length);
+    expect(Object.keys(WEIGHTS)).toEqual([...PLAN]);
+    expect(Object.keys(LABELS)).toEqual([...PLAN]);
+    expect(Object.values(WEIGHTS).every((w) => w > 0)).toBe(true);
   });
 });
 
@@ -98,6 +105,21 @@ describe('savingOutcome', () => {
     // Chrome restarted mid-download marks it interrupted; one it never started, or forgot, is not there at all.
     expect(savingOutcome('interrupted')).toBe('interrupted');
     expect(savingOutcome(undefined)).toBe('interrupted');
+  });
+});
+
+describe('abandoned', () => {
+  const now = Date.parse('2026-10-27T12:00:00Z');
+  it('is a run last saved more than a week ago', () => {
+    expect(abandoned({ heartbeatAt: now - STAGING_TTL_MS - 1 }, now)).toBe(true);
+    expect(abandoned({ heartbeatAt: now - STAGING_TTL_MS }, now)).toBe(false);
+    expect(abandoned({ heartbeatAt: now - 1000 }, now)).toBe(false);
+  });
+
+  it('counts a run stored before heartbeatAt existed from its start, and keeps one it cannot date', () => {
+    expect(abandoned({ startedAt: '2026-10-01T00:00:00Z' }, now)).toBe(true);
+    expect(abandoned({ startedAt: '2026-10-26T00:00:00Z' }, now)).toBe(false);
+    expect(abandoned({}, now)).toBe(false);
   });
 });
 

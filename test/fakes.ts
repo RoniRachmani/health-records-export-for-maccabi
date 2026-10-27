@@ -3,7 +3,7 @@
    clock, and a run of every collection step. */
 import { Window } from 'happy-dom';
 import {
-  badPath, binResult, domHtmlParser, errMessage, jsonBytes, jsonResult, runStep, sha256Hex, Collector, STEP_ORDER,
+  badPath, binResult, domHtmlParser, errMessage, jsonBytes, jsonResult, parseJson, runStep, sha256Hex, Collector, STEP_ORDER,
   type Clock, type Ctx, type Deps, type HttpRequest, type HttpResponse, type Json, type Problem, type Sink, type StepName, type Transport,
 } from '../src/core';
 
@@ -202,6 +202,9 @@ export class MemorySink implements Sink {
   aliases = new Map<string, string>();
   async exists(rel: string) {
     return this.files.has(rel);
+  }
+  async readJson(rel: string) {
+    return parseJson(this.files.get(rel));
   }
   async putJson(rel: string, obj: Json) {
     const bad = badPath(rel);

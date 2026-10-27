@@ -33,111 +33,69 @@ export type RunStatus =
   | 'error';
 
 /**
- * The run plan, in order. Collection steps are core step names; the others are
- * run-level actions. Each finished entry is checkpointed so a paused or
- * restarted run continues after it.
+ * The run plan, in order, one row per step: the step, its weight and its label. Collection steps are core step names;
+ * the others are run-level actions. Each finished step is checkpointed so a paused or restarted run continues after it.
+ * PLAN, WEIGHTS and LABELS below are read off these rows, so a step is added in one place here (and in core's STEPS,
+ * and the popup's STAGES).
+ *
+ * weight is the step's rough share of the run's time, for the progress bar. Only the ratios matter; percentOf divides
+ * by their sum. What makes a step slow is the number of requests it sends, one every PACE_MS, so the steps whose list
+ * has no date cap -- referrals, approvals and the doctor messages, which are asked for from 1900 and so grow with how
+ * long someone has been a member -- weigh more than the ones the server caps (visits: 12 months) or that hold only
+ * what is current (medications: prescriptions in force, though that was 30 requests on one account and 2 on another).
+ * Fitted to measured runs on three accounts (docs/sections.md, *How long each line takes*): the whole numbers that
+ * keep the bar closest to the elapsed time on the worst of them, within about 5 points, when the medical file is ready
+ * by the time it is collected.
+ *
+ * label is the popup's heading while the step runs, and the name a problem or an error gives it. Each is the name of
+ * what the step collects, and appears in its stage's line in STAGES (popup/model.ts), so the heading and the
+ * highlighted line always say the same thing. A step that only serves another (a page change, the wait) takes that
+ * one's name: what it is doing is the line under the heading, in DESCRIPTIONS.
  */
-export const PLAN = [
+const STEP_ROWS = [
   // The medical file is ordered first so Maccabi builds it while the rest is collected: by the time
   // waitMedicalFile runs, it is normally ready and there is nothing left to wait for. The legacy
   // page it is ordered from serves the purchases, hospital stays and uploads too, so the run still
   // crosses once.
-  'openLegacyPage',
-  'orderMedicalFile',
+  { step: 'openLegacyPage', weight: 2, label: 'Ordering your medical file' },
+  // The order request itself took 1.5 s in most runs and 8.9 s in one.
+  { step: 'orderMedicalFile', weight: 1, label: 'Ordering your medical file' },
   // The member's details, then their medications, come first in the popup's list, as the natural
   // opening. Both are REST API steps, which do not care what page the tab is on, so they are
   // collected from the legacy page, next to the purchases that belong with the prescriptions (both
   // write to medications-and-prescriptions/). The token is good for hours; the site's idle logouts
   // (the legacy page has its own, shorter one) are kept off by keepSessionAlive, on whatever page the tab is on.
-  'profileAndDoctors',
+  { step: 'profileAndDoctors', weight: 2, label: 'Your details and doctor' },
   // Allergies, upcoming appointments and requests: three short requests, shown in the popup as part
   // of "Your details and doctor", which needs them right after it.
-  'emptySections',
-  'medications',
-  'purchases',
-  'hospitalStays',
-  'savedDocuments',
-  'returnToSonline',
-  'testResults',
-  'visits',
-  'referrals',
-  'approvals',
-  'vaccinations',
-  'letters',
-  'doctorCommunications',
+  { step: 'emptySections', weight: 1, label: 'Allergies, appointments and requests' },
+  { step: 'medications', weight: 6, label: 'Prescriptions' },
+  { step: 'purchases', weight: 1, label: 'Medication purchases' },
+  { step: 'hospitalStays', weight: 1, label: 'Hospital stays' },
+  { step: 'savedDocuments', weight: 2, label: 'Your uploads' },
+  { step: 'returnToSonline', weight: 1, label: 'Test results' },
+  { step: 'testResults', weight: 46, label: 'Test results' },
+  { step: 'visits', weight: 6, label: 'Visit summaries' },
+  { step: 'referrals', weight: 13, label: 'Referrals' },
+  { step: 'approvals', weight: 1, label: 'Approvals' },
+  { step: 'vaccinations', weight: 2, label: 'Vaccinations' },
+  { step: 'letters', weight: 2, label: 'Letters' },
+  { step: 'doctorCommunications', weight: 15, label: 'Messages with your doctor' },
   // General health information a practitioner handed out, not about the member: the least of the
   // sections, so the last before the medical file.
-  'infoPages',
-  'waitMedicalFile',
-  'save',
-] as const;
-export type PlanStep = (typeof PLAN)[number];
-
-/**
- * Rough share of the run's time per step, for the progress bar. Only the ratios matter; percentOf
- * divides by their sum. What makes a step slow is the number of requests it sends, one every
- * PACE_MS, so the steps whose list has no date cap — referrals, approvals and the doctor messages,
- * which are asked for from 1900 and so grow with how long someone has been a member — weigh more
- * than the ones the server caps (visits: 12 months) or that hold only what is current
- * (medications: prescriptions in force, though that was 30 requests on one account and 2 on another).
- * Fitted to measured runs on three accounts (docs/sections.md, *How long each line takes*): the
- * whole numbers that keep the bar closest to the elapsed time on the worst of them, within about
- * 5 points, when the medical file is ready by the time it is collected.
- */
-export const WEIGHTS: Record<PlanStep, number> = {
-  profileAndDoctors: 2,
-  testResults: 46,
-  visits: 6,
-  medications: 6,
-  referrals: 13,
-  approvals: 1,
-  infoPages: 1,
-  vaccinations: 2,
-  letters: 2,
-  doctorCommunications: 15,
-  emptySections: 1,
-  openLegacyPage: 2,
-  purchases: 1,
-  savedDocuments: 2,
-  hospitalStays: 1,
-  // The order request itself took 1.5 s in most runs and 8.9 s in one.
-  orderMedicalFile: 1,
-  returnToSonline: 1,
+  { step: 'infoPages', weight: 1, label: 'Information pages' },
   // Small because it runs last: the file has had the whole collection to be built, so this is
   // usually one poll plus the download (8.6 s). A file Maccabi is slower with holds the bar here,
   // with the panel saying it is being prepared: no weight fits a wait of seconds to 15 minutes.
-  waitMedicalFile: 5,
+  { step: 'waitMedicalFile', weight: 5, label: 'Collecting your medical file' },
   // Building and downloading the ZIP took under a second.
-  save: 1,
-};
+  { step: 'save', weight: 1, label: 'Saving the ZIP' },
+] as const satisfies readonly { step: string; weight: number; label: string }[];
 
-/**
- * The popup's heading while a step runs, and the name a problem or an error gives it. Each is the name of what the
- * step collects, and appears in its stage's line in STAGES (popup/model.ts), so the heading and the highlighted line
- * always say the same thing. A step that only serves another (a page change, the wait) takes that one's name: what
- * it is doing is the line under the heading, in DESCRIPTIONS.
- */
-export const LABELS: Record<PlanStep, string> = {
-  profileAndDoctors: 'Your details and doctor',
-  testResults: 'Test results',
-  visits: 'Visit summaries',
-  medications: 'Prescriptions',
-  referrals: 'Referrals',
-  approvals: 'Approvals',
-  infoPages: 'Information pages',
-  vaccinations: 'Vaccinations',
-  letters: 'Letters',
-  doctorCommunications: 'Messages with your doctor',
-  emptySections: 'Allergies, appointments and requests',
-  openLegacyPage: 'Ordering your medical file',
-  purchases: 'Medication purchases',
-  savedDocuments: 'Your uploads',
-  hospitalStays: 'Hospital stays',
-  orderMedicalFile: 'Ordering your medical file',
-  returnToSonline: 'Test results',
-  waitMedicalFile: 'Collecting your medical file',
-  save: 'Saving the ZIP',
-};
+export type PlanStep = (typeof STEP_ROWS)[number]['step'];
+export const PLAN: readonly PlanStep[] = STEP_ROWS.map((r) => r.step);
+export const WEIGHTS = Object.fromEntries(STEP_ROWS.map((r) => [r.step, r.weight])) as Record<PlanStep, number>;
+export const LABELS = Object.fromEntries(STEP_ROWS.map((r) => [r.step, r.label])) as Record<PlanStep, string>;
 
 export interface Timing {
   ms: number;
@@ -283,6 +241,23 @@ export function sameLayout(run: { next: number; layout?: number }): boolean {
 export function savingOutcome(downloadState: string | undefined): 'wait' | 'complete' | 'interrupted' {
   if (downloadState === 'in_progress') return 'wait';
   return downloadState === 'complete' ? 'complete' : 'interrupted';
+}
+
+/**
+ * How long a run nobody comes back to keeps its collected files. They are health records, at rest in the browser
+ * profile, so a paused or stopped export is not left there indefinitely: a week after it was last saved, it is
+ * discarded as Cancel would.
+ */
+export const STAGING_TTL_MS = 7 * 24 * 3600_000;
+export const STAGING_TTL_DAYS = STAGING_TTL_MS / (24 * 3600_000);
+
+/**
+ * A stored run that has not been saved for STAGING_TTL_MS. A run with a worker driving it saves at every step, so the
+ * runner asks this only of a run no loop holds; one stored before heartbeatAt existed counts from its start.
+ */
+export function abandoned(run: { heartbeatAt?: number; startedAt?: string }, now: number): boolean {
+  const last = run.heartbeatAt ?? (run.startedAt ? Date.parse(run.startedAt) : NaN);
+  return Number.isFinite(last) && now - last > STAGING_TTL_MS;
 }
 
 export const SESSION_ENDED_MESSAGE =

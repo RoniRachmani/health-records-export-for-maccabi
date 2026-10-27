@@ -19,11 +19,11 @@ function testTitle(t: Json): string {
   return '';
 }
 
-export async function testResults(c: Collector, _ctx: Ctx): Promise<void> {
+export async function testResults(c: Collector, ctx: Ctx): Promise<void> {
   const list = await c.getSave('test-results/list.json', 'POST', 'TestResultsAPI/v1/members/0/{mid}/tests', { members: [], categories: [] });
   await c.getSave('test-results/latest-lab-results.json', 'GET', 'TestResultsAPI/v1/members/0/{mid}/getlatestlabresults');
   await c.getSave('test-results/followed-counter.json', 'GET', 'TestResultsAPI/v1/members/0/{mid}/followed/counter');
-  const tests: Json[] = (list.r.data && list.r.data.tests) || [];
+  const tests = await c.listIn('test-results', list.r, 'tests');
   const latestDate: Record<string, string> = {};
   const desc: Record<string, Json> = {};
   const seen: Record<string, boolean> = {};
@@ -40,16 +40,29 @@ export async function testResults(c: Collector, _ctx: Ctx): Promise<void> {
     let name = stem(iso(t.execute_date), id + '-' + safe(t.type), testTitle(t));
     if (seen[name]) name += '-' + (await shortHash([t.doc_id, t.execute_date, t.request_id, t.type]));
     seen[name] = true;
-    const d = await c.getSave('test-results/details/' + name + '.json', 'POST', 'TestResultsAPI/v1/members/0/{mid}/getresultsbyid',
-      { request_id: String(t.request_id), doc_id: t.doc_id, logged_user_gender: c.session.gender, current_user_gender: c.session.gender },
-      { request_id: String(t.request_id), type: t.type });
-    const groups: Json[] = (d.r.data && d.r.data.results) || [];
+    const rel = 'test-results/details/' + name + '.json';
+    const problems = c.problemCount;
+    // A test this run already collected whole is read back from its file: the lab histories below need its values.
+    const mark = await c.marked(ctx, 'testResults', rel);
+    const saved = mark === undefined ? undefined : await c.deps.sink.readJson(rel);
+    let groups: Json[];
+    let changedFile: boolean;
+    if (saved) {
+      groups = (saved.data && saved.data.results) || [];
+      changedFile = mark === 1;
+    } else {
+      const d = await c.getSave(rel, 'POST', 'TestResultsAPI/v1/members/0/{mid}/getresultsbyid',
+        { request_id: String(t.request_id), doc_id: t.doc_id, logged_user_gender: c.session.gender, current_user_gender: c.session.gender },
+        { request_id: String(t.request_id), type: t.type });
+      groups = await c.listIn(rel, d.r, 'results');
+      changedFile = changed(d.result);
+    }
     groups.forEach((g) => {
       (g.group_values || []).forEach((v: Json) => {
         if (!v.test_id || !v.lab_date) return;
         if (!latestDate[v.test_id] || v.lab_date > latestDate[v.test_id]) latestDate[v.test_id] = v.lab_date;
         desc[v.test_id] = v.test_desc;
-        if (changed(d.result)) touched[v.test_id] = true;
+        if (changedFile) touched[v.test_id] = true;
       });
     });
     // The lobby's view button opens this link from the list item's own
@@ -60,6 +73,7 @@ export async function testResults(c: Collector, _ctx: Ctx): Promise<void> {
         c.apiUrl('TestResultsAPI/pdf/openfile') + '?memberidcode=0&memberid=' + mid + '&data=' + encodeURIComponent(t.doc_id) +
         '&t=' + t.time_stamp + '&hash=' + t.hash + '&memberIdForHeader=' + mid + '&memberIdCodeForHeader=0', {});
     }
+    if (!saved && c.problemCount === problems) await c.markDone(ctx, 'testResults', rel, changedFile);
   }
   // One history per measurement type. The server returns the whole series
   // whichever date is asked for; asking for the latest keeps the file stable.
@@ -75,4 +89,5 @@ export async function testResults(c: Collector, _ctx: Ctx): Promise<void> {
       'TestResultsAPI/v1/compare/0/{mid}/compare?test_id=' + encodeURIComponent(tid) + '&date_of_result=' + encodeURIComponent(latestDate[tid]),
       undefined, { test_id: tid, test_desc: desc[tid], date_of_result: latestDate[tid] });
   }
+  c.finishMarks(ctx, 'testResults');
 }

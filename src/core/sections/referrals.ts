@@ -25,7 +25,7 @@ const RANGE = '?from_date=1900-01-01&to_date=' + END_DATE;
 export async function referrals(c: Collector, _ctx: Ctx): Promise<void> {
   const ref = await c.getSave('referrals/list.json', 'GET', 'MedicalFileAPI/v1/members/0/{mid}/referrals' + RANGE);
   const pdfBase = c.apiUrl('MedicalFileAPI/v1/members/0/{mid}/pdf');
-  const list: Json[] = (ref.r.data && ref.r.data.referrals) || [];
+  const list = await c.listIn('referrals', ref.r, 'referrals');
   for (let i = 0; i < list.length; i++) {
     const x = list[i];
     c.progress(i, list.length, 'referrals', { done: i, total: list.length });
@@ -38,7 +38,7 @@ export async function referrals(c: Collector, _ctx: Ctx): Promise<void> {
 export async function approvals(c: Collector, _ctx: Ctx): Promise<void> {
   const ap = await c.getSave('approvals/list.json', 'GET', 'MedicalFileAPI/v1/members/0/{mid}/approvals' + RANGE);
   const pdfBase = c.apiUrl('MedicalFileAPI/v1/members/0/{mid}/pdf');
-  const list: Json[] = (ap.r.data && ap.r.data.approval) || [];
+  const list = await c.listIn('approvals', ap.r, 'approval');
   // Two approvals can agree on every field but the signed pdf_link: a consultant's answers to two
   // referring doctors on one day, two documents (measured 2026-09-30). The second of a kind is -2.
   const seen: Record<string, number> = {};
@@ -59,7 +59,7 @@ export async function infoPages(c: Collector, _ctx: Ctx): Promise<void> {
   // export's README says there are none instead of describing an empty list (measured 2026-09-30).
   const path = 'MedicalFileAPI/v1/members/0/{mid}/tutorials' + RANGE;
   const tu = await c.fetchRec('info-pages/list.json', 'GET', path);
-  const list: Json[] = (tu.ok && tu.r.data && tu.r.data.tutorials) || [];
+  const list = tu.ok ? await c.listIn('info-pages', tu.r, 'tutorials') : [];
   if (!list.length) return;
   await c.saveRec('info-pages/list.json', 'GET', path, tu.r);
   for (let i = 0; i < list.length; i++) {

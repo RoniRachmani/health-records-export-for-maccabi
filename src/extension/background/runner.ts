@@ -7,7 +7,7 @@ import {
   SessionEndedError, sha256Hex, waitMedicalFile, keepListedMedicalFile, type Session, type StepName, type Transport,
 } from '../../core';
 import {
-  alignToPlan, exportName, FILE_LAYOUT, LABELS, MACCABI_ORIGIN, percentOf, PLAN, resumeIndex, sameLayout, savingOutcome, SESSION_ENDED_MESSAGE, SONLINE_PAGE, stepFailure,
+  abandoned, alignToPlan, exportName, FILE_LAYOUT, LABELS, MACCABI_ORIGIN, percentOf, PLAN, resumeIndex, sameLayout, savingOutcome, SESSION_ENDED_MESSAGE, SONLINE_PAGE, STAGING_TTL_DAYS, STAGING_TTL_MS, stepFailure,
   SUMMARY_PAGE, type PlanStep, type RunState,
 } from '../shared/state';
 import {
@@ -20,6 +20,8 @@ import { currentRoutes, currentSession, extensionFetch, isVisible, keepSessionAl
 import { updateBadge, notify } from './ui';
 
 const HEARTBEAT = 'hrem-heartbeat';
+/** Wakes a worker when a run nobody came back to is due to be discarded (STAGING_TTL_MS). */
+export const EXPIRY = 'hrem-expiry';
 /** Comfortably inside the site's idle logouts, 330 s on legacy pages and 360 s elsewhere (see keepSessionAlive). */
 const ACTIVITY_MS = 240_000;
 
@@ -27,13 +29,17 @@ let state: RunState | null = null;
 let active: Promise<void> | null = null;
 let cancelRequested = false;
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
+let loaded: Promise<void> | null = null;
+/** When the EXPIRY alarm is set for (0: not set), so save() touches it only when that changes. */
+let expiryAt = -1;
 
 const OLD_VERSION_MESSAGE =
   'An earlier version of the extension started this export, so it can’t be continued. Delete its files and start a new export.';
 
 // ---- state ------------------------------------------------------------
 export async function loadRun(): Promise<RunState | null> {
-  if (!state) {
+  // Read once per worker, and shared: at a browser start the start-up and the heartbeat recovery both get here at once.
+  await (loaded ??= (async () => {
     state = ((await chrome.storage.local.get('run')).run as RunState | undefined) ?? null;
     // A run stored before this field existed has no name to check against, and keeps its index.
     if (state && (!alignToPlan(state) || !sameLayout(state))) {
@@ -41,8 +47,22 @@ export async function loadRun(): Promise<RunState | null> {
       state.status = 'error';
       state.message = OLD_VERSION_MESSAGE;
     }
-  }
+  })());
+  if (state && !active && abandoned(state, Date.now())) await expire();
   return state;
+}
+
+/** Discards a run nobody came back to for STAGING_TTL_MS, and tells the member when it still held their files. */
+async function expire(): Promise<void> {
+  const held = state?.status !== 'done'; // a finished run's files went with the download
+  await discard(); // clears state before its first await, so a second caller finds nothing to expire
+  if (held) {
+    await notify(
+      'attention',
+      'Export deleted',
+      'An export left unfinished for ' + STAGING_TTL_DAYS + ' days was deleted, with the files it had collected. Start a new one whenever you like.',
+    );
+  }
 }
 
 async function save(): Promise<void> {
@@ -65,6 +85,13 @@ async function save(): Promise<void> {
     await chrome.storage.local.remove('run');
   }
   await updateBadge(state);
+  // A run no loop drives may never wake a worker again on its own: the alarm does, when it is due to be discarded.
+  const at = state && !['running', 'saving'].includes(state.status) ? state.heartbeatAt! + STAGING_TTL_MS + 60_000 : 0;
+  if (at !== expiryAt) {
+    expiryAt = at;
+    if (at) await chrome.alarms.create(EXPIRY, { when: at });
+    else await chrome.alarms.clear(EXPIRY);
+  }
 }
 
 function saveSoon(): void {

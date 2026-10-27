@@ -42,15 +42,18 @@ not used for any other purpose.
 
 - Collected records and files, which include your personal details such as your name and ID number, are kept in the
   extension's storage in your browser (IndexedDB), on your computer's disk. They are deleted as soon as the ZIP is
-  saved, or when you cancel or discard the export. A paused or stopped export keeps them so it can continue.
+  saved, or when you cancel or discard the export. A paused or stopped export keeps them so it can continue, for 7 days
+  after it last made progress: then the extension deletes them, with the export, and tells you in a notification.
 - The first name the popup shows, with the member ID number it belongs to, is kept in Chrome's in-memory session
   storage and is not written to disk. It is deleted when Chrome closes.
 - The session token, with the member ID number and gender that come with it, is kept in Chrome's in-memory session
   storage and is not written to disk. It is deleted when the ZIP is saved, when you cancel or discard the export, or
   when Chrome closes.
 - Export progress, including the list of problems, your birth date and the code computed from your member ID, is
-  kept in the extension's local storage, on your computer's disk. It is deleted when you press Clear this summary, or cancel or
-  discard the export.
+  kept in the extension's local storage, on your computer's disk. While a long section is being collected, it also
+  holds short codes computed from the names of the records already collected, so a resumed export does not ask for them
+  again. It is deleted when you press Clear this summary, or cancel or discard the export, and 7 days after the export
+  last made progress.
 - The notice setting is kept in the extension's local storage. It is deleted when you remove the extension.
 - The ZIP file is saved to your Downloads folder and stays there until you delete it. Chrome also lists it in its
   download history.

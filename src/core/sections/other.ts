@@ -1,4 +1,4 @@
-import { errMessage, isControl, PACE_MS, TOO_LARGE, type Collector } from '../collector';
+import { changed, errMessage, isControl, PACE_MS, TOO_LARGE, type Collector } from '../collector';
 import type { Ctx, DocRef, Json } from '../types';
 import { iso, safe, shortHash, stem, title, titleOf } from '../util';
 import { VISIT_TITLE, visitPdfUrl } from './visits';
@@ -9,18 +9,22 @@ const INQUIRY_TITLE = ['service_provider_name', 'practitioner_name'];
 // DocumentOriginName, the name of the file the member uploaded, comes after these (see uploadName).
 const UPLOAD_TITLE = ['DocumentTitle', 'DocumentDescription', 'Description'];
 
-export async function doctorCommunications(c: Collector, _ctx: Ctx): Promise<void> {
+export async function doctorCommunications(c: Collector, ctx: Ctx): Promise<void> {
   const q = await c.getSave('communication-with-doctor/list.json', 'GET', 'CommunicationWithDoctorAPI/v1/members/0/{mid}/inquiries');
-  const list: Json[] = (q.r.data && q.r.data.inquiries) || [];
+  const list = await c.listIn('communication-with-doctor', q.r, 'inquiries');
   for (let i = 0; i < list.length; i++) {
     const x = list[i];
     c.progress(i, list.length, 'doctor inquiries', { done: i, total: list.length });
     const date = iso(x.creation_date);
     const byDoctor = titleOf(x, INQUIRY_TITLE);
+    // Marked by the name it has before its details are read, the one name a re-run knows without asking for them.
+    const first = 'communication-with-doctor/details/' + stem(date, safe(x.request_id), byDoctor) + '.json';
+    if ((await c.marked(ctx, 'doctorCommunications', first)) !== undefined) continue;
+    const problems = c.problemCount;
     // The name comes from the details, so they are asked for first and saved last, once they can
     // point to the forms and the visit that are saved beside them.
     const path = 'CommunicationWithDoctorAPI/v1/members/0/{mid}/inquiries/' + x.request_id + '/details';
-    const d = await c.fetchRec('communication-with-doctor/details/' + stem(date, safe(x.request_id), byDoctor) + '.json', 'GET', path);
+    const d = await c.fetchRec(first, 'GET', path);
     const details: Json = d.ok ? d.r.data : null;
     const rel = 'communication-with-doctor/details/' + stem(date, safe(x.request_id), inquiryTitle(details) || byDoctor) + '.json';
 
@@ -42,8 +46,10 @@ export async function doctorCommunications(c: Collector, _ctx: Ctx): Promise<voi
     const extra: Record<string, Json> = {};
     if (files.length) extra.files = files;
     if (visit) extra.visit = visit;
-    await c.saveRec(rel, 'GET', path, d.r, undefined, extra);
+    const result = await c.saveRec(rel, 'GET', path, d.r, undefined, extra);
+    if (c.problemCount === problems) await c.markDone(ctx, 'doctorCommunications', first, changed(result));
   }
+  c.finishMarks(ctx, 'doctorCommunications');
 }
 
 /**

@@ -5,4 +5,4 @@ export { Collector, SessionEndedError, CancelledError, RateLimitedError, isContr
 export { STEPS, STEP_ORDER, LEGACY_STEPS, STEP_NEEDS, runStep, type StepName } from './steps';
 export { keepListedMedicalFile, orderRefused, orderSettled, placeOrder, waitMedicalFile, letters, MEDICAL_FILE, type OrderResult, type WaitOptions } from './sections/letters';
 export { domHtmlParser } from './html';
-export { badPath, binResult, extOf, jsonBytes, jsonResult } from './sinkRules';
+export { badPath, binResult, extOf, jsonBytes, jsonResult, parseJson } from './sinkRules';

@@ -102,7 +102,8 @@ it) is checkpointed to `chrome.storage.local` after every step, so a paused run,
 worker or a Chrome restart continues from there. When you touch `PLAN`:
 
 - add the collection function to `STEPS` in `src/core/steps.ts` first (its key is the plan step name);
-- update `WEIGHTS` and `LABELS` in `state.ts` (both are `Record<PlanStep, …>`, so TS catches omissions);
+- add its row to `STEP_ROWS` in `state.ts`, in run order, with its `weight` and `label`: `PLAN`, `WEIGHTS` and
+  `LABELS` are read off those rows;
 - update `STAGES` in `src/extension/popup/model.ts`, the popup's list of sections, which is its view of the
   run: stages are **in `PLAN` order**, one line per thing the member gets (a long step may take a line per part,
   with `parts`), and the first stage holding a step is labelled with its `LABELS` entry. A step that only
@@ -127,11 +128,15 @@ Steps use `c.exists()` / `c.pdfIfMissing()` to skip what they already have. A do
 elsewhere in the export (an inquiry's form, an upload, a linked visit's summary) goes through `c.pdfOnce()` /
 `c.saveOnce()` instead: the sink indexes every binary by SHA-256 (`findBySha256`), and a copy is not written but
 recorded as an alias (`putAlias` / `aliasOf`), which the record's `files[]` names as `same_as` and a re-run skips
-without a request. **Every step must be safe to
+without a request. The two longest steps (`testResults`, `doctorCommunications`) also mark each record collected
+whole in `ctx.marks` (`Collector.marked` / `markDone` / `finishMarks`), so a re-run skips them; a record that filed a
+problem is never marked, since problems are cleared when a step re-runs. **Every step must be safe to
 re-run from the start** — a resume, a reconnect or a rewind through `OPENED_BY` will do exactly that. A change that
 renames files already staged bumps `FILE_LAYOUT` in `state.ts`, so a run paused across the update is discarded
 instead of staging both names.
-`orderMedicalFile` guards itself (`run.order`) because re-running it would order and SMS again.
+`orderMedicalFile` guards itself (`run.order`) because re-running it would order and SMS again. A stored run nobody
+comes back to for `STAGING_TTL_MS` (7 days) is discarded with its staging (`abandoned` in `state.ts`, checked by
+`loadRun`, woken by the `hrem-expiry` alarm): change the Privacy Policy with it.
 
 ### Errors
 
@@ -143,6 +148,8 @@ bad record never ends an export. Problems are filed under the current step and c
 re-runs. Legacy steps don't get a 401: an ended session answers them with a followed redirect to
 `/my.logout.php3` (a 200 web page), which `Collector.legacy` and `fetchBin` turn into `SessionEndedError`
 from the response's final URL, and `runner.ts` also treats "Failed to fetch" in them as a dead session.
+A section reads the list it walks with `Collector.listIn`, never `(r.data && r.data.key) || []`: a list key the site
+renamed is then a `kind: 'shape'` problem (the site may have changed), not a section that looks empty.
 
 ### Other pieces
 

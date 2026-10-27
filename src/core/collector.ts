@@ -1,7 +1,10 @@
-import type { Deps, DocRef, HttpResponse, Json, SaveResult, Session } from './types';
+import type { Ctx, Deps, DocRef, HttpResponse, Json, Problem, SaveResult, Session } from './types';
 import { charset, isPdf, mimeType, retryAfterMs, sha256Hex } from './util';
 
 export const PACE_MS = 300;
+
+/** How a 'shape' problem begins (Collector.listIn): what the member reads in the popup and in export-errors.json. */
+export const SHAPE_CHANGED = 'Maccabi answered in a shape the extension does not know, so the site may have changed';
 
 /** How long to wait on a 429 that carries no Retry-After, and the longest wait the run sits through. */
 export const RATE_LIMIT_WAIT_MS = 30_000;
@@ -112,6 +115,8 @@ export interface BinResult {
 /** One export session: the seams, the member's session and the per-phase log. */
 export class Collector {
   log: [string, string][] = [];
+  /** Problems filed so far, so a step can tell whether a record went through without one. */
+  problemCount = 0;
 
   constructor(readonly deps: Deps, public session: Session) {}
 
@@ -152,13 +157,58 @@ export class Collector {
    * Files a problem under the current step. An error message can quote a request URL, and problems are
    * shown in the popup and written into the export, so the member id becomes {mid} as in a record's endpoint.
    */
-  async problem(where: string, what: unknown): Promise<void> {
+  async problem(where: string, what: unknown, kind?: Problem['kind']): Promise<void> {
     const mid = this.session.mid;
     const scrub = (s: string) => (mid ? s.split(mid).join('{mid}') : s);
     where = scrub(where);
     const text = scrub(String(what));
     this.log.push([where, 'PROBLEM: ' + text]);
-    await this.deps.sink.problem({ where, what: text.slice(0, 300), at: new Date(this.now()).toISOString() });
+    this.problemCount++;
+    await this.deps.sink.problem({ where, what: text.slice(0, 300), at: new Date(this.now()).toISOString(), ...(kind && { kind }) });
+  }
+
+  /**
+   * The list under `key` in an answer a step goes on to collect records from. Answers are not typed, so a key the site
+   * renamed would read as an empty list, and the export would say the section had nothing on record. An answer that is
+   * plainly no list -- an empty body, a 204, `{}`, the key null -- is an empty list. One with other keys and not this
+   * one, or with this one as something other than a list, files a 'shape' problem under `where` (a folder: the list
+   * itself was saved) that names the keys it does have, never their values. A failed request filed its own problem.
+   */
+  async listIn(where: string, r: ApiResult, key: string): Promise<Json[]> {
+    const d = r.data;
+    if (r.status !== 200 || d === null || d === undefined) return [];
+    let found: string;
+    if (Array.isArray(d)) found = 'a list';
+    else if (typeof d !== 'object') found = typeof d;
+    else {
+      const v = d[key];
+      if (Array.isArray(v)) return v;
+      const keys = Object.keys(d);
+      if (v === null || (v === undefined && !keys.length)) return [];
+      found = v === undefined ? 'only ' + keys.slice(0, 8).join(', ') + (keys.length > 8 ? ', …' : '') : '`' + key + '` as ' + typeof v;
+    }
+    await this.problem(where, SHAPE_CHANGED + ': expected a `' + key + '` list, found ' + found, 'shape');
+    return [];
+  }
+
+  // ---- resuming inside a step ------------------------------------------
+  /**
+   * What a record of `step` left earlier in this run, by its file name: 1 or 0 when it was collected whole (1: it
+   * changed a file), undefined when it is still to collect. The name is kept as a digest, so the run's stored state
+   * stays small however many records there are. Problems are cleared when a step starts again, so only a record that
+   * filed none is marked (markDone), and one that did is asked for again and files it again.
+   */
+  async marked(ctx: Ctx, step: string, rel: string): Promise<0 | 1 | undefined> {
+    return ctx.marks?.[step]?.[await markKey(rel)];
+  }
+
+  async markDone(ctx: Ctx, step: string, rel: string, changedFile: boolean): Promise<void> {
+    ((ctx.marks ??= {})[step] ??= {})[await markKey(rel)] = changedFile ? 1 : 0;
+  }
+
+  /** The step has gone through its records: the next time it runs is a new pass, and asks for all of them. */
+  finishMarks(ctx: Ctx, step: string): void {
+    if (ctx.marks) delete ctx.marks[step];
   }
 
   // ---- Maccabi --------------------------------------------------------
@@ -379,6 +429,11 @@ export class Collector {
       throw new Error('response is not valid ' + cs + ' (' + (r.contentType || 'no content type') + ')');
     }
   }
+}
+
+/** 12 hex digits of a record's file name: a chance of two names in a run of 2,000 meeting about 1 in 10^8. */
+async function markKey(rel: string): Promise<string> {
+  return (await sha256Hex(new TextEncoder().encode(rel))).slice(0, 12);
 }
 
 export function changed(result: SaveResult | null | undefined): boolean {

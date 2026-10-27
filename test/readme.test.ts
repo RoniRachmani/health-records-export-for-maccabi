@@ -113,6 +113,20 @@ describe('exportReadme', () => {
     expect(section.indexOf('`referrals/`')).toBeLessThan(section.indexOf('`communication-with-doctor/`'));
   });
 
+  it('says when a folder may be missing records because the site answered in a shape it does not know', () => {
+    const errors = exportErrors([
+      { step: 'referrals', where: 'referrals', what: 'Maccabi answered in a shape …', at, kind: 'shape' },
+      { step: 'visits', where: 'visit-summaries', what: 'Maccabi answered in a shape …', at, kind: 'shape' },
+      { step: 'visits', where: 'visit-summaries/files/2026-03-01_V1.pdf', what: 'PDF download: HTTP 404', at },
+    ]);
+    expect(errors[0]).toMatchObject({ folders: ['referrals'], kind: 'shape' });
+    expect(errors[2]).not.toHaveProperty('kind');
+    const md = readme(PRESENT, FILE, errors);
+    const section = md.slice(md.indexOf('## What this export failed'), md.indexOf('## Lab values'));
+    expect(section).toContain('- `referrals/`: Maccabi answered in a shape the extension does not know (the site may have changed), so records in it may be missing.');
+    expect(section).toContain('- `visit-summaries/`: Maccabi answered in a shape the extension does not know (the site may have changed), so records in it may be missing; also, 1 document could not be collected.');
+  });
+
   it('names the version and file layout that made the export, and when collection began', () => {
     const md = readme().replace(/\s+/g, ' ');
     expect(md).toContain('Exported 2026-09-18 from online.maccabi4u.co.il with the Maccabi Health Records Takeout browser extension, version 0.6.1, file layout 2;');

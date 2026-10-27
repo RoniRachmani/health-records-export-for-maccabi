@@ -23,6 +23,16 @@ export function jsonBytes(obj: Json): Uint8Array {
 }
 
 /** What saving obj over existing (undefined when absent) amounts to. */
+/** A stored JSON file's content, or undefined when there is none or it does not parse. */
+export function parseJson(bytes: Uint8Array | undefined): Json | undefined {
+  if (!bytes) return undefined;
+  try {
+    return JSON.parse(new TextDecoder().decode(bytes));
+  } catch {
+    return undefined;
+  }
+}
+
 export function jsonResult(existing: Uint8Array | undefined, obj: Json): SaveResult {
   if (!existing) return 'written';
   try {

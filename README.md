@@ -123,7 +123,8 @@ Then load the `dist/` folder the same way.
 | **The ZIP was not saved** | Press **Save again**. Also shown when Chrome closed while the ZIP was downloading. |
 
 Resume refuses to continue if a different member is logged in. **Cancel export** ends the export and deletes the files
-collected so far, once you confirm it.
+collected so far, once you confirm it. An export left paused or stopped for 7 days is deleted the same way, and a
+notification says so.
 
 A single item that fails doesn't stop the export. It's listed in the popup when the export finishes, and stays
 there until the next export starts. The ZIP records it too, in `export-errors.json`, so whoever reads the export
@@ -237,8 +238,8 @@ and your doctor decide. For urgent symptoms, call your doctor or Magen David Ado
   remote code.
 - It never sees, stores or enters your password or one-time codes. It uses the session you're already logged in with.
   The session token is kept in Chrome's in-memory session storage and never written to disk.
-- Collected files are staged in the extension's IndexedDB and deleted as soon as the ZIP is saved, or when you stop
-  the export.
+- Collected files are staged in the extension's IndexedDB and deleted as soon as the ZIP is saved, when you stop
+  the export, or 7 days after a paused or stopped export last made progress.
 - Apart from the medical file order, it only reads. Requests go one at a time, 300 ms apart, and every one is listed
   in [docs/endpoints/endpoints.json](docs/endpoints/endpoints.json) with the file it produces. It never calls anything
   that changes or deletes data, marks items as read, returns session credentials, or touches payment details.

@@ -40,6 +40,8 @@ const world = {
   dieOn: undefined as ((items: Record<string, unknown>) => boolean) | undefined,
   /** Whether keepListedMedicalFile was asked, i.e. the run took no new medical file. */
   keptListed: false,
+  /** Alarms set, by name, with when they fire (periodic ones: 0). */
+  alarms: {} as Record<string, number>,
 };
 
 /** Kills the service worker where it stands: what it has not written by now is lost, and it never goes on. */
@@ -138,7 +140,10 @@ function fakeChrome() {
   });
   return {
     storage: { local: store(world.local), session: store(world.sessionStore) },
-    alarms: { create: async () => {}, clear: async () => true },
+    alarms: {
+      create: async (name: string, info: { when?: number }) => void (world.alarms[name] = info.when ?? 0),
+      clear: async (name: string) => delete world.alarms[name],
+    },
     runtime: { getPlatformInfo: async () => ({}), getManifest: () => ({ version: '0.0.0' }) },
     downloads: {
       download: async () => ++world.downloads,
@@ -175,7 +180,7 @@ beforeEach(() => {
   Object.assign(world, {
     ran: [], step: {}, orders: 0, order: { ordered: true, to_date: '2026-10-26', from_date: '2016-10-26' }, session: MEMBER,
     visible: true, sessionLookups: 0, navigations: [], path: '/sonline/', stagingCleared: 0, notices: [], downloads: 0, downloadItem: undefined, revoked: [],
-    local: {}, sessionStore: {}, dead: false, dieOn: undefined, keptListed: false,
+    local: {}, sessionStore: {}, dead: false, dieOn: undefined, keptListed: false, alarms: {},
   });
   vi.stubGlobal('chrome', fakeChrome());
   vi.stubGlobal('__DEV_BRIDGE__', false);
@@ -553,5 +558,66 @@ describe("the popup's ways to the export", () => {
       'tab 7 {"active":true}', 'window 3 {"focused":true}',
       'open https://online.maccabi4u.co.il/',
     ]);
+  });
+});
+
+describe('a run nobody comes back to', () => {
+  const DAY = 24 * 3600_000;
+  const pausedAgo = (ms: number, status: RunState['status'] = 'paused_session') => {
+    world.local.run = {
+      id: 'r', status, tabId: TAB, startedAt: new Date(Date.now() - ms).toISOString(), next: PLAN.indexOf('visits'), nextStep: 'visits',
+      layout: FILE_LAYOUT, ctx: {}, stepDone: 0, stepTotal: 0, percent: 40, heartbeatAt: Date.now() - ms,
+    } as RunState;
+  };
+
+  it('is deleted with its files a week after it was last saved, and the member is told', async () => {
+    pausedAgo(8 * DAY);
+    const runner = await freshRunner();
+    await runner.recover('startup');
+    expect(stored()).toBeUndefined();
+    expect(world.stagingCleared).toBe(1);
+    expect(world.notices).toEqual(['Export deleted']);
+    expect(await runner.loadRun()).toBeNull();
+  });
+
+  it('is kept, and can be resumed, inside the week', async () => {
+    pausedAgo(6 * DAY);
+    const runner = await freshRunner();
+    expect((await runner.loadRun())?.status).toBe('paused_session');
+    await runner.resume(TAB);
+    expect((await settled())?.status).toBe('saving');
+    expect(world.stagingCleared).toBe(0);
+  });
+
+  it('is deleted once when the start-up and the heartbeat recovery both find it', async () => {
+    pausedAgo(30 * DAY, 'error');
+    const runner = await freshRunner();
+    await Promise.all([runner.recover('startup'), runner.recover('heartbeat'), runner.loadRun()]);
+    expect(stored()).toBeUndefined();
+    expect(world.stagingCleared).toBe(1);
+    expect(world.notices).toEqual(['Export deleted']);
+  });
+
+  it('goes quietly when it had finished, its files gone with the download', async () => {
+    pausedAgo(8 * DAY, 'done');
+    const runner = await freshRunner();
+    await runner.loadRun();
+    expect(stored()).toBeUndefined();
+    expect(world.notices).toEqual([]);
+  });
+
+  it('sets an alarm for the day it is due while paused, and clears it once the run goes on', async () => {
+    world.step.visits = (attempt) => {
+      if (attempt <= 3) throw new SessionEndedError('gone');
+    };
+    const runner = await freshRunner();
+    await runner.start(TAB);
+    const run = await settled();
+    expect(run?.status).toBe('paused_session');
+    expect(world.alarms['hrem-expiry']).toBe(run!.heartbeatAt! + 7 * DAY + 60_000);
+
+    await runner.resume(TAB);
+    expect('hrem-expiry' in world.alarms).toBe(false);
+    expect((await settled())?.status).toBe('saving');
   });
 });

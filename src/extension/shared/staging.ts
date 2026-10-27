@@ -1,7 +1,7 @@
 /* Staged export files, in the extension's IndexedDB. The background run writes
    here as it goes; the offscreen document reads it to build the ZIP. A paused
    run keeps its files here until it is resumed, saved or cancelled. */
-import { badPath, binResult, jsonBytes, jsonResult, sha256Hex, type Problem, type SaveReply, type Sink } from '../../core';
+import { badPath, binResult, jsonBytes, jsonResult, parseJson, sha256Hex, type Problem, type SaveReply, type Sink } from '../../core';
 
 const DB_NAME = 'hrem-staging';
 // 2 added the content index and the aliases (Sink.findBySha256, putAlias).
@@ -179,6 +179,9 @@ export const stagingSink: Sink = {
   async exists(rel) {
     const tx = (await db()).transaction('meta');
     return (await request(tx.objectStore('meta').getKey(rel))) !== undefined;
+  },
+  async readJson(rel) {
+    return parseJson(await getFile(rel));
   },
   async putJson(rel, obj): Promise<SaveReply> {
     const bad = badPath(rel);

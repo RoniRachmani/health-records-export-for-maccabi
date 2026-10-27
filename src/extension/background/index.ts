@@ -1,7 +1,7 @@
 import { errMessage } from '../../core';
 import { MACCABI_ORIGIN, TERMS_EFFECTIVE, type Request, type StateReply } from '../shared/state';
 import { handleDev } from './dev';
-import { cancel, dismiss, focusRunTab, loadRun, onDownloadChanged, recover, resume, retrySave, showFile, start, UserError } from './runner';
+import { cancel, dismiss, EXPIRY, focusRunTab, loadRun, onDownloadChanged, recover, resume, retrySave, showFile, start, UserError } from './runner';
 import { tabInfo } from './tab';
 import { noticeKind, READY_BUTTONS } from './ui';
 
@@ -93,7 +93,7 @@ chrome.notifications.onButtonClicked.addListener((id, index) => {
   void chrome.notifications.clear(id);
 });
 chrome.alarms.onAlarm.addListener((a) => {
-  if (a.name === 'hrem-heartbeat') void recover('heartbeat');
+  if (a.name === 'hrem-heartbeat' || a.name === EXPIRY) void recover('heartbeat');
 });
 chrome.runtime.onStartup.addListener(() => void recover('startup'));
 // A service worker restarted mid-run (not a browser restart) continues where it stopped.

@@ -49,6 +49,15 @@ describe.each(sinks)('%s', (_name, make) => {
     expect(await s.putJson('visits/a.json', { a: 2, b: [2] })).toEqual({ result: 'updated' });
   });
 
+  it('reads back the JSON it wrote, and nothing for a file that is missing or is not JSON', async () => {
+    const s = await make();
+    expect(await s.readJson('visits/a.json')).toBeUndefined();
+    await s.putJson('visits/a.json', { a: 1, b: ['ב'] });
+    expect(await s.readJson('visits/a.json')).toEqual({ a: 1, b: ['ב'] });
+    await s.putBin('visits/b.json', bytes(0x25, 0x50, 0x44, 0x46), false);
+    expect(await s.readJson('visits/b.json')).toBeUndefined();
+  });
+
   it('keeps a document unless replace is asked, and replaces it only when the bytes differ', async () => {
     const s = await make();
     expect(await s.putBin('visits/a.pdf', bytes(1, 2, 3), false)).toEqual({ result: 'written' });

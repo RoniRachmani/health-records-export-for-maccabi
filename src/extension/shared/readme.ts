@@ -199,17 +199,19 @@ export interface ExportError {
   where: string;
   what: string;
   at: string;
+  /** 'shape': the site answered in a shape the extension does not read, so it may have changed (core's Problem.kind). */
+  kind?: 'shape';
 }
 
 const KNOWN = new Set([MEDICAL_FILE, ...FOLDERS.map((f) => f.name)]);
 
 /** The run's problems as the export records them. */
-export function exportErrors(problems: { step?: string; where: string; what: string; at: string }[]): ExportError[] {
+export function exportErrors(problems: { step?: string; where: string; what: string; at: string; kind?: 'shape' }[]): ExportError[] {
   return problems.map((p) => {
     const top = p.where.split('/')[0];
     const step = p.step ?? '';
     const folders = KNOWN.has(top) ? [top] : (STEP_FOLDERS[step as PlanStep] ?? []);
-    return { folders, step, where: p.where, what: p.what, at: p.at };
+    return { folders, step, where: p.where, what: p.what, at: p.at, ...(p.kind && { kind: p.kind }) };
   });
 }
 
@@ -243,11 +245,18 @@ function failedSection(errors: ExportError[]): string {
     }
     // A path with an extension is one file; a bare folder or a step's name is the step failing partway.
     const ext = (e: ExportError) => (e.where.split('/').pop() || '').match(/\.([a-z0-9]+)$/i)?.[1];
-    const records = mine.filter((e) => ext(e) === 'json').length;
-    const documents = mine.filter((e) => ext(e) && ext(e) !== 'json').length;
+    // A list in a shape the extension does not read left its records uncollected, however many there were.
+    const shape = mine.filter((e) => e.kind === 'shape');
+    const rest = mine.filter((e) => e.kind !== 'shape');
+    const records = rest.filter((e) => ext(e) === 'json').length;
+    const documents = rest.filter((e) => ext(e) && ext(e) !== 'json').length;
     const parts = [records && count(records, 'record'), documents && count(documents, 'document')].filter(Boolean) as string[];
     let line = parts.length ? inWords(parts) + ' could not be collected' : '';
-    if (records + documents < mine.length) line = line ? line + ', and collecting the rest stopped partway' : 'collecting it stopped partway';
+    if (records + documents < rest.length) line = line ? line + ', and collecting the rest stopped partway' : 'collecting it stopped partway';
+    if (shape.length) {
+      const changed = 'Maccabi answered in a shape the extension does not know (the site may have changed), so records in it may be missing';
+      line = line ? changed + '; also, ' + line : changed;
+    }
     lines.push('- `' + name + '/`: ' + line + '.');
   }
   const loose = errors.filter((e) => !e.folders.length).length;

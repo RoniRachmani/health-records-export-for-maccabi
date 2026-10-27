@@ -94,7 +94,7 @@ the table:
 | 14 | Messages with your doctor | 24.8 s | 23.6 s | 38.9 s |
 | 6 | Your uploads | 10.9 s | 0.6 s | 0.4 s |
 
-`WEIGHTS` in `state.ts` are fitted to the three accounts, the first as measured on 2026-09-29: the whole numbers that keep the progress bar closest to
+`WEIGHTS` (each step's `weight` in `STEP_ROWS`, `state.ts`) are fitted to the three accounts, the first as measured on 2026-09-29: the whole numbers that keep the progress bar closest to
 the elapsed time on the worst of them, at each line's end and halfway through test results. That is within about
 5 points, where the weights set from the table alone were 6.7 points behind on the second account and held the bar on
 one percent through its 20 s of prescriptions. It assumes the medical file is ready when line 16 comes. Re-measure

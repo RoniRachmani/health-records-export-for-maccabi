@@ -27,10 +27,15 @@ interface Letter {
   [field: string]: unknown;
 }
 
-/** The entries of a letters_for_member answer; anything that is not an object is not an entry. */
+/** The entries of a list of letters; anything that is not an object is not an entry. */
+function entries(list: unknown[]): Letter[] {
+  return list.filter((x): x is Letter => !!x && typeof x === 'object');
+}
+
+/** The entries of a letters_for_member answer, read without filing anything: the medical file's polls ask it often. */
 function lettersOf(data: unknown): Letter[] {
   const list = data && typeof data === 'object' ? (data as { letters?: unknown }).letters : undefined;
-  return Array.isArray(list) ? list.filter((x): x is Letter => !!x && typeof x === 'object') : [];
+  return Array.isArray(list) ? entries(list) : [];
 }
 
 /** The order's answer, once its `d` is parsed: Success '1' or '2' ordered, '3' refused. */
@@ -40,7 +45,7 @@ interface OrderAnswer {
 
 export async function letters(c: Collector, ctx: Ctx): Promise<Letter[]> {
   const l = await c.getSave('letters/list.json', 'GET', 'DirectorshipAPI/v1/members/0/{mid}/letters_for_member?from_date=1900-01-01&to_date=' + END_DATE);
-  const list = lettersOf(l.r.data);
+  const list = entries(await c.listIn('letters', l.r, 'letters'));
   for (let i = 0; i < list.length; i++) {
     const x = list[i];
     c.progress(i, list.length, 'letters', { done: i, total: list.length });

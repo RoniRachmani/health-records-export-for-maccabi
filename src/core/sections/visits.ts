@@ -14,7 +14,7 @@ export async function visits(c: Collector, _ctx: Ctx): Promise<void> {
     return;
   }
   await c.save('visit-summaries/list.json', c.rec('POST', 'AppointmentOrderAPI/v1/members/0/{mid}/visits/history', real, { request_body: { members: [{ member_id_code: '0', member_id: '{mid}' }] } }));
-  const results: Json[] = (real.data && real.data.results) || [];
+  const results = await c.listIn('visit-summaries', real, 'results');
   for (let i = 0; i < results.length; i++) {
     const v = results[i];
     c.progress(i, results.length, 'visits', { done: i, total: results.length });

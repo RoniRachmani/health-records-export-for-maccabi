@@ -141,6 +141,9 @@ export function folderSink(core, dir, version) {
     async exists(rel) {
       return existsSync(join(dir, rel));
     },
+    async readJson(rel) {
+      return core.parseJson(read(rel));
+    },
     async putJson(rel, obj) {
       const bad = core.badPath(rel);
       if (bad) return { error: bad };
