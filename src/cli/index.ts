@@ -8,4 +8,4 @@
 export * from '../core';
 export { EXPORT_ERRORS, INSTRUCTION_POINTERS, exportErrors, exportReadme, notCollected } from '../extension/shared/readme';
 export { STALL_MS, TAB_FETCH_TIMEOUT_MS, TAB_MAX_BYTES, activityInPage, fetchInPage, snapshotInPage, xhrInPage } from '../extension/background/tab';
-export { FILE_LAYOUT, MACCABI_ORIGIN, SONLINE_PAGE, SUMMARY_PAGE, exportName } from '../extension/shared/state';
+export { FILE_LAYOUT, MACCABI_ORIGIN, SUMMARY_PAGE, exportName } from '../extension/shared/state';
