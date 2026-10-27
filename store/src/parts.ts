@@ -4,9 +4,9 @@
    Nothing here decides a layout — each page's own CSS places these. */
 
 // The mark and the two file icons are shared with the listing images (store/design/listing.mjs), which run in Node.
-import { DOC, FOLDER, MARK, MARK_PATH } from '../design/glyphs.mjs';
+import { DOC, FOLDER, MARK } from '../design/glyphs.mjs';
 
-export { DOC, FOLDER, MARK, MARK_PATH };
+export { DOC, FOLDER, MARK };
 
 export type Child = Node | string | null | undefined | false;
 

@@ -8,7 +8,7 @@ const SHAPE_CHANGED = 'Maccabi answered in a shape the extension does not know, 
 
 /** How long to wait on a 429 that carries no Retry-After, and the longest wait the run sits through. */
 const RATE_LIMIT_WAIT_MS = 30_000;
-export const RATE_LIMIT_MAX_MS = 120_000;
+const RATE_LIMIT_MAX_MS = 120_000;
 
 /**
  * api() and fetchBin() send a request up to TRIES times when no response comes or the server answers
