@@ -2413,6 +2413,9 @@ h2 {
   border-radius: 0;
   background: none;
   box-shadow: none;
+  /* The strip inherits Round 2's .mini window, whose overflow: hidden makes it a scroll container: a scroll timeline would
+     then follow that box, which never scrolls, instead of the page. Clip clips the same and scrolls nothing. */
+  overflow: clip;
 }
 .tl.mini .tl-plot {
   --label: 0px;
@@ -2639,11 +2642,6 @@ h2 {
    - The path a record takes: Maccabi Online; the extension's hop draws to your computer; then, slower and dashed, the
      hop to an assistant only if you choose it. Each arrowhead arrives with its line, uncut. A clip starts a pixel past
      empty, or its edge, on a fraction of a pixel, leaves a hairline before anything has drawn. */
-/* The strip inherits Round 2's .mini window, whose overflow: hidden makes it a scroll container: a scroll timeline would
-   then follow that box, which never scrolls, instead of the page. Clip clips the same and scrolls nothing. */
-.tl.mini {
-  overflow: clip;
-}
 @media (prefers-reduced-motion: no-preference) {
   @keyframes tl-sweep {
     from { clip-path: inset(-8px calc(100% + 9px) -8px -8px); }
