@@ -6,7 +6,7 @@ export const FOLDER = '<svg viewBox="0 0 24 20" width="24" height="20"><path d="
 
 // The folder outline, as scripts/make-icons.mjs rounds it: the tab's corners at r 0.8, the rest at
 // r 2.75. Keep the two in step — this is the same mark, drawn twice.
-export const MARK_PATH = 'M2.75 7A2.75 2.75 0 0 1 5.5 4.25L9.031 4.25A0.8 0.8 0 0 1 9.64 4.53L11.51 6.72A0.8 0.8 0 0 0 12.119 7L18.5 7A2.75 2.75 0 0 1 21.25 9.75L21.25 18.25A2.75 2.75 0 0 1 18.5 21L5.5 21A2.75 2.75 0 0 1 2.75 18.25Z';
+const MARK_PATH = 'M2.75 7A2.75 2.75 0 0 1 5.5 4.25L9.031 4.25A0.8 0.8 0 0 1 9.64 4.53L11.51 6.72A0.8 0.8 0 0 0 12.119 7L18.5 7A2.75 2.75 0 0 1 21.25 9.75L21.25 18.25A2.75 2.75 0 0 1 18.5 21L5.5 21A2.75 2.75 0 0 1 2.75 18.25Z';
 export const MARK = `<g fill="none" stroke-linecap="round" stroke-linejoin="round">
     <path d="${MARK_PATH}" transform="translate(-1.1 -1.1)" stroke="#f1c1cd" stroke-width="2.55"/>
     <path d="${MARK_PATH}" fill="#ffffff" stroke="#083f92" stroke-width="1.6"/>
