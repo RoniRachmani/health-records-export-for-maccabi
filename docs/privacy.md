@@ -2,7 +2,7 @@
 
 [Maccabi Health Records Takeout](https://maccabi.ronirachmani.com/)
 
-Effective 27 October 2026
+Effective 28 October 2026
 
 <!-- public/privacy.html, which ships in the extension at chrome-extension://<id>/privacy.html, is written from this: run `node scripts/policy-pages.mjs` after editing. -->
 
