@@ -26,6 +26,8 @@ const PAGES = {
 
 /** @param {string} s */
 const escape = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+/** The same, for a value inside a double-quoted attribute. @param {string} s */
+const attr = (s) => escape(s).replace(/"/g, '&quot;');
 
 const REPO = 'https://github.com/RoniRachmani/health-records-export-for-maccabi/blob/main/';
 
@@ -46,11 +48,11 @@ function inline(text) {
   const token = /\[([^\]]*)\]\(([^)\s]*)\)|<((?:https?:\/\/|mailto:)?[^\s<>]+[.@][^\s<>]+)>|`([^`]*)`|\\(.)|([^[<`\\]+|.)/gs;
   for (const m of text.matchAll(token)) {
     const [, label, href, auto, code, escaped, plain] = m;
-    if (href !== undefined) out += `<a href="${escape(pageHref(href))}">${inline(label)}</a>`;
+    if (href !== undefined) out += `<a href="${attr(pageHref(href))}">${inline(label)}</a>`;
     else if (auto !== undefined) {
       const mail = !/^https?:/.test(auto) && auto.includes('@');
       const target = mail ? 'mailto:' + auto.replace(/^mailto:/, '') : auto;
-      out += `<a href="${escape(target)}">${escape(auto.replace(/^(https?:\/\/|mailto:)/, ''))}</a>`;
+      out += `<a href="${attr(target)}">${escape(auto.replace(/^(https?:\/\/|mailto:)/, ''))}</a>`;
     } else if (code !== undefined) out += escape(code);
     else out += escape(escaped ?? plain ?? m[0]);
   }
@@ -118,7 +120,7 @@ export function renderPolicy(name, md) {
     '    <meta name="viewport" content="width=device-width, initial-scale=1" />',
     '    <meta name="color-scheme" content="light" />',
     `    <title>${escape(title)} - Maccabi Health Records Takeout</title>`,
-    `    <meta name="description" content="${escape(page.description).replace(/"/g, '&quot;')}" />`,
+    `    <meta name="description" content="${attr(page.description)}" />`,
     `    <link rel="canonical" href="${SITE}${name}.html" />`,
     '    <link rel="stylesheet" href="pages.css" />',
     '  </head>',
