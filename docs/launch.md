@@ -3,7 +3,7 @@
 The plan for taking the extension from its first few users to 50 installs, with the posts to send and the log to fill
 in. The messaging comes from [positioning.md](positioning.md); when a post and that file disagree, the file wins.
 
-**Goal:** 50 installs on the Chrome Web Store developer dashboard by Saturday 28 November 2026. Beside it: 5 store
+**Goal:** 50 installs on the Chrome Web Store developer dashboard by Saturday 12 December 2026. Beside it: 5 store
 reviews, 10 conversations with people who ran an export, and an answer to positioning.md's *To validate with
 customers*.
 
@@ -18,7 +18,7 @@ readers in four are with another fund and can't use the extension at all. The ca
 
 - **Primary:** the curious, tech-comfortable Maccabi member of positioning.md: uses Claude or ChatGPT, installs
   extensions, reads English.
-- **A test, in the week of 8–14 November:** English-speaking olim on Maccabi. The extension and the page are English only, and for them
+- **A test, in the week of 22–28 November:** English-speaking olim on Maccabi. The extension and the page are English only, and for them
   "it reads the Hebrew" is the pitch and not a proof point. If they install at a better rate than the primary
   audience, positioning.md's point 6 needs a second look.
 - **Not yet:** patient and chronic-condition groups. They come back for trends, but they are less at home with a
@@ -46,12 +46,12 @@ One channel in each window, because that is the only way to tell them apart (see
 | Week | What | Where | Notes | Status |
 |---|---|---|---|---|
 | 14–17 Oct | Baselines, tagged store links, this log | | Before any post | Done |
-| 18–24 Oct | [A message](#a-message-to-someone-you-know) to 30–40 Maccabi members | WhatsApp, direct messages | About one contact in four is a member, so reaching them means writing to some 150 contacts, or to the groups you're in. Aim: 10 installs, 3 reviews, 5 conversations, and a word with 5 who stopped | |
-| 25–31 Oct | [The founder's post](#linkedin), and a comment on day 3 | LinkedIn | Needs nothing before it | |
-| 1–7 Nov | [*Loose ends*, in Hebrew](#hebrew-ai-groups) | 2 or 3 AI groups on Facebook, two days apart | Ask each admin first. Needs the first reviews on the listing | |
-| 8–14 Nov | [Ask in English](#english-speaking-groups) | Olim groups, r/Israel | The test above | |
-| 15–21 Nov | [Show HN](#hacker-news-and-rclaudeai), then r/ClaudeAI | Hacker News, Reddit | Almost no members there: this week is for feedback and stars, not installs. Be there for the comments all day | |
-| 22–28 Nov | What the first users asked | LinkedIn, and the best channel again | Open: decide from the log | |
+| 1–7 Nov | [A message](#a-message-to-someone-you-know) to 30–40 Maccabi members | WhatsApp, direct messages | About one contact in four is a member, so reaching them means writing to some 150 contacts, or to the groups you're in. Aim: 10 installs, 3 reviews, 5 conversations, and a word with 5 who stopped | |
+| 8–14 Nov | [The founder's post](#linkedin), and a comment on day 3 | LinkedIn | Needs nothing before it | |
+| 15–21 Nov | [*Loose ends*, in Hebrew](#hebrew-ai-groups) | 2 or 3 AI groups on Facebook, two days apart | Ask each admin first. Needs the first reviews on the listing | |
+| 22–28 Nov | [Ask in English](#english-speaking-groups) | Olim groups, r/Israel | The test above | |
+| 29 Nov–5 Dec | [Show HN](#hacker-news-and-rclaudeai), then r/ClaudeAI | Hacker News, Reddit | Almost no members there: this week is for feedback and stars, not installs. Be there for the comments all day | |
+| 6–12 Dec | What the first users asked | LinkedIn, and the best channel again | Open: decide from the log | |
 
 Left out on purpose: paid ads (nothing targets Maccabi members), Product Hunt, and the press, until the extension has
 reviews and a few months of working.
@@ -94,7 +94,7 @@ Not used: the dashboard's Google Analytics opt-in, and any counting inside the e
 **Targets**, to be replaced with the log's own ratios after week 2. They assume one visit in five reaches the listing
 and one listing view in four installs, which is a guess:
 
-| Measure | Target by 28 Nov |
+| Measure | Target by 12 Dec |
 |---|---|
 | Installs | 50 |
 | Landing page visits | 800 to 1,200 |
@@ -119,6 +119,8 @@ only measure this launch gives of what the other three quarters would want.
 | 15 Nov | | | | | | | | | | |
 | 22 Nov | | | | | | | | | | |
 | 29 Nov | | | | | | | | | | |
+| 6 Dec | | | | | | | | | | |
+| 13 Dec | | | | | | | | | | |
 
 ### What to ask a user
 
