@@ -39,6 +39,8 @@ maccabi-export-*/
 *.raw.json
 # DevTools network captures hold the responses, the member id and the session token in the clear.
 *.har
+# The launch's own working log (docs/launch.md): who was written to and what they said, which is about real people.
+/launch-log.md
 
 # Frames of the landing page's motion, by `npm run site-check -- frames`, and the styles `-- styles save` keeps.
 site-frames/

@@ -163,8 +163,9 @@ future, and this is what they did:
 
 > פתחתם את התיקייה שוב מאז שדיברנו? בשביל מה?
 
-**What to write down**, one row a person, and **not in this repo**: these are notes about real people. No names and
-nothing from a record. Only the counts come back here, in the log's *Notes*.
+**What to write down**, one row a person, in `launch-log.md` at the repo's root, which git ignores and which is
+**never committed**: these are notes about real people. No names and nothing from a record. Only the counts come
+back here, in the log's *Notes*.
 
 - The assistant apps they had before, and whether they paid.
 - How far they got (installed, exported, opened the folder, asked), and where they stuck.
