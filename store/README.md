@@ -93,7 +93,9 @@ commits nothing: its images are in the wrong font for the store.
   they are drawn on.
 - `scripts/store-assets.mjs` selects shots and writes canonical PNGs, the review page, manifest and ZIP.
   `scripts/store-listing.mjs` captures the approved layouts.
-- `scripts/store-auxiliary.mjs` holds the video-poster and landing-page-preview recipes. The social preview uses the
+- `scripts/store-auxiliary.mjs` holds the video-poster, video-thumbnail and landing-page-preview recipes. The thumbnail
+  (`npm run store-assets -- thumbnail`) is the linked film's closing card with no badge, uploaded in YouTube Studio as
+  the video's custom thumbnail, which the listing shows as its first picture. The social preview uses the
   approved marquee at its own dimensions.
 - `store/design/glyphs.mjs` supplies the canonical outlined folder mark and distinct document/folder glyphs, shared
   with the video through `store/src/parts.ts`.

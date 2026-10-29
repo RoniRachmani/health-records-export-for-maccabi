@@ -86,6 +86,7 @@ iframe { position: absolute; top: 107px; right: 24px; width: 360px; height: 1px;
 .thread { position: absolute; inset: 0; width: 1920px; height: 1080px; pointer-events: none; z-index: 11; overflow: visible; }
 .thread path { fill: none; stroke: #296bed; stroke-width: 3px; stroke-linecap: round; }
 .end-copy { left: 790px; top: 285px; width: 1030px; z-index: 18; }
+.still .end-copy { left: 1080px; width: 800px; }
 .end-copy h1 { font-size: 83px; font-weight: 500; line-height: 1.15; letter-spacing: -3px; color: #083f92; }
 .end-copy h1 em { font-style: normal; color: #b83b7c; }
 .end-product { display: flex; align-items: center; gap: 16px; color: #083f92; font-size: 31px; margin-top: 36px; }

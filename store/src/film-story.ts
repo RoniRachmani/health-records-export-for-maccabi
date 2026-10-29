@@ -354,17 +354,21 @@ async function main(): Promise<void> {
   };
   // The poster the README shows, as video.ts draws the promo's: one frame of the film with a play badge over it.
   // `?poster` is the second above, which is what scripts/store-assets.mjs asks for; `?poster=12` is that second
-  // instead, for looking at candidates.
-  const poster = new URLSearchParams(location.search).get('poster');
+  // instead, for looking at candidates. `?still=` is the same frame with no badge: YouTube's thumbnail, which the
+  // store shows under a play button of its own.
+  const params = new URLSearchParams(location.search);
+  const poster = params.get('poster') ?? params.get('still');
   if (poster === null) {
     draw(0);
   } else {
+    // The store puts its play button in the middle of the thumbnail: move the closing words clear of it.
+    if (!params.has('poster')) document.body.classList.add('still');
     // Twice, a moment apart, so the popup has laid out the state the first one gave it.
     const at = poster === '' ? POSTER_AT : Number(poster);
     draw(at);
     await new Promise((r) => setTimeout(r, 40));
     draw(at);
-    document.body.append(h('div', 'play', svg(PLAY)));
+    if (params.has('poster')) document.body.append(h('div', 'play', svg(PLAY)));
     await new Promise((r) => requestAnimationFrame(r));
   }
   document.documentElement.dataset.ready = '1';

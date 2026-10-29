@@ -293,8 +293,9 @@ A release, in order:
    Actions tab with the version. It refuses a version whose notes are missing or whose tag exists, runs the gate,
    packages, tags `main`'s head and publishes the release with the ZIP. This is the step that can't be undone.
 5. **The Chrome Web Store, by hand.** Download the ZIP from the release and upload it on the developer dashboard.
-   If the name, the copy or the art changed, update the listing from `docs/store-listing.md` and `store/assets/` (and
-   a re-rendered video and its captions on YouTube), then submit for review. A listing change can slow review.
+   If `git diff v<last> -- docs/store-listing.md store/assets/` shows anything, update the listing from them: paste the
+   whole description block rather than editing the dashboard's copy line by line, so the two can't drift (and upload a
+   re-rendered video, its captions and its thumbnail on YouTube). Then submit for review. A listing change can slow review.
 6. **After.** Check the website and its policy pages. Once the store approves the update, install it from the store
    and run one export.
 

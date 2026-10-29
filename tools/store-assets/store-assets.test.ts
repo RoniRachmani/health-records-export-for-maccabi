@@ -6,11 +6,11 @@ const script = fileURLToPath(new URL('../../scripts/store-assets.mjs', import.me
 const list = (...args: string[]) => spawnSync(process.execPath, [script, '--list', ...args], { encoding: 'utf8' });
 
 describe('store image command', () => {
-  it('exposes the eight production assets and preserves the poster and link-preview routes', () => {
+  it('exposes the eight production assets and preserves the poster, thumbnail and link-preview routes', () => {
     const result = list();
     expect(result.status).toBe(0);
     const images = JSON.parse(result.stdout) as Array<{ file: string; shot: string; width: number; height: number }>;
-    expect(images.map(image => image.shot)).toEqual(['ask', 'whole', 'advice', 'start', 'open', 'promo', 'marquee', 'icon', 'poster', 'og-site', 'social']);
+    expect(images.map(image => image.shot)).toEqual(['ask', 'whole', 'advice', 'start', 'open', 'promo', 'marquee', 'icon', 'poster', 'thumbnail', 'og-site', 'social']);
     expect(images.every(image => !image.file.includes('mock') && image.width > 0 && image.height > 0)).toBe(true);
   });
 

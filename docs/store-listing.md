@@ -29,16 +29,14 @@ new package.
 > Your whole Maccabi history, and a genius friend who's read all of it: save your records, then ask Claude or ChatGPT. Unofficial.
 
 **Description** (plain text. The store shows line breaks but doesn't render Markdown). It follows
-[positioning.md](positioning.md): the headline and subline, then the three values in order (the whole history, a friend
+[positioning.md](positioning.md): the subline, then the three values in order (the whole history, a friend
 who has read it, yours to keep), then how to get there, with privacy and price said once near the top and the details
-near the end:
+near the end. It leaves out the headline: the store prints the summary, which opens with it, right above.
 
 ```
-Your whole Maccabi history, and a genius friend who's read all of it.
-
 Save everything from Maccabi Online to your computer, then ask anything: what changed, what stands out, what to do next. Open the export in the Claude or ChatGPT desktop app, and the assistant reads every record, written in Hebrew, and answers in plain English.
 
-Maccabi Online shows your records one page at a time, within date limits. This extension puts every record in one place on your computer, where an assistant can read all of it. It's free, and your records stay on your computer.
+Maccabi Online shows your records one page at a time, within date limits. This extension puts every record in one place, where an assistant can read all of it. It's free, and your records stay on your computer.
 
 EVERYTHING, IN ONE PLACE
 Your full medical file, ordered for the widest range Maccabi allows, plus every result, visit, prescription, referral, vaccination and letter the site has:
@@ -48,9 +46,7 @@ Your full medical file, ordered for the widest range Maccabi allows, plus every 
 • Prescriptions, your full pharmacy purchase history and the purchase report
 • Referrals, approvals and information pages
 • Vaccinations and the vaccination booklet
-• Letters
-• Messages with your doctor, and the forms attached to them
-• Documents you uploaded
+• Letters, messages with your doctor, and documents you uploaded
 • Hospital stays, with discharge letters when the site has them
 • Your member details, entitlements and assigned doctors
 
@@ -71,47 +67,42 @@ Or ask it to make something:
 Every answer names the record it came from, so you can check it. The assistant advises; you and your doctor decide. For urgent symptoms, call a doctor or emergency services, not an assistant.
 
 YOURS TO KEEP, AND TO GROW
-The export is yours: take it to a private doctor or one abroad, and keep it through a move or a switch of health fund. Add to it as you go, such as a private clinic's letter, a new result or notes from abroad, and tell the assistant what the records can't know, like what you take now. It keeps notes in a folder of its own, so the export becomes a health record you keep growing, not a one-time snapshot.
+Take it to a private doctor or one abroad, and keep it through a move or a switch of health fund. Add a private clinic's letter or a new result as you go, and tell the assistant what the records can't know, like what you take now. It keeps notes in a folder of its own, so the export grows with you.
 
 HOW IT WORKS
 1. Log in to Maccabi Online as usual.
 2. On that tab, click the extension's icon and press Start export.
 3. Keep the tab open and in front. Usually after a few minutes (up to 20 if the medical file is slow to arrive), the ZIP is in your Downloads folder and Chrome lets you know.
-4. Unzip it and open the folder in an assistant's desktop app. In Claude, choose Project or folder under the message box. In ChatGPT, switch to Work, then choose the folder under Choose project. Claude Code and Codex work too.
+4. Unzip it and open the folder in an assistant's desktop app: in Claude, Project or folder under the message box; in ChatGPT, Work, then Choose project. Claude Code and Codex work too.
 5. Start with "Read README.md first. Then summarize my health history from my full medical file."
 
-The desktop app is what reads the whole folder: a chat takes a few dozen files, and an export has hundreds. Claude's desktop app needs a paid plan for now. ChatGPT Work is in the free plan too, where it has rolled out. Its usage is limited, and a large export may need more.
+The desktop app is what reads the whole folder: a chat takes a few dozen files, and an export has hundreds. Claude's desktop app needs a paid plan for now. ChatGPT Work is in the free plan too, where it has rolled out, with limited usage.
 
-While the export runs, the tab moves to the site's medical-file page and back. The extension keeps your Maccabi Healthcare Services session from timing out until the export finishes. If the session ends anyway, the export pauses. Log in again and press Resume. Files collected so far are kept.
+While it runs, the tab moves to the medical-file page and back, and the extension keeps your Maccabi session alive. If the session ends anyway, the export pauses: log in again and press Resume, and nothing collected is lost.
 
 BEFORE YOU START
-Each export orders a fresh copy of your full medical file. Maccabi Healthcare Services texts you about the order, and the new file replaces the previous one on the site. If an export already ordered one earlier the same day, the extension uses that copy. Ordering this file is the only change the extension makes to your account.
+Each export orders a fresh copy of your full medical file, which replaces the previous one on the site, and Maccabi Healthcare Services texts you about the order. A second export the same day uses that copy. Ordering this file is the only change the extension makes to your account.
 
 WHAT THE ASSISTANT IS ASKED TO DO
-The ZIP's README is written for the assistant that reads your records, as its instructions. It asks the assistant to:
-• start with the full medical file
-• name the file, and the page of a PDF, behind each fact, and give each its date
-• say plainly when a record suggests something needs a doctor soon
-• explain in plain language, without diagnosing or advising a change of treatment
-• not mistake something missing from the export for something that never happened
-• keep your name, ID number and contact details out of web searches and other tools
+The ZIP's README is the assistant's instructions. Besides naming its sources, it asks the assistant to say plainly when something needs a doctor soon, not to diagnose or advise a change of treatment, not to take a gap in the export for something that never happened, and to keep your name, ID number and contact details out of web searches and other tools.
 
 WHAT YOU GET
-One folder for each part of the site. Every record is saved as the site's own data (JSON), and a record's PDF sits beside it with the same name: its date, ID and title. The full medical file is at the top of the ZIP, and a README explains what each folder holds.
+One folder for each part of the site, each record as the site's own data (JSON) with its PDF beside it. The full medical file is at the top of the ZIP, and a README explains the rest.
 
-Not included: imaging studies (DICOM), which the site only opens in its own viewer, and visits older than 12 months, which the site doesn't show. The purchase report PDF covers the last 2 years, though the purchase history itself covers everything. If an item fails to download, the export carries on, and the popup lists it when the export finishes.
+Not included: imaging studies (DICOM), which the site only opens in its own viewer, and visits older than 12 months, which the site doesn't show. If an item fails to download, the export carries on, and the popup lists it at the end.
 
 PRIVACY
-The extension connects only to online.maccabi4u.co.il, uses the session you're already logged in with, and has no servers, analytics or tracking. It deletes its own copy of your files once the ZIP is saved. You choose which AI assistant, if any, reads them. It's open source and not minified, so you can read exactly what runs: https://github.com/RoniRachmani/health-records-export-for-maccabi
+The extension connects only to online.maccabi4u.co.il, uses the session you're already logged in with, and has no servers, analytics or tracking. It deletes its own copy of your files once the ZIP is saved, and you choose which AI assistant, if any, reads them. It's open source and not minified: https://github.com/RoniRachmani/health-records-export-for-maccabi
 
-The ZIP isn't encrypted, so keep it somewhere safe. An AI service you open it in can read it: check what it keeps and for how long, turn off training on your chats where you can, and keep your records in a project of their own.
+The ZIP isn't encrypted, so keep it somewhere safe. An AI service you open it in can read it: check what it keeps, turn off training on your chats where you can, and keep your records in a project of their own.
 
 Use the extension only with your own account, or with an account whose records you're legally entitled to access. It copies what Maccabi Online provides. It isn't medical advice, and the export isn't an official copy of your records.
 
 Unofficial. Not affiliated with, endorsed by or sponsored by Maccabi Healthcare Services.
 ```
 
-**Category:** Productivity > Tools
+**Category:** Well-being, the store's category for self-help and personal development and the nearest it has to health.
+Under Tools, the listing was shown beside AI chat exporters.
 
 **Language:** English, the language of the extension's interface.
 
@@ -209,14 +200,14 @@ Ask Claude or ChatGPT about your Maccabi Online medical records – free Chrome 
 **Description** (plain text with no links; the chapter times are the film's parts, `runFrom`, `saved` and `uses` in `T` in
 `store/src/video.ts`, so retiming the film means changing them here and on YouTube; YouTube shows chapters only
 when each is at least 10 seconds long. It is the store description cut down, in the same order and words, so change
-them together):
+them together. Unlike the store's, it opens with the headline, since the video's title isn't the summary):
 
 ```
 Your whole Maccabi history, and a genius friend who's read all of it.
 
 Save everything from Maccabi Online to your computer, then ask anything: what changed, what stands out, what to do next. This free Chrome extension saves every record the site has, and every PDF, as one ZIP, and you open the folder in the Claude or ChatGPT desktop app. The assistant reads every record, written in Hebrew, and answers in plain English.
 
-Maccabi Online shows your records one page at a time, within date limits. This puts every record in one place on your computer, where an assistant can read all of it.
+Maccabi Online shows your records one page at a time, within date limits. This puts every record in one place, where an assistant can read all of it.
 
 ▶ Find it on the Chrome Web Store: Maccabi Health Records Takeout - Ready for AI
 
