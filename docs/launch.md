@@ -103,6 +103,61 @@ and one listing view in four installs, which is a guess:
 | Reviews | 5 |
 | Conversations with users | 10 |
 
+### Reading the numbers
+
+How the log's rows were read on 29 October, so each Sunday reads them the same way. A row dated Sunday covers the days
+up to the Saturday before it, and its totals count from 14 October itself. Read only what the row needs: each place
+shows the whole account.
+
+**GoatCounter.** Open the dashboard for exactly the row's days, by the day:
+`https://maccabi-export.goatcounter.com/?period-start=2026-10-14&period-end=<Saturday>&daily=true`. The page's text
+shows only the period's total; the counts by day and hour are in the chart's `data-stats`, which the browser's console
+reads with:
+
+```js
+JSON.parse(document.querySelector('.widget-loaded[data-stats]').dataset.stats)
+  .map(d => `${d.day} ${d.daily} ${d.hourly.map((v, h) => v ? `${h}h×${v}` : '').filter(Boolean)}`)
+```
+
+Its hours are UTC: a post at 17:18 in Israel lands in the 14h slot (15h in winter time). Every referrer shows as
+"(unknown)", as [Measuring](#measuring) expects.
+
+**GitHub**, with `gh` (the traffic needs push access, and keeps 14 days only):
+
+```sh
+R=RoniRachmani/health-records-export-for-maccabi
+gh api repos/$R --jq .stargazers_count
+gh api repos/$R/stargazers -H "Accept: application/vnd.github.star+json" --jq '.[].starred_at'
+gh api repos/$R/traffic/views --jq '.views[] | "\(.timestamp[:10]) \(.count) views, \(.uniques) people"'
+gh api repos/$R/traffic/popular/referrers --jq '.[] | "\(.referrer) \(.count)/\(.uniques)"'
+```
+
+**The Chrome Web Store dashboard**, signed in as the publisher. It opens in the Claude desktop app's browser pane as
+well as in Chrome. Its Analytics pages are `…/devconsole/<publisher id>/lmjcbhajlnbpldofejcglcdclceampjp/analytics/`
+followed by `installs`, `impressions` or `users`, and each shows the last 30 days, up to the day before yesterday. Its
+charts draw on data the page carries in `AF_initDataCallback` scripts, one per chart, which the console lists with:
+
+```js
+[...document.scripts].map(s => s.textContent)
+  .filter(t => /AF_initDataCallback\(\{key: 'ds:/.test(t) && /"\d{4}-\d\d-\d\d"/.test(t))
+  .map(t => t.replace(/^AF_initDataCallback\(\{key: '(ds:\d+)'.*?data:/, '$1 '))
+```
+
+Each is a list of `["<date>", …]` entries, and days with nothing are left out. Find the chart by the name in it, not by
+its `ds:` number, which differs from page to page:
+
+| Column | Page | The entries that hold it |
+|---|---|---|
+| Installs, uninstalls | `installs` | `INSTALLS`, `UNINSTALLS`; the regions are the `COUNTRY` entries on the same page |
+| Listing views | `impressions` | `DETAIL_PAGEVIEWS`, split by the `UTM_SOURCE` entries. `IMPRESSIONS` is something else: the item shown in the store's lists and searches |
+| Users | `users` | `WEEKLY_USERS` on the row's Saturday, with `COUNTRY` and `LANGUAGE` beside it |
+
+Listing views tagged with a source that isn't one of [the links above](#measuring) (`chatgpt.com`, so far) count as
+untagged, and the note says how many. The installs' regions come from each user's account and can be wrong, but read
+them every week all the same: an install from abroad that never shows in *Users* is not a member.
+
+**Reviews.** The listing's own page, in Chrome: the browser pane won't open the public store.
+
 ### Log
 
 Fill a row each Sunday. Visits, listing views, installs and uninstalls are totals since 14 October. *Asked for
@@ -112,8 +167,8 @@ only measure this launch gives of what the other three quarters would want.
 | Date | Posted that week | Visits | Listing views: site / github / untagged | Installs | Uninstalls | Users | Reviews | Stars | Asked for another fund | Notes |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 14 Oct | Nothing yet | 0 | 0 / 0 / 0 | 0 | 0 | 3 | 0 | 1 | 0 | Baseline. GitHub: 115 views from 18 people in the 14 days before |
-| 18 Oct | | | | | | | | | | |
-| 25 Oct | | | | | | | | | | |
+| 18 Oct | Nothing | 9 | 0 / 0 / 7 | 10 | 2 | 2 | 0 | 1 | | Visits 14–17 Oct: 5, 3, 1, 0, which may include my own visits. Installs by region: 6 US, 2 Germany, 1 Japan, 1 Israel. 4 listing views on 17 Oct came tagged `utm_source=chatgpt.com`. GitHub 15–17 Oct: 5 views, at most 2 people a day |
+| 25 Oct | One WhatsApp group message, 18 Oct | 25 | 3 / 1 / 11 | 23 | 2 | 1 | 0 | 1 | | 16 visits 18–24 Oct; 2 in the hour after the message, 3 that day. All 13 installs 18–24 Oct were outside Israel (11 US, 2 Japan), and weekly users fell to 1: no install that week came from Israel. GitHub 18–24 Oct: 24 views, 18 of them by one person on 18 Oct |
 | 1 Nov | | | | | | | | | | |
 | 8 Nov | | | | | | | | | | |
 | 15 Nov | | | | | | | | | | |
