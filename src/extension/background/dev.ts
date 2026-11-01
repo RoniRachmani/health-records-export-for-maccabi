@@ -6,6 +6,8 @@ import { jwtClaims, type Json } from '../../core';
 import { getFile, listMeta, listProblems } from '../shared/staging';
 import { cancel, dismiss, loadRun, resume, retrySave, start, writeRootFiles } from './runner';
 import { rawDumpOn, setRawDump } from './rawDump';
+import { mergeShapes, shapeDrift, sortedShapes, type Shapes } from '../shared/shapes';
+import { seenShapes, setShapes, shapesOn } from './shapeDump';
 import { currentRoutes, extensionFetch, sessionOf, snapshot, tabTransport } from './tab';
 
 type DevMsg = { type: string; [k: string]: Json };
@@ -85,8 +87,12 @@ async function handleDevImpl(msg: DevMsg, sender: chrome.runtime.MessageSender):
        terminal of the member whose records they are. */
     case 'dev:names':
       return (await listMeta()).map((m) => m.rel).sort();
-    case 'dev:problems':
-      return (await listProblems()).map((p) => p.step + ' | ' + p.where + ' | ' + p.what);
+    case 'dev:problems': {
+      // A finished run's staging is gone: what it filed is on the run, the first 50 of them.
+      const staged = await listProblems();
+      const problems = staged.length ? staged : ((await loadRun())?.problems ?? []) as typeof staged;
+      return problems.map((p) => p.step + ' | ' + p.where + ' | ' + p.what);
+    }
     case 'dev:start':
       await start(tabId);
       return { ok: true };
@@ -133,6 +139,16 @@ async function handleDevImpl(msg: DevMsg, sender: chrome.runtime.MessageSender):
       // the export itself. Set it before dev:start: it is read once per step.
       await setRawDump(!!msg.on);
       return { on: await rawDumpOn() };
+    case 'dev:shapes':
+      // The field names and types of every answer of the next run. Set it before dev:start, as with dev:rawDump.
+      await setShapes(!!msg.on);
+      return { on: await shapesOn() };
+    case 'dev:shapesSeen': {
+      // Given the committed snapshot: what this run showed that it has not, and the two merged.
+      const seen = await seenShapes();
+      const known = (msg.known ?? {}) as Shapes;
+      return { endpoints: Object.keys(seen).length, drift: shapeDrift(known, seen), merged: sortedShapes(mergeShapes(known, seen)) };
+    }
     case 'dev:routes':
       if (msg.routes) await chrome.storage.local.set({ routes: msg.routes });
       else await chrome.storage.local.remove('routes');

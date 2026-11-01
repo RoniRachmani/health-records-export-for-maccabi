@@ -1,7 +1,7 @@
 import { countOf } from '../../core/util';
-import { SITE_ASK, SITE_OPEN, type Request, type RunState, type StateReply } from '../shared/state';
+import { SITE_ASK, SITE_OPEN, withoutLateFile, type Request, type RunState, type StateReply } from '../shared/state';
 import {
-  announcement, bandSpan, countText, doneSummary, groupProblems, hintText, keptConfirm, nextAction, problemCount, problemText, progressTexts, STAGES,
+  announcement, bandSpan, canSaveNow, countText, doneSummary, groupProblems, hintText, keptConfirm, lateFileText, nextAction, problemCount, problemText, progressTexts, STAGES,
   stageFileCounts, stageStates, statsText, stepText, viewKey, waitingForFile, type Announced, type Confirm, type UiFlags,
 } from './model';
 
@@ -246,7 +246,7 @@ function idleView(st: StateReply): Child[] {
   return [
     accountRow(st),
     h('h2', {}, 'Your records, one ZIP'),
-    h('p', { class: 'lead' }, 'Tests, visits, prescriptions, letters, your full medical file and more. Usually a few minutes; up to 20 if the medical file is slow to arrive.'),
+    h('p', { class: 'lead' }, 'Tests, visits, prescriptions, letters, your full medical file and more. Usually a few minutes; up to 35 if the medical file is slow to arrive.'),
     actions(actionButton('Start export', { type: 'start' }, 'primary block', 'Checking your login…')),
     // What the click does, as the button's caption, so it is read with it. The notice said it in full before the
     // first export; this is the reminder.
@@ -286,7 +286,10 @@ function progressView(run: RunState): Child[] {
     // The column's head, said once over the counts; screen readers hear "files" with each count instead.
     ui.confirm !== 'cancel' && h('p', { class: 'files-head', 'aria-hidden': 'true' }, 'Files'),
     ui.confirm !== 'cancel' && h('ol', { class: 'stages', 'aria-label': 'Sections' }, ...stages),
-    run.status === 'running' && ui.confirm !== 'cancel' && h('p', { class: 'dismiss' }, cancelButton('quiet')),
+    // Save now shares Cancel's row: the running view has no room for another.
+    run.status === 'running' && ui.confirm !== 'cancel' && h('p', { class: 'dismiss' },
+      canSaveNow(run) && actionButton('Save now, without today’s file', { type: 'saveNow' }, 'quiet', 'Saving…'),
+      cancelButton('quiet')),
   ];
 }
 
@@ -345,27 +348,30 @@ function askLink(): HTMLElement {
 }
 
 function doneView(run: RunState): Child[] {
-  const shown = run.problems || [];
-  const count = problemCount(run);
+  // The late medical file is said once, in its own note, not again among the items.
+  const shown = withoutLateFile(run.problems || [], run);
+  const count = problemCount(run) - ((run.problems || []).length - shown.length);
+  const late = lateFileText(run);
   const icon = h('span', { class: 'file-icon', 'aria-hidden': 'true' });
   icon.innerHTML = ZIP_ICON;
   const caution = h('p', { class: 'caution' }, h('span', {}, 'The ZIP contains sensitive health information. Store and share it with care.'));
   caution.insertAdjacentHTML('afterbegin', LOCK_ICON);
   // Not one of the pair: it clears this summary and goes back to the start, which is nobody's next step. It says on its
   // face that the ZIP is not touched.
-  const clear = h('p', { class: 'dismiss' }, actionButton('Clear this summary (the ZIP stays)', { type: 'dismiss' }, 'quiet'));
+  const clear = h('p', { class: 'dismiss' }, actionButton(late ? 'Clear this to export again (the ZIP stays)' : 'Clear this summary (the ZIP stays)', { type: 'dismiss' }, 'quiet'));
   // It opens a page on the website, not an AI: the mark after its name says it leaves the popup, and a screen reader
   // hears where to. Its name is the notification's too, so the mark is said, not the name lengthened.
   const ai = button('Open it in an AI', () => void window.open(SITE_OPEN, '_blank'), 'opens');
   ai.insertAdjacentHTML('beforeend', OPENS_ICON);
   ai.append(h('span', { class: 'visually-hidden' }, ' (opens in a new tab)'));
   return [
-    h('h2', {}, 'Your export is ready'),
+    h('h2', {}, late ? 'Saved, without today’s medical file' : 'Your export is ready'),
     h('div', { class: 'file-card' },
       icon,
       h('div', {},
         h('strong', { class: 'filename' }, run.zipName || 'The ZIP'),
         h('div', { class: 'small muted' }, doneSummary(run)))),
+    late && note('warn', h('div', {}, late.what), h('div', {}, late.next)),
     count > 0 && h('details', { class: 'problems' },
       h('summary', {}, countOf(count, 'item', 'items') + ' could not be exported'),
       h('p', { class: 'small' }, 'Everything else was saved. A new export tries these again; this list is shown until it starts.'),

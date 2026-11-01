@@ -106,7 +106,7 @@ downloading the ZIP is under a second.
 
 The medical file overlaps the whole run: it is ordered on line 1 and collected on line 16. The run keeps
 `orderedAt` and `medicalFileMs`, the time from the order until the run has the PDF: here 2 min 54 s. Line 16's first
-check already found the file ready, so Maccabi took at most that, and the line waited only for the PDF. A file Maccabi is slower with makes line 16 poll every 15 s, up to 15 minutes (`waitMedicalFile`'s
+check already found the file ready, so Maccabi took at most that, and the line waited only for the PDF. A file Maccabi is slower with makes line 16 poll every 15 s, up to 30 minutes (`waitMedicalFile`'s
 `timeoutMs`), and the parts then name each status it waited in.
 
 The download itself is the `letters` part: about 8 s here, two requests of which the first was most likely answered
@@ -126,7 +126,8 @@ earlier one (`timestamp`, `hash` and `link` change on every read). So `waitMedic
   it has seen the new order pending (`mustSeePending`), or once 2 minutes (`appearMs`) have passed since the order
   (`orderedAt`). The rest of the run has usually used those up, so the first check takes the file.
 - waits past any other listed file, an earlier day's or today's over a narrower range (the site's own order form asks
-  for one), for up to 15 minutes: while it is listed, Maccabi has not swapped the new one in.
+  for one), for up to 30 minutes: while it is listed, Maccabi has not swapped the new one in. The member can leave the wait with
+  Save now (`giveUp`), once the first check has found the file not ready; a file ready at that moment is still taken.
 - gives up after `appearMs` only when the list is empty.
 - when it gives up, keeps the file Maccabi still lists and names it in `export-errors.json` (with its range when that is
   narrower than the whole history), and says to export again once Maccabi Online lists today's, which that export takes

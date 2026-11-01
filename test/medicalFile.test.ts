@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { keepListedMedicalFile, letters, newCtx, orderRefused, orderSettled, placeOrder, waitMedicalFile } from '../src/core';
 import type { HttpRequest } from '../src/core/types';
 import { fakeMaccabi, fakeTransport, makeCollector, FakeClock, MemorySink, PDF, bytesResp } from './fakes';
@@ -7,6 +7,31 @@ const SUMMARY = '/online/medicalfile/summary/';
 const ok = (success: string) => ({ status: 200, text: JSON.stringify({ d: JSON.stringify({ Success: success }) }) });
 
 describe('placeOrder', () => {
+  it('takes an order an earlier run sent today instead of sending another', async () => {
+    const xhr = vi.fn(() => ({ status: 200, text: JSON.stringify({ d: JSON.stringify({ Success: '1' }) }) }));
+    const site = fakeMaccabi();
+    const { c } = makeCollector(fakeTransport(site.routes, { pagePath: '/online/medicalfile/summary/', xhr }));
+    const beforeSend = vi.fn(async () => {});
+    const taken = await placeOrder(c, { beforeSend, earlier: { confirmed: true, code: '1' } });
+    expect(taken).toMatchObject({ ordered: true, earlier_order: true, success_code: '1', to_date: '2026-09-17' });
+    expect(taken.sent).toBeUndefined();
+    expect(orderSettled(taken)).toBe(true);
+    const lost = await placeOrder(c, { beforeSend, earlier: { confirmed: false } });
+    expect(lost).toMatchObject({ ordered: false, earlier_order: true });
+    expect(orderSettled(lost)).toBe(true);
+    expect(xhr).not.toHaveBeenCalled();
+    expect(beforeSend).not.toHaveBeenCalled();
+    // dev:reorder times a real order, whatever went before.
+    await placeOrder(c, { reorder: true, beforeSend, earlier: { confirmed: true } });
+    expect(xhr).toHaveBeenCalledOnce();
+  });
+
+  it('still prefers a file that is ready to an earlier order', async () => {
+    const site = fakeMaccabi({ medicalFile: { letter_type: 2, status: 1, link: 'x.pdf', to_date: '2026-09-17', from_date: '1900-01-01T00:00:00' } });
+    const { c } = makeCollector(fakeTransport(site.routes, { pagePath: '/online/medicalfile/summary/' }));
+    expect(await placeOrder(c, { earlier: { confirmed: true } })).toMatchObject({ skipped_ready_today: true });
+  });
+
   it('refuses to order from any other page', async () => {
     const site = fakeMaccabi();
     let xhrs = 0;
@@ -171,7 +196,7 @@ describe('waitMedicalFile', () => {
     const site = fakeMaccabi();
     const { c, sink } = makeCollector(fakeTransport(site.routes));
     expect(await waitMedicalFile(c, { toDate: '2026-09-17' })).toMatchObject({ ready: false });
-    expect((sink as MemorySink).problems[0].what).toMatch(/^no medical file with to_date 2026-09-17 after 1[23]\d s, so this export has no medical file\. Export again later today, /);
+    expect((sink as MemorySink).problems[0].what).toMatch(/^no medical file with to_date 2026-09-17 after 1[23]\d s, so this export has no medical file\. When Maccabi texts you today, export again/);
     expect((sink as MemorySink).problems[0].where).toBe('medical-file');
   });
 
@@ -197,7 +222,7 @@ describe('waitMedicalFile', () => {
     expect((sink as MemorySink).problems).toEqual([]);
   });
 
-  it('keeps the earlier day\'s file, and names it, when the new one is not listed in 15 minutes', async () => {
+  it('keeps the earlier day\'s file, and names it, when the new one is not listed in 30 minutes', async () => {
     const { c, sink } = makeCollector(fakeTransport(fakeMaccabi({ medicalFile: earlierDay }).routes));
     const w = await waitMedicalFile(c, { toDate: '2026-09-17', fromDate: '1900-01-01' });
     expect(w.ready).toBe(false);
@@ -206,9 +231,29 @@ describe('waitMedicalFile', () => {
     expect((sink as MemorySink).files.has('letters/list.json')).toBe(true);
     expect((sink as MemorySink).problems.map((p) => [p.where, p.what])).toEqual([[
       'medical-file',
-      'medical file to 2026-09-17 not listed after 15 min, so this export has the earlier medical file, 2026-09-10_medical-file.pdf. ' +
-      "Export again later today, once Maccabi Online lists today's: that export takes it without ordering again",
+      'medical file to 2026-09-17 not listed after 30 min, so this export has the earlier medical file, 2026-09-10_medical-file.pdf. ' +
+      "When Maccabi texts you today, export again: that export takes today's file without ordering again",
     ]]);
+  });
+
+  it('stops waiting when the member saves now, keeps the listed file, and names its day', async () => {
+    const { c, sink, clock } = makeCollector(fakeTransport(fakeMaccabi({ medicalFile: earlierDay }).routes));
+    let polls = 0;
+    const w = await waitMedicalFile(c, { toDate: '2026-09-17', fromDate: '1900-01-01', giveUp: () => ++polls >= 2 });
+    expect(w).toMatchObject({ ready: false, polls: 2, kept: '2026-09-10' });
+    expect(clock.sleeps.filter((ms) => ms === 15000)).toHaveLength(1);
+    expect((sink as MemorySink).files.get('2026-09-10_medical-file.pdf')).toEqual(PDF);
+    expect((sink as MemorySink).problems.map((p) => p.what)).toEqual([
+      'saved without waiting for the file ordered today, so this export has the earlier medical file, 2026-09-10_medical-file.pdf. ' +
+      "When Maccabi texts you today, export again: that export takes today's file without ordering again",
+    ]);
+  });
+
+  it('still takes a file that became ready as the member pressed Save now', async () => {
+    const ready = { ...earlierDay, to_date: '2026-09-17', from_date: '1900-01-01T00:00:00', status: 1, item_date: '2026-09-17T00:00:00' };
+    const { c, sink } = makeCollector(fakeTransport(fakeMaccabi({ medicalFile: ready }).routes));
+    expect(await waitMedicalFile(c, { toDate: '2026-09-17', fromDate: '1900-01-01', giveUp: () => true })).toMatchObject({ ready: true });
+    expect((sink as MemorySink).problems).toEqual([]);
   });
 
   it('keeps today\'s file over a narrower range when the new one is not swapped in, and says what it covers', async () => {
@@ -217,9 +262,9 @@ describe('waitMedicalFile', () => {
     expect(await waitMedicalFile(c, { toDate: '2026-09-17', fromDate: '1900-01-01' })).toMatchObject({ ready: false });
     expect((sink as MemorySink).files.has('2026-09-17_medical-file.pdf')).toBe(true);
     expect((sink as MemorySink).problems.map((p) => p.what)).toEqual([
-      'medical file to 2026-09-17 not listed after 15 min, so this export has the earlier medical file, ' +
-      "2026-09-17_medical-file.pdf, which covers only 2023-09-17 to 2026-09-17. Export again later today, once Maccabi Online lists today's: " +
-      'that export takes it without ordering again',
+      'medical file to 2026-09-17 not listed after 30 min, so this export has the earlier medical file, ' +
+      "2026-09-17_medical-file.pdf, which covers only 2023-09-17 to 2026-09-17. When Maccabi texts you today, export again: " +
+      "that export takes today's file without ordering again",
     ]);
   });
 

@@ -37,10 +37,10 @@ Load `dist-dev/` (or `dist/`) unpacked at `chrome://extensions`. The development
 `coverage`) before every push.
 
 `test/runner.test.ts` drives the run loop with `chrome.*` faked: a whole run, reconnecting, a rewind that does not
-order again, rate limits, Cancel, a worker restart at a checkpoint or while the medical file is being ordered, Save
-again, a run found `saving` after a restart (`settleSave`), and a hidden tab's pause (and Cancel during it). Some of
-it is not covered there: the heartbeat's `recover` of a running run, and the real Chrome parts the test fakes (the
-tab's navigation and `executeScript`, the offscreen ZIP, the download). A change to any of these, or to `runner.ts`,
+order again, a new run the same day, rate limits, going offline, Cancel, a worker restart at a checkpoint or while the
+medical file is being ordered, the heartbeat's `recover` of a running run, Save again, a run found `saving` after a
+restart (`settleSave`), and a hidden tab's pause (and Cancel during it). Some of it is not covered there: the real
+Chrome parts the test fakes (the tab's navigation and `executeScript`, the offscreen ZIP, the download). A change to any of these, or to `runner.ts`,
 needs a run of the development build as well (`npm run live`, and a pause and Resume from the console), and a test here when
 one can be written.
 
@@ -53,7 +53,7 @@ order the medical file and collect purchases, hospital stays and uploads (with t
 which the REST API answers from any page), back to `/sonline/` for the other REST API sections, and the medical file collected last, by which time Maccabi Healthcare Services has had the whole run to build it. Each finished step is
 checkpointed in `chrome.storage.local`, so a paused run, or a restarted service worker, continues from there. The
 medical file is ordered at most once per run: once the order has gone out, a resume or a reconnect that comes back
-through that step skips it, even when Maccabi Healthcare Services' answer was lost or was a refusal (`Success 3`, where the site's own button says to try again later): on 2026-10-15 a refused order was followed by its SMS 21 minutes later, so Maccabi may still carry one out, and asking again could text the member twice. So the order is not left for the step's checkpoint: the run is saved as the request goes out, and again with the answer, and a service worker killed in between comes back knowing it ordered. When no new file was ordered, the run keeps the file Maccabi already lists and files a problem that names it, so an earlier file is never taken for today's. After a refusal it tells the member to export again once the SMS comes, that day: that export takes the ready file without ordering.
+through that step skips it, even when Maccabi Healthcare Services' answer was lost or was a refusal (`Success 3`, where the site's own button says to try again later): on 2026-10-15 a refused order was followed by its SMS 21 minutes later, so Maccabi may still carry one out, and asking again could text the member twice. So the order is not left for the step's checkpoint: the run is saved as the request goes out, and again with the answer, and a service worker killed in between comes back knowing it ordered. The same goes across runs: the list shows no pending order, so `LAST_ORDER` in `chrome.storage.local`, which Cancel does not delete, keeps the day and the member of the last order sent, and a new run that day sends none. It waits for that order's file if Maccabi confirmed it, and otherwise keeps the listed file and says so. Maccabi's build has taken from under 3 minutes to, once, the next day, so the wait lasts up to 30 minutes, and from the first check that finds the file not ready the popup offers Save now, which ends the wait with the file already listed. Whenever the order's file did not make it, `medicalFileLate` makes the finished view and the notification say what the ZIP holds and to export again once Maccabi texts. When no new file was ordered, the run keeps the file Maccabi already lists and files a problem that names it, so an earlier file is never taken for today's. After a refusal it tells the member to export again once the SMS comes, that day: that export takes the ready file without ordering.
 
 A step that continues is run again from its start, so every step is safe to repeat: JSON is rewritten only when
 its content changed, and a document already staged is not asked for again. Staging also keeps a SHA-256 index of the
@@ -147,6 +147,8 @@ await dev({ type: 'dev:skipOrder', on: true });                  // test a full 
 | `dev:reorder` `{on}` | `orderMedicalFile` orders even when a file from today over the same range is already ready (normally it uses that one), so a real order can be timed again the same day. Stays set until turned off. |
 | `dev:breakSession` | Invalidate the stored token, to test reconnecting |
 | `dev:rawDump` `{on}` | Stage every response of the next run under `_raw/` in the ZIP, byte for byte, beside the export. Set it before `dev:start`. |
+| `dev:shapes` `{on}` | Keep the field names and types of every answer of the next run, never a value. Set it before `dev:start`. |
+| `dev:shapesSeen` `{known}` | What that run showed that the snapshot `known` has not, and the two merged. |
 | `dev:routes` `{routes}` | Choose whether `/sonline/` and `/online/` requests go from the extension or the tab |
 | `dev:spike` `{url, method, route, auth}` | Send one request and report its status and shape |
 | `dev:reload` | Reload the extension |
@@ -171,6 +173,7 @@ files collected per folder and the time and requests of each step and part (the 
 | `--keep` | Leaves the browser and the paused run in place, to look at them. |
 | `--root-files` | Also writes the ZIP's root files before discarding the run (`dev:rootFiles`), and prints the README's version line, what it says failed, and `export-errors.json` beside the popup's problem count. |
 | `--names` | Prints every staged file's path (`dev:names`), to check how files are named. |
+| `--shapes` | Records the field names and types of every answer, prints what [docs/endpoints/shapes.json](docs/endpoints/shapes.json) has not seen, and adds it there. See below. |
 | `--screenshots` | Photographs the popup before the start and at every step, into `.cache/live-screenshots/` (gitignored, since the problems it lists come from your records). It opens the toolbar popup itself, so leave the browser window in front while it runs. |
 
 The username and password come from 1Password through its CLI (`brew install 1password-cli`, then
@@ -192,6 +195,13 @@ script retrying a wrong password is how an account gets locked. The browser prof
 (`~/.hrem-live-profile`, or `LIVE_PROFILE`) and is kept between runs, so a session that is still alive is
 reused: every new sign-in ends your other sessions. Branded Chrome ignores `--load-extension`; there, load
 `dist-dev/` by hand once in that profile, and the script says so when it finds no extension answering.
+
+The tests only meet the fake site, so `--shapes` is what ties it to the real one. `docs/endpoints/shapes.json` holds,
+per endpoint, each field's path and types: a value never gets in (`src/extension/shared/shapes.ts`), a key that is not
+plainly a field name becomes `<key>`, an id in a path becomes `{id}`, and the script refuses to write Hebrew or a long
+number. It is only added to, since a field one account lacks has not left the site. `test/shapes.test.ts` then fails when
+`fakeMaccabi` answers with a field or type the snapshot has not seen: correct the fake, or the collector if the site
+moved. Read the printed differences as the first sign of a change on the site, and run it before a release.
 
 ## An export from the terminal, without the extension
 
@@ -221,8 +231,7 @@ run; the documents it found to be copies of another are remembered in `.export-s
 folder that is the script's and not the export's. A run that is stopped (an ended session, a 429, a page that will not
 open) keeps what it collected and still writes the root files, with the stop filed against the step it happened in.
 Like the popup, it ends the member's other Maccabi sessions when it has to sign in, and a wrong password is never
-resubmitted. It is a tool for working on the collector, and for an export without the popup; the popup remains the
-way to export for everyone else. `scripts/headless-lib.mjs` holds the two seams it puts under the collector, the page
+resubmitted. It is a tool for working on the collector; the popup is the way to export. `scripts/headless-lib.mjs` holds the two seams it puts under the collector, the page
 as `Transport` and a folder as `Sink`, and `test/headless.test.ts` runs the test-results step through them against
 the fake site.
 
@@ -234,8 +243,8 @@ npm run export -- --no-browser --all    # the same, every section
 npm run export -- --no-browser --sms    # sign in with an SMS code instead: Maccabi texts it, the script asks for it; --phone 2 picks between different numbers
 ```
 
-`--no-browser` needs no Chrome and no extension: the sign-in and the requests run in Node, so an export can run on a
-server, in a container, or from `cron` — the way to keep a copy of your records that refreshes itself. The sign-in is
+`--no-browser` needs no Chrome and no extension: the sign-in and the requests run in Node, which is what lets the
+collector be checked against the site with nothing else in the way. The sign-in is
 Maccabi's own SAML handoff replayed over `fetch` with a cookie jar (`scripts/maccabi-session.mjs`): the chain that
 [Oren Yomtov's maccabi-health](https://github.com/orenyomtov/maccabi-health) (MIT) first worked out and documented
 in its [AUTH.md](https://github.com/orenyomtov/maccabi-health/blob/main/docs/AUTH.md), and where that project showed

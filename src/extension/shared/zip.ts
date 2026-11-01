@@ -8,8 +8,9 @@ const STORED = new Set(['.pdf', '.zip', '.jpg', '.jpeg', '.png', '.gif', '.docx'
 
 /**
  * The ZIP's bytes, as the chunks fflate emits. rels are added in the order given, each as
- * `<root>/<rel>`; read() supplies one file's bytes at a time, so the whole export is never held
- * in memory twice. A rel whose bytes are missing is left out. Hebrew names need nothing extra:
+ * `<root>/<rel>`; read() supplies one file's bytes at a time, so staging is never read in whole first.
+ * The chunks are the whole ZIP in memory, and the Blob made from them overlaps it for a moment, which is
+ * nothing at the 16 MB of a usual export. A rel whose bytes are missing is left out. Hebrew names need nothing extra:
  * fflate flags an entry UTF-8 when its name has non-ASCII bytes.
  */
 export async function zipChunks(

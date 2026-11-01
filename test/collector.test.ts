@@ -440,10 +440,16 @@ describe('full run against the fake site', () => {
 
   it('names an inquiry by what it is about, and its forms by their kind', async () => {
     const site = fakeMaccabi();
-    const details: Route = (_req, url) => (url.pathname.endsWith('/inquiries/Q2/details')
-      ? jsonResp({ request_subjects: [{ name: 'חידוש מרשם' }, { name: 'שאלה' }], general_question_subject: 'לא זה',
-        medical_forms_details: [{ document_description: 'הוראות לתרופות', link_pdf: 'l' }, { document_description: 'אישור', link_pdf: 'l' }] })
-      : undefined);
+    // The subjects are on the list's entry; the site's details do not carry them.
+    const details: Route = (_req, url) => {
+      if (url.pathname.endsWith('/inquiries')) {
+        return jsonResp({ inquiries: [{ request_id: 'Q2', creation_date: '2026-04-05T09:00:00', request_subjects: [{ id: 1, name: 'חידוש מרשם' }, { id: 2, name: 'שאלה' }],
+          medical_forms_documents: [{ result_file: 'f/2.pdf', timestamp: 't', hash: 'h' }, { result_file: 'f/3.pdf', timestamp: 't', hash: 'h' }] }] });
+      }
+      return url.pathname.endsWith('/inquiries/Q2/details')
+        ? jsonResp({ general_question_subject: 'לא זה', medical_forms_details: [{ document_description: 'הוראות לתרופות', link_pdf: 'l' }, { document_description: 'אישור', link_pdf: 'l' }] })
+        : undefined;
+    };
     const { c, sink } = makeCollector(fakeTransport([details, ...site.routes]));
     await runAll(c, newCtx(), ['doctorCommunications']);
     const mem = sink as MemorySink;
@@ -618,6 +624,18 @@ describe('full run against the fake site', () => {
       expect([...(sink as MemorySink).files.keys()]).toEqual([]);
     });
   }
+});
+
+describe('a file the sink refuses', () => {
+  it('is filed as a problem, so the export says it is missing, and its record is not marked whole', async () => {
+    const sink = new MemorySink();
+    const { c } = makeCollector(fakeTransport(fakeMaccabi().routes), sink);
+    expect(await c.save('a//b.json', {})).toBeUndefined();
+    expect(await c.saveBin('../c.pdf', PDF)).toBeUndefined();
+    expect(sink.problems.map((p) => p.where)).toEqual(['a//b.json', '../c.pdf']);
+    expect(sink.problems[0].what).toMatch(/bad path/);
+    expect(c.problemCount).toBe(2);
+  });
 });
 
 describe('problems', () => {

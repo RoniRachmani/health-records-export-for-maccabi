@@ -229,6 +229,32 @@ describe('popup', () => {
     expect(sent.map((m) => m.type)).toContain('start');
   });
 
+  it('offers Save now beside Cancel while the file is prepared, and sends it', async () => {
+    await openPopup({ run: running(), tab });
+    expect(document.body.textContent).not.toContain('Save now');
+    storageChange(running({ next: PLAN.indexOf('waitMedicalFile'), detail: 'Collecting your medical file: medical file status pending', order: { ordered: true } }));
+    buttonNamed('Save now, without today’s file').click();
+    await flush();
+    expect(sent.map((m) => m.type)).toContain('saveNow');
+    expect(buttonNamed('Cancel export').closest('.dismiss')).not.toBeNull();
+  });
+
+  it('heads the finish with the late medical file, says it once, and counts only the other items', async () => {
+    const problems = [
+      { where: 'medical-file', what: 'medical file to 2026-11-01 not listed after 30 min', at: '' },
+      { where: 'visit-summaries/files/x.pdf', what: 'HTTP 500', at: '' },
+    ];
+    await openPopup({ run: running({ status: 'done', next: PLAN.length, percent: 100, medicalFileLate: { kept: '2026-10-29' }, problems, problemCount: 2 }), tab });
+    expect(document.querySelector('h2')?.textContent).toBe('Saved, without today’s medical file');
+    expect(document.querySelector('.note.warn')?.textContent).toContain('your medical file from 29 October 2026');
+    expect(document.querySelector('details.problems summary')?.textContent).toBe('1 item could not be exported');
+    expect(document.body.textContent).not.toContain('not listed after');
+    buttonNamed('Clear this to export again (the ZIP stays)');
+
+    await openPopup({ run: running({ status: 'done', next: PLAN.length, percent: 100, medicalFileLate: {}, problems: [problems[0]], problemCount: 1 }), tab });
+    expect(document.querySelector('details.problems')).toBeNull();
+  });
+
   it('reports the full problem count when only the first problems are kept', async () => {
     const problems = Array.from({ length: 50 }, (_, i) => ({ where: 'test-results/files/' + i + '.pdf', what: 'HTTP 500', at: '' }));
     const done = running({ status: 'done', next: PLAN.length, percent: 100, fileCount: 1234, zipName: 'maccabi-export-2026-09-17.zip', finishedAt: new Date().toISOString(), problems, problemCount: 73 });

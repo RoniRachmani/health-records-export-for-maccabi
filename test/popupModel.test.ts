@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  announcement, bandSpan, doneSummary, keptConfirm, nextAction, problemCount, progressTexts,
+  announcement, bandSpan, canSaveNow, doneSummary, keptConfirm, lateFileText, nextAction, problemCount, progressTexts,
   countText, currentStage, DESCRIPTIONS, formatBytes, formatDuration, groupProblems, hintText, problemText, STAGES, stageFileCounts, stageSpan, stageStates, statsText,
   stepText, viewKey, waitingForFile, type UiFlags,
 } from '../src/extension/popup/model';
@@ -204,7 +204,7 @@ describe('statsText and stepText', () => {
     expect(stepText({ ...base, next: PLAN.indexOf('approvals'), detail: 'Approvals: approvals' }).detail).toBe('Downloading each approval as a PDF');
     expect(stepText({ ...base, next: PLAN.indexOf('infoPages'), detail: 'Information pages: information pages' }).detail).toBe('Downloading each page as a PDF');
     const waiting = { ...base, next: PLAN.indexOf('waitMedicalFile') };
-    expect(stepText({ ...waiting, detail: 'Collecting your medical file: medical file status 2' }).detail).toBe('Maccabi is preparing it: up to 15 min');
+    expect(stepText({ ...waiting, detail: 'Collecting your medical file: medical file status 2' }).detail).toBe('Maccabi is preparing it: up to 30 min');
     expect(stepText({ ...base, next: PLAN.length })).toEqual({ title: '', detail: '' });
   });
 
@@ -321,6 +321,36 @@ describe('the running panel', () => {
     const { title, detail } = stepText(r);
     expect(progressTexts(r)).toEqual({ pill: 'Exporting · 12%', valueText: '12%, ' + title + ': ' + detail + ', ' + countText(r) });
     expect(progressTexts({ ...r, status: 'saving' }).pill).toBe('Saving');
+  });
+});
+
+describe('Save now', () => {
+  const waiting = (over: Partial<RunState> = {}) => ({
+    status: 'running', next: PLAN.indexOf('waitMedicalFile'), detail: LABELS.waitMedicalFile + ': medical file status pending', order: { ordered: true }, ...over,
+  } as RunState);
+
+  it('is offered once the run has looked and found the file not ready', () => {
+    expect(canSaveNow(waiting())).toBe(true);
+    expect(canSaveNow(waiting({ detail: LABELS.waitMedicalFile + ': waiting for the medical file to appear' }))).toBe(true);
+  });
+
+  it('is not offered at the first check, while downloading, once pressed, or with nothing ordered', () => {
+    expect(canSaveNow(waiting({ detail: LABELS.waitMedicalFile }))).toBe(false);
+    expect(canSaveNow(waiting({ detail: LABELS.waitMedicalFile + ': letters' }))).toBe(false);
+    expect(canSaveNow(waiting({ saveNow: true }))).toBe(false);
+    expect(canSaveNow(waiting({ order: { ordered: false } }))).toBe(false);
+    expect(canSaveNow(waiting({ next: PLAN.indexOf('visits') }))).toBe(false);
+  });
+});
+
+describe('lateFileText', () => {
+  it('says what the ZIP has, then what to do', () => {
+    expect(lateFileText({ medicalFileLate: { kept: '2026-10-29' } })).toEqual({
+      what: 'This ZIP has your medical file from 29 October 2026: Maccabi hasn’t finished today’s yet.',
+      next: 'When Maccabi texts you today, export again. It takes a few minutes and won’t order another.',
+    });
+    expect(lateFileText({ medicalFileLate: {} })?.what).toMatch(/^This ZIP has no medical file:/);
+    expect(lateFileText({})).toBeNull();
   });
 });
 

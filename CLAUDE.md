@@ -20,6 +20,7 @@ npm run dev                       # watch build into dist-dev/ (dev build, extra
 npm run build                     # typecheck + store build into dist/
 npm run package                   # build + release/<name>-<version>.zip (refuses a dev build)
 npm run live                      # a live export on your own account, never ordering, no ZIP (1Password refs in .env)
+npm run live -- --shapes          # the same, and records each answer's field names and types into docs/endpoints/shapes.json
 npm run export                    # an export with no extension: test results into ./maccabi-export-<today>/ (same .env)
 npm run export -- --all           # every section, nothing ordered; --steps a,b for some; --out DIR; --keep
 npm run export -- --no-browser    # no Chrome: SAML sign-in over fetch with the password from .env or 1Password, requests from Node
@@ -135,7 +136,7 @@ problem is never marked, since problems are cleared when a step re-runs. **Every
 re-run from the start** — a resume, a reconnect or a rewind through `OPENED_BY` will do exactly that. A change that
 renames files already staged bumps `FILE_LAYOUT` in `state.ts`, so a run paused across the update is discarded
 instead of staging both names.
-`orderMedicalFile` guards itself (`run.order`) because re-running it would order and SMS again. A stored run nobody
+`orderMedicalFile` guards itself (`run.order`, and `LAST_ORDER` in `chrome.storage.local` for a new run the same day, since Cancel deletes the run) because re-running it would order and SMS again. A stored run nobody
 comes back to for `STAGING_TTL_MS` (7 days) is discarded with its staging (`abandoned` in `state.ts`, checked by
 `loadRun`, woken by the `hrem-expiry` alarm): change the Privacy Policy with it.
 
@@ -218,6 +219,9 @@ renamed is then a `kind: 'shape'` problem (the site may have changed), not a sec
   package, a release or the website), and nothing a member reads (the README's parts for members, the store listing, the landing
   page, the popup, an export's README) offers or mentions them. Work on them keeps out of the code that ships
   (`src/extension/`, and `src/core/` beyond what the extension needs too); `src/cli/index.ts` only re-exports for them.
+- **The fake site follows the real one**: `npm run live -- --shapes` keeps each answer's field names and types in
+  `docs/endpoints/shapes.json`, values never, and `test/shapes.test.ts` holds `fakeMaccabi` to it. That file is the one
+  thing a live run writes into the repo: keep `shared/shapes.ts` letting no value through.
 - **Every request goes in `docs/endpoints/`**: the collector's (`src/core`, sent from the tab or from Node) in
   `endpoints.json` with the file it produces, and the ones the scripts send themselves (the sign-in chain, the token
   bootstrap, the legacy page prime) in `scripts-endpoints.json` with what each sends and returns, names and shapes and

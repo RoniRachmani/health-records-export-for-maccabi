@@ -1,4 +1,4 @@
-import { errMessage, type Ctx, type OrderResult, type Problem } from '../../core';
+import { errMessage, LEGACY_STEPS, MEDICAL_FILE, type Ctx, type OrderResult, type Problem } from '../../core';
 import { israelToday } from '../../core/util';
 
 export const MACCABI_ORIGIN = 'https://online.maccabi4u.co.il';
@@ -86,7 +86,7 @@ const STEP_ROWS = [
   { step: 'infoPages', weight: 1, label: 'Information pages' },
   // Small because it runs last: the file has had the whole collection to be built, so this is
   // usually one poll plus the download (8.6 s). A file Maccabi is slower with holds the bar here,
-  // with the panel saying it is being prepared: no weight fits a wait of seconds to 15 minutes.
+  // with the panel saying it is being prepared: no weight fits a wait of seconds to 30 minutes.
   { step: 'waitMedicalFile', weight: 5, label: 'Collecting your medical file' },
   // Building and downloading the ZIP took under a second.
   { step: 'save', weight: 1, label: 'Saving the ZIP' },
@@ -156,7 +156,32 @@ export interface RunState {
   /** Hash of the member id, to refuse resuming as a different member. */
   memberHash?: string;
   heartbeatAt?: number;
+  /** Cancel was pressed while a loop held the run: a worker that dies before discarding it leaves this for the next. */
+  cancelling?: boolean;
+  /** The member pressed Save now during the medical file's wait. Stored, so a restarted worker does not wait on. */
+  saveNow?: boolean;
+  /** The run ended without the file it ordered: `kept` is the day of the file it has instead, if any. */
+  medicalFileLate?: { kept?: string };
 }
+
+/**
+ * The last medical file order, kept in chrome.storage.local under LAST_ORDER apart from the run, which Cancel deletes.
+ * Maccabi texts the member for each order and its list shows no pending one, so this is all that stops a new run from
+ * ordering again the same day. Written before the order goes out, and again with its answer.
+ */
+export interface LastOrder {
+  /** The day in Israel it was sent, which is its to_date. */
+  day: string;
+  memberHash: string;
+  /** When it was sent (ISO). */
+  at: string;
+  /** Maccabi confirmed it, so a later run waits for its file. */
+  confirmed: boolean;
+  /** Its Success code, when an answer came. */
+  code?: string;
+}
+
+export const LAST_ORDER = 'lastOrder';
 
 export interface TabInfo {
   onMaccabi: boolean;
@@ -174,6 +199,7 @@ export type Request =
   | { type: 'cancel' }
   | { type: 'dismiss' }
   | { type: 'retrySave' }
+  | { type: 'saveNow' }
   | { type: 'showFile' }
   | { type: 'openMaccabi' }
   | { type: 'focusTab' };
@@ -190,11 +216,7 @@ export interface StateReply {
  * page itself when it has to, so resuming at the order does not repeat the purchases, uploads
  * and hospital stays that share that page.
  */
-const OPENED_BY: Partial<Record<PlanStep, PlanStep>> = {
-  purchases: 'openLegacyPage',
-  savedDocuments: 'openLegacyPage',
-  hospitalStays: 'openLegacyPage',
-};
+const OPENED_BY: Partial<Record<PlanStep, PlanStep>> = Object.fromEntries(LEGACY_STEPS.map((s) => [s, 'openLegacyPage' as const]));
 
 /**
  * A stored run points at the step to run next by index, and editing PLAN moves indices: an
@@ -220,8 +242,9 @@ export function alignToPlan(run: { next: number; nextStep?: PlanStep }): boolean
  * 4: a test is titled by its procedures or kind, which the site sends as lists; no test had a title.
  * 5: a test's procedures are also read from procedures[]; a referral is titled by its specialist; a
  * visit linked from an inquiry by its speciality, as listed visits are; prescriptions are one PDF per visit.
+ * 6: an inquiry is titled by the subjects the list gives it, which were looked for in its details.
  */
-export const FILE_LAYOUT = 5;
+export const FILE_LAYOUT = 6;
 
 /**
  * False when a stored run was started by a version that named files differently and still has
@@ -260,8 +283,57 @@ export function abandoned(run: { heartbeatAt?: number; startedAt?: string }, now
   return Number.isFinite(last) && now - last > STAGING_TTL_MS;
 }
 
+/** The moves a run's status can make: every status the runner sets goes through nextStatus. */
+export type RunEvent = 'resume' | 'pause' | 'hide' | 'show' | 'stop' | 'save' | 'saved' | 'saveFailed' | 'retrySave' | 'obsolete';
+
+const ALL_STATUSES: readonly RunStatus[] = ['running', 'paused_session', 'paused_hidden', 'saving', 'done', 'error'];
+
+const MOVES: Record<RunEvent, { from: readonly RunStatus[]; to: RunStatus }> = {
+  // Resume, from a pause, a stop or a run no worker holds any more.
+  resume: { from: ['paused_session', 'paused_hidden', 'running', 'error'], to: 'running' },
+  // The session ended, or Chrome restarted, with the run going, waiting for its tab or saving.
+  pause: { from: ['running', 'paused_hidden', 'saving'], to: 'paused_session' },
+  hide: { from: ['running', 'paused_hidden'], to: 'paused_hidden' },
+  show: { from: ['running', 'paused_hidden'], to: 'running' },
+  stop: { from: ['running', 'paused_hidden', 'saving'], to: 'error' },
+  save: { from: ['running'], to: 'saving' },
+  saved: { from: ['saving'], to: 'done' },
+  saveFailed: { from: ['saving'], to: 'error' },
+  retrySave: { from: ['error'], to: 'running' },
+  // Stored by a version this one cannot continue: it can only be discarded.
+  obsolete: { from: ALL_STATUSES, to: 'error' },
+};
+
+/** Whether the event applies to a run in this status. */
+export function canMove(status: RunStatus, event: RunEvent): boolean {
+  return MOVES[event].from.includes(status);
+}
+
+/** The status after the event; a status it does not apply to stays as it is. */
+export function nextStatus(status: RunStatus, event: RunEvent): RunStatus {
+  return canMove(status, event) ? MOVES[event].to : status;
+}
+
+/** A worker's loop or a download is carrying the run forward. */
+export function isDriven(status: RunStatus): boolean {
+  return status === 'running' || status === 'saving';
+}
+
+/** The run is not over, so a new one cannot start beside it. */
+export function isUnderway(status: RunStatus): boolean {
+  return isDriven(status) || status === 'paused_session' || status === 'paused_hidden';
+}
+
+export const OFFLINE_MESSAGE =
+  'This computer seems to be offline, so the export paused. Once it is back online, click the extension’s icon on the Maccabi Online tab and press Resume. Files collected so far are kept.';
+
 export const SESSION_ENDED_MESSAGE =
   'Your Maccabi Online session ended. Log in again, then click the extension’s icon on the Maccabi Online tab and press Resume. Files collected so far are kept.';
+
+/** Problems without the one about the late medical file, which the finished view and the notification say in full. */
+export function withoutLateFile<P extends Problem>(problems: P[], run: Pick<RunState, 'medicalFileLate'>): P[] {
+  return run.medicalFileLate ? problems.filter((p) => p.where !== MEDICAL_FILE) : problems;
+}
 
 /** What the run does when a step throws: the runner carries it out, this only decides. */
 type StepFailure =

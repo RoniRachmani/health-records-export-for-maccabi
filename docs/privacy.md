@@ -2,7 +2,7 @@
 
 [Maccabi Health Records Takeout](https://maccabi.ronirachmani.com/)
 
-Effective 28 October 2026
+Effective 1 November 2026
 
 <!-- public/privacy.html, which ships in the extension at chrome-extension://<id>/privacy.html, is written from this: run `node scripts/policy-pages.mjs` after editing. -->
 
@@ -29,6 +29,7 @@ checks that tab's login session and reads your first name. It reads the rest whe
 - Export progress: which steps are done, how many files and how much data are collected, the ZIP file's name, a list
   of items that could not be exported, your birth date (needed to request vaccination details), and a code computed
   from your member ID, which stops a paused export from being resumed by a different member.
+- The day and time of your last medical file order, and whether Maccabi confirmed it.
 - One setting: which version of the Terms of Use and this policy you accepted, by effective date, in the notice shown
   the first time you open the popup.
 
@@ -54,6 +55,10 @@ not used for any other purpose.
   holds short codes computed from the names of the records already collected, so a resumed export does not ask for them
   again. It is deleted when you press Clear this summary, or cancel or discard the export, and 7 days after the export
   last made progress.
+- The day and time of your last medical file order, whether Maccabi confirmed it, and the code computed from your
+  member ID, are kept in the extension's local storage, on your computer's disk, even after you cancel an export. They
+  stop a new export that day from ordering again, which would make Maccabi text you again. The next order replaces
+  them, and they are deleted when you remove the extension.
 - The notice setting is kept in the extension's local storage. It is deleted when you remove the extension.
 - The ZIP file is saved to your Downloads folder and stays there until you delete it. Chrome also lists it in its
   download history.

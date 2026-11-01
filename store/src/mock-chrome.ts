@@ -1,5 +1,5 @@
 /* Store images and the promo video only: stands in for the extension APIs the real popup uses, so
-   it renders a made-up state (?state=notice|ready|login|running|paused|error|done|problems). No real data. */
+   it renders a made-up state (?state=notice|ready|login|running|waiting|paused|error|done|late|problems). No real data. */
 import pkg from '../../package.json';
 import { PLAN, type RunState, type StateReply } from '../../src/extension/shared/state';
 
@@ -57,6 +57,18 @@ const STATES: Record<string, Omit<StateReply, 'noticeAccepted'> & { noticeAccept
     }),
     tab,
   },
+  waiting: {
+    run: run({
+      next: PLAN.indexOf('waitMedicalFile'),
+      detail: 'Collecting your medical file: medical file status pending',
+      percent: 95,
+      fileCount: 480,
+      byteCount: 37_900_000,
+      order: { ordered: true, sent: true },
+      filesByKey: { profileAndDoctors: 7, emptySections: 3, medications: 1, 'medications:prescriptions': 8, 'purchases:purchase history': 2, 'purchases:purchase report': 2, 'hospitalStays:hospital stays': 1, 'hospitalStays:hospital letters': 2, 'savedDocuments:saved documents': 11, testResults: 3, 'testResults:test results': 182, 'testResults:lab histories': 38, visits: 40, referrals: 60, approvals: 20, vaccinations: 10, letters: 6, doctorCommunications: 80, infoPages: 4 },
+    }),
+    tab,
+  },
   paused: {
     run: run({
       status: 'paused_session',
@@ -73,6 +85,15 @@ const STATES: Record<string, Omit<StateReply, 'noticeAccepted'> & { noticeAccept
     tab,
   },
   done: { run: done, tab },
+  late: {
+    run: {
+      ...done,
+      medicalFileLate: { kept: '2026-09-10' },
+      problems: [{ where: 'medical-file', what: 'medical file to 2026-09-17 not listed after 30 min', at: '' }],
+      problemCount: 1,
+    },
+    tab,
+  },
   problems: {
     run: {
       ...done,

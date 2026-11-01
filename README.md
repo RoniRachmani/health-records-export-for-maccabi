@@ -91,7 +91,7 @@ Then load the `dist/` folder the same way.
    **Agree and continue**. Nothing is read from the tab until you do.
 3. Leave the tab open and in front. It starts on the old site's medical-file page, to order your file and collect the
    parts that live there, then returns to the new site for the rest. The toolbar badge shows progress.
-4. Usually after a few minutes (up to 20 if the medical file is slow to arrive), `maccabi-export-YYYY-MM-DD.zip` is in your Downloads folder and Chrome notifies you.
+4. Usually after a few minutes (up to 35 if the medical file is slow to arrive), `maccabi-export-YYYY-MM-DD.zip` is in your Downloads folder and Chrome notifies you.
 5. Unzip it, open the folder in the Claude or ChatGPT desktop app and ask. See
    [Hand it to an AI assistant](#hand-it-to-an-ai-assistant).
 

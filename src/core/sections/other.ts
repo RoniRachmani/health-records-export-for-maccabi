@@ -26,7 +26,7 @@ export async function doctorCommunications(c: Collector, ctx: Ctx): Promise<void
     const path = 'CommunicationWithDoctorAPI/v1/members/0/{mid}/inquiries/' + x.request_id + '/details';
     const d = await c.fetchRec(first, 'GET', path);
     const details: Json = d.ok ? d.r.data : null;
-    const rel = 'communication-with-doctor/details/' + stem(date, safe(x.request_id), inquiryTitle(details) || byDoctor) + '.json';
+    const rel = 'communication-with-doctor/details/' + stem(date, safe(x.request_id), inquiryTitle(x, details) || byDoctor) + '.json';
 
     const docs: Json[] = x.medical_forms_documents || [];
     const names = formNames(docs, details, byDoctor);
@@ -53,13 +53,13 @@ export async function doctorCommunications(c: Collector, ctx: Ctx): Promise<void
 }
 
 /**
- * What an inquiry is about: the subjects the member picked, the kinds of form the doctor sent back, or
- * the question's own subject -- last, because it can be the opening of the member's message rather
- * than a subject (seen 2026-09-28). '' when the details name none of them, and the doctor names it.
+ * What an inquiry is about: the subjects the member picked, which the list gives and the details do not, the kinds
+ * of form the doctor sent back, or the question's own subject -- last, because it can be the opening of the member's
+ * message rather than a subject (seen 2026-09-28). '' when none of them says, and the doctor names it.
  */
-function inquiryTitle(details: Json): string {
+function inquiryTitle(listed: Json, details: Json): string {
   if (!details) return '';
-  const subjects: Json[] = (details.request_subjects || []).map((s: Json) => s && s.name).filter((n: Json) => typeof n === 'string' && n.trim());
+  const subjects: Json[] = (listed.request_subjects || []).map((s: Json) => s && s.name).filter((n: Json) => typeof n === 'string' && n.trim());
   const kinds: string[] = [];
   for (const f of details.medical_forms_details || []) {
     const k = typeof f.document_description === 'string' ? f.document_description.trim() : '';

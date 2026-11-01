@@ -1,6 +1,6 @@
 // An export from the terminal, with no extension: the same collector the extension runs (src/core/),
 // driven from Node against a browser this script opens and signs in to, writing the same folder the
-// ZIP would hold. For working on the collector, or for an export without the popup.
+// ZIP would hold. For working on the collector.
 //
 //   npm run export                        test results and lab histories into ./maccabi-export-<today>/
 //   npm run export -- --all               every section the extension collects, except that nothing is

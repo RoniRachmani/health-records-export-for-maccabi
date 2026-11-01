@@ -3,12 +3,12 @@
    worker can pick it up); the member's session token lives only in
    chrome.storage.session; exported files live in IndexedDB staging. */
 import {
-  apiPath, CancelledError, Collector, countOf, LEGACY_STEPS, MEDICAL_FILE, newCtx, orderSettled, placeOrder, runStep,
+  apiPath, CancelledError, Collector, countOf, israelToday, LEGACY_STEPS, MEDICAL_FILE, newCtx, orderSettled, placeOrder, runStep,
   SessionEndedError, sha256Hex, waitMedicalFile, keepListedMedicalFile, type Session, type StepName, type Transport,
 } from '../../core';
 import {
-  abandoned, alignToPlan, exportName, FILE_LAYOUT, LABELS, MACCABI_ORIGIN, percentOf, PLAN, resumeIndex, sameLayout, savingOutcome, SESSION_ENDED_MESSAGE, SONLINE_PAGE, STAGING_TTL_DAYS, STAGING_TTL_MS, stepFailure,
-  SUMMARY_PAGE, type PlanStep, type RunState,
+  abandoned, alignToPlan, canMove, exportName, FILE_LAYOUT, isDriven, isUnderway, LABELS, LAST_ORDER, MACCABI_ORIGIN, nextStatus, OFFLINE_MESSAGE, percentOf, PLAN, resumeIndex, sameLayout, savingOutcome, SESSION_ENDED_MESSAGE, SONLINE_PAGE, STAGING_TTL_DAYS, STAGING_TTL_MS, stepFailure,
+  SUMMARY_PAGE, withoutLateFile, type LastOrder, type PlanStep, type RunEvent, type RunState,
 } from '../shared/state';
 import {
   clearProblemsOfStep, clearStaging, listMeta, listProblems, putTextDirect, setCurrentPart, setCurrentStep, stagedTotals, stagingKey, stagingSink,
@@ -16,6 +16,7 @@ import {
 import { EXPORT_ERRORS, exportErrors, exportReadme, INSTRUCTION_POINTERS, type ExportError } from '../shared/readme';
 import { callOffscreen, closeOffscreen, offscreenHtml, revokeBlob } from './offscreenClient';
 import { capturingTransport, rawDumpOn } from './rawDump';
+import { recordingTransport, shapesOn } from './shapeDump';
 import { currentRoutes, currentSession, extensionFetch, isVisible, keepSessionAlive, navigate, routedTransport, snapshot } from './tab';
 import { updateBadge, notify } from './ui';
 
@@ -32,11 +33,17 @@ let saveTimer: ReturnType<typeof setTimeout> | undefined;
 let loaded: Promise<void> | null = null;
 /** When the EXPIRY alarm is set for (0: not set), so save() touches it only when that changes. */
 let expiryAt = -1;
+/** Wakes whatever the run is sleeping on, so Cancel does not sit through a long wait. */
+const sleepers = new Set<() => void>();
 
 const OLD_VERSION_MESSAGE =
   'An earlier version of the extension started this export, so it can’t be continued. Delete its files and start a new export.';
 
 // ---- state ------------------------------------------------------------
+function move(run: RunState, event: RunEvent): void {
+  run.status = nextStatus(run.status, event);
+}
+
 export async function loadRun(): Promise<RunState | null> {
   // Read once per worker, and shared: at a browser start the start-up and the heartbeat recovery both get here at once.
   await (loaded ??= (async () => {
@@ -44,7 +51,7 @@ export async function loadRun(): Promise<RunState | null> {
     // A run stored before this field existed has no name to check against, and keeps its index.
     if (state && (!alignToPlan(state) || !sameLayout(state))) {
       state.planMismatch = true;
-      state.status = 'error';
+      move(state, 'obsolete');
       state.message = OLD_VERSION_MESSAGE;
     }
   })());
@@ -68,7 +75,7 @@ async function expire(): Promise<void> {
 async function save(): Promise<void> {
   clearTimeout(saveTimer);
   saveTimer = undefined;
-  if (state && (state.status === 'running' || state.status === 'saving')) {
+  if (state && isDriven(state.status)) {
     const t = await stagedTotals();
     // The run may have been discarded meanwhile.
     if (state) {
@@ -86,7 +93,7 @@ async function save(): Promise<void> {
   }
   await updateBadge(state);
   // A run no loop drives may never wake a worker again on its own: the alarm does, when it is due to be discarded.
-  const at = state && !['running', 'saving'].includes(state.status) ? state.heartbeatAt! + STAGING_TTL_MS + 60_000 : 0;
+  const at = state && !isDriven(state.status) ? state.heartbeatAt! + STAGING_TTL_MS + 60_000 : 0;
   if (at !== expiryAt) {
     expiryAt = at;
     if (at) await chrome.alarms.create(EXPIRY, { when: at });
@@ -128,7 +135,7 @@ async function loggedInSession(tabId: number): Promise<Session> {
 
 export async function start(tabId: number): Promise<void> {
   const run = await loadRun();
-  if (run && ['running', 'saving', 'paused_session', 'paused_hidden'].includes(run.status)) {
+  if (run && isUnderway(run.status)) {
     throw new UserError('An export is already in progress. Resume or cancel it first.');
   }
   const s = await loggedInSession(tabId);
@@ -155,7 +162,7 @@ export async function start(tabId: number): Promise<void> {
 export async function resume(tabId: number): Promise<void> {
   if (active) return; // still running, e.g. waiting for the tab to come back to the front
   const run = await loadRun();
-  if (!run || !['paused_session', 'paused_hidden', 'running', 'error'].includes(run.status)) throw new UserError('There is no paused export to resume.');
+  if (!run || !canMove(run.status, 'resume')) throw new UserError('There is no paused export to resume.');
   if (run.planMismatch) throw new UserError(OLD_VERSION_MESSAGE);
   const s = await loggedInSession(tabId);
   if (!(await sameMember(run, s))) {
@@ -165,7 +172,7 @@ export async function resume(tabId: number): Promise<void> {
   cancelRequested = false;
   run.tabId = tabId;
   run.next = resumeIndex(run.next);
-  run.status = 'running';
+  move(run, 'resume');
   run.message = undefined;
   run.errorDetail = undefined;
   await save();
@@ -174,8 +181,29 @@ export async function resume(tabId: number): Promise<void> {
 
 export async function cancel(): Promise<void> {
   cancelRequested = true;
-  if (active) return; // the loop stops at its next request and cleans up
+  wakeSleepers();
+  if (active) {
+    // The loop stops at its next request and cleans up; a worker that dies first leaves this for the next to finish.
+    if (state) {
+      state.cancelling = true;
+      await save();
+    }
+    return;
+  }
   await discard();
+}
+
+/** Stops waiting for the medical file: the run takes the file Maccabi lists and goes on to the ZIP. */
+export async function saveNow(): Promise<void> {
+  const run = await loadRun();
+  if (run?.status !== 'running' || PLAN[run.next] !== 'waitMedicalFile') throw new UserError('The export is not waiting for the medical file.');
+  run.saveNow = true;
+  await save();
+  wakeSleepers();
+}
+
+function wakeSleepers(): void {
+  for (const wake of [...sleepers]) wake();
 }
 
 async function discard(): Promise<void> {
@@ -201,6 +229,10 @@ export async function dismiss(): Promise<void> {
 export async function recover(reason: 'startup' | 'heartbeat'): Promise<void> {
   const run = await loadRun();
   if (!run || active) return;
+  if (run.cancelling) {
+    await discard();
+    return;
+  }
   if (run.status === 'saving') {
     await settleSave(run);
     return;
@@ -210,7 +242,7 @@ export async function recover(reason: 'startup' | 'heartbeat'): Promise<void> {
       await pause('paused_session', 'Chrome was restarted during the export. Log in to Maccabi Online, then click the extension’s icon on the Maccabi Online tab and press Resume. Files collected so far are kept.');
       return;
     }
-    run.status = 'running';
+    move(run, 'resume');
     void loop();
   }
 }
@@ -218,7 +250,7 @@ export async function recover(reason: 'startup' | 'heartbeat'): Promise<void> {
 // ---- the loop ----------------------------------------------------------
 async function pause(status: 'paused_session' | 'paused_hidden', message: string): Promise<void> {
   if (!state) return;
-  state.status = status;
+  move(state, status === 'paused_session' ? 'pause' : 'hide');
   state.message = message;
   await save();
   await notify('attention', 'Export paused', message);
@@ -255,7 +287,8 @@ function loop(): Promise<void> {
           return;
         }
         setCurrentStep(step);
-        await clearProblemsOfStep(step);
+        // A settled order is not asked again, so what it filed would not be filed again either.
+        if (!(step === 'orderMedicalFile' && orderSettled(state.order))) await clearProblemsOfStep(step);
         timeUnder(stagingKey(step, ''));
         try {
           await runPlanStep(step);
@@ -266,9 +299,11 @@ function loop(): Promise<void> {
           timeUnder(null); // before anything below saves the state, so a pause or an error keeps the time too
           const failure = stepFailure(e, { step, cancelRequested, reconnects });
           if (failure.action === 'cancel') break;
+          const offline = navigator.onLine === false;
           if (failure.action === 'reconnect' && state) {
             reconnectedAt = state.next;
-            if (await reconnect()) {
+            // Offline, a reload would only swap the tab for an error page.
+            if (!offline && (await reconnect())) {
               reconnects++;
               continue;
             }
@@ -276,7 +311,7 @@ function loop(): Promise<void> {
           }
           if (failure.action === 'stop') {
             if (state) {
-              state.status = 'error';
+              move(state, 'stop');
               state.message = failure.message;
               state.errorDetail = failure.detail;
               await save();
@@ -284,7 +319,7 @@ function loop(): Promise<void> {
             }
             return;
           }
-          await pause('paused_session', failure.action === 'pause' ? failure.message : SESSION_ENDED_MESSAGE);
+          await pause('paused_session', offline ? OFFLINE_MESSAGE : failure.action === 'pause' ? failure.message : SESSION_ENDED_MESSAGE);
           return;
         }
         if (state && state.status === 'running') {
@@ -296,7 +331,7 @@ function loop(): Promise<void> {
     } finally {
       clearInterval(keepAlive);
       clearInterval(activity);
-      if (!state || !['running', 'saving'].includes(state.status)) await chrome.alarms.clear(HEARTBEAT);
+      if (!state || !isDriven(state.status)) await chrome.alarms.clear(HEARTBEAT);
       active = null;
     }
   })();
@@ -330,7 +365,7 @@ async function waitVisible(): Promise<void> {
     await new Promise((r) => setTimeout(r, VISIBLE_POLL_MS));
   }
   if (state) {
-    state.status = 'running';
+    move(state, 'show');
     state.message = undefined;
     state.errorDetail = undefined;
     await save();
@@ -355,17 +390,36 @@ async function renewSession(): Promise<void> {
   }
 }
 
+/** A wait Cancel can cut short; the request after it then stops the run. */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    if (cancelRequested) {
+      resolve();
+      return;
+    }
+    const wake = () => {
+      clearTimeout(timer);
+      sleepers.delete(wake);
+      resolve();
+    };
+    const timer = setTimeout(wake, ms);
+    sleepers.add(wake);
+  });
+}
+
 async function collector(): Promise<Collector> {
   const run = state as RunState;
   const session = await getSession();
   if (!session) throw new SessionEndedError('no session token');
-  const transport = routedTransport(run.tabId, await currentRoutes(), waitVisible);
+  let transport = routedTransport(run.tabId, await currentRoutes(), waitVisible);
+  if (__DEV_BRIDGE__ && (await rawDumpOn())) transport = capturingTransport(transport, session.mid);
+  if (__DEV_BRIDGE__ && (await shapesOn())) transport = recordingTransport(transport, session.mid);
   return new Collector(
     {
-      transport: counted(__DEV_BRIDGE__ && (await rawDumpOn()) ? capturingTransport(transport, session.mid) : transport),
+      transport: counted(transport),
       sink: stagingSink,
       html: offscreenHtml,
-      clock: { now: () => Date.now(), sleep: (ms) => new Promise((r) => setTimeout(r, ms)) },
+      clock: { now: () => Date.now(), sleep },
       progress: (ev) => {
         if (!state) return;
         state.stepDone = ev.done;
@@ -417,7 +471,8 @@ const SUMMARY_PATH = /^\/online\/medicalfile\/summary\/?$/i;
 /**
  * Sends the order from the summary page, opening it first when the tab is elsewhere, and keeps the answer. Both the
  * sending and the answer are checkpointed as they happen, not when the step ends: a worker killed in between would
- * otherwise come back with no order on record, and order again (and Maccabi text the member again).
+ * otherwise come back with no order on record, and order again (and Maccabi text the member again). What outlives the
+ * run is LAST_ORDER, for a new run the same day.
  */
 async function orderMedicalFile(run: RunState): Promise<void> {
   // Normally the tab is still on the page openLegacyPage opened; after a Resume or a reconnect it
@@ -425,15 +480,32 @@ async function orderMedicalFile(run: RunState): Promise<void> {
   if (!SUMMARY_PATH.test((await snapshot(run.tabId)).path)) await navigate(run.tabId, SUMMARY_PAGE, SUMMARY_PATH);
   const c = await collector();
   const reorder = __DEV_BRIDGE__ && !!(await chrome.storage.local.get('devReorder')).devReorder;
+  const earlier = await orderedToday(run);
   // Until the answer is in, the run holds an order that went out with no answer, which orderSettled never repeats.
   const beforeSend = async () => {
+    // Here, not in the request: a tab that is gone, or a Cancel, then leaves an order that was never sent as just that.
+    await waitVisible();
     run.order = { ordered: false, sent: true };
+    await rememberOrder(run, false);
     await save();
   };
-  run.order = await placeOrder(c, { reorder, beforeSend });
-  if (run.order.ordered) run.orderedAt = new Date().toISOString();
+  run.order = await placeOrder(c, { reorder, beforeSend, earlier });
+  if (run.order.ordered) run.orderedAt = (run.order.earlier_order && earlier?.at) || new Date().toISOString();
+  if (run.order.sent) await rememberOrder(run, !!run.order.ordered, run.order.success_code);
   await save();
   if (run.order.error) await c.problem(MEDICAL_FILE, 'medical file not ordered: ' + run.order.error);
+}
+
+/** The order this member sent today, from this run or one since discarded. */
+async function orderedToday(run: RunState): Promise<LastOrder | undefined> {
+  const last = (await chrome.storage.local.get(LAST_ORDER))[LAST_ORDER] as LastOrder | undefined;
+  return last && last.memberHash === run.memberHash && last.day === israelToday(Date.now()) ? last : undefined;
+}
+
+async function rememberOrder(run: RunState, confirmed: boolean, code?: string): Promise<void> {
+  if (!run.memberHash) return;
+  const last: LastOrder = { day: israelToday(Date.now()), memberHash: run.memberHash, at: run.orderedAt ?? new Date().toISOString(), confirmed, ...(code ? { code } : {}) };
+  await chrome.storage.local.set({ [LAST_ORDER]: last });
 }
 
 /** Takes the tab back to /sonline/ and its fresh token, refusing another member's session. */
@@ -467,6 +539,7 @@ async function runPlanStep(step: PlanStep): Promise<void> {
       return;
     case 'waitMedicalFile': {
       const c = await collector();
+      run.medicalFileLate = undefined; // a step run again decides afresh
       if (run.order && run.order.ordered) {
         // A run stored before same_range_before existed goes by same_day_before, as it did then.
         const waited = await waitMedicalFile(c, {
@@ -474,11 +547,15 @@ async function runPlanStep(step: PlanStep): Promise<void> {
           fromDate: run.order.from_date,
           mustSeePending: run.order.same_range_before ?? run.order.same_day_before,
           orderedAt: run.orderedAt ? Date.parse(run.orderedAt) : undefined,
+          giveUp: () => !!run.saveNow,
         });
         if (waited.ready && run.orderedAt) run.medicalFileMs = Date.now() - Date.parse(run.orderedAt);
+        if (!waited.ready) run.medicalFileLate = { kept: waited.kept };
       } else {
         // No new file was ordered: keep the one Maccabi already has, if any, and say which it is.
-        await keepListedMedicalFile(c, run.order);
+        const kept = await keepListedMedicalFile(c, run.order);
+        // An order that went out, unconfirmed or refused, may still be carried out, with its text.
+        if (run.order?.sent || run.order?.earlier_order) run.medicalFileLate = { kept };
       }
       return;
     }
@@ -534,7 +611,7 @@ export async function writeRootFiles(): Promise<{ readme: string; errors: Export
 
 async function saveZip(): Promise<void> {
   const run = state as RunState;
-  run.status = 'saving';
+  move(run, 'save');
   run.detail = LABELS.save;
   // Save again builds a new ZIP: the one that did not make it would otherwise stay in memory beside it.
   await dropBlob(run);
@@ -580,7 +657,7 @@ async function dropBlob(run: RunState): Promise<void> {
 }
 
 async function saveFailed(run: RunState, reason: string): Promise<void> {
-  run.status = 'error';
+  move(run, 'saveFailed');
   // Save again builds the ZIP afresh from staging: this one is no use, and holds the whole export in memory.
   await dropBlob(run);
   run.message = 'The ZIP could not be saved (' + reason + '). Your files are still collected: press “Save again”.';
@@ -593,7 +670,7 @@ export async function onDownloadChanged(delta: chrome.downloads.DownloadDelta): 
   if (!run || run.downloadId !== delta.id || run.status !== 'saving') return;
   if (delta.state?.current === 'complete') {
     // Before anything is awaited: settleSave and the download's own event can both get here, and only one finishes.
-    run.status = 'done';
+    move(run, 'saved');
     const problems = await listProblems();
     run.problems = problems.slice(0, 50);
     run.problemCount = problems.length;
@@ -606,8 +683,10 @@ export async function onDownloadChanged(delta: chrome.downloads.DownloadDelta): 
     await dropBlob(run);
     await save();
     await release();
-    const p = run.problemCount;
-    await notify('ready', 'Export ready', run.zipName + ': ' + countOf(run.fileCount ?? 0, 'file', 'files') + '.' + (p ? ' ' + countOf(p, 'item', 'items') + ' couldn’t be exported.' : ''));
+    const p = withoutLateFile(problems, run).length;
+    const late = run.medicalFileLate;
+    await notify('ready', late ? 'Export saved, without today’s medical file' : 'Export ready', run.zipName + ': ' + countOf(run.fileCount ?? 0, 'file', 'files') + '.' +
+      (p ? ' ' + countOf(p, 'item', 'items') + ' couldn’t be exported.' : '') + (late ? ' When Maccabi texts you today, export again.' : ''));
   } else if (delta.state?.current === 'interrupted') {
     await saveFailed(run, delta.error?.current || 'interrupted');
   }
@@ -615,8 +694,8 @@ export async function onDownloadChanged(delta: chrome.downloads.DownloadDelta): 
 
 export async function retrySave(): Promise<void> {
   const run = await loadRun();
-  if (!run || run.status !== 'error' || run.next !== PLAN.indexOf('save')) throw new UserError('Nothing to save again.');
-  run.status = 'running';
+  if (!run || !canMove(run.status, 'retrySave') || run.next !== PLAN.indexOf('save')) throw new UserError('Nothing to save again.');
+  move(run, 'retrySave');
   run.message = undefined;
   run.errorDetail = undefined;
   await save();

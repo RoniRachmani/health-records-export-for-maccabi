@@ -1,0 +1,3149 @@
+{
+  "GET /sonline/AppointmentOrderAPI/webapi/mac/v1/members/0/{mid}/eligibility/vaccines/flu": {
+    "$": [
+      "object"
+    ],
+    "$.is_vaccine_eligable": [
+      "boolean"
+    ],
+    "$.need_fluzone": [
+      "boolean"
+    ],
+    "$.target_population_ind": [
+      "boolean"
+    ]
+  },
+  "GET /sonline/AppointmentOrderAPI/webapi/mac/v1/members/0/{mid}/providers/ascribed": {
+    "$": [
+      "object"
+    ],
+    "$.ascribed_massage": [
+      "null"
+    ],
+    "$.district_code": [
+      "number"
+    ],
+    "$.emp_number": [
+      "number"
+    ],
+    "$.first_name": [
+      "string"
+    ],
+    "$.gender": [
+      "string"
+    ],
+    "$.gender_code": [
+      "number"
+    ],
+    "$.last_name": [
+      "string"
+    ],
+    "$.license_number": [
+      "string"
+    ],
+    "$.member_fax_num": [
+      "string"
+    ],
+    "$.personal_title": [
+      "string"
+    ],
+    "$.position_number": [
+      "number"
+    ],
+    "$.s_p_clinic_city": [
+      "string"
+    ],
+    "$.s_p_clinic_house_num": [
+      "string"
+    ],
+    "$.s_p_clinic_srteet": [
+      "string"
+    ],
+    "$.service_provider_id": [
+      "string"
+    ],
+    "$.telephone_cell": [
+      "string"
+    ],
+    "$.telephone_home": [
+      "string"
+    ]
+  },
+  "GET /sonline/AppointmentOrderAPI/webapi/mac/v1/members/0/{mid}/visits/{id}": {
+    "$": [
+      "object"
+    ],
+    "$.approvals": [
+      "null"
+    ],
+    "$.diagnosis": [
+      "array"
+    ],
+    "$.diagnosis[]": [
+      "object"
+    ],
+    "$.diagnosis[].diagnosis_description": [
+      "null"
+    ],
+    "$.diagnosis[].diagnosis_property1": [
+      "null"
+    ],
+    "$.diagnosis[].diagnosis_property2": [
+      "null"
+    ],
+    "$.drugs": [
+      "array",
+      "null"
+    ],
+    "$.drugs[]": [
+      "object"
+    ],
+    "$.drugs[].full_drug_name": [
+      "string"
+    ],
+    "$.drugs[].hash": [
+      "string"
+    ],
+    "$.drugs[].instructions": [
+      "string"
+    ],
+    "$.drugs[].largo_code": [
+      "string"
+    ],
+    "$.drugs[].permanent_drug": [
+      "number"
+    ],
+    "$.drugs[].prescription_cancellation_status": [
+      "number"
+    ],
+    "$.drugs[].prescription_date_from": [
+      "string"
+    ],
+    "$.drugs[].prescription_date_to": [
+      "string"
+    ],
+    "$.drugs[].prescription_is_digital": [
+      "number"
+    ],
+    "$.drugs[].prescription_issued_status": [
+      "number"
+    ],
+    "$.drugs[].prescription_pdf_link": [
+      "string"
+    ],
+    "$.drugs[].timestamp": [
+      "string"
+    ],
+    "$.employee_number": [
+      "number"
+    ],
+    "$.follow_up_details": [
+      "null"
+    ],
+    "$.follow_up_in_time": [
+      "null",
+      "number"
+    ],
+    "$.follow_up_time_type": [
+      "null",
+      "string"
+    ],
+    "$.follow_up_visit_invetation": [
+      "string"
+    ],
+    "$.hash": [
+      "string"
+    ],
+    "$.identification_method": [
+      "null",
+      "number"
+    ],
+    "$.member_id": [
+      "string"
+    ],
+    "$.member_id_code": [
+      "string"
+    ],
+    "$.online_requests": [
+      "null",
+      "string"
+    ],
+    "$.position_id": [
+      "number"
+    ],
+    "$.referrals": [
+      "array",
+      "null"
+    ],
+    "$.referrals[]": [
+      "object"
+    ],
+    "$.referrals[].hash": [
+      "string"
+    ],
+    "$.referrals[].inspections": [
+      "null"
+    ],
+    "$.referrals[].referral_date_from": [
+      "string"
+    ],
+    "$.referrals[].referral_date_to": [
+      "string"
+    ],
+    "$.referrals[].referral_displaying_name": [
+      "string"
+    ],
+    "$.referrals[].referral_id": [
+      "string"
+    ],
+    "$.referrals[].referral_pdf_link": [
+      "string"
+    ],
+    "$.referrals[].referral_sub_type_code": [
+      "string"
+    ],
+    "$.referrals[].referral_title_name": [
+      "string"
+    ],
+    "$.referrals[].referral_type_code": [
+      "string"
+    ],
+    "$.referrals[].timestamp": [
+      "string"
+    ],
+    "$.service_provider_gender": [
+      "number"
+    ],
+    "$.service_provider_gender_desc": [
+      "string"
+    ],
+    "$.service_provider_name": [
+      "string"
+    ],
+    "$.service_provider_specialization": [
+      "string"
+    ],
+    "$.timestamp": [
+      "string"
+    ],
+    "$.tutorials": [
+      "null"
+    ],
+    "$.visit_recommendations": [
+      "null",
+      "string"
+    ],
+    "$.visit_summary_date": [
+      "string"
+    ],
+    "$.visit_summary_pdf_link": [
+      "string"
+    ],
+    "$.visit_type_code": [
+      "string"
+    ]
+  },
+  "GET /sonline/AppointmentOrderAPI/webapi/mac/v1/members/0/{mid}/visits/{id}/": {
+    "$": [
+      "object"
+    ],
+    "$.approvals": [
+      "array",
+      "null"
+    ],
+    "$.approvals[]": [
+      "object"
+    ],
+    "$.approvals[].approval_date_from": [
+      "null"
+    ],
+    "$.approvals[].approval_date_to": [
+      "null"
+    ],
+    "$.approvals[].approval_id": [
+      "string"
+    ],
+    "$.approvals[].approval_pdf_link": [
+      "string"
+    ],
+    "$.approvals[].approval_type_code": [
+      "string"
+    ],
+    "$.approvals[].form_or_approval": [
+      "number"
+    ],
+    "$.approvals[].hash": [
+      "string"
+    ],
+    "$.approvals[].timestamp": [
+      "string"
+    ],
+    "$.approvals[].title_name": [
+      "string"
+    ],
+    "$.diagnosis": [
+      "array"
+    ],
+    "$.diagnosis[]": [
+      "object"
+    ],
+    "$.diagnosis[].diagnosis_description": [
+      "null"
+    ],
+    "$.diagnosis[].diagnosis_property1": [
+      "null"
+    ],
+    "$.diagnosis[].diagnosis_property2": [
+      "null"
+    ],
+    "$.drugs": [
+      "array",
+      "null"
+    ],
+    "$.drugs[]": [
+      "object"
+    ],
+    "$.drugs[].full_drug_name": [
+      "string"
+    ],
+    "$.drugs[].hash": [
+      "string"
+    ],
+    "$.drugs[].instructions": [
+      "string"
+    ],
+    "$.drugs[].largo_code": [
+      "string"
+    ],
+    "$.drugs[].permanent_drug": [
+      "number"
+    ],
+    "$.drugs[].prescription_cancellation_status": [
+      "number"
+    ],
+    "$.drugs[].prescription_date_from": [
+      "string"
+    ],
+    "$.drugs[].prescription_date_to": [
+      "string"
+    ],
+    "$.drugs[].prescription_is_digital": [
+      "number"
+    ],
+    "$.drugs[].prescription_issued_status": [
+      "number"
+    ],
+    "$.drugs[].prescription_pdf_link": [
+      "string"
+    ],
+    "$.drugs[].timestamp": [
+      "string"
+    ],
+    "$.employee_number": [
+      "number"
+    ],
+    "$.follow_up_details": [
+      "null"
+    ],
+    "$.follow_up_in_time": [
+      "null"
+    ],
+    "$.follow_up_time_type": [
+      "null"
+    ],
+    "$.follow_up_visit_invetation": [
+      "string"
+    ],
+    "$.hash": [
+      "string"
+    ],
+    "$.identification_method": [
+      "null",
+      "number"
+    ],
+    "$.member_id": [
+      "string"
+    ],
+    "$.member_id_code": [
+      "string"
+    ],
+    "$.online_requests": [
+      "string"
+    ],
+    "$.position_id": [
+      "number"
+    ],
+    "$.referrals": [
+      "array"
+    ],
+    "$.referrals[]": [
+      "object"
+    ],
+    "$.referrals[].hash": [
+      "string"
+    ],
+    "$.referrals[].inspections": [
+      "null"
+    ],
+    "$.referrals[].referral_date_from": [
+      "string"
+    ],
+    "$.referrals[].referral_date_to": [
+      "string"
+    ],
+    "$.referrals[].referral_displaying_name": [
+      "string"
+    ],
+    "$.referrals[].referral_id": [
+      "string"
+    ],
+    "$.referrals[].referral_pdf_link": [
+      "string"
+    ],
+    "$.referrals[].referral_sub_type_code": [
+      "string"
+    ],
+    "$.referrals[].referral_title_name": [
+      "string"
+    ],
+    "$.referrals[].referral_type_code": [
+      "string"
+    ],
+    "$.referrals[].timestamp": [
+      "string"
+    ],
+    "$.service_provider_gender": [
+      "number"
+    ],
+    "$.service_provider_gender_desc": [
+      "string"
+    ],
+    "$.service_provider_name": [
+      "string"
+    ],
+    "$.service_provider_specialization": [
+      "string"
+    ],
+    "$.timestamp": [
+      "string"
+    ],
+    "$.tutorials": [
+      "null"
+    ],
+    "$.visit_recommendations": [
+      "null"
+    ],
+    "$.visit_summary_date": [
+      "string"
+    ],
+    "$.visit_summary_pdf_link": [
+      "string"
+    ],
+    "$.visit_type_code": [
+      "string"
+    ]
+  },
+  "GET /sonline/CommunicationWithDoctorAPI/webapi/mac/v1/members/0/{mid}/inquiries": {
+    "$": [
+      "object"
+    ],
+    "$.inquiries": [
+      "array"
+    ],
+    "$.inquiries[]": [
+      "object"
+    ],
+    "$.inquiries[].age": [
+      "null"
+    ],
+    "$.inquiries[].creation_date": [
+      "string"
+    ],
+    "$.inquiries[].document_id": [
+      "string"
+    ],
+    "$.inquiries[].is_active": [
+      "boolean"
+    ],
+    "$.inquiries[].is_attached": [
+      "boolean"
+    ],
+    "$.inquiries[].is_read": [
+      "boolean"
+    ],
+    "$.inquiries[].medical_forms_documents": [
+      "array",
+      "null"
+    ],
+    "$.inquiries[].medical_forms_documents[]": [
+      "object"
+    ],
+    "$.inquiries[].medical_forms_documents[].hash": [
+      "string"
+    ],
+    "$.inquiries[].medical_forms_documents[].result_file": [
+      "string"
+    ],
+    "$.inquiries[].medical_forms_documents[].timestamp": [
+      "string"
+    ],
+    "$.inquiries[].member_id": [
+      "string"
+    ],
+    "$.inquiries[].member_id_code": [
+      "number"
+    ],
+    "$.inquiries[].read_approval_date": [
+      "null",
+      "string"
+    ],
+    "$.inquiries[].read_approval_require": [
+      "null",
+      "number"
+    ],
+    "$.inquiries[].request_id": [
+      "string"
+    ],
+    "$.inquiries[].request_status": [
+      "string"
+    ],
+    "$.inquiries[].request_status_code": [
+      "string"
+    ],
+    "$.inquiries[].request_subjects": [
+      "array",
+      "null"
+    ],
+    "$.inquiries[].request_subjects[]": [
+      "object"
+    ],
+    "$.inquiries[].request_subjects[].id": [
+      "number"
+    ],
+    "$.inquiries[].request_subjects[].name": [
+      "string"
+    ],
+    "$.inquiries[].service_provider_name": [
+      "string"
+    ],
+    "$.inquiries[].status_update_date": [
+      "string"
+    ],
+    "$.inquiries[].timestamp_sequence": [
+      "string"
+    ],
+    "$.inquiries[].type": [
+      "string"
+    ],
+    "$.inquiries[].view_by_user_date": [
+      "string"
+    ],
+    "$.inquiries[].view_by_user_id": [
+      "null"
+    ]
+  },
+  "GET /sonline/CommunicationWithDoctorAPI/webapi/mac/v1/members/0/{mid}/inquiries/{id}/details": {
+    "$": [
+      "object"
+    ],
+    "$.additional_text_for_drugs": [
+      "null",
+      "string"
+    ],
+    "$.approval_request_details": [
+      "array"
+    ],
+    "$.approval_request_details[]": [
+      "object"
+    ],
+    "$.approval_request_details[].approval_additional_text": [
+      "string"
+    ],
+    "$.approval_request_details[].approval_description": [
+      "string"
+    ],
+    "$.approval_request_details[].approval_request_details_id": [
+      "number"
+    ],
+    "$.approval_request_details[].approval_required_from": [
+      "string"
+    ],
+    "$.approval_request_details[].approval_required_to": [
+      "string"
+    ],
+    "$.approval_request_details[].approval_type_id": [
+      "number"
+    ],
+    "$.approval_request_details[].team_counter": [
+      "string"
+    ],
+    "$.clinic_id": [
+      "string"
+    ],
+    "$.creation_date": [
+      "string"
+    ],
+    "$.doc_profession": [
+      "string"
+    ],
+    "$.doctor_gender": [
+      "null",
+      "number"
+    ],
+    "$.doctor_id": [
+      "number"
+    ],
+    "$.doctor_name": [
+      "string"
+    ],
+    "$.doctor_remark": [
+      "string"
+    ],
+    "$.form_type": [
+      "number"
+    ],
+    "$.general_question_subject": [
+      "null",
+      "string"
+    ],
+    "$.hash": [
+      "null"
+    ],
+    "$.is_approval_request": [
+      "boolean"
+    ],
+    "$.is_attached": [
+      "boolean"
+    ],
+    "$.is_expired": [
+      "boolean"
+    ],
+    "$.is_from_recommendation": [
+      "boolean"
+    ],
+    "$.is_general_request": [
+      "boolean"
+    ],
+    "$.is_prescription_request": [
+      "boolean"
+    ],
+    "$.is_print_in_doctors_office": [
+      "boolean"
+    ],
+    "$.is_referral_request": [
+      "boolean"
+    ],
+    "$.is_structured_request": [
+      "boolean"
+    ],
+    "$.is_team": [
+      "boolean"
+    ],
+    "$.is_viewed_by_user": [
+      "boolean"
+    ],
+    "$.job_id": [
+      "null"
+    ],
+    "$.main_job_id": [
+      "null",
+      "number"
+    ],
+    "$.medical_forms_details": [
+      "array"
+    ],
+    "$.medical_forms_details[]": [
+      "object"
+    ],
+    "$.medical_forms_details[].creation_date": [
+      "string"
+    ],
+    "$.medical_forms_details[].delivery_date": [
+      "null"
+    ],
+    "$.medical_forms_details[].doc_form_id": [
+      "number"
+    ],
+    "$.medical_forms_details[].document_description": [
+      "string"
+    ],
+    "$.medical_forms_details[].document_id": [
+      "number"
+    ],
+    "$.medical_forms_details[].document_status_id": [
+      "number"
+    ],
+    "$.medical_forms_details[].document_type": [
+      "number"
+    ],
+    "$.medical_forms_details[].file_name_title": [
+      "string"
+    ],
+    "$.medical_forms_details[].form_type": [
+      "number"
+    ],
+    "$.medical_forms_details[].hash": [
+      "string"
+    ],
+    "$.medical_forms_details[].is_delivered": [
+      "boolean"
+    ],
+    "$.medical_forms_details[].link_pdf": [
+      "string"
+    ],
+    "$.medical_forms_details[].presc_id": [
+      "null"
+    ],
+    "$.medical_forms_details[].request_id": [
+      "number"
+    ],
+    "$.medical_forms_details[].timestamp": [
+      "string"
+    ],
+    "$.medical_forms_details[].token": [
+      "string"
+    ],
+    "$.medical_forms_details[].update_date": [
+      "string"
+    ],
+    "$.medical_forms_details[].valid_from": [
+      "string"
+    ],
+    "$.medical_forms_details[].valid_until": [
+      "string"
+    ],
+    "$.open_medical_record_number": [
+      "null",
+      "string"
+    ],
+    "$.patient_age": [
+      "number"
+    ],
+    "$.patient_full_name": [
+      "string"
+    ],
+    "$.patient_gender": [
+      "string"
+    ],
+    "$.patient_phone": [
+      "string"
+    ],
+    "$.patient_remark": [
+      "string"
+    ],
+    "$.person_number": [
+      "null",
+      "number"
+    ],
+    "$.personal_doctor_remark": [
+      "string"
+    ],
+    "$.prescription_largo_code_list": [
+      "array"
+    ],
+    "$.prescription_user_drugs_indication": [
+      "array"
+    ],
+    "$.read_approval_date": [
+      "null",
+      "string"
+    ],
+    "$.read_approval_require": [
+      "string"
+    ],
+    "$.referral_request": [
+      "null",
+      "string"
+    ],
+    "$.request_id": [
+      "number"
+    ],
+    "$.request_status": [
+      "number"
+    ],
+    "$.request_status_desc": [
+      "string"
+    ],
+    "$.requested_validity": [
+      "null",
+      "number"
+    ],
+    "$.service_code": [
+      "null",
+      "number"
+    ],
+    "$.source": [
+      "number"
+    ],
+    "$.specialization_code": [
+      "null",
+      "number"
+    ],
+    "$.team_counter": [
+      "string"
+    ],
+    "$.timestamp": [
+      "null"
+    ],
+    "$.update_date": [
+      "string"
+    ],
+    "$.user_code": [
+      "number"
+    ],
+    "$.user_id": [
+      "number"
+    ]
+  },
+  "GET /sonline/DirectorshipAPI/webapi/mac/v1/members/0/{mid}/entitlement": {
+    "$": [
+      "object"
+    ],
+    "$.is_all_in_my_maccabi": [
+      "boolean"
+    ],
+    "$.members": [
+      "array"
+    ],
+    "$.members[]": [
+      "object"
+    ],
+    "$.members[].age": [
+      "null"
+    ],
+    "$.members[].eligibility_status": [
+      "string"
+    ],
+    "$.members[].existing_insurance": [
+      "string"
+    ],
+    "$.members[].first_name": [
+      "null"
+    ],
+    "$.members[].last_name": [
+      "null"
+    ],
+    "$.members[].member_id": [
+      "string"
+    ],
+    "$.members[].member_id_code": [
+      "string"
+    ],
+    "$.members[].payer_id": [
+      "string"
+    ],
+    "$.members[].payer_id_code": [
+      "string"
+    ],
+    "$.members[].relationship": [
+      "string"
+    ],
+    "$.members[].treatment_code": [
+      "string"
+    ],
+    "$.next_month_date": [
+      "string"
+    ]
+  },
+  "GET /sonline/DirectorshipAPI/webapi/mac/v1/members/0/{mid}/insurance/seniority": {
+    "$": [
+      "object"
+    ],
+    "$.hash": [
+      "string"
+    ],
+    "$.insurance_groups": [
+      "array"
+    ],
+    "$.insurance_groups[]": [
+      "object"
+    ],
+    "$.insurance_groups[].ins_seniority_date": [
+      "string"
+    ],
+    "$.insurance_groups[].ins_status": [
+      "string"
+    ],
+    "$.insurance_groups[].ins_type_code": [
+      "string"
+    ],
+    "$.membership_end_date": [
+      "string"
+    ],
+    "$.membership_status": [
+      "number"
+    ],
+    "$.timestamp": [
+      "string"
+    ]
+  },
+  "GET /sonline/DirectorshipAPI/webapi/mac/v1/members/0/{mid}/letters_for_member": {
+    "$": [
+      "object"
+    ],
+    "$.letters": [
+      "array"
+    ],
+    "$.letters[]": [
+      "object"
+    ],
+    "$.letters[].child_info": [
+      "boolean"
+    ],
+    "$.letters[].code_sub_system": [
+      "string"
+    ],
+    "$.letters[].code_system": [
+      "string"
+    ],
+    "$.letters[].code_type_document": [
+      "number"
+    ],
+    "$.letters[].from_date": [
+      "string"
+    ],
+    "$.letters[].hash": [
+      "string"
+    ],
+    "$.letters[].is_doc_exist": [
+      "string"
+    ],
+    "$.letters[].is_personal_mail": [
+      "string"
+    ],
+    "$.letters[].item_date": [
+      "string"
+    ],
+    "$.letters[].letter_code": [
+      "number"
+    ],
+    "$.letters[].letter_desc": [
+      "string"
+    ],
+    "$.letters[].letter_type": [
+      "number"
+    ],
+    "$.letters[].link": [
+      "string"
+    ],
+    "$.letters[].mailing_type": [
+      "string"
+    ],
+    "$.letters[].member_id": [
+      "number"
+    ],
+    "$.letters[].member_id_code": [
+      "string"
+    ],
+    "$.letters[].name_document": [
+      "string"
+    ],
+    "$.letters[].original_item_date": [
+      "string"
+    ],
+    "$.letters[].recipient_f_name": [
+      "string"
+    ],
+    "$.letters[].recipient_id": [
+      "number"
+    ],
+    "$.letters[].recipient_id_code": [
+      "string"
+    ],
+    "$.letters[].recipient_l_name": [
+      "string"
+    ],
+    "$.letters[].reference_id": [
+      "string"
+    ],
+    "$.letters[].status": [
+      "number"
+    ],
+    "$.letters[].timestamp": [
+      "string"
+    ],
+    "$.letters[].to_date": [
+      "string"
+    ]
+  },
+  "GET /sonline/MainAppAPI/webapi/mac/v1/members/0/{mid}": {
+    "$": [
+      "object"
+    ],
+    "$.address_status": [
+      "string"
+    ],
+    "$.address_type_1": [
+      "string"
+    ],
+    "$.address_type_2": [
+      "string"
+    ],
+    "$.age": [
+      "string"
+    ],
+    "$.athorization": [
+      "string"
+    ],
+    "$.authentication_unique_identifier": [
+      "null"
+    ],
+    "$.birth_date": [
+      "string"
+    ],
+    "$.branch": [
+      "string"
+    ],
+    "$.cl_city": [
+      "string"
+    ],
+    "$.cl_house": [
+      "string"
+    ],
+    "$.cl_street": [
+      "string"
+    ],
+    "$.credit_type": [
+      "string"
+    ],
+    "$.email": [
+      "string"
+    ],
+    "$.fax": [
+      "string"
+    ],
+    "$.fax_area_code": [
+      "string"
+    ],
+    "$.fax_special_code": [
+      "string"
+    ],
+    "$.filler": [
+      "string"
+    ],
+    "$.first_name_english": [
+      "string"
+    ],
+    "$.first_name_hebrew": [
+      "string"
+    ],
+    "$.home_phone": [
+      "string"
+    ],
+    "$.home_phone_area_code": [
+      "string"
+    ],
+    "$.id_code": [
+      "string"
+    ],
+    "$.id_number": [
+      "string"
+    ],
+    "$.info_page_type": [
+      "string"
+    ],
+    "$.ins_date_1": [
+      "string"
+    ],
+    "$.ins_date_2": [
+      "string"
+    ],
+    "$.ins_date_3": [
+      "string"
+    ],
+    "$.ins_date_4": [
+      "string"
+    ],
+    "$.ins_group_1": [
+      "string"
+    ],
+    "$.ins_group_2": [
+      "string"
+    ],
+    "$.ins_group_3": [
+      "string"
+    ],
+    "$.ins_group_4": [
+      "string"
+    ],
+    "$.ins_payed_until_date_1": [
+      "string"
+    ],
+    "$.ins_payed_until_date_2": [
+      "string"
+    ],
+    "$.ins_payed_until_date_3": [
+      "string"
+    ],
+    "$.ins_payed_until_date_4": [
+      "string"
+    ],
+    "$.is_Soldier": [
+      "boolean"
+    ],
+    "$.is_cardio": [
+      "boolean"
+    ],
+    "$.is_chronical_prescriptions": [
+      "boolean"
+    ],
+    "$.is_diabetes": [
+      "boolean"
+    ],
+    "$.is_messaging": [
+      "boolean"
+    ],
+    "$.is_opting_out": [
+      "boolean"
+    ],
+    "$.is_vc": [
+      "boolean"
+    ],
+    "$.last_name_english": [
+      "string"
+    ],
+    "$.last_name_hebrew": [
+      "string"
+    ],
+    "$.last_visit": [
+      "string"
+    ],
+    "$.linked_doc_first_name": [
+      "string"
+    ],
+    "$.linked_doc_last_name": [
+      "string"
+    ],
+    "$.living_app_num": [
+      "string"
+    ],
+    "$.living_city": [
+      "string"
+    ],
+    "$.living_city_name": [
+      "null"
+    ],
+    "$.living_enterance": [
+      "string"
+    ],
+    "$.living_house_num": [
+      "string"
+    ],
+    "$.living_po_box": [
+      "string"
+    ],
+    "$.living_street": [
+      "string"
+    ],
+    "$.living_street_name": [
+      "string"
+    ],
+    "$.living_zip_code": [
+      "string"
+    ],
+    "$.macabiton_type": [
+      "string"
+    ],
+    "$.maccabi_nomination": [
+      "null"
+    ],
+    "$.mail_app_num": [
+      "string"
+    ],
+    "$.mail_city": [
+      "string"
+    ],
+    "$.mail_city_name": [
+      "null"
+    ],
+    "$.mail_enterance": [
+      "string"
+    ],
+    "$.mail_house_num": [
+      "string"
+    ],
+    "$.mail_po_box": [
+      "string"
+    ],
+    "$.mail_street": [
+      "string"
+    ],
+    "$.mail_street_name": [
+      "string"
+    ],
+    "$.mail_zip_code": [
+      "string"
+    ],
+    "$.other_phone": [
+      "string"
+    ],
+    "$.other_phone_area_code": [
+      "string"
+    ],
+    "$.parent_email": [
+      "string"
+    ],
+    "$.rem_body_1": [
+      "null"
+    ],
+    "$.rem_body_10": [
+      "null"
+    ],
+    "$.rem_body_11": [
+      "null"
+    ],
+    "$.rem_body_12": [
+      "null"
+    ],
+    "$.rem_body_13": [
+      "null"
+    ],
+    "$.rem_body_14": [
+      "null"
+    ],
+    "$.rem_body_15": [
+      "null"
+    ],
+    "$.rem_body_2": [
+      "null"
+    ],
+    "$.rem_body_3": [
+      "null"
+    ],
+    "$.rem_body_4": [
+      "null"
+    ],
+    "$.rem_body_5": [
+      "null"
+    ],
+    "$.rem_body_6": [
+      "null"
+    ],
+    "$.rem_body_7": [
+      "null"
+    ],
+    "$.rem_body_8": [
+      "null"
+    ],
+    "$.rem_body_9": [
+      "null"
+    ],
+    "$.rem_code_1": [
+      "null"
+    ],
+    "$.rem_code_10": [
+      "null"
+    ],
+    "$.rem_code_11": [
+      "null"
+    ],
+    "$.rem_code_12": [
+      "null"
+    ],
+    "$.rem_code_13": [
+      "null"
+    ],
+    "$.rem_code_14": [
+      "null"
+    ],
+    "$.rem_code_15": [
+      "null"
+    ],
+    "$.rem_code_2": [
+      "null"
+    ],
+    "$.rem_code_3": [
+      "null"
+    ],
+    "$.rem_code_4": [
+      "null"
+    ],
+    "$.rem_code_5": [
+      "null"
+    ],
+    "$.rem_code_6": [
+      "null"
+    ],
+    "$.rem_code_7": [
+      "null"
+    ],
+    "$.rem_code_8": [
+      "null"
+    ],
+    "$.rem_code_9": [
+      "null"
+    ],
+    "$.rem_end_date_1": [
+      "null"
+    ],
+    "$.rem_end_date_10": [
+      "null"
+    ],
+    "$.rem_end_date_11": [
+      "null"
+    ],
+    "$.rem_end_date_12": [
+      "null"
+    ],
+    "$.rem_end_date_13": [
+      "null"
+    ],
+    "$.rem_end_date_14": [
+      "null"
+    ],
+    "$.rem_end_date_15": [
+      "null"
+    ],
+    "$.rem_end_date_2": [
+      "null"
+    ],
+    "$.rem_end_date_3": [
+      "null"
+    ],
+    "$.rem_end_date_4": [
+      "null"
+    ],
+    "$.rem_end_date_5": [
+      "null"
+    ],
+    "$.rem_end_date_6": [
+      "null"
+    ],
+    "$.rem_end_date_7": [
+      "null"
+    ],
+    "$.rem_end_date_8": [
+      "null"
+    ],
+    "$.rem_end_date_9": [
+      "null"
+    ],
+    "$.rem_srt_date_1": [
+      "null"
+    ],
+    "$.rem_srt_date_10": [
+      "null"
+    ],
+    "$.rem_srt_date_11": [
+      "null"
+    ],
+    "$.rem_srt_date_12": [
+      "null"
+    ],
+    "$.rem_srt_date_13": [
+      "null"
+    ],
+    "$.rem_srt_date_14": [
+      "null"
+    ],
+    "$.rem_srt_date_15": [
+      "null"
+    ],
+    "$.rem_srt_date_2": [
+      "null"
+    ],
+    "$.rem_srt_date_3": [
+      "null"
+    ],
+    "$.rem_srt_date_4": [
+      "null"
+    ],
+    "$.rem_srt_date_5": [
+      "null"
+    ],
+    "$.rem_srt_date_6": [
+      "null"
+    ],
+    "$.rem_srt_date_7": [
+      "null"
+    ],
+    "$.rem_srt_date_8": [
+      "null"
+    ],
+    "$.rem_srt_date_9": [
+      "null"
+    ],
+    "$.remarks": [
+      "null"
+    ],
+    "$.return_code_1": [
+      "string"
+    ],
+    "$.return_code_2": [
+      "string"
+    ],
+    "$.return_code_3": [
+      "string"
+    ],
+    "$.return_code_enum": [
+      "number"
+    ],
+    "$.sex": [
+      "string"
+    ],
+    "$.soldier_code": [
+      "number"
+    ],
+    "$.user_login_status": [
+      "number"
+    ],
+    "$.work_phone": [
+      "string"
+    ],
+    "$.work_phone_area_code": [
+      "string"
+    ]
+  },
+  "GET /sonline/MedicalFileAPI/webapi/mac/v1/members/0/{mid}/approvals": {
+    "$": [
+      "object"
+    ],
+    "$.approval": [
+      "array"
+    ],
+    "$.approval[]": [
+      "object"
+    ],
+    "$.approval[].approval_date": [
+      "string"
+    ],
+    "$.approval[].approval_date_from": [
+      "string"
+    ],
+    "$.approval[].approval_date_to": [
+      "string"
+    ],
+    "$.approval[].approval_type_code": [
+      "string"
+    ],
+    "$.approval[].hash": [
+      "string"
+    ],
+    "$.approval[].pdf_link": [
+      "string"
+    ],
+    "$.approval[].practitioner_full_name": [
+      "string"
+    ],
+    "$.approval[].specialization_description": [
+      "string"
+    ],
+    "$.approval[].timestamp": [
+      "string"
+    ],
+    "$.approval[].title_name": [
+      "string"
+    ]
+  },
+  "GET /sonline/MedicalFileAPI/webapi/mac/v1/members/0/{mid}/assigned_practitioners": {
+    "$": [
+      "array"
+    ],
+    "$[]": [
+      "object"
+    ],
+    "$[].clinic_address": [
+      "string"
+    ],
+    "$[].clinic_assign_status": [
+      "boolean"
+    ],
+    "$[].clinic_assign_status_code": [
+      "number"
+    ],
+    "$[].clinic_assign_status_desc": [
+      "string"
+    ],
+    "$[].concealment": [
+      "array"
+    ],
+    "$[].concealment[]": [
+      "string"
+    ],
+    "$[].employee_id": [
+      "number"
+    ],
+    "$[].gender": [
+      "string"
+    ],
+    "$[].position_id": [
+      "number"
+    ],
+    "$[].practitioner_id": [
+      "number"
+    ],
+    "$[].practitioner_name": [
+      "string"
+    ],
+    "$[].profession_areas": [
+      "array"
+    ],
+    "$[].profession_areas[]": [
+      "object"
+    ],
+    "$[].profession_areas[].code": [
+      "string"
+    ]
+  },
+  "GET /sonline/MedicalFileAPI/webapi/mac/v1/members/0/{mid}/prescriptions/purchased/report": {
+    "$": [
+      "object"
+    ],
+    "$.base64": [
+      "string"
+    ],
+    "$.type": [
+      "string"
+    ]
+  },
+  "GET /sonline/MedicalFileAPI/webapi/mac/v1/members/0/{mid}/referrals": {
+    "$": [
+      "object"
+    ],
+    "$.referrals": [
+      "array"
+    ],
+    "$.referrals[]": [
+      "object"
+    ],
+    "$.referrals[].<key>": [
+      "null",
+      "string"
+    ],
+    "$.referrals[].actions": [
+      "array",
+      "null"
+    ],
+    "$.referrals[].actions[]": [
+      "object"
+    ],
+    "$.referrals[].actions[].action_name": [
+      "string"
+    ],
+    "$.referrals[].actions[].action_number": [
+      "string"
+    ],
+    "$.referrals[].actions[].cpt_code": [
+      "null"
+    ],
+    "$.referrals[].actions[].referral_id": [
+      "string"
+    ],
+    "$.referrals[].chronic_medications": [
+      "null"
+    ],
+    "$.referrals[].classification_type": [
+      "string"
+    ],
+    "$.referrals[].diagnoses": [
+      "array",
+      "null"
+    ],
+    "$.referrals[].diagnoses[]": [
+      "object"
+    ],
+    "$.referrals[].diagnoses[].diagnosis_name": [
+      "string"
+    ],
+    "$.referrals[].diagnoses[].diagnosis_number": [
+      "string"
+    ],
+    "$.referrals[].diagnoses[].referral_id": [
+      "string"
+    ],
+    "$.referrals[].displaying_name": [
+      "string"
+    ],
+    "$.referrals[].general_data": [
+      "object"
+    ],
+    "$.referrals[].general_data.appointment_info": [
+      "string"
+    ],
+    "$.referrals[].general_data.online_booking_ref": [
+      "string"
+    ],
+    "$.referrals[].general_data.online_booking_test": [
+      "string"
+    ],
+    "$.referrals[].general_data.service_area": [
+      "string"
+    ],
+    "$.referrals[].general_data.visit_type": [
+      "string"
+    ],
+    "$.referrals[].hash": [
+      "string"
+    ],
+    "$.referrals[].lab_tests": [
+      "array",
+      "null"
+    ],
+    "$.referrals[].lab_tests[]": [
+      "object"
+    ],
+    "$.referrals[].lab_tests[].lab_test_name": [
+      "string"
+    ],
+    "$.referrals[].lab_tests[].lab_test_number": [
+      "string"
+    ],
+    "$.referrals[].lab_tests[].referral_id": [
+      "string"
+    ],
+    "$.referrals[].pdf_link": [
+      "string"
+    ],
+    "$.referrals[].referral_date": [
+      "string"
+    ],
+    "$.referrals[].referral_date_from": [
+      "string"
+    ],
+    "$.referrals[].referral_date_to": [
+      "string"
+    ],
+    "$.referrals[].referral_id": [
+      "string"
+    ],
+    "$.referrals[].service_provider_full_name": [
+      "string"
+    ],
+    "$.referrals[].service_provider_id": [
+      "string"
+    ],
+    "$.referrals[].service_provider_specialization_id": [
+      "null",
+      "number"
+    ],
+    "$.referrals[].sub_type_code": [
+      "string"
+    ],
+    "$.referrals[].timestamp": [
+      "string"
+    ],
+    "$.referrals[].title_name": [
+      "string"
+    ],
+    "$.referrals[].type_code": [
+      "string"
+    ]
+  },
+  "GET /sonline/MedicalFileAPI/webapi/mac/v1/members/0/{mid}/sensitivity": {
+    "$": [
+      "object"
+    ],
+    "$.intolerance": [
+      "array"
+    ]
+  },
+  "GET /sonline/MedicalFileAPI/webapi/mac/v1/members/0/{mid}/tutorials": {
+    "$": [
+      "object"
+    ],
+    "$.tutorials": [
+      "array"
+    ],
+    "$.tutorials[]": [
+      "object"
+    ],
+    "$.tutorials[].display_text": [
+      "string"
+    ],
+    "$.tutorials[].hash": [
+      "string"
+    ],
+    "$.tutorials[].member_id": [
+      "string"
+    ],
+    "$.tutorials[].member_id_code": [
+      "string"
+    ],
+    "$.tutorials[].practitioner_name": [
+      "string"
+    ],
+    "$.tutorials[].session_datetime": [
+      "string"
+    ],
+    "$.tutorials[].specialization": [
+      "string"
+    ],
+    "$.tutorials[].timestamp": [
+      "string"
+    ],
+    "$.tutorials[].type": [
+      "string"
+    ],
+    "$.tutorials[].type_id": [
+      "number"
+    ],
+    "$.tutorials[].url": [
+      "string"
+    ]
+  },
+  "GET /sonline/MedicalFileAPI/webapi/mac/v1/members/0/{mid}/vaccination/certificates/report": {
+    "$": [
+      "object"
+    ],
+    "$.base64": [
+      "string"
+    ],
+    "$.type": [
+      "string"
+    ]
+  },
+  "GET /sonline/MedicalFileAPI/webapi/mac/v1/members/0/{mid}/vaccinations": {
+    "$": [
+      "array"
+    ],
+    "$[]": [
+      "object"
+    ],
+    "$[].age_on_vaccination": [
+      "string"
+    ],
+    "$[].is_link_document": [
+      "number"
+    ],
+    "$[].is_remark": [
+      "number"
+    ],
+    "$[].is_reminder": [
+      "number"
+    ],
+    "$[].modul_id": [
+      "null",
+      "string"
+    ],
+    "$[].notes": [
+      "null"
+    ],
+    "$[].operator_name": [
+      "string"
+    ],
+    "$[].record_id": [
+      "number"
+    ],
+    "$[].remark": [
+      "null"
+    ],
+    "$[].source": [
+      "string"
+    ],
+    "$[].vaccination_date": [
+      "string"
+    ],
+    "$[].vaccination_place": [
+      "string"
+    ],
+    "$[].vaccine_code": [
+      "string"
+    ],
+    "$[].vaccine_custom_name": [
+      "null",
+      "string"
+    ],
+    "$[].vaccine_name": [
+      "string"
+    ],
+    "$[].vaccine_serial_code": [
+      "null",
+      "string"
+    ],
+    "$[].virtual_key": [
+      "string"
+    ]
+  },
+  "GET /sonline/MedicalFileAPI/webapi/mac/v1/members/0/{mid}/vaccinations_grouped": {
+    "$": [
+      "object"
+    ],
+    "$.hash": [
+      "string"
+    ],
+    "$.timeline": [
+      "array"
+    ],
+    "$.timeline[]": [
+      "object"
+    ],
+    "$.timeline[].first_date": [
+      "string"
+    ],
+    "$.timeline[].hash": [
+      "string"
+    ],
+    "$.timeline[].last_date": [
+      "string"
+    ],
+    "$.timeline[].timestamp": [
+      "string"
+    ],
+    "$.timeline[].vaccinations_amount": [
+      "number"
+    ],
+    "$.timeline[].vaccine_group_code": [
+      "number"
+    ],
+    "$.timeline[].vaccine_group_name": [
+      "string"
+    ],
+    "$.timestamp": [
+      "string"
+    ]
+  },
+  "GET /sonline/MedicalFileAPI/webapi/mac/v1/practitioner_affiliation/0/{mid}/eligibilities": {
+    "$": [
+      "object"
+    ],
+    "$.<key>": [
+      "string"
+    ],
+    "$.abroad_remark_code": [
+      "null"
+    ],
+    "$.code": [
+      "number"
+    ],
+    "$.description": [
+      "string"
+    ],
+    "$.employee_number": [
+      "number"
+    ],
+    "$.facility_code": [
+      "number"
+    ],
+    "$.future_appointment_date": [
+      "null"
+    ],
+    "$.has_future_appointment": [
+      "boolean"
+    ],
+    "$.is_assign_active": [
+      "boolean"
+    ],
+    "$.is_customer_abroad": [
+      "boolean"
+    ],
+    "$.is_customer_active": [
+      "boolean"
+    ],
+    "$.is_eligible": [
+      "boolean"
+    ],
+    "$.last_visit_date": [
+      "string"
+    ],
+    "$.next_possible_assign_date": [
+      "string"
+    ],
+    "$.permanent_ascription_indication": [
+      "boolean"
+    ],
+    "$.position_id": [
+      "number"
+    ],
+    "$.practitioner_full_name": [
+      "string"
+    ],
+    "$.practitioner_id": [
+      "number"
+    ],
+    "$.total_future_appointments": [
+      "null"
+    ],
+    "$.visited_this_qtr": [
+      "boolean"
+    ]
+  },
+  "GET /sonline/TestResultsAPI/webapi/mac/v1/compare/0/{mid}/compare": {
+    "$": [
+      "object"
+    ],
+    "$.current_result": [
+      "object"
+    ],
+    "$.current_result.doc_first_name": [
+      "string"
+    ],
+    "$.current_result.doc_last_name": [
+      "string"
+    ],
+    "$.current_result.hash": [
+      "null"
+    ],
+    "$.current_result.is_follow": [
+      "boolean"
+    ],
+    "$.current_result.is_graph": [
+      "boolean"
+    ],
+    "$.current_result.is_messages": [
+      "string"
+    ],
+    "$.current_result.is_vitek": [
+      "boolean"
+    ],
+    "$.current_result.lab_date": [
+      "string"
+    ],
+    "$.current_result.max_lim": [
+      "number"
+    ],
+    "$.current_result.message": [
+      "string"
+    ],
+    "$.current_result.message_list": [
+      "array"
+    ],
+    "$.current_result.message_list[]": [
+      "string"
+    ],
+    "$.current_result.min_lim": [
+      "number"
+    ],
+    "$.current_result.numeric_percentage": [
+      "number"
+    ],
+    "$.current_result.result": [
+      "number"
+    ],
+    "$.current_result.result_file": [
+      "null"
+    ],
+    "$.current_result.test_desc": [
+      "string"
+    ],
+    "$.current_result.test_id": [
+      "string"
+    ],
+    "$.current_result.time_stamp": [
+      "null"
+    ],
+    "$.current_result.units": [
+      "string"
+    ],
+    "$.current_result.vitek_row": [
+      "array"
+    ],
+    "$.hash": [
+      "string"
+    ],
+    "$.other_results": [
+      "array"
+    ],
+    "$.other_results[]": [
+      "object"
+    ],
+    "$.other_results[].doc_first_name": [
+      "string"
+    ],
+    "$.other_results[].doc_last_name": [
+      "string"
+    ],
+    "$.other_results[].hash": [
+      "null"
+    ],
+    "$.other_results[].is_follow": [
+      "boolean"
+    ],
+    "$.other_results[].is_graph": [
+      "boolean"
+    ],
+    "$.other_results[].is_messages": [
+      "string"
+    ],
+    "$.other_results[].is_vitek": [
+      "boolean"
+    ],
+    "$.other_results[].lab_date": [
+      "string"
+    ],
+    "$.other_results[].max_lim": [
+      "number"
+    ],
+    "$.other_results[].message": [
+      "string"
+    ],
+    "$.other_results[].message_list": [
+      "array"
+    ],
+    "$.other_results[].message_list[]": [
+      "string"
+    ],
+    "$.other_results[].min_lim": [
+      "number"
+    ],
+    "$.other_results[].numeric_percentage": [
+      "number"
+    ],
+    "$.other_results[].result": [
+      "number"
+    ],
+    "$.other_results[].result_file": [
+      "null"
+    ],
+    "$.other_results[].test_desc": [
+      "string"
+    ],
+    "$.other_results[].test_id": [
+      "string"
+    ],
+    "$.other_results[].time_stamp": [
+      "null"
+    ],
+    "$.other_results[].units": [
+      "string"
+    ],
+    "$.other_results[].vitek_row": [
+      "array"
+    ],
+    "$.timestamp": [
+      "string"
+    ]
+  },
+  "GET /sonline/TestResultsAPI/webapi/mac/v1/members/0/{mid}/followed/counter": {
+    "$": [
+      "object"
+    ],
+    "$.followed_counter": [
+      "number"
+    ]
+  },
+  "GET /sonline/TestResultsAPI/webapi/mac/v1/members/0/{mid}/getlatestlabresults": {
+    "$": [
+      "object"
+    ],
+    "$.hash": [
+      "string"
+    ],
+    "$.results": [
+      "array"
+    ],
+    "$.results[]": [
+      "object"
+    ],
+    "$.results[].group_name": [
+      "string"
+    ],
+    "$.results[].group_values": [
+      "array"
+    ],
+    "$.results[].group_values[]": [
+      "object"
+    ],
+    "$.results[].group_values[].hash": [
+      "null"
+    ],
+    "$.results[].group_values[].is_follow": [
+      "boolean"
+    ],
+    "$.results[].group_values[].is_messages": [
+      "string"
+    ],
+    "$.results[].group_values[].is_vitek": [
+      "boolean"
+    ],
+    "$.results[].group_values[].lab_date": [
+      "string"
+    ],
+    "$.results[].group_values[].max_lim": [
+      "number"
+    ],
+    "$.results[].group_values[].message": [
+      "string"
+    ],
+    "$.results[].group_values[].message_list": [
+      "array"
+    ],
+    "$.results[].group_values[].message_list[]": [
+      "string"
+    ],
+    "$.results[].group_values[].min_lim": [
+      "number"
+    ],
+    "$.results[].group_values[].numeric_percentage": [
+      "number"
+    ],
+    "$.results[].group_values[].result": [
+      "number"
+    ],
+    "$.results[].group_values[].result_file": [
+      "null"
+    ],
+    "$.results[].group_values[].test_desc": [
+      "string"
+    ],
+    "$.results[].group_values[].test_id": [
+      "string"
+    ],
+    "$.results[].group_values[].time_stamp": [
+      "null"
+    ],
+    "$.results[].group_values[].units": [
+      "string"
+    ],
+    "$.results[].group_values[].vitek_row": [
+      "array"
+    ],
+    "$.time_stamp": [
+      "string"
+    ]
+  },
+  "POST /online/Ajax/DrugsManager/WsPurchasedDrugsManager.asmx/GetAllPurchasedPrescription": {
+    "$": [
+      "object"
+    ],
+    "$.d": [
+      "string"
+    ]
+  },
+  "POST /online/Ajax/PHR/WsPHRManager.asmx/GetFileDetails": {
+    "$": [
+      "object"
+    ],
+    "$.d": [
+      "array"
+    ],
+    "$.d[]": [
+      "object"
+    ],
+    "$.d[].CategoryId": [
+      "number"
+    ],
+    "$.d[].DocumentDate": [
+      "string"
+    ],
+    "$.d[].DocumentDescription": [
+      "string"
+    ],
+    "$.d[].DocumentOriginName": [
+      "string"
+    ],
+    "$.d[].DocumentSystemName": [
+      "string"
+    ],
+    "$.d[].DocumentTitle": [
+      "string"
+    ],
+    "$.d[].FileId": [
+      "number"
+    ],
+    "$.d[].__type": [
+      "string"
+    ]
+  },
+  "POST /online/Ajax/PHR/WsPHRManager.asmx/SearchByDate": {
+    "$": [
+      "object"
+    ],
+    "$.d": [
+      "string"
+    ]
+  },
+  "POST /online/webapi/MailingsFromHospitals/GetMailingsFromHospitals/": {
+    "$": [
+      "object"
+    ],
+    "$.ReportHospitalizations": [
+      "array"
+    ],
+    "$.ReportHospitalizations[]": [
+      "object"
+    ],
+    "$.ReportHospitalizations[].Date": [
+      "string"
+    ],
+    "$.ReportHospitalizations[].DateHospitalization": [
+      "string"
+    ],
+    "$.ReportHospitalizations[].Department": [
+      "string"
+    ],
+    "$.ReportHospitalizations[].DescriptionDistinction": [
+      "array"
+    ],
+    "$.ReportHospitalizations[].DescriptionDistinction[]": [
+      "object"
+    ],
+    "$.ReportHospitalizations[].DescriptionDistinction[].Description": [
+      "string"
+    ],
+    "$.ReportHospitalizations[].DescriptionTreatment": [
+      "array"
+    ],
+    "$.ReportHospitalizations[].DescriptionTreatment[]": [
+      "object"
+    ],
+    "$.ReportHospitalizations[].DescriptionTreatment[].Description": [
+      "string"
+    ],
+    "$.ReportHospitalizations[].DurationHospitalization": [
+      "string"
+    ],
+    "$.ReportHospitalizations[].HasLink": [
+      "boolean"
+    ],
+    "$.ReportHospitalizations[].LinkPDF": [
+      "string"
+    ],
+    "$.ReportHospitalizations[].NameHospital": [
+      "string"
+    ],
+    "$.ReportHospitalizations[].QuantityTreatments": [
+      "string"
+    ],
+    "$.ReportHospitalizations[].TypeCommitment": [
+      "string"
+    ],
+    "$.ReportHospitalizations[].TypeCommitmentEgenKey": [
+      "string"
+    ],
+    "$.ResultMessage": [
+      "object"
+    ],
+    "$.ResultMessage.Code": [
+      "number"
+    ],
+    "$.ResultMessage.Description": [
+      "string"
+    ],
+    "$.ResultMessage.Message": [
+      "string"
+    ]
+  },
+  "POST /sonline/AppointmentOrderAPI/webapi/mac/v1/members/0/{mid}/visits/history": {
+    "$": [
+      "object"
+    ],
+    "$.is_psy": [
+      "null"
+    ],
+    "$.results": [
+      "array"
+    ],
+    "$.results[]": [
+      "object"
+    ],
+    "$.results[].appointment_date": [
+      "string"
+    ],
+    "$.results[].appointment_id": [
+      "string"
+    ],
+    "$.results[].concealment": [
+      "string"
+    ],
+    "$.results[].doc_id": [
+      "string"
+    ],
+    "$.results[].doc_type_id": [
+      "number"
+    ],
+    "$.results[].doc_type_name": [
+      "string"
+    ],
+    "$.results[].equipments": [
+      "null"
+    ],
+    "$.results[].facility_id": [
+      "null",
+      "string"
+    ],
+    "$.results[].has_summery_file": [
+      "boolean"
+    ],
+    "$.results[].identification_method": [
+      "number"
+    ],
+    "$.results[].is_advertised": [
+      "boolean"
+    ],
+    "$.results[].is_read": [
+      "boolean"
+    ],
+    "$.results[].member_id": [
+      "string"
+    ],
+    "$.results[].member_id_code": [
+      "number"
+    ],
+    "$.results[].object_id": [
+      "number"
+    ],
+    "$.results[].object_type": [
+      "string"
+    ],
+    "$.results[].pernr": [
+      "number"
+    ],
+    "$.results[].provider_id": [
+      "null",
+      "string"
+    ],
+    "$.results[].provider_role": [
+      "null",
+      "string"
+    ],
+    "$.results[].service_name": [
+      "string"
+    ],
+    "$.results[].service_provider_name": [
+      "string"
+    ],
+    "$.results[].service_provider_title": [
+      "null",
+      "string"
+    ],
+    "$.results[].summons_type": [
+      "null",
+      "string"
+    ],
+    "$.results[].timestamp_sequence": [
+      "string"
+    ],
+    "$.results[].triage_type": [
+      "null"
+    ]
+  },
+  "POST /sonline/AppointmentOrderAPI/webapi/mac/v2/members/0/{mid}/appointments/future": {
+    "$": [
+      "array"
+    ],
+    "$[]": [
+      "object"
+    ],
+    "$[].appointment_duration": [
+      "null"
+    ],
+    "$[].appointment_end_datetime": [
+      "null"
+    ],
+    "$[].appointment_status": [
+      "null"
+    ],
+    "$[].appointment_type_code": [
+      "null"
+    ],
+    "$[].ascribed_doctor": [
+      "null"
+    ],
+    "$[].ascribed_doctor_gender": [
+      "null"
+    ],
+    "$[].branch_code": [
+      "null"
+    ],
+    "$[].branch_name": [
+      "null"
+    ],
+    "$[].category_visit_type": [
+      "number"
+    ],
+    "$[].category_visit_type_desc": [
+      "null"
+    ],
+    "$[].combine_id": [
+      "string"
+    ],
+    "$[].combine_type": [
+      "string"
+    ],
+    "$[].date": [
+      "string"
+    ],
+    "$[].description": [
+      "string"
+    ],
+    "$[].description_code": [
+      "null"
+    ],
+    "$[].employee_id": [
+      "number"
+    ],
+    "$[].external_channel_code": [
+      "number"
+    ],
+    "$[].external_id": [
+      "string"
+    ],
+    "$[].facility_category": [
+      "null"
+    ],
+    "$[].facility_category_code": [
+      "null"
+    ],
+    "$[].facility_code": [
+      "number"
+    ],
+    "$[].facility_name": [
+      "null"
+    ],
+    "$[].follow_up_appointments_count": [
+      "number"
+    ],
+    "$[].follow_up_appointments_dates": [
+      "array"
+    ],
+    "$[].id": [
+      "string"
+    ],
+    "$[].is_virtual": [
+      "string"
+    ],
+    "$[].member_full_name": [
+      "null"
+    ],
+    "$[].member_id": [
+      "number"
+    ],
+    "$[].member_id_code": [
+      "number"
+    ],
+    "$[].object_id": [
+      "number"
+    ],
+    "$[].object_type": [
+      "string"
+    ],
+    "$[].parent_facility_code": [
+      "number"
+    ],
+    "$[].patient_instructions": [
+      "null"
+    ],
+    "$[].permissions": [
+      "string"
+    ],
+    "$[].phone_for_contact": [
+      "string"
+    ],
+    "$[].provider_address": [
+      "string"
+    ],
+    "$[].provider_id": [
+      "number"
+    ],
+    "$[].provider_name": [
+      "string"
+    ],
+    "$[].provider_phone": [
+      "array"
+    ],
+    "$[].provider_phone[]": [
+      "string"
+    ],
+    "$[].provider_role": [
+      "string"
+    ],
+    "$[].provider_service_type": [
+      "string"
+    ],
+    "$[].provider_service_type_code": [
+      "null"
+    ],
+    "$[].secondary_provider_name": [
+      "null"
+    ],
+    "$[].subsidiary_id": [
+      "null"
+    ],
+    "$[].subsidiary_name": [
+      "null"
+    ],
+    "$[].type": [
+      "string"
+    ],
+    "$[].visit": [
+      "null"
+    ],
+    "$[].visit_characteristic": [
+      "string"
+    ],
+    "$[].waiting_list_status": [
+      "string"
+    ]
+  },
+  "POST /sonline/MainAppAPI/webapi/mac/v1/members/0/{mid}/providers": {
+    "$": [
+      "object"
+    ],
+    "$.providers": [
+      "object"
+    ],
+    "$.providers.provider": [
+      "array"
+    ],
+    "$.providers.provider[]": [
+      "object"
+    ],
+    "$.providers.provider[].<key>": [
+      "null"
+    ],
+    "$.providers.provider[].clinic": [
+      "object"
+    ],
+    "$.providers.provider[].clinic.branch_id": [
+      "string"
+    ],
+    "$.providers.provider[].clinic.branch_type": [
+      "string"
+    ],
+    "$.providers.provider[].clinic.maccabi_branch_name": [
+      "string"
+    ],
+    "$.providers.provider[].contacts": [
+      "array"
+    ],
+    "$.providers.provider[].contacts[]": [
+      "object"
+    ],
+    "$.providers.provider[].contacts[].code": [
+      "string"
+    ],
+    "$.providers.provider[].contacts[].contact_details": [
+      "string"
+    ],
+    "$.providers.provider[].contacts[].description": [
+      "string"
+    ],
+    "$.providers.provider[].contacts[].string": [
+      "string"
+    ],
+    "$.providers.provider[].equipments": [
+      "null"
+    ],
+    "$.providers.provider[].facility_id": [
+      "string"
+    ],
+    "$.providers.provider[].facility_parent_id": [
+      "string"
+    ],
+    "$.providers.provider[].order_visit_details": [
+      "object"
+    ],
+    "$.providers.provider[].order_visit_details.doc_id": [
+      "string"
+    ],
+    "$.providers.provider[].order_visit_details.employee_id": [
+      "string"
+    ],
+    "$.providers.provider[].order_visit_details.is_order_visit_available": [
+      "boolean"
+    ],
+    "$.providers.provider[].order_visit_details.object_id": [
+      "string"
+    ],
+    "$.providers.provider[].order_visit_details.object_type": [
+      "string"
+    ],
+    "$.providers.provider[].order_visit_details.summons_type": [
+      "string"
+    ],
+    "$.providers.provider[].order_visit_details.triage_type": [
+      "null"
+    ],
+    "$.providers.provider[].profession_areas": [
+      "array"
+    ],
+    "$.providers.provider[].profession_areas[]": [
+      "object"
+    ],
+    "$.providers.provider[].profession_areas[].code": [
+      "string"
+    ],
+    "$.providers.provider[].profession_areas[].description": [
+      "string"
+    ],
+    "$.providers.provider[].provider_details": [
+      "object"
+    ],
+    "$.providers.provider[].provider_details.chapter_code": [
+      "string"
+    ],
+    "$.providers.provider[].provider_details.city": [
+      "string"
+    ],
+    "$.providers.provider[].provider_details.coordinate_x": [
+      "string"
+    ],
+    "$.providers.provider[].provider_details.coordinate_y": [
+      "string"
+    ],
+    "$.providers.provider[].provider_details.full": [
+      "string"
+    ],
+    "$.providers.provider[].provider_details.gender": [
+      "string"
+    ],
+    "$.providers.provider[].provider_details.house_string": [
+      "string"
+    ],
+    "$.providers.provider[].provider_details.name": [
+      "string"
+    ],
+    "$.providers.provider[].provider_details.street": [
+      "string"
+    ],
+    "$.providers.provider[].provider_details.summons_type": [
+      "string"
+    ],
+    "$.providers.provider[].provider_id": [
+      "string"
+    ],
+    "$.providers.provider[].provider_role": [
+      "string"
+    ],
+    "$.providers.provider[].remarks": [
+      "array"
+    ],
+    "$.providers.provider[].remarks[]": [
+      "object"
+    ],
+    "$.providers.provider[].remarks[].remark": [
+      "string"
+    ],
+    "$.providers.provider[].remarks[].remark_code": [
+      "string"
+    ],
+    "$.providers.provider[].sap_key": [
+      "object"
+    ],
+    "$.providers.provider[].sap_key.employee_id": [
+      "string"
+    ],
+    "$.providers.provider[].sap_key.object_Id": [
+      "string"
+    ],
+    "$.providers.provider[].sap_key.object_type": [
+      "string"
+    ],
+    "$.providers.provider[].schedules": [
+      "object"
+    ],
+    "$.providers.provider[].schedules.schedule": [
+      "array"
+    ],
+    "$.providers.provider[].schedules.schedule[]": [
+      "object"
+    ],
+    "$.providers.provider[].schedules.schedule[].afternoon": [
+      "string"
+    ],
+    "$.providers.provider[].schedules.schedule[].evening": [
+      "string"
+    ],
+    "$.providers.provider[].schedules.schedule[].frequency_code": [
+      "string"
+    ],
+    "$.providers.provider[].schedules.schedule[].frequency_desc": [
+      "string"
+    ],
+    "$.providers.provider[].schedules.schedule[].morning": [
+      "string"
+    ],
+    "$.providers.provider[].schedules.schedule[].remark_desc": [
+      "string"
+    ],
+    "$.providers.provider[].schedules.schedule[].schedule_desc": [
+      "string"
+    ],
+    "$.providers.provider[].schedules.schedule[].schedule_type": [
+      "string"
+    ],
+    "$.providers.provider[].schedules.schedule[].shift_end_h": [
+      "string"
+    ],
+    "$.providers.provider[].schedules.schedule[].shift_start_h": [
+      "string"
+    ],
+    "$.providers.provider[].schedules.schedule[].week_day": [
+      "string"
+    ],
+    "$.providers.provider[].schedules.schedule[].week_day_l": [
+      "string"
+    ],
+    "$.providers.provider[].schedules.schedule[].week_day_s": [
+      "string"
+    ],
+    "$.providers.provider[].scpecializations": [
+      "object"
+    ],
+    "$.providers.provider[].scpecializations.concatinated": [
+      "string"
+    ],
+    "$.providers.provider[].scpecializations.scpecializations": [
+      "array"
+    ],
+    "$.providers.provider[].scpecializations.scpecializations[]": [
+      "string"
+    ],
+    "$.providers.provider[].teams": [
+      "null"
+    ],
+    "$.providers.provider[].treat_areas": [
+      "object"
+    ],
+    "$.providers.provider[].treat_areas.concatinated": [
+      "string"
+    ],
+    "$.providers.provider[].treat_areas.treat_areas": [
+      "array"
+    ],
+    "$.providers.provider[].treat_areas.treat_areas[]": [
+      "string"
+    ],
+    "$.providers.provider[].triage_type": [
+      "null"
+    ]
+  },
+  "POST /sonline/MedicalFileAPI/webapi/mac/v1/members/0/{mid}/prescriptions": {
+    "$": [
+      "object"
+    ],
+    "$.results": [
+      "array"
+    ],
+    "$.results[]": [
+      "object"
+    ],
+    "$.results[].cancellation_status": [
+      "number"
+    ],
+    "$.results[].cancelled_dispense_id": [
+      "null",
+      "string"
+    ],
+    "$.results[].clicks_visit_number": [
+      "string"
+    ],
+    "$.results[].concealment": [
+      "string"
+    ],
+    "$.results[].create_date": [
+      "string"
+    ],
+    "$.results[].date_to_present": [
+      "string"
+    ],
+    "$.results[].day_remain": [
+      "string"
+    ],
+    "$.results[].days_for_prescription_purchase": [
+      "null"
+    ],
+    "$.results[].days_for_prescription_renewal": [
+      "null"
+    ],
+    "$.results[].dispense_id": [
+      "null",
+      "string"
+    ],
+    "$.results[].dispense_line": [
+      "null",
+      "string"
+    ],
+    "$.results[].dispensed_date": [
+      "null",
+      "string"
+    ],
+    "$.results[].dispensed_days": [
+      "number"
+    ],
+    "$.results[].dispensed_drug_instructions": [
+      "null",
+      "string"
+    ],
+    "$.results[].dispensed_drug_largo_code": [
+      "null",
+      "string"
+    ],
+    "$.results[].dispensed_drug_name": [
+      "null",
+      "string"
+    ],
+    "$.results[].dispensed_pharmacy": [
+      "null",
+      "string"
+    ],
+    "$.results[].dispensed_quantity": [
+      "number"
+    ],
+    "$.results[].doc_id": [
+      "string"
+    ],
+    "$.results[].doc_type_id": [
+      "number"
+    ],
+    "$.results[].doc_type_name": [
+      "string"
+    ],
+    "$.results[].drug_instructions": [
+      "string"
+    ],
+    "$.results[].drug_largo_code": [
+      "string"
+    ],
+    "$.results[].drug_name": [
+      "string"
+    ],
+    "$.results[].drug_name_to_present": [
+      "string"
+    ],
+    "$.results[].file_link": [
+      "string"
+    ],
+    "$.results[].from_date": [
+      "string"
+    ],
+    "$.results[].has_content": [
+      "boolean"
+    ],
+    "$.results[].hash": [
+      "string"
+    ],
+    "$.results[].interaction_id": [
+      "null"
+    ],
+    "$.results[].is_active": [
+      "boolean"
+    ],
+    "$.results[].is_digital_prescription": [
+      "boolean"
+    ],
+    "$.results[].is_future_prescription": [
+      "string"
+    ],
+    "$.results[].is_maccabi_file_attached": [
+      "boolean"
+    ],
+    "$.results[].is_narcotics": [
+      "boolean"
+    ],
+    "$.results[].is_non_continuous_treatment": [
+      "boolean"
+    ],
+    "$.results[].is_permanent_drug": [
+      "boolean"
+    ],
+    "$.results[].is_prescription_renewal": [
+      "boolean"
+    ],
+    "$.results[].is_read": [
+      "boolean"
+    ],
+    "$.results[].issued_drug_timestamp": [
+      "string"
+    ],
+    "$.results[].measurment_units": [
+      "string"
+    ],
+    "$.results[].member_id": [
+      "string"
+    ],
+    "$.results[].member_id_code": [
+      "number"
+    ],
+    "$.results[].member_price": [
+      "number"
+    ],
+    "$.results[].orginal_package_count": [
+      "string"
+    ],
+    "$.results[].payment_amount": [
+      "number"
+    ],
+    "$.results[].prescriber_name": [
+      "string"
+    ],
+    "$.results[].prescriber_title": [
+      "string"
+    ],
+    "$.results[].prescription_number": [
+      "string"
+    ],
+    "$.results[].prescription_timestamp": [
+      "string"
+    ],
+    "$.results[].purchase_status": [
+      "number"
+    ],
+    "$.results[].request_create_date": [
+      "string"
+    ],
+    "$.results[].specialization": [
+      "string"
+    ],
+    "$.results[].status": [
+      "string"
+    ],
+    "$.results[].status_code": [
+      "number"
+    ],
+    "$.results[].status_update_date": [
+      "string"
+    ],
+    "$.results[].subject": [
+      "null"
+    ],
+    "$.results[].timestamp": [
+      "string"
+    ],
+    "$.results[].timestamp_sequence": [
+      "string"
+    ],
+    "$.results[].to_date": [
+      "string"
+    ],
+    "$.results[].type": [
+      "string"
+    ],
+    "$.results[].type_name": [
+      "null"
+    ],
+    "$.results[].uri": [
+      "null"
+    ]
+  },
+  "POST /sonline/RequestsAndApprovalsAPI/webapi/mac/v1/members/0/{mid}/requests_and_cases": {
+    "$": [
+      "array"
+    ]
+  },
+  "POST /sonline/TestResultsAPI/webapi/mac/v1/members/0/{mid}/getresultsbyid": {
+    "$": [
+      "object"
+    ],
+    "$.corona_hash": [
+      "null"
+    ],
+    "$.corona_t": [
+      "null"
+    ],
+    "$.execute_date": [
+      "string"
+    ],
+    "$.hash": [
+      "string"
+    ],
+    "$.is_partial": [
+      "boolean"
+    ],
+    "$.is_read": [
+      "boolean"
+    ],
+    "$.referrer_name": [
+      "null",
+      "string"
+    ],
+    "$.results": [
+      "array"
+    ],
+    "$.results[]": [
+      "object"
+    ],
+    "$.results[].group_name": [
+      "string"
+    ],
+    "$.results[].group_values": [
+      "array"
+    ],
+    "$.results[].group_values[]": [
+      "object"
+    ],
+    "$.results[].group_values[].hash": [
+      "null"
+    ],
+    "$.results[].group_values[].is_follow": [
+      "boolean"
+    ],
+    "$.results[].group_values[].is_messages": [
+      "string"
+    ],
+    "$.results[].group_values[].is_vitek": [
+      "boolean"
+    ],
+    "$.results[].group_values[].lab_date": [
+      "string"
+    ],
+    "$.results[].group_values[].max_lim": [
+      "number"
+    ],
+    "$.results[].group_values[].message": [
+      "string"
+    ],
+    "$.results[].group_values[].message_list": [
+      "array"
+    ],
+    "$.results[].group_values[].message_list[]": [
+      "string"
+    ],
+    "$.results[].group_values[].min_lim": [
+      "number"
+    ],
+    "$.results[].group_values[].numeric_percentage": [
+      "number"
+    ],
+    "$.results[].group_values[].result": [
+      "number"
+    ],
+    "$.results[].group_values[].result_file": [
+      "null"
+    ],
+    "$.results[].group_values[].test_desc": [
+      "string"
+    ],
+    "$.results[].group_values[].test_id": [
+      "string"
+    ],
+    "$.results[].group_values[].time_stamp": [
+      "null"
+    ],
+    "$.results[].group_values[].units": [
+      "string"
+    ],
+    "$.results[].group_values[].vitek_row": [
+      "array"
+    ],
+    "$.show_print_corona_english_report": [
+      "boolean"
+    ],
+    "$.time_stamp": [
+      "string"
+    ]
+  },
+  "POST /sonline/TestResultsAPI/webapi/mac/v1/members/0/{mid}/tests": {
+    "$": [
+      "object"
+    ],
+    "$.categories": [
+      "array"
+    ],
+    "$.categories[]": [
+      "object"
+    ],
+    "$.categories[].category_id": [
+      "number"
+    ],
+    "$.categories[].category_name": [
+      "string"
+    ],
+    "$.tests": [
+      "array"
+    ],
+    "$.tests[]": [
+      "object"
+    ],
+    "$.tests[].category_id": [
+      "number"
+    ],
+    "$.tests[].category_name": [
+      "string"
+    ],
+    "$.tests[].category_original_id": [
+      "number"
+    ],
+    "$.tests[].concealment": [
+      "string"
+    ],
+    "$.tests[].data_type_code": [
+      "number"
+    ],
+    "$.tests[].doc_id": [
+      "string"
+    ],
+    "$.tests[].doc_type_id": [
+      "number"
+    ],
+    "$.tests[].doc_type_name": [
+      "string"
+    ],
+    "$.tests[].execute_date": [
+      "string"
+    ],
+    "$.tests[].executed_by": [
+      "null"
+    ],
+    "$.tests[].executing_institute": [
+      "null",
+      "string"
+    ],
+    "$.tests[].file_name": [
+      "null"
+    ],
+    "$.tests[].hash": [
+      "string"
+    ],
+    "$.tests[].is_partial": [
+      "boolean"
+    ],
+    "$.tests[].is_read": [
+      "boolean"
+    ],
+    "$.tests[].is_result_yesterday": [
+      "boolean"
+    ],
+    "$.tests[].member_id": [
+      "string"
+    ],
+    "$.tests[].member_id_code": [
+      "number"
+    ],
+    "$.tests[].procedures": [
+      "array",
+      "null"
+    ],
+    "$.tests[].procedures[]": [
+      "object"
+    ],
+    "$.tests[].procedures[].test_id": [
+      "null",
+      "string"
+    ],
+    "$.tests[].procedures[].test_name": [
+      "string"
+    ],
+    "$.tests[].referrer_name": [
+      "null",
+      "string"
+    ],
+    "$.tests[].request_id": [
+      "string"
+    ],
+    "$.tests[].result_date": [
+      "string"
+    ],
+    "$.tests[].result_date_desc": [
+      "string"
+    ],
+    "$.tests[].result_files": [
+      "array",
+      "null"
+    ],
+    "$.tests[].result_files[]": [
+      "object"
+    ],
+    "$.tests[].result_files[].result_file": [
+      "string"
+    ],
+    "$.tests[].test_category": [
+      "array"
+    ],
+    "$.tests[].test_category[]": [
+      "string"
+    ],
+    "$.tests[].test_name": [
+      "array"
+    ],
+    "$.tests[].test_name[]": [
+      "string"
+    ],
+    "$.tests[].time_stamp": [
+      "string"
+    ],
+    "$.tests[].type": [
+      "string"
+    ]
+  }
+}

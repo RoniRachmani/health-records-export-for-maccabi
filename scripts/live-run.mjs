@@ -17,6 +17,8 @@
 //                                 prints the README's version line, what it says failed, and export-errors.json
 //   npm run live -- --names       also prints every staged file's path, to check how files are named (names carry
 //                                 titles, such as a drug or a specialist, so this is the one output with more than counts)
+//   npm run live -- --shapes      records the field names and types of every answer (never a value), prints what
+//                                 docs/endpoints/shapes.json has not seen, and adds it there
 //   npm run live -- --screenshots opens the toolbar popup and photographs it before the start and at every
 //                                 step, bringing the browser window to the front for each, into .cache/live-screenshots/<time>/ (gitignored:
 //                                 the problem lines it can show come from the member's records)
@@ -31,7 +33,7 @@
 // Nothing here prints a credential or a record: what it reports is what the dev bridge replies with,
 // statuses, counts and problem lines. The password is filled once per run and never re-submitted,
 // because a script retrying a wrong password is how an account gets locked.
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { ORIGIN, START, lit, openBrowser as openPlainBrowser, signIn } from './maccabi-browser.mjs';
@@ -44,6 +46,8 @@ const ROOT_FILES = process.argv.includes('--root-files');
 const NAMES = process.argv.includes('--names');
 const EXPORT = process.argv.includes('--export');
 const REORDER = process.argv.includes('--reorder');
+const SHAPES = process.argv.includes('--shapes');
+const SHAPES_FILE = join(root, 'docs', 'endpoints', 'shapes.json');
 const SHOTS = process.argv.includes('--screenshots')
   ? join(root, '.cache', 'live-screenshots', new Date().toISOString().slice(0, 19).replace(/:/g, '-'))
   : null;
@@ -159,9 +163,26 @@ function orderOutcome(order) {
   if (!order) return 'not ordered (dev:skipOrder)';
   if (order.error) return 'not ordered: ' + order.error;
   if (order.skipped_ready_today) return "no order: today's file over the same range was already ready, and the run used it";
+  if (order.earlier_order) return 'no order: an earlier run ordered today' + (order.ordered ? ', and the run waited for that file' : ', unconfirmed; see the problems');
   if (order.ordered) return 'ordered (Maccabi sent an SMS)' + (order.same_day_before ? ", replacing a file from earlier today" : '');
   if (order.success_code === '3') return 'refused (Success 3: Maccabi asked to try again later, and may still text); see the problems';
   return 'order not confirmed' + (order.success_code ? ' (Success ' + order.success_code + ')' : '') + '; see the problems';
+}
+
+/**
+ * What this run's answers show that the committed snapshot has not, then the two merged into it. Added to, never
+ * replaced: a field one account lacks has not left the site. The reply is names and types, and is checked all the
+ * same, since this file goes into the repo.
+ */
+async function writeShapes(page) {
+  const known = existsSync(SHAPES_FILE) ? JSON.parse(readFileSync(SHAPES_FILE, 'utf8')) : {};
+  const res = await page.dev({ type: 'dev:shapesSeen', known }, 30_000);
+  if (!res?.merged) throw new Error('dev:shapesSeen: ' + (res?.error || 'no answer'));
+  console.log(`Shapes: ${res.endpoints} endpoints, ${res.drift.length} differences from docs/endpoints/shapes.json`);
+  for (const line of res.drift) console.log('  ' + line);
+  const text = JSON.stringify(res.merged, null, 2) + '\n';
+  if (/[\u0590-\u05FF]|\d{5,}/.test(text)) throw new Error('The shapes hold Hebrew or a long number, so they were not written.');
+  writeFileSync(SHAPES_FILE, text);
 }
 
 async function main() {
@@ -185,6 +206,10 @@ async function main() {
     await ask(page, { type: 'dev:cancel' });
   } else if (before.run) {
     await ask(page, { type: 'dev:dismiss' });
+  }
+  if (SHAPES) {
+    const shapes = await ask(page, { type: 'dev:shapes', on: true });
+    if (shapes?.on !== true) throw new Error('The extension did not confirm dev:shapes.');
   }
   if (EXPORT) {
     // The member's own Start in the popup is what orders: this script still never does.
@@ -287,6 +312,10 @@ async function main() {
       console.log(`export-errors.json: ${root.errors.length} entries; the popup: ${problems.length} problems`);
       for (const e of root.errors) console.log('  ' + e);
     }
+  }
+  if (SHAPES) {
+    await writeShapes(page);
+    await page.dev({ type: 'dev:shapes', on: false });
   }
   // Only for this export: the next one uses today's file again.
   if (REORDER) await page.dev({ type: 'dev:reorder', on: false });

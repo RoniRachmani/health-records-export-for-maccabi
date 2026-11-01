@@ -9,7 +9,7 @@ and [CONTRIBUTING.md](../CONTRIBUTING.md), for contributors.
 |---|---|---|
 | [sections.md](sections.md) | Each line of the popup's section list: its run steps, their parts and the files they write, then how long each takes and how the medical-file wait works | You change `PLAN`, `STAGES`, `WEIGHTS` or a collector. `repoRules.test.ts` checks the table |
 | [sms.md](sms.md) | The texts Maccabi sends (the sign-in code, the medical file being ready), what sets each off and what never does | You touch the order or a sign-in |
-| [endpoints/](endpoints/) | Every request this repo sends: `endpoints.json` (the collector's, with the file each produces) and `scripts-endpoints.json` (the terminal scripts' own). `scan-baseline.json`, `other-endpoints.json` and `MedDream-endpoints.json` serve the endpoint scan ([its README](../tools/endpoint-scan/README.md)) | You add or change a request. `endpoints.test.ts` fails on one that is missing |
+| [endpoints/](endpoints/) | Every request this repo sends: `endpoints.json` (the collector's, with the file each produces) and `scripts-endpoints.json` (the terminal scripts' own). `shapes.json` (written by `npm run live -- --shapes`) holds the field names and types the site answers with, and `shapes.test.ts` holds the fake site to it. `scan-baseline.json`, `other-endpoints.json` and `MedDream-endpoints.json` serve the endpoint scan ([its README](../tools/endpoint-scan/README.md)) | You add or change a request. `endpoints.test.ts` fails on one that is missing |
 | [releases/](releases/) | Each GitHub release's notes, `<version>.md`, which the *Release* workflow publishes | You release a version |
 
 ## For members, and the store

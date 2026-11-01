@@ -162,7 +162,7 @@ async function check(stage, [width, height]) {
 
 /** Chrome cuts a popup off at 600px. The states store/src/mock-chrome.ts makes up, with every <details> closed. */
 const POPUP_MAX = 600;
-const POPUP_STATES = ['ready', 'login', 'running', 'paused', 'error', 'done', 'problems'];
+const POPUP_STATES = ['ready', 'login', 'running', 'waiting', 'paused', 'error', 'done', 'late', 'problems'];
 
 async function popup(stage) {
   const fails = [];

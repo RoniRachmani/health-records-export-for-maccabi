@@ -4,8 +4,8 @@
 // around it replaced: the tab, the staging, the offscreen document, and the collector's steps, scripted per test.
 // What is real is runner.ts itself, PLAN and its resume rules (shared/state.ts), and core's errors and order rules.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { FILE_LAYOUT, PLAN, type PlanStep, type RunState } from '../src/extension/shared/state';
-import { RateLimitedError, SessionEndedError, type Collector, type OrderResult, type Session } from '../src/core';
+import { FILE_LAYOUT, LAST_ORDER, PLAN, type LastOrder, type PlanStep, type RunState } from '../src/extension/shared/state';
+import { israelToday, RateLimitedError, SessionEndedError, type Collector, type EarlierOrder, type OrderResult, type Session } from '../src/core';
 
 const MEMBER: Session = { mid: '123456789', jwt: 'jwt', gender: 'F' };
 const TAB = 7;
@@ -19,9 +19,11 @@ const world = {
   /** What a step does when it runs: throw, wait, use the collector it was given, or nothing (the default). */
   step: {} as Partial<Record<PlanStep, (attempt: number, c: Collector) => Promise<void> | void>>,
   orders: 0,
-  order: { ordered: true, to_date: '2026-10-26', from_date: '2016-10-26' } as OrderResult,
+  order: { ordered: true, sent: true, to_date: '2026-10-26', from_date: '2016-10-26' } as OrderResult,
   session: MEMBER as Session | null,
   visible: true,
+  /** Whether the tab is there and in front, when a test needs more than `visible` says. */
+  tabLook: undefined as (() => boolean) | undefined,
   sessionLookups: 0,
   navigations: [] as string[],
   /** The tab's page: where it was last sent, or /sonline/ once a session was taken from it. */
@@ -40,6 +42,13 @@ const world = {
   dieOn: undefined as ((items: Record<string, unknown>) => boolean) | undefined,
   /** Whether keepListedMedicalFile was asked, i.e. the run took no new medical file. */
   keptListed: false,
+  /** What waitMedicalFile answers, and what it does before it does. */
+  waited: { ready: true } as { ready: boolean; kept?: string },
+  waiting: undefined as ((giveUp: () => boolean) => Promise<void>) | undefined,
+  /** Steps whose problems were cleared before they ran. */
+  problemsCleared: [] as string[],
+  /** The `earlier` each placeOrder was given. */
+  earlier: [] as (EarlierOrder | undefined)[],
   /** Alarms set, by name, with when they fire (periodic ones: 0). */
   alarms: {} as Record<string, number>,
 };
@@ -59,20 +68,24 @@ vi.mock('../src/core', async (importOriginal) => {
       const attempt = world.ran.filter((s) => s === step).length;
       await world.step[step]?.(attempt, c);
     }),
-    placeOrder: vi.fn(async (c: Collector, opts?: { beforeSend?: () => Promise<void> }) => {
+    placeOrder: vi.fn(async (c: Collector, opts?: { beforeSend?: () => Promise<void>; earlier?: EarlierOrder }) => {
+      world.earlier.push(opts?.earlier);
+      if (opts?.earlier) return { ordered: opts.earlier.confirmed, earlier_order: true } as OrderResult;
       await opts?.beforeSend?.();
       world.ran.push('orderMedicalFile');
       world.orders++;
       await world.step.orderMedicalFile?.(world.orders, c);
       return world.order;
     }),
-    waitMedicalFile: vi.fn(async () => {
+    waitMedicalFile: vi.fn(async (_c: Collector, opts?: { giveUp?: () => boolean }) => {
       world.ran.push('waitMedicalFile');
-      return { ready: true };
+      await world.waiting?.(opts?.giveUp ?? (() => false));
+      return world.waited;
     }),
     keepListedMedicalFile: vi.fn(async () => {
       world.ran.push('waitMedicalFile');
       world.keptListed = true;
+      return '2026-10-18';
     }),
   };
 });
@@ -85,7 +98,7 @@ vi.mock('../src/extension/background/tab', () => ({
     return world.session;
   },
   extensionFetch: async () => ({ status: 200, redirected: false, contentType: '', bytes: new Uint8Array() }),
-  isVisible: async () => world.visible,
+  isVisible: async () => world.tabLook?.() ?? world.visible,
   keepSessionAlive: async () => {},
   navigate: async (_tab: number, url: string) => {
     world.navigations.push(url);
@@ -96,7 +109,9 @@ vi.mock('../src/extension/background/tab', () => ({
 }));
 
 vi.mock('../src/extension/shared/staging', () => ({
-  clearProblemsOfStep: async () => {},
+  clearProblemsOfStep: async (step: string) => {
+    world.problemsCleared.push(step);
+  },
   clearStaging: async () => {
     world.stagingCleared++;
   },
@@ -178,9 +193,9 @@ const collected = (list: readonly PlanStep[]) => list.filter((s) => !['openLegac
 
 beforeEach(() => {
   Object.assign(world, {
-    ran: [], step: {}, orders: 0, order: { ordered: true, to_date: '2026-10-26', from_date: '2016-10-26' }, session: MEMBER,
-    visible: true, sessionLookups: 0, navigations: [], path: '/sonline/', stagingCleared: 0, notices: [], downloads: 0, downloadItem: undefined, revoked: [],
-    local: {}, sessionStore: {}, dead: false, dieOn: undefined, keptListed: false, alarms: {},
+    ran: [], step: {}, orders: 0, order: { ordered: true, sent: true, to_date: '2026-10-26', from_date: '2016-10-26' }, session: MEMBER,
+    visible: true, tabLook: undefined, sessionLookups: 0, navigations: [], path: '/sonline/', stagingCleared: 0, notices: [], downloads: 0, downloadItem: undefined, revoked: [],
+    local: {}, sessionStore: {}, dead: false, dieOn: undefined, keptListed: false, alarms: {}, problemsCleared: [], earlier: [], waited: { ready: true }, waiting: undefined,
   });
   vi.stubGlobal('chrome', fakeChrome());
   vi.stubGlobal('__DEV_BRIDGE__', false);
@@ -301,6 +316,21 @@ describe('a session that ends', () => {
   });
 });
 
+describe('a computer that goes offline', () => {
+  it('pauses and says so, without reloading the tab onto an error page', async () => {
+    world.step.visits = () => {
+      vi.stubGlobal('navigator', { onLine: false });
+      throw new SessionEndedError('request failed (Failed to fetch)');
+    };
+    const runner = await freshRunner();
+    await runner.start(TAB);
+    const run = await settled();
+    expect(run).toMatchObject({ status: 'paused_session', next: PLAN.indexOf('visits') });
+    expect(run?.message).toMatch(/offline/);
+    expect(world.sessionLookups).toBe(2); // Start's and returnToSonline's: no reconnect
+  });
+});
+
 describe('a run that cannot go on', () => {
   it('stops when the site asks it to slow down, and keeps what it has', async () => {
     world.step.referrals = () => {
@@ -346,7 +376,209 @@ describe('Cancel', () => {
   });
 });
 
+describe('the medical file that does not come', () => {
+  it('is saved without on Save now, and the member is told what to do', async () => {
+    let runner!: Runner;
+    let gaveUp = false;
+    world.waiting = async (giveUp) => {
+      expect(giveUp()).toBe(false);
+      await runner.saveNow();
+      gaveUp = giveUp();
+    };
+    world.waited = { ready: false, kept: '2026-10-29' };
+    runner = await freshRunner();
+    await runner.start(TAB);
+    const run = await settled();
+    expect(gaveUp).toBe(true);
+    expect(run).toMatchObject({ status: 'saving', saveNow: true, medicalFileLate: { kept: '2026-10-29' } });
+
+    await runner.onDownloadChanged({ id: run!.downloadId!, state: { current: 'complete' } } as chrome.downloads.DownloadDelta);
+    expect(world.notices).toEqual(['Export saved, without today’s medical file']);
+  });
+
+  it('refuses Save now when the run is not waiting for the file', async () => {
+    world.local.run = { status: 'running', next: PLAN.indexOf('visits'), nextStep: 'visits', layout: FILE_LAYOUT } as RunState;
+    const runner = await freshRunner();
+    await expect(runner.saveNow()).rejects.toThrow(/not waiting/);
+  });
+
+  it('counts as late when the order went out unconfirmed, and not when none was asked for', async () => {
+    world.order = { ordered: false, sent: true, success_code: '3' };
+    let runner = await freshRunner();
+    await runner.start(TAB);
+    expect((await settled())?.medicalFileLate).toEqual({ kept: '2026-10-18' });
+
+    world.order = { ordered: false, skipped_ready_today: true };
+    world.local = {};
+    world.sessionStore = {};
+    vi.stubGlobal('chrome', fakeChrome());
+    runner = await freshRunner();
+    await runner.start(TAB);
+    expect((await settled())?.medicalFileLate).toBeUndefined();
+  });
+});
+
+describe('Cancel in a long wait', () => {
+  it('cuts the wait short', async () => {
+    let runner!: Runner;
+    let woke = false;
+    world.step.visits = async (_attempt, c) => {
+      void runner.cancel();
+      await c.sleep(120_000);
+      woke = true;
+    };
+    runner = await freshRunner();
+    await runner.start(TAB);
+    await vi.waitFor(() => expect(stored()).toBeUndefined(), { timeout: 5000, interval: 5 });
+    expect(woke).toBe(true);
+  });
+
+  it('is finished by the next worker when this one dies first', async () => {
+    let runner!: Runner;
+    world.step.visits = async () => {
+      await runner.cancel();
+      await die();
+    };
+    runner = await freshRunner();
+    await runner.start(TAB);
+    await vi.waitFor(() => expect(world.dead).toBe(true), { timeout: 5000, interval: 5 });
+    await vi.waitFor(() => expect(stored()?.cancelling).toBe(true), { timeout: 5000, interval: 5 });
+
+    world.dead = false;
+    delete world.step.visits;
+    world.ran = [];
+    runner = await freshRunner();
+    await runner.recover('heartbeat');
+    expect(stored()).toBeUndefined();
+    expect(world.ran).toEqual([]);
+  });
+});
+
+describe('a new run the same day', () => {
+  /** A run that ordered, then was cancelled, as the member would. */
+  async function orderedThenCancelled(): Promise<Runner> {
+    let runner!: Runner;
+    world.step.visits = async () => {
+      await runner.cancel();
+    };
+    runner = await freshRunner();
+    await runner.start(TAB);
+    await vi.waitFor(() => expect(stored()).toBeUndefined(), { timeout: 5000, interval: 5 });
+    delete world.step.visits;
+    expect(world.orders).toBe(1);
+    return freshRunner();
+  }
+
+  it('waits for the order the last one sent, from when it was sent, and does not order again', async () => {
+    const runner = await orderedThenCancelled();
+    const sent = (world.local[LAST_ORDER] as LastOrder).at;
+    await runner.start(TAB);
+    const run = await settled();
+    expect(run?.status).toBe('saving');
+    expect(world.orders).toBe(1);
+    expect(world.earlier.at(-1)).toMatchObject({ confirmed: true });
+    expect(run?.orderedAt).toBe(sent);
+    expect(world.keptListed).toBe(false);
+  });
+
+  it('is told of an order that was never confirmed, and keeps the listed file', async () => {
+    world.order = { ordered: false, sent: true, success_code: '3' };
+    const runner = await orderedThenCancelled();
+    expect(world.local[LAST_ORDER]).toMatchObject({ confirmed: false, code: '3' });
+    await runner.start(TAB);
+    await settled();
+    expect(world.orders).toBe(1);
+    expect(world.keptListed).toBe(true);
+  });
+
+  it('orders on another day, and for another member', async () => {
+    const hash = (await orderedThenCancelled(), (world.local[LAST_ORDER] as LastOrder).memberHash);
+    world.local[LAST_ORDER] = { day: '2020-01-01', memberHash: hash, at: 'x', confirmed: true };
+    let runner = await freshRunner();
+    await runner.start(TAB);
+    await settled();
+    expect(world.orders).toBe(2);
+
+    world.local[LAST_ORDER] = { day: israelToday(Date.now()), memberHash: 'someone else', at: 'x', confirmed: true };
+    delete world.local.run;
+    runner = await freshRunner();
+    await runner.start(TAB);
+    await settled();
+    expect(world.orders).toBe(3);
+  });
+
+  it('remembers an order before it goes out, so a worker killed there still counts it', async () => {
+    world.step.orderMedicalFile = () => die();
+    const runner = await freshRunner();
+    await runner.start(TAB);
+    await vi.waitFor(() => expect(world.dead).toBe(true), { timeout: 5000, interval: 5 });
+    expect(world.local[LAST_ORDER]).toMatchObject({ confirmed: false });
+  });
+});
+
+describe('the medical file order', () => {
+  it('records nothing as sent when the tab is hidden and then closes before it goes out', async () => {
+    const closed = new SessionEndedError('the Maccabi Online tab was closed');
+    let looks = 0;
+    world.tabLook = () => {
+      if (++looks > 1) throw closed;
+      return false;
+    };
+    const runner = await freshRunner();
+    await runner.start(TAB);
+    await vi.waitFor(() => expect(stored()?.status).toBe('paused_session'), { timeout: 5000, interval: 5 });
+    const run = stored();
+    expect(run?.order).toBeUndefined();
+    expect(world.orders).toBe(0);
+    expect(world.local[LAST_ORDER]).toBeUndefined();
+  });
+
+  it('keeps what a settled order filed when a rewind comes back through it', async () => {
+    world.step.hospitalStays = (attempt) => {
+      if (attempt === 1) throw new SessionEndedError('gone');
+    };
+    const runner = await freshRunner();
+    await runner.start(TAB);
+    expect((await settled())?.status).toBe('saving');
+    expect(world.problemsCleared.filter((s) => s === 'orderMedicalFile')).toHaveLength(1); // the first time, not the rewind
+    expect(world.problemsCleared.filter((s) => s === 'hospitalStays')).toHaveLength(2);
+  });
+});
+
 describe('a service worker that restarts', () => {
+  it('carries on a run it finds running, at the same step, when the heartbeat wakes it', async () => {
+    world.step.visits = () => {
+      throw new Error('stop here');
+    };
+    let runner = await freshRunner();
+    await runner.start(TAB);
+    await settled();
+    world.local.run = { ...stored()!, status: 'running', message: undefined, errorDetail: undefined };
+    delete world.step.visits;
+    world.ran = [];
+
+    runner = await freshRunner();
+    await runner.recover('heartbeat');
+    expect((await settled())?.status).toBe('saving');
+    expect(world.ran).toEqual(collected(steps('visits')));
+    expect(world.notices.filter((n) => n === 'Export paused')).toEqual([]);
+  });
+
+  it('pauses a run it finds running when the session token is gone', async () => {
+    world.step.visits = () => {
+      throw new Error('stop here');
+    };
+    let runner = await freshRunner();
+    await runner.start(TAB);
+    await settled();
+    world.local.run = { ...stored()!, status: 'running' };
+    world.sessionStore = {};
+    vi.stubGlobal('chrome', fakeChrome());
+    runner = await freshRunner();
+    await runner.recover('heartbeat');
+    expect(stored()?.status).toBe('paused_session');
+  });
+
   it('pauses a run it finds running, and Resume continues it from where it was', async () => {
     world.step.visits = () => {
       throw new Error('stop here'); // leaves a run stored at visits, as a worker that died there would

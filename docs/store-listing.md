@@ -72,7 +72,7 @@ Take it to a private doctor or one abroad, and keep it through a move or a switc
 HOW IT WORKS
 1. Log in to Maccabi Online as usual.
 2. On that tab, click the extension's icon and press Start export.
-3. Keep the tab open and in front. Usually after a few minutes (up to 20 if the medical file is slow to arrive), the ZIP is in your Downloads folder and Chrome lets you know.
+3. Keep the tab open and in front. Usually after a few minutes (up to 35 if the medical file is slow to arrive), the ZIP is in your Downloads folder and Chrome lets you know.
 4. Unzip it and open the folder in an assistant's desktop app: in Claude, Project or folder under the message box; in ChatGPT, Work, then Choose project. Claude Code and Codex work too.
 5. Start with "Read README.md first. Then summarize my health history from my full medical file."
 
@@ -243,7 +243,7 @@ Take it to a private doctor or one abroad, keep it through a move or a switch of
 HOW IT WORKS
 1. Log in to Maccabi Online as usual.
 2. On that tab, click the extension's icon and press Start export.
-3. Keep the tab open and in front. Usually after a few minutes (up to 20 if the medical file is slow to arrive), the ZIP is in your Downloads folder.
+3. Keep the tab open and in front. Usually after a few minutes (up to 35 if the medical file is slow to arrive), the ZIP is in your Downloads folder.
 4. Unzip it and open the folder in an assistant's desktop app. In Claude, choose Project or folder under the message box. In ChatGPT, switch to Work, then choose the folder under Choose project.
 5. Start with "Read README.md first. Then summarize my health history from my full medical file."
 
@@ -290,7 +290,7 @@ Saves the signed-in member's own medical records from Maccabi Online (online.mac
 **Host permission** (`https://online.maccabi4u.co.il/*`):
 
 ```
-Reads the signed-in member's records and their PDFs from Maccabi Online, using the session the member is already logged in with. Each export also orders the member's full medical file, which the member is told about before starting. The extension accesses no other site. activeTab isn't enough: its access ends when the tab navigates, and an export moves the tab between the site's pages and can run for up to 20 minutes.
+Reads the signed-in member's records and their PDFs from Maccabi Online, using the session the member is already logged in with. Each export also orders the member's full medical file, which the member is told about before starting. The extension accesses no other site. activeTab isn't enough: its access ends when the tab navigates, and an export moves the tab between the site's pages and can run for up to 35 minutes.
 ```
 
 **scripting:**
@@ -299,7 +299,7 @@ Reads the signed-in member's records and their PDFs from Maccabi Online, using t
 Runs short functions in the Maccabi Online tab the member is logged in on, and only there. The functions do three things:
 1. Read the site's session token so the extension can make requests as the logged-in member. When the token is stale, they clear it so that the site issues a new one.
 2. Send the few requests that the site accepts only from its own pages: the legacy medical-file services and the medical file order.
-3. While an export runs, dispatch a mousedown event on the page every 4 minutes. Maccabi Healthcare Services logs members out after 6 minutes without a click or keypress, and an export can run for up to 20 minutes without user input. The member is told about this before the first export, and it stops as soon as the export ends.
+3. While an export runs, dispatch a mousedown event on the page every 4 minutes. Maccabi Healthcare Services logs members out after 6 minutes without a click or keypress, and an export can run for up to 35 minutes without user input. The member is told about this before the first export, and it stops as soon as the export ends.
 ```
 
 **downloads:**

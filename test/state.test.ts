@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { CancelledError, RateLimitedError, SessionEndedError, STEP_ORDER } from '../src/core';
 import {
-  abandoned, alignToPlan, FILE_LAYOUT, LABELS, MAX_RECONNECTS, PLAN, resumeIndex, sameLayout, savingOutcome, SESSION_ENDED_MESSAGE, STAGING_TTL_MS, stepFailure, WEIGHTS,
+  abandoned, alignToPlan, canMove, FILE_LAYOUT, isDriven, isUnderway, LABELS, MAX_RECONNECTS, nextStatus, PLAN, resumeIndex, sameLayout, savingOutcome, SESSION_ENDED_MESSAGE, STAGING_TTL_MS, stepFailure, WEIGHTS,
+  type RunStatus,
 } from '../src/extension/shared/state';
 
 describe('PLAN', () => {
@@ -14,6 +15,44 @@ describe('PLAN', () => {
     expect(Object.keys(WEIGHTS)).toEqual([...PLAN]);
     expect(Object.keys(LABELS)).toEqual([...PLAN]);
     expect(Object.values(WEIGHTS).every((w) => w > 0)).toBe(true);
+  });
+});
+
+describe('nextStatus', () => {
+  const ALL: RunStatus[] = ['running', 'paused_session', 'paused_hidden', 'saving', 'done', 'error'];
+
+  it('moves a run as each event says', () => {
+    expect(nextStatus('paused_session', 'resume')).toBe('running');
+    expect(nextStatus('error', 'resume')).toBe('running');
+    expect(nextStatus('running', 'pause')).toBe('paused_session');
+    expect(nextStatus('paused_hidden', 'pause')).toBe('paused_session');
+    expect(nextStatus('running', 'hide')).toBe('paused_hidden');
+    expect(nextStatus('paused_hidden', 'show')).toBe('running');
+    expect(nextStatus('saving', 'stop')).toBe('error');
+    expect(nextStatus('running', 'save')).toBe('saving');
+    expect(nextStatus('saving', 'saved')).toBe('done');
+    expect(nextStatus('saving', 'saveFailed')).toBe('error');
+    expect(nextStatus('error', 'retrySave')).toBe('running');
+  });
+
+  it('leaves a run alone when the event does not apply', () => {
+    expect(nextStatus('done', 'resume')).toBe('done');
+    expect(nextStatus('saving', 'resume')).toBe('saving');
+    expect(nextStatus('done', 'saved')).toBe('done');
+    expect(canMove('saving', 'retrySave')).toBe(false);
+  });
+
+  it('never reopens a finished run, whatever comes', () => {
+    for (const e of ['resume', 'pause', 'hide', 'show', 'stop', 'save', 'saved', 'saveFailed', 'retrySave'] as const) expect(nextStatus('done', e)).toBe('done');
+  });
+
+  it('lets an obsolete run be discarded from any status', () => {
+    for (const s of ALL) expect(nextStatus(s, 'obsolete')).toBe('error');
+  });
+
+  it('counts a run as underway until it is done or stopped', () => {
+    expect(ALL.filter(isUnderway)).toEqual(['running', 'paused_session', 'paused_hidden', 'saving']);
+    expect(ALL.filter(isDriven)).toEqual(['running', 'saving']);
   });
 });
 

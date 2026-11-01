@@ -1,7 +1,7 @@
 import { errMessage } from '../../core';
 import { MACCABI_ORIGIN, TERMS_EFFECTIVE, type Request, type StateReply } from '../shared/state';
 import { handleDev } from './dev';
-import { cancel, dismiss, EXPIRY, focusRunTab, loadRun, onDownloadChanged, recover, resume, retrySave, showFile, start, UserError } from './runner';
+import { cancel, dismiss, EXPIRY, focusRunTab, loadRun, onDownloadChanged, recover, resume, retrySave, saveNow, showFile, start, UserError } from './runner';
 import { tabInfo } from './tab';
 import { noticeKind, READY_BUTTONS } from './ui';
 
@@ -53,6 +53,9 @@ async function handle(msg: Request & { tabId?: number }): Promise<unknown> {
       return { ok: true };
     case 'retrySave':
       await retrySave();
+      return { ok: true };
+    case 'saveNow':
+      await saveNow();
       return { ok: true };
     case 'showFile':
       await showFile();

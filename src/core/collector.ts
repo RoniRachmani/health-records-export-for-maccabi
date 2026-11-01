@@ -1,4 +1,4 @@
-import type { Ctx, Deps, DocRef, HttpResponse, Json, Problem, SaveResult, Session } from './types';
+import type { Ctx, Deps, DocRef, HttpResponse, Json, Problem, SaveReply, SaveResult, Session } from './types';
 import { charset, isPdf, mimeType, retryAfterMs, sha256Hex } from './util';
 
 export const PACE_MS = 300;
@@ -142,14 +142,17 @@ export class Collector {
   }
 
   async save(rel: string, obj: Json): Promise<SaveResult | undefined> {
-    const res = await this.deps.sink.putJson(rel, obj);
-    this.log.push([rel, (res.result || res.error) as string]);
-    return res.result;
+    return this.saved(rel, await this.deps.sink.putJson(rel, obj));
   }
 
   async saveBin(rel: string, bytes: Uint8Array, replace = false): Promise<SaveResult | undefined> {
-    const res = await this.deps.sink.putBin(rel, bytes, replace);
-    this.log.push([rel, (res.result || res.error) as string]);
+    return this.saved(rel, await this.deps.sink.putBin(rel, bytes, replace));
+  }
+
+  /** A file the sink refused is a problem like any other: the export has to say it is missing. */
+  private async saved(rel: string, res: SaveReply): Promise<SaveResult | undefined> {
+    if (res.error) await this.problem(rel, res.error);
+    else this.log.push([rel, res.result as string]);
     return res.result;
   }
 

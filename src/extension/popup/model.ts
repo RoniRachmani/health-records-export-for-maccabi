@@ -161,6 +161,14 @@ export function waitingForFile(run: RunState): boolean {
 }
 
 /**
+ * Whether the panel offers Save now: once the run has looked and found the file it ordered not ready, not during the
+ * first check, when the file is usually there, and not once pressed.
+ */
+export function canSaveNow(run: RunState): boolean {
+  return waitingForFile(run) && partOf(run) !== '' && !run.saveNow && !!run.order?.ordered;
+}
+
+/**
  * The reminder at the foot of the panel. While the medical file is being prepared it leads into the link to the AI assistant
  * page (the panel says how long that can take). One line, in any font: the running view has no room to spare under
  * Chrome's 600px cap.
@@ -210,7 +218,7 @@ export const DESCRIPTIONS: Record<PlanStep, Record<string, string>> = {
   waitMedicalFile: {
     '': 'Checking whether your file is ready',
     'waiting for the medical file to appear': 'Waiting for the new file to be listed',
-    'medical file status': 'Maccabi is preparing it: up to 15 min',
+    'medical file status': 'Maccabi is preparing it: up to 30 min',
     letters: 'Downloading your medical file',
   },
   save: { '': 'Packing all files into one ZIP' },
@@ -303,7 +311,7 @@ export interface UiFlags {
 export function viewKey(st: StateReply, ui: UiFlags): string {
   const r = st.run;
   const base = r
-    ? ['run', r.id, r.status, r.message ?? '', r.status === 'error' ? r.next : '', st.tab.onMaccabi]
+    ? ['run', r.id, r.status, r.message ?? '', r.status === 'error' ? r.next : '', st.tab.onMaccabi, canSaveNow(r)]
     : ['idle', st.noticeAccepted, st.tab.onMaccabi, st.tab.loggedIn, st.tab.name ?? ''];
   return [...base, ui.busy ?? '', ui.confirm ?? '', ui.stopping, ui.error].join('|');
 }
@@ -359,6 +367,21 @@ export function doneSummary(run: RunState): string {
   return [countOf(run.fileCount ?? 0, 'file', 'files'), run.zipBytes !== undefined && formatBytes(run.zipBytes), took, 'in your Downloads folder']
     .filter(Boolean)
     .join(' · ');
+}
+
+/** An ISO date as the popup says it: 29 October 2026. */
+function dayText(iso: string): string {
+  return new Date(iso + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+}
+
+/** What the finished view says when the fresh medical file did not make it: what the ZIP holds, then what to do. */
+export function lateFileText(run: Pick<RunState, 'medicalFileLate'>): { what: string; next: string } | null {
+  const late = run.medicalFileLate;
+  if (!late) return null;
+  return {
+    what: (late.kept ? 'This ZIP has your medical file from ' + dayText(late.kept) : 'This ZIP has no medical file') + ': Maccabi hasn’t finished today’s yet.',
+    next: 'When Maccabi texts you today, export again. It takes a few minutes and won’t order another.',
+  };
 }
 
 /** How many items could not be exported: the total kept beside the first few, never fewer than are shown. */
