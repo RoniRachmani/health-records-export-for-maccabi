@@ -24,7 +24,7 @@ const CACHE = join(root, '.cache', 'elevenlabs-sound');
 const IMPORT = join(CACHE, 'import');
 const API = 'https://api.elevenlabs.io/v1';
 const MUSIC_MODEL = 'music_v2_5';
-const SFX_MODEL = 'eleven_text_to_sound_v2';
+const SFX_MODEL = 'eleven_text_to_sound_v3';
 
 // The register of the whole score: what soundtrack.mjs plays, described rather than written.
 const STYLE = ['instrumental', 'modern tech product film score', 'warm optimistic electronic pop', 'D major', '88 BPM',
@@ -141,7 +141,7 @@ export async function elevenSound(spec, options = {}) {
     const list = [];
     for (let take = 0; take < (kind.takes ?? 1); take++) {
       // `take` only tells the takes apart in the cache; it is not sent.
-      const request = { text: kind.text, duration_seconds: seconds, prompt_influence: 0.6, model_id: options.soundModel ?? SFX_MODEL };
+      const request = { text: kind.text, duration_seconds: seconds, prompt_influence: 0.6, model_id: SFX_MODEL };
       const out = file({ ...request, take }, 'mp3');
       if (!existsSync(out)) {
         console.log('  asking ElevenLabs for the ' + s.kind + ' (' + seconds + 's' + (kind.takes ? ', take ' + (take + 1) : '') + ')');

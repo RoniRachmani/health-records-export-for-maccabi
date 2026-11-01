@@ -22,7 +22,6 @@ export const BEFORE_THURSDAY_STEM = 'before-thursday';
 export function beforeThursdaySoundOptions(spec) {
   return {
     useImports: false,
-    soundModel: 'eleven_text_to_sound_v3',
     music: musicRequest(spec, { style: STYLE, never: NEVER, parts: PARTS, seed: 2026102503 }),
     effects: {
       whoosh: { text: 'One understated airy silk swish for a premium documentary screen transition. Smooth short movement, dry and soft, no impact, no music, no voice.' },
