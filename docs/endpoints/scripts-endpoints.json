@@ -1,5 +1,5 @@
 {
-  "_note": "Every request the terminal scripts send themselves, beside the collector's (which are docs/endpoints/endpoints.json's, whether sent from a tab or from Node): the sign-in chain, the portal's token bootstrap and the legacy page prime of scripts/maccabi-session.mjs (npm run export -- --no-browser). Nothing here is requested by the extension. The chain is the one orenyomtov/maccabi-health documented (docs/AUTH.md there); the password road was recorded from the site's own page with scripts/discover-login.mjs. No values: what each request sends and returns is field names and shapes. test/endpoints.test.ts checks that every path written in scripts/maccabi-session.mjs is listed here.",
+  "_note": "Every request the terminal scripts send themselves, beside the collector's (which are docs/endpoints/endpoints.json's, whether sent from a tab or from Node): the sign-in chain, the portal's token bootstrap and the legacy page prime of scripts/maccabi-session.mjs (npm run export -- --no-browser), and the static files the drift check reads (scripts/drift-check.mjs, npm run drift). Nothing here is requested by the extension. The chain is the one orenyomtov/maccabi-health documented (docs/AUTH.md there); the password road was recorded from the site's own page with scripts/discover-login.mjs. No values: what each request sends and returns is field names and shapes. test/endpoints.test.ts checks that every path written in scripts/maccabi-session.mjs and scripts/drift-check.mjs is listed here.",
   "conventions": {
     "pacing": "One at a time, core.PACE_MS (300 ms) after the previous one came back, redirect hops included: the one queue in MaccabiSession.request.",
     "auth": "The login origin's /infosec calls carry Authorization: Bearer <jwt>, each with the token the previous answer handed out (originJWT from the login page, then auth -> detailsV2 -> generateV2 -> validate, or detailsV2 -> auth on the password road -> response). The portal's requests carry its session cookies; the bootstrap also Authorization: Bearer null, as the portal's own page sends it.",
@@ -80,6 +80,23 @@
       "sends": "session cookies, with cookie_sessionId_0_<mid> = session_id set by the script when the portal did not set it",
       "returns": "200 text/html (the page; not read beyond checking it is not the login page)",
       "notes": "Primes the legacy /online/ services before the legacy steps, as the extension's tab does by opening the page (core.SUMMARY_PAGE): they answer only a session that has loaded one of their pages. A redirect to the login origin, /my.logout.php3 or /my.policy, or a page that carries originJWT, is an ended session."
+    }
+  ],
+
+  "drift": [
+    {
+      "method": "GET",
+      "url": "https://online.maccabi4u.co.il/sonline/",
+      "sends": "session cookies",
+      "returns": "200 text/html, the portal's page; only its <script src> and script preload addresses are read",
+      "notes": "The drift check's endpoint scan starts from the scripts this page loads, as npm run endpoints starts from the ones the browser's page loaded. Read after sign-in, before the collector's steps."
+    },
+    {
+      "method": "GET",
+      "url": "https://online.maccabi4u.co.il/<script path>.js",
+      "sends": "session cookies; redirects not followed",
+      "returns": "the site's front-end scripts (application/javascript): code, no member's data",
+      "notes": "Each script the portal page and the legacy summary page load (the summary page is the one the session primes, see above), and the chunks they name (chunkFiles in tools/endpoint-scan/endpoint-scan-lib.mjs), up to 600 files, held in memory for the scan and never written. Only on *.maccabi4u.co.il over https."
     }
   ]
 }

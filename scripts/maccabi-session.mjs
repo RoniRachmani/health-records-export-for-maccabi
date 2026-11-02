@@ -459,7 +459,9 @@ export class MaccabiSession {
   /**
    * Loads the legacy summary page as the extension's tab does before the legacy steps: the /online/
    * services answer only a session that has loaded one of their pages, under the navigation session id
-   * the bootstrap returned. Afterwards pagePath() says /online/..., as the tab's would.
+   * the bootstrap returned. Afterwards pagePath() says /online/..., as the tab's would. Gives the page's HTML, whose
+   * script tags the drift check's endpoint scan reads.
+   * @returns {Promise<string>}
    */
   async primeLegacy() {
     if (!this.legacySessionId) throw new SignInError('NO_LEGACY_SESSION');
@@ -474,6 +476,7 @@ export class MaccabiSession {
       throw new Error('The legacy page did not open (HTTP ' + r.status + ' at ' + at.pathname + ')');
     }
     this.pagePath = this.#summary;
+    return html;
   }
 
   /** Back to the portal for the API steps; the extension's tab returns to /sonline/ the same way. */

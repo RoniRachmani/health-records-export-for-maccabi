@@ -87,8 +87,18 @@ describe('docs/endpoints/scripts-endpoints.json', () => {
     expect(listed('infosec/otp/notListed')).toBe(false); // so the check can fail
   });
 
+  it('lists every request path in scripts/drift-check.mjs', () => {
+    const source = readFileSync('scripts/drift-check.mjs', 'utf8');
+    const paths = new Set<string>();
+    // The portal page the scan starts from is the bare '/sonline/', which IN_SCRIPT (a path past it) does not take.
+    for (const [, url] of source.matchAll(/request\('(\/[^']*)'/g)) paths.add(bare(url));
+    for (const [, url] of source.matchAll(IN_SCRIPT)) paths.add(bare(url));
+    expect(paths.size).toBeGreaterThan(0);
+    expect([...paths].filter((p) => !listed(p))).toEqual([]);
+  });
+
   it('names no value: what each request sends and returns is shapes', () => {
-    for (const entry of [...map.sign_in, ...map.session]) {
+    for (const entry of [...map.sign_in, ...map.session, ...map.drift]) {
       expect(entry).toMatchObject({ method: expect.stringMatching(/^(GET|POST)$/), url: expect.stringMatching(/^https:\/\/(mac|online)\.maccabi4u\.co\.il\//), sends: expect.any(String), returns: expect.any(String) });
       expect(entry.url).not.toMatch(/\d{5,}/); // no id number in a path
     }

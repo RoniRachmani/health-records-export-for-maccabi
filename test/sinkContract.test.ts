@@ -1,5 +1,6 @@
-/* The write rules every Sink keeps, run against each of the three: the fake the collector's tests use, the
-   IndexedDB staging the extension ships (on fake-indexeddb), and the folder the terminal export writes. The
+/* The write rules every Sink keeps, run against each of the four: the fake the collector's tests use, the
+   IndexedDB staging the extension ships (on fake-indexeddb), the folder the terminal export writes, and the drift
+   check's sink, which keeps JSON in memory and a document's digest alone. The
    collector is tested against the fake alone, so this is what says the other two behave the same. */
 import 'fake-indexeddb/auto';
 import { mkdtempSync, rmSync } from 'node:fs';
@@ -11,6 +12,7 @@ import * as core from '../src/cli/index';
 import {
   clearProblemsOfStep, clearStaging, getFile, listMeta, listProblems, putBinDirect, putTextDirect, setCurrentPart, setCurrentStep, stagedTotals, stagingSink,
 } from '../src/extension/shared/staging';
+import { memorySink } from '../scripts/drift-lib.mjs';
 import { folderSink } from '../scripts/headless-lib.mjs';
 import { MemorySink } from './fakes';
 
@@ -37,6 +39,7 @@ const sinks: [string, () => Promise<Sink>][] = [
       return folderSink(core, dir, '0.0.0');
     },
   ],
+  ['memorySink (drift check)', async () => memorySink(core)],
 ];
 
 const bytes = (...b: number[]) => new Uint8Array(b);

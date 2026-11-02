@@ -28,6 +28,8 @@ npm run export -- --no-browser --sms   # the same, signed in with an SMS code ty
 node scripts/discover-login.mjs   # record the browser sign-in's request shapes (secrets replaced), to keep maccabi-session.mjs true to the site
 npm run endpoints                 # the site's own calls that docs/endpoints/endpoints.json lacks, and mapped ones it dropped (same .env; calls no API)
 npm run endpoints -- --from DIR   # the same on scripts a --save DIR kept, with no sign-in; --rea adds REA's parser
+npm run drift                     # the weekly drift check: no-browser sign-in, every section kept nowhere, shapes and scan against docs/endpoints/, report in .cache/drift/ (exit 1 differs, 2 could not check)
+npm run drift -- --install --day tue --time 03:30   # run it weekly from this checkout with a notification (launchd); --uninstall stops it
 npm run env                       # write .env from 1Password, by the references in .env.tpl (op inject)
 npm run clean                     # remove dist/, dist-dev/, dist-store/, dist-cli/, release/, coverage/
 npm run release:zip               # clean, test, build:dev, package
@@ -213,7 +215,7 @@ renamed is then a `kind: 'shape'` problem (the site may have changed), not a sec
   with JSDoc, checked by `scripts/tsconfig.json`, never with a `.d.mts` beside them. A sign-in attempt (a password, an SMS code) is sent once and never resubmitted; what is refused
   before it is sent (an empty password, a code that is not six digits) leaves the sign-in open.
 - **The research tools stay internal.** The no-browser SAML/SMS sign-in (`scripts/maccabi-session.mjs`), the export
-  from the terminal (`npm run export`), the live run (`npm run live`), the sign-in recorder
+  from the terminal (`npm run export`), the live run (`npm run live`), the drift check (`npm run drift`), the sign-in recorder
   (`scripts/discover-login.mjs`) and the endpoint scan with REA (`tools/endpoint-scan/`) are for researching the site
   and checking the collector on your own account, and nothing more. They never ship (not in the extension, the store
   package, a release or the website), and nothing a member reads (the README's parts for members, the store listing, the landing
@@ -221,7 +223,8 @@ renamed is then a `kind: 'shape'` problem (the site may have changed), not a sec
   (`src/extension/`, and `src/core/` beyond what the extension needs too); `src/cli/index.ts` only re-exports for them.
 - **The fake site follows the real one**: `npm run live -- --shapes` keeps each answer's field names and types in
   `docs/endpoints/shapes.json`, values never, and `test/shapes.test.ts` holds `fakeMaccabi` to it. That file is the one
-  thing a live run writes into the repo: keep `shared/shapes.ts` letting no value through.
+  thing a live run writes into the repo: keep `shared/shapes.ts` letting no value through. `npm run drift` compares with
+  it every week and never writes it (CONTRIBUTING.md's *A weekly drift check*).
 - **Every request goes in `docs/endpoints/`**: the collector's (`src/core`, sent from the tab or from Node) in
   `endpoints.json` with the file it produces, and the ones the scripts send themselves (the sign-in chain, the token
   bootstrap, the legacy page prime) in `scripts-endpoints.json` with what each sends and returns, names and shapes and

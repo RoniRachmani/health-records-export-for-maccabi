@@ -8,6 +8,7 @@ documents is for.
 [Driving a run from the console](#driving-a-run-from-the-console) ·
 [A live run from the terminal](#a-live-run-from-the-terminal) ·
 [An export from the terminal](#an-export-from-the-terminal-without-the-extension) ·
+[A weekly drift check](#a-weekly-drift-check) ·
 [Finding what the export could add](#finding-what-the-export-could-add) · [Releasing](#releasing) ·
 [Ground rules](#ground-rules)
 
@@ -202,6 +203,7 @@ plainly a field name becomes `<key>`, an id in a path becomes `{id}`, and the sc
 number. It is only added to, since a field one account lacks has not left the site. `test/shapes.test.ts` then fails when
 `fakeMaccabi` answers with a field or type the snapshot has not seen: correct the fake, or the collector if the site
 moved. Read the printed differences as the first sign of a change on the site, and run it before a release.
+[A weekly drift check](#a-weekly-drift-check) makes the same comparison with nobody at the machine.
 
 ## An export from the terminal, without the extension
 
@@ -272,6 +274,54 @@ in [docs/endpoints/scripts-endpoints.json](docs/endpoints/scripts-endpoints.json
 sign-in on both roads and the test-results step through the Node transport against a fake of the login origin and
 the fake site, and holds the script to each of these.
 
+## A weekly drift check
+
+The extension has no telemetry, so a change on Maccabi's side is otherwise found by a member whose export broke.
+`npm run drift` looks first, on your own account, with nobody at the machine:
+
+```sh
+npm run drift                                         # the check, into .cache/drift/ (gitignored)
+npm run drift -- --notify                             # the same, and a macOS notification with the outcome
+npm run drift -- --steps visits,referrals             # only those steps, to try it out; --no-scan skips the scan
+npm run drift -- --install --day tue --time 03:30     # every week, with --notify, from this checkout (launchd)
+npm run drift -- --uninstall                          # turns that off
+```
+
+It signs in [without a browser](#without-a-browser-at-all), with the password (never SMS), then:
+
+- runs every section of the collector, never ordering, over a sink that keeps nothing: JSON in memory for the steps
+  that read back an earlier one's, and a document as its digest alone, so no record is written anywhere;
+- records the field names and types of every answer (`shapeTransport`, as `--shapes` does) and compares them with
+  `docs/endpoints/shapes.json` (`shapeDrift`), and lists the fields that file has which this run's answers lacked;
+- counts every answer's status per endpoint, and every problem the run filed, by step, folder and kind of failure:
+  `kind: 'shape'` ones (`Collector.listIn`, a list key the site renamed) above all;
+- reads the site's front-end scripts, as [the endpoint scan](#finding-what-the-export-could-add) does, but over the
+  session's own requests from the scripts the portal page and the legacy summary page load, and says which requests
+  of `endpoints.json` the code no longer makes (beyond `scan-baseline.json`'s) or makes with another method.
+
+It writes `.cache/drift/latest.md`, a dated copy beside it, `shapes-seen.json` (this run's shapes, names and types
+only) and `state.json`, the problem kinds and the calls in the code that the next check compares against, so a
+problem that comes back every week is said once. It exits 0 when nothing differs, 1 when something does (a shape
+drift line, a shape problem, a problem the last completed check did not have, a request gone from the site's code, or
+a run that stopped), and 2 when it could not check (the sign-in, the credentials, a run past the hour). The report
+names endpoints, field paths, steps, folders, statuses and counts, never a value, a title or a file name, and is not
+written if it holds Hebrew or a long number. It never writes `shapes.json`: a difference is for you to read, then
+fix the fake site or the collector and record the shapes with `npm run live -- --shapes`.
+
+Its rules are the no-browser export's: one sign-in, never resubmitted, which ends your other Maccabi sessions (so the
+schedule wants a quiet hour); every request through `MaccabiSession.request`'s one queue, `PACE_MS` apart; and the
+pages and scripts it reads itself listed in [scripts-endpoints.json](docs/endpoints/scripts-endpoints.json) under
+`drift`. A run takes Maccabi's hour at most, and stops itself past 80 minutes.
+
+The schedule is a launchd agent, `~/Library/LaunchAgents/com.ronirachmani.hrem.drift.plist`, running Node on
+`scripts/drift-check.mjs` in the checkout it was installed from, with its output in `.cache/drift/launchd.log`.
+launchd runs it in your login session, which is what lets it show a notification, and runs a week's check that
+the Mac slept through once it wakes. (cron does neither, and a Claude scheduled task would need the app open and put
+the run through a model for no gain.) Nobody is there to unlock 1Password, so give it the values: `npm run env`
+writes them into `.env`. With references there instead, a locked app makes `op` give up after two minutes, and the
+check reports that it could not read the credentials and sends nothing to Maccabi. Install it from a checkout that
+stays (the main one, not a worktree), with `main` holding this script.
+
 ## Finding what the export could add
 
 `npm run endpoints` lists what Maccabi Online's own front-end code can call that `docs/endpoints/endpoints.json` does
@@ -339,8 +389,8 @@ The promo video, its soundtrack and the *Before Thursday* draft film are in
 - **Never commit real data.** No responses, exports, PDFs or anything else taken from a real account. Test fixtures are
   synthetic.
 - **The research tools stay internal.** The no-browser SAML/SMS sign-in, the export from the terminal
-  (`npm run export`), the live run (`npm run live`), the sign-in recorder (`scripts/discover-login.mjs`) and the
-  endpoint scan with REA (`npm run endpoints`) are for researching the site and checking the collector on your own
+  (`npm run export`), the live run (`npm run live`), the drift check (`npm run drift`), the sign-in recorder
+  (`scripts/discover-login.mjs`) and the endpoint scan with REA (`npm run endpoints`) are for researching the site and checking the collector on your own
   account. They never ship in the extension, the store package, a release or the website, and nothing a member reads
   (the README's parts for members, the store listing, the landing page, the popup, an export's README) offers or mentions them. A
   change for them stays out of the code that ships: `src/extension/`, and `src/core/` beyond what the extension needs

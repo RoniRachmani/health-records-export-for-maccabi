@@ -42,9 +42,8 @@
 // with the member id written as {mid} as the export's own files write it.
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
-import { build } from 'vite';
 import { createInterface } from 'node:readline/promises';
+import { loadCore } from './cli-core.mjs';
 import { folderSink, keepAlive, pageTransport, sessionOf } from './headless-lib.mjs';
 import { START, credentials, idNumber, openBrowser, signIn } from './maccabi-browser.mjs';
 import { MaccabiSession, choosePhone } from './maccabi-session.mjs';
@@ -78,27 +77,6 @@ if (flag('--phone') && (!SMS || !/^\d+$/.test(PHONE || ''))) {
 
 /** The site logs the tab out after ~6 min without a click; a mousedown every 2 min keeps it (see keepSessionAlive in tab.ts). A browser's timer: a Node session has no page to go idle, and its own requests reset the gateway's clock. */
 const ALIVE_MS = 120_000;
-
-/** The TypeScript sources, bundled for Node: src/cli/index.ts re-exports what this script uses. */
-async function loadCore() {
-  const out = join(root, 'dist-cli');
-  await build({
-    root,
-    configFile: false,
-    logLevel: 'warn',
-    publicDir: false,
-    define: { __DEV_BRIDGE__: 'false' },
-    build: {
-      outDir: out,
-      emptyOutDir: true,
-      minify: false,
-      target: 'es2022',
-      lib: { entry: join(root, 'src/cli/index.ts'), formats: ['es'], fileName: () => 'core.mjs' },
-      rollupOptions: { external: ['fflate'] },
-    },
-  });
-  return import(pathToFileURL(join(out, 'core.mjs')).href);
-}
 
 // ---- the run --------------------------------------------------------------------------------------
 

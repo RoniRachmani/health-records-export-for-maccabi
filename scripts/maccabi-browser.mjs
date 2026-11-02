@@ -29,6 +29,9 @@ const POLL_MS = 5000;
 /** How long the browser has to answer a protocol command, unless the caller gives it longer. */
 const REPLY_MS = 30_000;
 
+/** How long op may wait for the 1Password app (unlocked, and the CLI allowed): a run nobody is at must not hang on it. */
+const OP_TIMEOUT_MS = 120_000;
+
 const NO_OP = 'The 1Password CLI (op) is not installed: brew install 1password-cli, then turn on '
   + '"Integrate with 1Password CLI" in the 1Password app (Settings > Developer).';
 
@@ -37,7 +40,7 @@ function resolve(name) {
   const value = /** @type {string} */ (process.env[name]);
   if (!value.startsWith('op://')) return value;
   try {
-    return execFileSync('op', ['read', '--no-newline', value], { encoding: 'utf8', stdio: ['inherit', 'pipe', 'inherit'] });
+    return execFileSync('op', ['read', '--no-newline', value], { encoding: 'utf8', stdio: ['inherit', 'pipe', 'inherit'], timeout: OP_TIMEOUT_MS });
   } catch (e) {
     if (e.code === 'ENOENT') throw new Error(NO_OP);
     throw new Error(`op could not read ${name} (${value}).`);
@@ -51,6 +54,7 @@ function opItem() {
     out = execFileSync('op', ['item', 'get', ITEM, '--format', 'json', '--reveal'], {
       encoding: 'utf8',
       stdio: ['inherit', 'pipe', 'inherit'],
+      timeout: OP_TIMEOUT_MS,
     });
   } catch (e) {
     if (e.code === 'ENOENT') throw new Error(NO_OP);

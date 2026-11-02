@@ -27,6 +27,7 @@
     "export": "node scripts/headless-export.mjs",
     "env": "op inject -i .env.tpl -o .env",
     "endpoints": "node tools/endpoint-scan/endpoint-scan.mjs",
+    "drift": "node scripts/drift-check.mjs",
     "store-assets": "node scripts/store-assets.mjs",
     "store-video": "node scripts/store-video.mjs",
     "film:before-thursday": "node scripts/store-video.mjs --before-thursday",
