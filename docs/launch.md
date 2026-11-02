@@ -33,8 +33,9 @@ readers in four are with another fund and can't use the extension at all. The ca
 - Says "on a computer, in Chrome". Most clicks from a social post are on a phone, where it cannot install; the page's
   "Email yourself the link" is for them.
 - Says *Unofficial*, and never tags Maccabi or uses its logo or name as a brand.
-- Shows the made-up member only: the page's pictures, the store's screenshots, the film. Never a real record, a real
-  dashboard or a real screen of the site.
+- Shows the made-up member, or a real screen that identifies no one: the page's pictures, the store's screenshots, the
+  film, or the popup partway through a run on the site, like the README's screenshot. Never a name, a member number, a
+  real record or a real dashboard.
 - Says only what the landing page says: you log in yourself, the assistant reads a folder, it advises and you and your
   doctor decide. It names no other product.
 - Is posted on a workday morning, Sunday to Wednesday, when people are at a computer.
@@ -240,7 +241,60 @@ back here, in the log's *Notes*.
 ## Posts
 
 Drafts. Each is in the developer's voice and is theirs to change: fill what is in square brackets, and cut anything
-that isn't true of their own export.
+that isn't true of their own export. Start a new draft from [The founder's voice](#the-founders-voice), and from the posts as sent in
+`launch-log.md`: they are what went out, and the drafts below came first and are longer.
+
+### The founder's voice
+
+Learned from every message sent through 29 October 2026, and from how the founder rewrote the drafts: two chats, three
+posts in builders' groups, and a note to a group's admin with an English post under it. The texts, and where each one
+went, are in `launch-log.md`, under *Posts as sent*: who and where stay there, and this section keeps only what they
+teach. *Voice and tone* in [positioning.md](positioning.md) is the brand's, for the page and the store; this is the
+founder's, for a message under their own name.
+
+**In every message**
+
+- **The word is כל.** All five Hebrew messages say the whole file and not the site's pages: bold in three, and in the
+  last as the point of the post. It is positioning.md's *Wholeness*, found without being asked.
+- **Opens on who it is for.** "לחברי מכבי שבינינו" opened the first message, and the later posts kept it or grew it. In a
+  chat with its own history, it opens on something already shared there instead. No bold title line.
+- **Writes to the people in the room.** The Hebrew forms that fit the chat; the field's own English for builders
+  (אייג׳נט, יוזקייסים, ריפו); a nickname where the group is about one tool.
+- **Spoken, and short.** One paragraph per idea, no bullets. A list of what the export holds runs inline and ends
+  "וכו׳ וכו׳", rather than trying to be complete. In a chat it is one line, or a few short messages in a row.
+- **The same ask since the first message.** "אם יש לכם דקה ליד מחשב", in three of the Hebrew messages. In builders'
+  groups it says why: research, said as research. "דקה" was chosen over "ten minutes" more than once; an export takes
+  several, so someone who says they stopped partway may have taken it at its word.
+- **Names the assistant the audience uses.** Claude or ChatGPT in chats; Claude alone in the groups about Claude.
+- **Leaves the caveats to the link.** No Hebrew message says "unofficial", "on a computer, not a phone" or "pass it on"
+  in its own words. The page says the first two, and the GitHub preview says "Unofficial… Not affiliated"; "pass it on"
+  is said nowhere. *Every post* still asks for all three: offer them in the shortest form that can survive the cut,
+  and if the founder cuts them anyway, that is their call to make.
+- **A real screen, not the made-up member.** The founder chose the popup partway through a run on the site over the
+  page's pictures, which is why *Every post* now allows a screen that identifies no one.
+
+**In builders' groups**
+
+- **The detail a builder will check, and none of the selling.** The site's JSON with its PDF beside it, and the
+  CLAUDE.md that points to the README; example questions and promises went.
+- **Says who reads what.** The README's reader, and the person it serves, which the draft left out.
+- **Fewer points, not fewer words.** Two posts came out close to their drafts' length (739 and 988 characters against
+  832 and 810, the second with its link): what went was the caveats and the separate points, and the explanation that
+  stayed grew.
+- **The code rather than the page.** All three linked GitHub: two linked nothing else, and one put it before the page.
+  The drafts had offered the page. In a chat the link is the page.
+- **Borrows the group's own shape.** Asked to write it like a post that had worked there, the founder kept the shape
+  (the site's gap, "so I made", the link, "מה דעתכם?") and rewrote every word of the draft.
+- **Turns the other funds into a question.** Asking who knows of the same for the other funds invites the people
+  *Every post* passes by, and their answers are the log's *Asked for another fund*.
+
+**To a gatekeeper, and in English**
+
+- **The full version.** The note to an admin kept every sentence of its draft, the group's name and the offer to share
+  it: asking permission, the founder says more, not less.
+- **English stays close to the draft.** The English post under that note was the draft, less "pass it on".
+- **The link goes where it can be added at once.** In the first comment where the post goes up straight away; in the
+  post itself where an admin reviews it first, since a comment can't be added until it is approved.
 
 ### A message to someone you know
 
@@ -344,7 +398,7 @@ post, and post only where they agree. If an admin hasn't answered in two days, t
 The note to the admin, with the whole post under it, so they are agreeing to the words and not to a description of
 them:
 
-> שלום [שם], אני רוני, מהקבוצה. בניתי תוסף לכרום, חינמי ובקוד פתוח, ששומר את כל הרשומות ממכבי אונליין בתיקייה אחת
+> שלום [שם], אני [השם שלך], מהקבוצה. בניתי תוסף לכרום, חינמי ובקוד פתוח, ששומר את כל הרשומות ממכבי אונליין בתיקייה אחת
 > במחשב, כדי לפתוח אותה ב-Claude או ב-ChatGPT ולשאול עליה. אני לא מוכר בו כלום ואין בו פרסומות. אפשר לפרסם עליו
 > פוסט בקבוצה? זה הנוסח המלא, ואם משהו בו לא מתאים לכללי הקבוצה אשנה אותו, או אוותר:
 >
@@ -382,36 +436,28 @@ The post:
 
 ### English-speaking groups
 
-Attach the page's allergy answer: the Hebrew page behind, the English answer in front.
+Short enough to read without "See more": some groups ask for that, and
+remove anything that looks like an ad. The picture tells the rest, and the link goes in the first comment. Attach the
+README's screenshot, or a newer one like it: the popup partway through a run, with nothing that identifies anyone.
 
-> **Your Maccabi records are in Hebrew. You can ask about them in English.**
+> **For Maccabi members: your records are in Hebrew, but you can ask about them in English.**
 >
-> I'm a Maccabi member, and I built a free, open-source Chrome extension that saves everything from Maccabi Online to
-> one folder on your computer: your full medical file, test results, visit summaries, prescriptions, referrals,
-> vaccinations and letters.
->
-> Open that folder in the Claude or ChatGPT desktop app and ask in English:
->
-> • Am I allergic to any medicine?
-> • What changed in my latest blood tests?
-> • What should I raise with my doctor on Thursday?
->
-> It reads the Hebrew and answers in plain English, and the export asks it to name the record, and the page, behind
-> each answer, so you can check it or show it to your doctor.
->
-> Good to know: you log in to Maccabi yourself, and your records go to your computer and nowhere else unless you take
-> them there. It installs in Chrome on a computer, not a phone. Claude's desktop app needs a paid plan. It's
-> unofficial, not affiliated with Maccabi Healthcare Services, and the assistant explains and suggests: you and your
-> doctor decide.
->
-> https://maccabi.ronirachmani.com/
+> I built a free Chrome extension that saves your whole Maccabi Online history to one folder on your computer, for
+> Claude or ChatGPT to read. It works on a computer, not a phone. It's unofficial and not affiliated with Maccabi. Link
+> in the comments.
 
-A Facebook group's admin gets the same question as the Hebrew groups', with the post under it:
+First comment: `https://maccabi.ronirachmani.com/`
 
-> Hi [name], I'm Roni, a member of this group and of Maccabi. I built a free, open-source Chrome extension that saves
-> a member's Maccabi Online records to a folder on their own computer, so they can ask Claude or ChatGPT about them in
-> English. Nothing in it is for sale, and it has no ads. May I post about it here? The whole post is below, and if
-> something in it doesn't fit the group's rules I'll change it, or not post.
+A Facebook group's admin gets the same question as the Hebrew groups', with the post under it. Where the group is run
+by an organisation, the last sentence offers it to them as well:
+
+> Hi [name], I'm [your name], a member of the "[group]" group and of Maccabi.
+>
+> I built a free, open-source Chrome extension that saves a member's Maccabi Online records to a folder on their own
+> computer, so they can ask Claude or ChatGPT about them in English. Nothing in it is for sale, and it has no ads. I
+> know the group doesn't allow ads, so I'm asking first: may I post about it here? The whole post is below, and if
+> something in it doesn't fit the group's rules I'll change it, or not post. If you think it would help [organisation]'s
+> advisors, you're welcome to share it however suits you.
 
 **r/Israel** gets its own version, two days after the groups, so the two can be told apart in the day's visits. Read
 the subreddit's rules on self-promotion first, and ask its moderators if they don't settle it. It is a text post with
