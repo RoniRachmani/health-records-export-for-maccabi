@@ -29,8 +29,8 @@ checks that tab's login session and reads your first name. It reads the rest whe
 - Export progress: which steps are done, how many files and how much data are collected, the ZIP file's name, a list
   of items that could not be exported, your birth date (needed to request vaccination details), and a code computed
   from your member ID, which stops a paused export from being resumed by a different member.
-- The day and time of your last medical file order, whether Maccabi confirmed it or asked to try again later, and
-  whether it was that one second try.
+- The day and time of your last medical file order, whether Maccabi confirmed it or asked to try again later, whether
+  it was that one second try, and whether an export has collected its file.
 - One setting: which version of the Terms of Use and this policy you accepted, by effective date, in the notice shown
   the first time you open the popup.
 
@@ -56,11 +56,13 @@ not used for any other purpose.
   holds short codes computed from the names of the records already collected, so a resumed export does not ask for them
   again. It is deleted when you press Clear this summary, or cancel or discard the export, and 7 days after the export
   last made progress.
-- The day and time of your last medical file order, what Maccabi answered, whether it was a second try, and the code
-  computed from your member ID, are kept in the extension's local storage, on your computer's disk, even after you
-  cancel an export. They stop a new export that day from ordering again, which would make Maccabi text you again. The
-  one exception is an order Maccabi asked to try again later: an export an hour or more after it orders once more, and
-  no export orders again that day. The next order replaces them, and they are deleted when you remove the extension.
+- The day and time of your last medical file order, what Maccabi answered, whether it was a second try, whether an
+  export has collected its file, and the code computed from your member ID, are kept in the extension's local storage,
+  on your computer's disk, even after you cancel an export. They stop a new export that day from ordering again, which
+  would make Maccabi text you again, and, until an export has that order's file, one in the next few days. The one
+  exception is an order Maccabi asked to try again later: an export an hour or more after it, the same day, orders once
+  more, and no export orders again that day. The next order replaces them, and they are deleted when you remove the
+  extension.
 - The notice setting is kept in the extension's local storage. It is deleted when you remove the extension.
 - The ZIP file is saved to your Downloads folder and stays there until you delete it. Chrome also lists it in its
   download history.
@@ -95,7 +97,9 @@ including the Limited Use requirements.
 Apart from reading, the extension takes one action: each export orders a fresh copy of your full medical file. It sends
 the same request the site's own order button sends, but asks for your whole history, which is a wider date range than
 the site's form offers. Maccabi Healthcare Services sends you an SMS about it, and the new file replaces the previous one in the site's
-list. When a copy ordered earlier the same day over the same range is already waiting, no new order is placed. The
+list. When a copy ordered earlier the same day over the same range is already waiting, no new order is placed, and
+neither is one when a copy ordered in the last 3 days, which no export has collected yet, is ready, or, the day after
+it was ordered, is still being prepared. The
 extension does not change or delete anything else, mark items as read, or access payment details.
 
 ## Permissions

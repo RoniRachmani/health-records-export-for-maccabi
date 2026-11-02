@@ -104,7 +104,8 @@ Then load the `dist/` folder the same way.
 - **Maccabi Healthcare Services will text you, right at the start.** Each export orders a fresh copy of your full medical file, first
   thing, so Maccabi Healthcare Services can build it while everything else is collected. It sends the site's own order request, but asks
   for your whole history, which is wider than the range the site's form offers. Maccabi Healthcare Services sends an SMS, and the new file
-  replaces the previous one on the site. A copy ordered earlier the same day over the same range is used as it is.
+  replaces the previous one on the site. A copy ordered earlier the same day over the same range is used as it is, and
+  so is one an export ordered in the last 3 days and finished without, once Maccabi Healthcare Services has prepared it.
   This is the only change the extension makes to your account, and it happens even if the export later fails.
 - **Keep the Maccabi Online tab in front.** Chrome pauses hidden tabs, which can end your session. If you switch away, the
   export waits until you come back.

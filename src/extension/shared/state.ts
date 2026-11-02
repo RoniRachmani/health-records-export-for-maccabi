@@ -161,16 +161,18 @@ export interface RunState {
   /** The member pressed Save now during the medical file's wait. Stored, so a restarted worker does not wait on. */
   saveNow?: boolean;
   /**
-   * The run ended without the file it ordered: `kept` is the day of the file it has instead, if any. `refused`: Maccabi
+   * The run ended without the file it ordered: `kept` is the day of the file it has instead, if any, and `until` the
+   * last day an export takes the ordered file, once Maccabi has built it, without ordering again. `refused`: Maccabi
    * refused the order, and `retryAt` (ISO) is when a new run may order once more, missing when the day's retry is used.
    */
-  medicalFileLate?: { kept?: string; refused?: boolean; retryAt?: string };
+  medicalFileLate?: { kept?: string; until?: string; refused?: boolean; retryAt?: string };
 }
 
 /**
  * The last medical file order, kept in chrome.storage.local under LAST_ORDER apart from the run, which Cancel deletes.
  * Maccabi texts the member for each order and its list shows no pending one, so this is all that stops a new run from
- * ordering again the same day. Written before the order goes out, and again with its answer.
+ * ordering again the same day, or, until an export has its file, in the days after (placeOrder's `earlier`). Written
+ * before the order goes out, again with its answer, and once more when a run collects its file.
  */
 export interface LastOrder {
   /** The day in Israel it was sent, which is its to_date. */
@@ -184,6 +186,8 @@ export interface LastOrder {
   code?: string;
   /** It was the day's one retry after a refusal (placeOrder's REFUSAL_RETRY_MS), so no run orders again that day. */
   retried?: boolean;
+  /** Whether a run has collected its file: a later day orders afresh unless this is false (missing in older versions'). */
+  collected?: boolean;
 }
 
 export const LAST_ORDER = 'lastOrder';
@@ -338,7 +342,7 @@ export const SESSION_ENDED_MESSAGE =
 /** Problems without the one about the late medical file, which the finished view and the notification say in full. */
 /** The "Export saved" notification's last sentence, when the export has no fresh medical file. */
 export function lateFileNotice(late: NonNullable<RunState['medicalFileLate']>): string {
-  if (!late.refused) return 'When Maccabi texts you today, export again.';
+  if (!late.refused) return 'When Maccabi texts you, export again.';
   return 'Maccabi asked to try again later: export again when it texts you, or ' +
     (late.retryAt ? 'from ' + israelTime(Date.parse(late.retryAt)) + ' if it doesn’t.' : 'tomorrow if it doesn’t.');
 }

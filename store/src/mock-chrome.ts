@@ -88,7 +88,7 @@ const STATES: Record<string, Omit<StateReply, 'noticeAccepted'> & { noticeAccept
   late: {
     run: {
       ...done,
-      medicalFileLate: { kept: '2026-09-10' },
+      medicalFileLate: { kept: '2026-09-10', until: '2026-09-13' },
       problems: [{ where: 'medical-file', what: 'medical file to 2026-09-17 not listed after 30 min', at: '' }],
       problemCount: 1,
     },

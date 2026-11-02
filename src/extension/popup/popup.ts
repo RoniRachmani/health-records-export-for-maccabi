@@ -184,7 +184,7 @@ function noticeView(): Child[] {
     h('ul', { class: 'points' },
       h('li', {}, h('strong', {}, 'Each export orders a fresh copy of your full medical file'),
         ', for your whole history: a wider range than the site’s own form offers. Maccabi texts you about it.' +
-        ' A copy already ordered today is reused.'),
+        ' A copy ordered today, or a recent one not yet exported, is reused.'),
       h('li', {}, 'Everything stays on this computer, in one ZIP.'),
       h('li', {}, 'It keeps you logged in to Maccabi while it runs.')),
     note('warn', h('strong', {}, 'The new copy replaces the medical file now on the site.')),
@@ -288,7 +288,7 @@ function progressView(run: RunState): Child[] {
     ui.confirm !== 'cancel' && h('ol', { class: 'stages', 'aria-label': 'Sections' }, ...stages),
     // Save now shares Cancel's row: the running view has no room for another.
     run.status === 'running' && ui.confirm !== 'cancel' && h('p', { class: 'dismiss' },
-      canSaveNow(run) && actionButton('Save now, without today’s file', { type: 'saveNow' }, 'quiet', 'Saving…'),
+      canSaveNow(run) && actionButton('Save now, without the new file', { type: 'saveNow' }, 'quiet', 'Saving…'),
       cancelButton('quiet')),
   ];
 }
@@ -365,7 +365,7 @@ function doneView(run: RunState): Child[] {
   ai.insertAdjacentHTML('beforeend', OPENS_ICON);
   ai.append(h('span', { class: 'visually-hidden' }, ' (opens in a new tab)'));
   return [
-    h('h2', {}, late ? 'Saved, without today’s medical file' : 'Your export is ready'),
+    h('h2', {}, late ? 'Saved, without the new medical file' : 'Your export is ready'),
     h('div', { class: 'file-card' },
       icon,
       h('div', {},

@@ -380,7 +380,11 @@ export function lateFileText(run: Pick<RunState, 'medicalFileLate'>): { what: st
   if (!late) return null;
   const has = late.kept ? 'This ZIP has your medical file from ' + dayText(late.kept) : 'This ZIP has no medical file';
   if (!late.refused) {
-    return { what: has + ': Maccabi hasn’t finished today’s yet.', next: 'When Maccabi texts you today, export again. It takes a few minutes and won’t order another.' };
+    return {
+      what: has + ': Maccabi hasn’t finished the new one yet.',
+      // A run stored before `until` existed says it without a day.
+      next: 'When Maccabi texts you, export again' + (late.until ? ' by ' + dayText(late.until) : '') + '. It takes a few minutes and won’t order another.',
+    };
   }
   // A refused order may still be built and texted for: the export after that text takes its file without ordering.
   return {

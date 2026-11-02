@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { keepListedMedicalFile, letters, newCtx, orderRefused, orderSettled, placeOrder, REFUSAL_RETRY_MS, waitMedicalFile } from '../src/core';
+import { earlierFileUntil, keepListedMedicalFile, letters, newCtx, orderRefused, orderSettled, placeOrder, REFUSAL_RETRY_MS, waitMedicalFile } from '../src/core';
+import type { EarlierOrder } from '../src/core';
 import type { HttpRequest } from '../src/core/types';
 import { fakeMaccabi, fakeTransport, makeCollector, FakeClock, MemorySink, PDF, bytesResp } from './fakes';
 
@@ -30,6 +31,77 @@ describe('placeOrder', () => {
     const site = fakeMaccabi({ medicalFile: { letter_type: 2, status: 1, link: 'x.pdf', to_date: '2026-09-17', from_date: '1900-01-01T00:00:00' } });
     const { c } = makeCollector(fakeTransport(site.routes, { pagePath: '/online/medicalfile/summary/' }));
     expect(await placeOrder(c, { earlier: { confirmed: true } })).toMatchObject({ skipped_ready_today: true });
+  });
+
+  // 2026-10-26: an export gave up on its order, Maccabi built the file that night and texted, and the next morning's
+  // export ordered (and texted) again. The fake clock's today is 2026-09-17.
+  describe('an earlier day\'s order no export has collected', () => {
+    const built = (to: string, more: Record<string, unknown> = {}) =>
+      ({ letter_type: 2, status: 1, link: 'mf.pdf', timestamp: 't', to_date: to, from_date: '1900-01-01T00:00:00', item_date: to + 'T00:00:00', ...more });
+    function order(listed: Record<string, unknown>, earlier: EarlierOrder) {
+      const xhr = vi.fn(() => ok('1'));
+      const { c, sink } = makeCollector(fakeTransport(fakeMaccabi({ medicalFile: listed }).routes, { pagePath: SUMMARY, xhr }));
+      return { c, sink: sink as MemorySink, xhr, result: placeOrder(c, { earlier }) };
+    }
+
+    it('takes its file once built, up to 3 days on, without ordering, and keeps it without a problem', async () => {
+      const { c, sink, xhr, result } = order(built('2026-09-16'), { day: '2026-09-16', confirmed: true, collected: false });
+      const taken = await result;
+      expect(taken).toEqual({ ordered: false, skipped_ready_earlier: true, from_date: '1900-01-01', to_date: '2026-09-16' });
+      expect(orderSettled(taken)).toBe(true);
+      expect(xhr).not.toHaveBeenCalled();
+      expect(await keepListedMedicalFile(c, taken)).toBe('2026-09-16');
+      expect(sink.files.get('2026-09-16_medical-file.pdf')).toEqual(PDF);
+      expect(sink.problems).toEqual([]);
+
+      expect(await order(built('2026-09-14'), { day: '2026-09-14', confirmed: true, collected: false }).result).toMatchObject({ skipped_ready_earlier: true });
+      const late = order(built('2026-09-13'), { day: '2026-09-13', confirmed: true, collected: false });
+      expect(await late.result).toMatchObject({ ordered: true, sent: true });
+      expect(late.xhr).toHaveBeenCalledOnce();
+    });
+
+    it('counts its days across a month\'s end', () => {
+      expect(earlierFileUntil('2026-09-30')).toBe('2026-10-03');
+    });
+
+    it('takes it after a refusal too, since Maccabi built it all the same', async () => {
+      expect(await order(built('2026-09-16'), { day: '2026-09-16', confirmed: false, code: '3', collected: false }).result).toMatchObject({ skipped_ready_earlier: true });
+    });
+
+    it('orders when an export already has that file, or the listed one is another day\'s or range', async () => {
+      for (const [listed, earlier] of [
+        [built('2026-09-16'), { day: '2026-09-16', confirmed: true, collected: true }],
+        // Stored by a version that did not keep it: it may have been collected.
+        [built('2026-09-16'), { day: '2026-09-16', confirmed: true }],
+        [built('2026-09-15'), { day: '2026-09-16', confirmed: false, collected: false }],
+        [built('2026-09-16', { from_date: '2023-09-16T00:00:00' }), { day: '2026-09-15', confirmed: true, collected: false }],
+        [built('2026-09-16', { status: 0 }), { day: '2026-09-15', confirmed: true, collected: false }],
+      ] as const) {
+        const o = order(listed, earlier);
+        expect(await o.result).toMatchObject({ ordered: true, sent: true, to_date: '2026-09-17' });
+        expect(o.xhr).toHaveBeenCalledOnce();
+      }
+    });
+
+    it('waits for a confirmed one still unbuilt the next day, and orders after that', async () => {
+      const next = order(built('2026-09-10'), { day: '2026-09-16', confirmed: true, code: '1', collected: false });
+      expect(await next.result).toEqual({
+        ordered: true, earlier_order: true, success_code: '1', from_date: '1900-01-01', to_date: '2026-09-16', same_day_before: false, same_range_before: false,
+      });
+      expect(next.xhr).not.toHaveBeenCalled();
+      const after = order(built('2026-09-10'), { day: '2026-09-15', confirmed: true, collected: false });
+      expect(await after.result).toMatchObject({ ordered: true, sent: true, to_date: '2026-09-17' });
+      expect(after.xhr).toHaveBeenCalledOnce();
+    });
+
+    it('says, when that wait gives up, which order it was and until when an export takes it', async () => {
+      const { c, sink } = makeCollector(fakeTransport(fakeMaccabi({ medicalFile: built('2026-09-10') }).routes));
+      expect(await waitMedicalFile(c, { toDate: '2026-09-16', fromDate: '1900-01-01', giveUp: () => true })).toMatchObject({ ready: false, kept: '2026-09-10' });
+      expect((sink as MemorySink).problems.map((p) => p.what)).toEqual([
+        'saved without waiting for the file ordered 2026-09-16, so this export has the earlier medical file, 2026-09-10_medical-file.pdf. ' +
+        'When Maccabi texts you, export again by 2026-09-19: that export takes the file ordered 2026-09-16 without ordering again',
+      ]);
+    });
   });
 
   it('refuses to order from any other page', async () => {
@@ -249,7 +321,7 @@ describe('waitMedicalFile', () => {
     const site = fakeMaccabi();
     const { c, sink } = makeCollector(fakeTransport(site.routes));
     expect(await waitMedicalFile(c, { toDate: '2026-09-17' })).toMatchObject({ ready: false });
-    expect((sink as MemorySink).problems[0].what).toMatch(/^no medical file with to_date 2026-09-17 after 1[23]\d s, so this export has no medical file\. When Maccabi texts you today, export again/);
+    expect((sink as MemorySink).problems[0].what).toMatch(/^no medical file with to_date 2026-09-17 after 1[23]\d s, so this export has no medical file\. When Maccabi texts you, export again by 2026-09-20/);
     expect((sink as MemorySink).problems[0].where).toBe('medical-file');
   });
 
@@ -285,7 +357,7 @@ describe('waitMedicalFile', () => {
     expect((sink as MemorySink).problems.map((p) => [p.where, p.what])).toEqual([[
       'medical-file',
       'medical file to 2026-09-17 not listed after 30 min, so this export has the earlier medical file, 2026-09-10_medical-file.pdf. ' +
-      "When Maccabi texts you today, export again: that export takes today's file without ordering again",
+      "When Maccabi texts you, export again by 2026-09-20: that export takes the file ordered 2026-09-17 without ordering again",
     ]]);
   });
 
@@ -297,8 +369,8 @@ describe('waitMedicalFile', () => {
     expect(clock.sleeps.filter((ms) => ms === 15000)).toHaveLength(1);
     expect((sink as MemorySink).files.get('2026-09-10_medical-file.pdf')).toEqual(PDF);
     expect((sink as MemorySink).problems.map((p) => p.what)).toEqual([
-      'saved without waiting for the file ordered today, so this export has the earlier medical file, 2026-09-10_medical-file.pdf. ' +
-      "When Maccabi texts you today, export again: that export takes today's file without ordering again",
+      'saved without waiting for the file ordered 2026-09-17, so this export has the earlier medical file, 2026-09-10_medical-file.pdf. ' +
+      "When Maccabi texts you, export again by 2026-09-20: that export takes the file ordered 2026-09-17 without ordering again",
     ]);
   });
 
@@ -316,8 +388,8 @@ describe('waitMedicalFile', () => {
     expect((sink as MemorySink).files.has('2026-09-17_medical-file.pdf')).toBe(true);
     expect((sink as MemorySink).problems.map((p) => p.what)).toEqual([
       'medical file to 2026-09-17 not listed after 30 min, so this export has the earlier medical file, ' +
-      "2026-09-17_medical-file.pdf, which covers only 2023-09-17 to 2026-09-17. When Maccabi texts you today, export again: " +
-      "that export takes today's file without ordering again",
+      "2026-09-17_medical-file.pdf, which covers only 2023-09-17 to 2026-09-17. When Maccabi texts you, export again by 2026-09-20: " +
+      "that export takes the file ordered 2026-09-17 without ordering again",
     ]);
   });
 

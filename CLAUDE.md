@@ -136,7 +136,7 @@ problem is never marked, since problems are cleared when a step re-runs. **Every
 re-run from the start** — a resume, a reconnect or a rewind through `OPENED_BY` will do exactly that. A change that
 renames files already staged bumps `FILE_LAYOUT` in `state.ts`, so a run paused across the update is discarded
 instead of staging both names.
-`orderMedicalFile` guards itself (`run.order`, and `LAST_ORDER` in `chrome.storage.local` for a new run the same day, since Cancel deletes the run) because re-running it would order and SMS again; the one exception is a refusal, which a new run retries once, an hour on (`REFUSAL_RETRY_MS` in `placeOrder`). A stored run nobody
+`orderMedicalFile` guards itself (`run.order`, and `LAST_ORDER` in `chrome.storage.local` for a new run the same day, since Cancel deletes the run, or in the days after while no run has collected that order's file) because re-running it would order and SMS again; the one exception is a refusal, which a new run the same day retries once, an hour on (`REFUSAL_RETRY_MS` in `placeOrder`). A stored run nobody
 comes back to for `STAGING_TTL_MS` (7 days) is discarded with its staging (`abandoned` in `state.ts`, checked by
 `loadRun`, woken by the `hrem-expiry` alarm): change the Privacy Policy with it.
 

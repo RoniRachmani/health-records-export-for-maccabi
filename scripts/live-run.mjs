@@ -163,7 +163,8 @@ function orderOutcome(order) {
   if (!order) return 'not ordered (dev:skipOrder)';
   if (order.error) return 'not ordered: ' + order.error;
   if (order.skipped_ready_today) return "no order: today's file over the same range was already ready, and the run used it";
-  if (order.earlier_order) return 'no order: an earlier run ordered today' + (order.ordered ? ', and the run waited for that file' : ', unconfirmed; see the problems');
+  if (order.skipped_ready_earlier) return 'no order: the file of the order sent ' + order.to_date + ', which no export had collected, was ready, and the run used it';
+  if (order.earlier_order) return 'no order: an earlier run ordered ' + (order.to_date ? 'to ' + order.to_date : 'today') + (order.ordered ? ', and the run waited for that file' : ', unconfirmed; see the problems');
   if (order.ordered) return 'ordered (Maccabi sent an SMS)' + (order.same_day_before ? ", replacing a file from earlier today" : '');
   if (order.success_code === '3') return 'refused (Success 3: Maccabi asked to try again later, and may still text); see the problems';
   return 'order not confirmed' + (order.success_code ? ' (Success ' + order.success_code + ')' : '') + '; see the problems';

@@ -194,7 +194,7 @@ describe('stepFailure', () => {
 
 describe('lateFileNotice', () => {
   it('ends the notification with what to do, and after a refusal from when a new export orders once more', () => {
-    expect(lateFileNotice({ kept: '2026-10-29' })).toBe('When Maccabi texts you today, export again.');
+    expect(lateFileNotice({ kept: '2026-10-29', until: '2026-11-01' })).toBe('When Maccabi texts you, export again.');
     expect(lateFileNotice({ refused: true, retryAt: '2026-11-02T10:14:00.000Z' })).toBe('Maccabi asked to try again later: export again when it texts you, or from 12:14 if it doesn’t.');
     expect(lateFileNotice({ refused: true })).toBe('Maccabi asked to try again later: export again when it texts you, or tomorrow if it doesn’t.');
   });

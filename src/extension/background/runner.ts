@@ -3,7 +3,7 @@
    worker can pick it up); the member's session token lives only in
    chrome.storage.session; exported files live in IndexedDB staging. */
 import {
-  apiPath, CancelledError, Collector, countOf, israelToday, LEGACY_STEPS, MEDICAL_FILE, newCtx, orderSettled, placeOrder, runStep,
+  apiPath, CancelledError, Collector, countOf, earlierFileUntil, israelToday, LEGACY_STEPS, MEDICAL_FILE, newCtx, orderSettled, placeOrder, runStep,
   SessionEndedError, sha256Hex, waitMedicalFile, keepListedMedicalFile, orderRefused, type Session, type StepName, type Transport,
 } from '../../core';
 import {
@@ -472,7 +472,7 @@ const SUMMARY_PATH = /^\/online\/medicalfile\/summary\/?$/i;
  * Sends the order from the summary page, opening it first when the tab is elsewhere, and keeps the answer. Both the
  * sending and the answer are checkpointed as they happen, not when the step ends: a worker killed in between would
  * otherwise come back with no order on record, and order again (and Maccabi text the member again). What outlives the
- * run is LAST_ORDER, for a new run the same day.
+ * run is LAST_ORDER, for a new run the same day, or one in the days after while no export has that order's file.
  */
 async function orderMedicalFile(run: RunState): Promise<void> {
   // Normally the tab is still on the page openLegacyPage opened; after a Resume or a reconnect it
@@ -480,7 +480,7 @@ async function orderMedicalFile(run: RunState): Promise<void> {
   if (!SUMMARY_PATH.test((await snapshot(run.tabId)).path)) await navigate(run.tabId, SUMMARY_PAGE, SUMMARY_PATH);
   const c = await collector();
   const reorder = __DEV_BRIDGE__ && !!(await chrome.storage.local.get('devReorder')).devReorder;
-  const earlier = await orderedToday(run);
+  const earlier = await lastOrder(run);
   // Until the answer is in, the run holds an order that went out with no answer, which orderSettled never repeats.
   const beforeSend = async ({ retry }: { retry: boolean }) => {
     // Here, not in the request: a tab that is gone, or a Cancel, then leaves an order that was never sent as just that.
@@ -496,16 +496,23 @@ async function orderMedicalFile(run: RunState): Promise<void> {
   if (run.order.error) await c.problem(MEDICAL_FILE, 'medical file not ordered: ' + run.order.error);
 }
 
-/** The order this member sent today, from this run or one since discarded. */
-async function orderedToday(run: RunState): Promise<LastOrder | undefined> {
+/** The last order this member sent, from this run or one since discarded; placeOrder goes by its day. */
+async function lastOrder(run: RunState): Promise<LastOrder | undefined> {
   const last = (await chrome.storage.local.get(LAST_ORDER))[LAST_ORDER] as LastOrder | undefined;
-  return last && last.memberHash === run.memberHash && last.day === israelToday(Date.now()) ? last : undefined;
+  return last && last.memberHash === run.memberHash ? last : undefined;
+}
+
+/** This run has the file of the order sent on `day`: if that is the last order, a later day orders afresh. */
+async function collectedOrder(run: RunState, day: string | undefined): Promise<void> {
+  const last = await lastOrder(run);
+  if (!last || !day || last.day !== day || last.collected !== false) return;
+  await chrome.storage.local.set({ [LAST_ORDER]: { ...last, collected: true } });
 }
 
 async function rememberOrder(run: RunState, confirmed: boolean, code?: string, retried?: boolean): Promise<void> {
   if (!run.memberHash) return;
   const last: LastOrder = {
-    day: israelToday(Date.now()), memberHash: run.memberHash, at: run.orderedAt ?? new Date().toISOString(), confirmed,
+    day: israelToday(Date.now()), memberHash: run.memberHash, at: run.orderedAt ?? new Date().toISOString(), confirmed, collected: false,
     ...(code ? { code } : {}), ...(retried ? { retried } : {}),
   };
   await chrome.storage.local.set({ [LAST_ORDER]: last });
@@ -553,13 +560,19 @@ async function runPlanStep(step: PlanStep): Promise<void> {
           giveUp: () => !!run.saveNow,
         });
         if (waited.ready && run.orderedAt) run.medicalFileMs = Date.now() - Date.parse(run.orderedAt);
-        if (!waited.ready) run.medicalFileLate = { kept: waited.kept };
+        if (waited.ready) await collectedOrder(run, run.order.to_date);
+        else run.medicalFileLate = { kept: waited.kept, until: earlierFileUntil(run.order.to_date ?? israelToday(Date.now())) };
       } else {
         // No new file was ordered: keep the one Maccabi already has, if any, and say which it is.
         const kept = await keepListedMedicalFile(c, run.order);
+        // A ready file that is an order's own, today's or an earlier day's, was used: that order is collected.
+        if (kept && (run.order?.skipped_ready_today || run.order?.skipped_ready_earlier)) await collectedOrder(run, run.order.to_date);
         // An order that went out, unconfirmed or refused, may still be carried out, with its text.
         if (run.order?.sent || run.order?.earlier_order) {
-          run.medicalFileLate = { kept, ...(orderRefused(run.order) && { refused: true, ...(run.order.retry_at && { retryAt: run.order.retry_at }) }) };
+          run.medicalFileLate = {
+            kept, until: earlierFileUntil(run.order.to_date ?? israelToday(Date.now())),
+            ...(orderRefused(run.order) && { refused: true, ...(run.order.retry_at && { retryAt: run.order.retry_at }) }),
+          };
         }
       }
       return;
@@ -690,7 +703,7 @@ export async function onDownloadChanged(delta: chrome.downloads.DownloadDelta): 
     await release();
     const p = withoutLateFile(problems, run).length;
     const late = run.medicalFileLate;
-    await notify('ready', late ? 'Export saved, without today’s medical file' : 'Export ready', run.zipName + ': ' + countOf(run.fileCount ?? 0, 'file', 'files') + '.' +
+    await notify('ready', late ? 'Export saved, without the new medical file' : 'Export ready', run.zipName + ': ' + countOf(run.fileCount ?? 0, 'file', 'files') + '.' +
       (p ? ' ' + countOf(p, 'item', 'items') + ' couldn’t be exported.' : '') + (late ? ' ' + lateFileNotice(late) : ''));
   } else if (delta.state?.current === 'interrupted') {
     await saveFailed(run, delta.error?.current || 'interrupted');

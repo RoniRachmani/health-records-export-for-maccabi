@@ -72,7 +72,7 @@ describe('popup', () => {
     expect(main.map((e) => e.className)).toEqual(['points', 'note warn', 'points']);
     expect(main[0].firstElementChild?.textContent).toBe(
       'Each export orders a fresh copy of your full medical file, for your whole history: a wider range than the site’s own form offers.' +
-      ' Maccabi texts you about it. A copy already ordered today is reused.');
+      ' Maccabi texts you about it. A copy ordered today, or a recent one not yet exported, is reused.');
     expect(main[1].textContent).toBe('The new copy replaces the medical file now on the site.');
     expect(main[2].textContent).toContain('Use it only for records you may legally access.');
     const links = [...document.querySelectorAll('.consent a')].map((a) => [a.textContent, a.getAttribute('href'), a.getAttribute('target')]);
@@ -233,7 +233,7 @@ describe('popup', () => {
     await openPopup({ run: running(), tab });
     expect(document.body.textContent).not.toContain('Save now');
     storageChange(running({ next: PLAN.indexOf('waitMedicalFile'), detail: 'Collecting your medical file: medical file status pending', order: { ordered: true } }));
-    buttonNamed('Save now, without today’s file').click();
+    buttonNamed('Save now, without the new file').click();
     await flush();
     expect(sent.map((m) => m.type)).toContain('saveNow');
     expect(buttonNamed('Cancel export').closest('.dismiss')).not.toBeNull();
@@ -245,7 +245,7 @@ describe('popup', () => {
       { where: 'visit-summaries/files/x.pdf', what: 'HTTP 500', at: '' },
     ];
     await openPopup({ run: running({ status: 'done', next: PLAN.length, percent: 100, medicalFileLate: { kept: '2026-10-29' }, problems, problemCount: 2 }), tab });
-    expect(document.querySelector('h2')?.textContent).toBe('Saved, without today’s medical file');
+    expect(document.querySelector('h2')?.textContent).toBe('Saved, without the new medical file');
     expect(document.querySelector('.note.warn')?.textContent).toContain('your medical file from 29 October 2026');
     expect(document.querySelector('details.problems summary')?.textContent).toBe('1 item could not be exported');
     expect(document.body.textContent).not.toContain('not listed after');

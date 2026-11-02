@@ -130,8 +130,10 @@ earlier one (`timestamp`, `hash` and `link` change on every read). So `waitMedic
   Save now (`giveUp`), once the first check has found the file not ready; a file ready at that moment is still taken.
 - gives up after `appearMs` only when the list is empty.
 - when it gives up, keeps the file Maccabi still lists and names it in `export-errors.json` (with its range when that is
-  narrower than the whole history), and says to export again once Maccabi Online lists today's, which that export takes
-  without ordering.
+  narrower than the whole history), and says to export again once Maccabi texts, by a day 3 days after the order's
+  (`earlierFileUntil`): that export takes the file without ordering, the same day (`skipped_ready_today`) or later
+  (`skipped_ready_earlier`, which goes straight to the download, as above). A run the next day that finds a confirmed
+  order still unbuilt waits for it here, to that order's `to_date`, instead of ordering again; a day after that, it orders.
 
 The runs behind those rules:
 

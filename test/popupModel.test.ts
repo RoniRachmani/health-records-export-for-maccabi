@@ -345,9 +345,9 @@ describe('Save now', () => {
 
 describe('lateFileText', () => {
   it('says what the ZIP has, then what to do', () => {
-    expect(lateFileText({ medicalFileLate: { kept: '2026-10-29' } })).toEqual({
-      what: 'This ZIP has your medical file from 29 October 2026: Maccabi hasn’t finished today’s yet.',
-      next: 'When Maccabi texts you today, export again. It takes a few minutes and won’t order another.',
+    expect(lateFileText({ medicalFileLate: { kept: '2026-10-29', until: '2026-11-01' } })).toEqual({
+      what: 'This ZIP has your medical file from 29 October 2026: Maccabi hasn’t finished the new one yet.',
+      next: 'When Maccabi texts you, export again by 1 November 2026. It takes a few minutes and won’t order another.',
     });
     expect(lateFileText({ medicalFileLate: {} })?.what).toMatch(/^This ZIP has no medical file:/);
     expect(lateFileText({})).toBeNull();

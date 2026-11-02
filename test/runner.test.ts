@@ -5,7 +5,7 @@
 // What is real is runner.ts itself, PLAN and its resume rules (shared/state.ts), and core's errors and order rules.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FILE_LAYOUT, LAST_ORDER, PLAN, type LastOrder, type PlanStep, type RunState } from '../src/extension/shared/state';
-import { israelToday, RateLimitedError, REFUSAL_RETRY_MS, SessionEndedError, type Collector, type EarlierOrder, type OrderResult, type Session } from '../src/core';
+import { earlierFileUntil, israelToday, RateLimitedError, REFUSAL_RETRY_MS, SessionEndedError, type Collector, type EarlierOrder, type OrderResult, type Session } from '../src/core';
 
 const MEMBER: Session = { mid: '123456789', jwt: 'jwt', gender: 'F' };
 const TAB = 7;
@@ -49,6 +49,11 @@ const world = {
   problemsCleared: [] as string[],
   /** The `earlier` each placeOrder was given. */
   earlier: [] as (EarlierOrder | undefined)[],
+  /**
+   * What placeOrder answers given the last order, when a test says (core decides; medicalFile.test.ts): otherwise one
+   * from today is taken, and one from an earlier day ordered over.
+   */
+  earlierDay: undefined as ((earlier: EarlierOrder) => OrderResult | undefined) | undefined,
   /** Alarms set, by name, with when they fire (periodic ones: 0). */
   alarms: {} as Record<string, number>,
 };
@@ -70,12 +75,16 @@ vi.mock('../src/core', async (importOriginal) => {
     }),
     placeOrder: vi.fn(async (c: Collector, opts?: { beforeSend?: (o: { retry: boolean }) => Promise<void>; earlier?: EarlierOrder }) => {
       world.earlier.push(opts?.earlier);
-      // Core's rule, as medicalFile.test.ts holds it: a refusal, not itself a retry, is retried once its hour is up.
       const e = opts?.earlier;
-      const retryAt = e && e.code === '3' && !e.retried && e.at ? Date.parse(e.at) + REFUSAL_RETRY_MS : undefined;
+      const taken = e && world.earlierDay?.(e);
+      if (taken) return taken;
+      const today = israelToday(Date.now());
+      const sameDay = !!e && (e.day ?? today) === today;
+      // Core's rule, as medicalFile.test.ts holds it: a refusal today, not itself a retry, is retried once its hour is up.
+      const retryAt = e && sameDay && e.code === '3' && !e.retried && e.at ? Date.parse(e.at) + REFUSAL_RETRY_MS : undefined;
       const retry = retryAt !== undefined && Date.now() >= retryAt;
-      if (e && !retry) {
-        return { ordered: e.confirmed, earlier_order: true, success_code: e.code, ...(retryAt && { retry_at: new Date(retryAt).toISOString() }) } as OrderResult;
+      if (e && sameDay && !retry) {
+        return { ordered: e.confirmed, earlier_order: true, success_code: e.code, to_date: today, ...(retryAt && { retry_at: new Date(retryAt).toISOString() }) } as OrderResult;
       }
       await opts?.beforeSend?.({ retry });
       world.ran.push('orderMedicalFile');
@@ -201,7 +210,7 @@ beforeEach(() => {
   Object.assign(world, {
     ran: [], step: {}, orders: 0, order: { ordered: true, sent: true, to_date: '2026-10-26', from_date: '2016-10-26' }, session: MEMBER,
     visible: true, tabLook: undefined, sessionLookups: 0, navigations: [], path: '/sonline/', stagingCleared: 0, notices: [], downloads: 0, downloadItem: undefined, revoked: [],
-    local: {}, sessionStore: {}, dead: false, dieOn: undefined, keptListed: false, alarms: {}, problemsCleared: [], earlier: [], waited: { ready: true }, waiting: undefined,
+    local: {}, sessionStore: {}, dead: false, dieOn: undefined, keptListed: false, alarms: {}, problemsCleared: [], earlier: [], earlierDay: undefined, waited: { ready: true }, waiting: undefined,
   });
   vi.stubGlobal('chrome', fakeChrome());
   vi.stubGlobal('__DEV_BRIDGE__', false);
@@ -399,7 +408,7 @@ describe('the medical file that does not come', () => {
     expect(run).toMatchObject({ status: 'saving', saveNow: true, medicalFileLate: { kept: '2026-10-29' } });
 
     await runner.onDownloadChanged({ id: run!.downloadId!, state: { current: 'complete' } } as chrome.downloads.DownloadDelta);
-    expect(world.notices).toEqual(['Export saved, without today’s medical file']);
+    expect(world.notices).toEqual(['Export saved, without the new medical file']);
   });
 
   it('refuses Save now when the run is not waiting for the file', async () => {
@@ -412,7 +421,8 @@ describe('the medical file that does not come', () => {
     world.order = { ordered: false, sent: true, success_code: '3', retry_at: '2026-10-18T10:14:00.000Z' };
     let runner = await freshRunner();
     await runner.start(TAB);
-    expect((await settled())?.medicalFileLate).toEqual({ kept: '2026-10-18', refused: true, retryAt: '2026-10-18T10:14:00.000Z' });
+    const until = earlierFileUntil(israelToday(Date.now()));
+    expect((await settled())?.medicalFileLate).toEqual({ kept: '2026-10-18', until, refused: true, retryAt: '2026-10-18T10:14:00.000Z' });
 
     world.order = { ordered: false, sent: true };
     world.local = {};
@@ -420,7 +430,7 @@ describe('the medical file that does not come', () => {
     vi.stubGlobal('chrome', fakeChrome());
     runner = await freshRunner();
     await runner.start(TAB);
-    expect((await settled())?.medicalFileLate).toEqual({ kept: '2026-10-18' });
+    expect((await settled())?.medicalFileLate).toEqual({ kept: '2026-10-18', until });
 
     world.order = { ordered: false, skipped_ready_today: true };
     world.local = {};
@@ -507,7 +517,7 @@ describe('a new run the same day', () => {
     const run = await settled();
     expect(world.orders).toBe(1);
     expect(world.keptListed).toBe(true);
-    expect(run?.medicalFileLate).toEqual({ kept: '2026-10-18' });
+    expect(run?.medicalFileLate).toEqual({ kept: '2026-10-18', until: earlierFileUntil(israelToday(Date.now())) });
   });
 
   it('after a refusal, orders nothing within the hour, and says from when a new run will', async () => {
@@ -521,7 +531,7 @@ describe('a new run the same day', () => {
     expect(world.orders).toBe(1);
     expect(world.earlier.at(-1)).toMatchObject({ confirmed: false, code: '3', at: last.at });
     expect(world.keptListed).toBe(true);
-    expect(run?.medicalFileLate).toEqual({ kept: '2026-10-18', refused: true, retryAt: new Date(Date.parse(last.at) + REFUSAL_RETRY_MS).toISOString() });
+    expect(run?.medicalFileLate).toEqual({ kept: '2026-10-18', until: earlierFileUntil(israelToday(Date.now())), refused: true, retryAt: new Date(Date.parse(last.at) + REFUSAL_RETRY_MS).toISOString() });
   });
 
   it('after a refusal and its hour, orders once more, and never a third time that day', async () => {
@@ -534,7 +544,7 @@ describe('a new run the same day', () => {
     expect(world.orders).toBe(2);
     expect(run?.order).toMatchObject({ retry: true, sent: true, success_code: '3' });
     expect(world.local[LAST_ORDER]).toMatchObject({ confirmed: false, code: '3', retried: true });
-    expect(run?.medicalFileLate).toEqual({ kept: '2026-10-18', refused: true });
+    expect(run?.medicalFileLate).toEqual({ kept: '2026-10-18', until: earlierFileUntil(israelToday(Date.now())), refused: true });
 
     // However long after, a new run that day orders no more.
     (world.local[LAST_ORDER] as LastOrder).at = new Date(Date.now() - 5 * REFUSAL_RETRY_MS).toISOString();
@@ -543,7 +553,7 @@ describe('a new run the same day', () => {
     await runner.start(TAB);
     run = await settled();
     expect(world.orders).toBe(2);
-    expect(run?.medicalFileLate).toEqual({ kept: '2026-10-18', refused: true });
+    expect(run?.medicalFileLate).toEqual({ kept: '2026-10-18', until: earlierFileUntil(israelToday(Date.now())), refused: true });
   });
 
   it('keeps the retry on record from before it goes out, so a worker killed there does not retry again', async () => {
@@ -573,12 +583,104 @@ describe('a new run the same day', () => {
     expect(world.orders).toBe(3);
   });
 
+  it('marks the order collected once its file is in, and not when the wait gave up on it', async () => {
+    const today = israelToday(Date.now());
+    world.order = { ...world.order, to_date: today };
+    world.waited = { ready: false, kept: '2026-10-18' };
+    let runner = await freshRunner();
+    await runner.start(TAB);
+    expect((await settled())?.medicalFileLate).toEqual({ kept: '2026-10-18', until: earlierFileUntil(today) });
+    expect(world.local[LAST_ORDER]).toMatchObject({ day: today, confirmed: true });
+    expect((world.local[LAST_ORDER] as LastOrder).collected).toBe(false);
+
+    world.waited = { ready: true };
+    delete world.local.run;
+    runner = await freshRunner();
+    await runner.start(TAB);
+    await settled();
+    expect(world.orders).toBe(1);
+    expect(world.local[LAST_ORDER]).toMatchObject({ day: today, collected: true });
+  });
+
+  it('marks today\'s order collected when a new run takes its ready file', async () => {
+    const today = israelToday(Date.now());
+    const runner = await orderedThenCancelled();
+    world.earlierDay = () => ({ ordered: false, skipped_ready_today: true, from_date: '1900-01-01', to_date: today });
+    world.local[LAST_ORDER] = { ...(world.local[LAST_ORDER] as LastOrder), day: today };
+    expect((world.local[LAST_ORDER] as LastOrder).collected).toBe(false);
+    await runner.start(TAB);
+    await settled();
+    expect(world.orders).toBe(1);
+    expect(world.local[LAST_ORDER]).toMatchObject({ day: today, collected: true });
+  });
+
   it('remembers an order before it goes out, so a worker killed there still counts it', async () => {
     world.step.orderMedicalFile = () => die();
     const runner = await freshRunner();
     await runner.start(TAB);
     await vi.waitFor(() => expect(world.dead).toBe(true), { timeout: 5000, interval: 5 });
     expect(world.local[LAST_ORDER]).toMatchObject({ confirmed: false });
+  });
+});
+
+describe('a new run on a later day', () => {
+  const yesterday = new Date(Date.parse(israelToday(Date.now()) + 'T00:00:00Z') - 86400000).toISOString().slice(0, 10);
+  /** The member's last order, sent yesterday by a run that gave up on its file. */
+  async function orderedYesterday(extra: Partial<LastOrder> = {}): Promise<LastOrder> {
+    // A first run tells the hash this member's runs remember; it is cleared away before the test's own.
+    const runner = await freshRunner();
+    await runner.start(TAB);
+    await settled();
+    const last: LastOrder = { day: yesterday, memberHash: (world.local[LAST_ORDER] as LastOrder).memberHash, at: yesterday + 'T20:00:00.000Z', confirmed: true, collected: false, ...extra };
+    world.local = { [LAST_ORDER]: last };
+    world.sessionStore = {};
+    vi.stubGlobal('chrome', fakeChrome());
+    Object.assign(world, { orders: 0, earlier: [], keptListed: false });
+    return last;
+  }
+
+  it('takes that order\'s file once Maccabi built it, without ordering, and marks it collected', async () => {
+    await orderedYesterday();
+    world.earlierDay = (e) => (e.collected ? undefined : { ordered: false, skipped_ready_earlier: true, from_date: '1900-01-01', to_date: e.day });
+    let runner = await freshRunner();
+    await runner.start(TAB);
+    const run = await settled();
+    expect(world.earlier.at(-1)).toMatchObject({ day: yesterday, confirmed: true });
+    expect(world.orders).toBe(0);
+    expect(world.keptListed).toBe(true);
+    expect(run?.medicalFileLate).toBeUndefined();
+    expect(world.local[LAST_ORDER]).toMatchObject({ day: yesterday, collected: true });
+
+    // Collected, so the next export orders a fresh file as usual.
+    delete world.local.run;
+    runner = await freshRunner();
+    await runner.start(TAB);
+    await settled();
+    expect(world.earlier.at(-1)).toMatchObject({ collected: true });
+    expect(world.orders).toBe(1);
+  });
+
+  it('waits for a confirmed order still being built, from when it was sent, and says until when to export again', async () => {
+    const last = await orderedYesterday();
+    world.earlierDay = (e) => ({ ordered: true, earlier_order: true, from_date: '1900-01-01', to_date: e.day });
+    world.waited = { ready: false, kept: '2026-10-18' };
+    const runner = await freshRunner();
+    await runner.start(TAB);
+    const run = await settled();
+    expect(world.orders).toBe(0);
+    expect(run?.orderedAt).toBe(last.at);
+    expect(run?.medicalFileLate).toEqual({ kept: '2026-10-18', until: earlierFileUntil(yesterday) });
+    expect((world.local[LAST_ORDER] as LastOrder).collected).toBe(false);
+  });
+
+  it('marks it collected when that wait gets the file', async () => {
+    await orderedYesterday();
+    world.earlierDay = (e) => ({ ordered: true, earlier_order: true, from_date: '1900-01-01', to_date: e.day });
+    const runner = await freshRunner();
+    await runner.start(TAB);
+    await settled();
+    expect(world.orders).toBe(0);
+    expect(world.local[LAST_ORDER]).toMatchObject({ day: yesterday, collected: true });
   });
 });
 

@@ -105,9 +105,17 @@ export interface OrderResult {
   same_range_before?: boolean;
   /** Nothing was ordered: a file from today over the same range was already waiting, and is used instead. */
   skipped_ready_today?: boolean;
+  /**
+   * Nothing was ordered: an earlier day's order that no export has collected was built since, and its file (to_date
+   * that day, over the same range) is used instead. to_date is that day.
+   */
+  skipped_ready_earlier?: boolean;
   /** The order request went out, whatever came back: Maccabi may have taken it even when no clear answer did. */
   sent?: boolean;
-  /** Nothing was sent: an earlier run ordered today, and ordered says whether Maccabi confirmed that order. */
+  /**
+   * Nothing was sent: an earlier run ordered today, and ordered says whether Maccabi confirmed that order. Or an
+   * order Maccabi confirmed yesterday has not been built yet, and is waited for: to_date is then yesterday.
+   */
   earlier_order?: boolean;
   /** This order is the day's one retry after a refusal (REFUSAL_RETRY_MS). */
   retry?: boolean;
@@ -115,11 +123,18 @@ export interface OrderResult {
   retry_at?: string;
 }
 
-/** An order the member's earlier run sent today, as far as the caller remembers it. */
+/** The member's last order, as far as the caller remembers it. */
 export interface EarlierOrder {
   confirmed: boolean;
   /** Its Success code, when an answer came. */
   code?: string;
+  /** The day in Israel it was sent, its to_date; missing is today. */
+  day?: string;
+  /**
+   * Whether an export has its file: only false is carried to a later day. An order stored before this was kept may
+   * have been collected, and a member exporting daily would otherwise get the same file twice.
+   */
+  collected?: boolean;
   /** When it was answered (ISO), which a refusal's cool-down counts from. */
   at?: string;
   /** It was itself the day's retry after a refusal, so no other is sent. */
@@ -142,6 +157,30 @@ function retryAfter(earlier: EarlierOrder): number | undefined {
 }
 
 /**
+ * How many days after its order an earlier order's file, once built, is still taken instead of ordering: Maccabi has
+ * built one overnight, and an export that gave up on it says to export again when Maccabi texts. Three days covers a
+ * weekend, and the file is never more than that behind the rest of the export.
+ */
+export const EARLIER_FILE_DAYS = 3;
+
+/**
+ * How many days after a confirmed order a run still waits for it, unbuilt, instead of ordering again. Builds have
+ * taken up to the next day: past that the order is more likely lost than slow, and a second text is better than
+ * leaving the member without a fresh file.
+ */
+const EARLIER_WAIT_DAYS = 1;
+
+/** The last day an export takes the file of an order sent on `day` without ordering again. */
+export function earlierFileUntil(day: string): string {
+  return new Date(Date.parse(day + 'T00:00:00Z') + EARLIER_FILE_DAYS * 86400000).toISOString().slice(0, 10);
+}
+
+/** Whole days from one ISO day to another. */
+function daysFrom(from: string, to: string): number {
+  return Math.round((Date.parse(to + 'T00:00:00Z') - Date.parse(from + 'T00:00:00Z')) / 86400000);
+}
+
+/**
  * Whether a run holding this result must not order again (a resume or a reconnect rewinds through the order step):
  * Maccabi took the order, or may have, or a ready file was used instead. Only an order that was never sent is tried
  * again. That includes a refusal: on 2026-10-15 one refused at 11:14 was followed by an SMS at 11:35, when nothing
@@ -149,7 +188,7 @@ function retryAfter(earlier: EarlierOrder): number | undefined {
  */
 export function orderSettled(o: OrderResult | undefined): boolean {
   if (!o) return false;
-  return !!(o.ordered || o.skipped_ready_today || o.sent || o.earlier_order);
+  return !!(o.ordered || o.skipped_ready_today || o.skipped_ready_earlier || o.sent || o.earlier_order);
 }
 
 /** Maccabi refused the order: Success '3', where the site's own button tells the member to try again later. */
@@ -166,9 +205,11 @@ export function orderRefused(o: OrderResult | undefined): boolean {
 // /online/medicalfile/summary/ in a tab that has been on /sonline/ (the wait
 // needs the SPA token). `beforeSend` runs just before the order goes out, for the caller to record that it is
 // about to (and whether it is the day's retry): once it is out, Maccabi may take it whether or not an answer ever
-// comes back. `earlier` is an order an earlier run sent today: a new run takes that one instead of ordering (and
-// texting) again, since the list shows no pending order to go by. The one exception is a refusal: once
-// REFUSAL_RETRY_MS has passed with no file on the list, a new run orders once more, and never again that day.
+// comes back. `earlier` is the last order an earlier run sent: a new run takes that one instead of ordering (and
+// texting) again, since the list shows no pending order to go by. From today, always, but for a refusal: once
+// REFUSAL_RETRY_MS has passed with no file on the list, a new run orders once more, and never again that day. From an
+// earlier day, only when no export has its file yet: once it is built (EARLIER_FILE_DAYS), whatever its answer was,
+// or, if Maccabi confirmed it, still unbuilt the next day (EARLIER_WAIT_DAYS).
 export async function placeOrder(c: Collector, opts: { reorder?: boolean; beforeSend?: (o: { retry: boolean }) => Promise<void>; earlier?: EarlierOrder } = {}): Promise<OrderResult> {
   if (!/^\/online\/medicalfile\/summary\/?$/i.test(await c.deps.transport.pagePath())) return { error: 'open /online/medicalfile/summary/ first' };
   if (!c.session.jwt) return { error: 'no SPA token in this tab -- open any /sonline/ page, then /online/medicalfile/summary/, and rerun' };
@@ -188,15 +229,28 @@ export async function placeOrder(c: Collector, opts: { reorder?: boolean; before
   if (sameRangeBefore && !opts.reorder) {
     return { ordered: false, skipped_ready_today: true, from_date: fromDate, to_date: toDate, same_day_before: true, same_range_before: true };
   }
+  const earlier = opts.reorder ? undefined : opts.earlier;
+  const sameDay = !!earlier && (earlier.day ?? toDate) === toDate;
   // Checked after the list, so a refused order Maccabi carried out after all is taken above, with no order.
-  const retryAt = opts.earlier && retryAfter(opts.earlier);
+  const retryAt = earlier && sameDay ? retryAfter(earlier) : undefined;
   const retry = retryAt !== undefined && c.now() >= retryAt;
-  if (opts.earlier && !opts.reorder && !retry) {
+  if (earlier && sameDay && !retry) {
     return {
-      ordered: opts.earlier.confirmed, earlier_order: true, success_code: opts.earlier.code, from_date: fromDate, to_date: toDate,
+      ordered: earlier.confirmed, earlier_order: true, success_code: earlier.code, from_date: fromDate, to_date: toDate,
       same_day_before: sameDayBefore, same_range_before: sameRangeBefore,
       ...(retryAt !== undefined && { retry_at: new Date(retryAt).toISOString() }),
     };
+  }
+  if (earlier?.day && !sameDay && earlier.collected === false) {
+    const day = earlier.day;
+    const age = daysFrom(day, toDate);
+    // Built since, whatever its answer said: a refused order has been carried out, with its text (2026-10-15).
+    if (age > 0 && age <= EARLIER_FILE_DAYS && before && before.to_date === day && before.status === 1 && coversFrom(before, fromDate)) {
+      return { ordered: false, skipped_ready_earlier: true, from_date: fromDate, to_date: day };
+    }
+    if (age > 0 && age <= EARLIER_WAIT_DAYS && earlier.confirmed) {
+      return { ordered: true, earlier_order: true, success_code: earlier.code, from_date: fromDate, to_date: day, same_day_before: false, same_range_before: false };
+    }
   }
   // XMLHttpRequest, not fetch: Radware adds the uzlc header only to XHRs.
   let res: { status: number; text: string };
@@ -265,7 +319,7 @@ async function keepListed(c: Collector): Promise<{ text: string; kept?: string }
  */
 export async function keepListedMedicalFile(c: Collector, order?: OrderResult): Promise<string | undefined> {
   const { text: kept, kept: day } = await keepListed(c);
-  if (!order || order.ordered || order.skipped_ready_today) return day;
+  if (!order || order.ordered || order.skipped_ready_today || order.skipped_ready_earlier) return day;
   // A refused order may still be carried out, with its SMS, minutes later: an export after that SMS, the same day,
   // takes the ready file without ordering (placeOrder skipped_ready_today). With no SMS, an export from retry_at orders
   // once more; before it, or after the day's retry, it orders nothing.
@@ -275,7 +329,7 @@ export async function keepListedMedicalFile(c: Collector, order?: OrderResult): 
       ? 'an export from ' + israelTime(Date.parse(order.retry_at)) + ' orders once more (Success 3)'
       : 'export again tomorrow (Success 3)')
     : order.earlier_order
-      ? 'an order already went out today, so none was sent, and ' + kept + '. ' + EXPORT_AGAIN
+      ? 'an order already went out today, so none was sent, and ' + kept + '. ' + exportAgain(israelToday(c.now()))
       : 'a new medical file was not ordered, so ' + kept);
   return day;
 }
@@ -301,9 +355,12 @@ interface WaitOptions {
   giveUp?: () => boolean;
 }
 
-// A confirmed order Maccabi has not finished: an export after its text, the same day, takes the file without ordering
-// (placeOrder skipped_ready_today). A problem keeps 300 characters.
-const EXPORT_AGAIN = 'When Maccabi texts you today, export again: that export takes today\'s file without ordering again';
+// A confirmed order Maccabi has not finished: an export after its text takes the file without ordering, the same day
+// (placeOrder skipped_ready_today) or up to EARLIER_FILE_DAYS later (skipped_ready_earlier). A problem keeps 300
+// characters.
+function exportAgain(day: string): string {
+  return 'When Maccabi texts you, export again by ' + earlierFileUntil(day) + ': that export takes the file ordered ' + day + ' without ordering again';
+}
 
 // Waits until the medical file ordered with endDate toDate is ready, then
 // saves the PDF and letters/list.json. When it gives up, it keeps the file Maccabi still lists, and says so.
@@ -333,13 +390,13 @@ export async function waitMedicalFile(c: Collector, opts: WaitOptions = {}): Pro
     // Checked after the look above, so a file that has just become ready is still taken.
     if (opts.giveUp?.()) {
       const { text, kept } = await keepListed(c);
-      await c.problem(MEDICAL_FILE, 'saved without waiting for the file ordered today, so ' + text + '. ' + EXPORT_AGAIN);
+      await c.problem(MEDICAL_FILE, 'saved without waiting for the file ordered ' + toDate + ', so ' + text + '. ' + exportAgain(toDate));
       return { polls, ready: false, kept };
     }
     // No entry at all, where the order should have put one.
     if (m.http === 200 && !listed && waited > appearMs) {
       const { text, kept } = await keepListed(c);
-      await c.problem(MEDICAL_FILE, 'no medical file with to_date ' + toDate + ' after ' + Math.round(waited / 1000) + ' s, so ' + text + '. ' + EXPORT_AGAIN);
+      await c.problem(MEDICAL_FILE, 'no medical file with to_date ' + toDate + ' after ' + Math.round(waited / 1000) + ' s, so ' + text + '. ' + exportAgain(toDate));
       return { polls, ready: false, kept };
     }
     if (waited > timeoutMs) {
@@ -349,7 +406,7 @@ export async function waitMedicalFile(c: Collector, opts: WaitOptions = {}): Pro
         return { polls, ready: false };
       }
       const { text, kept } = await keepListed(c);
-      await c.problem(MEDICAL_FILE, 'medical file to ' + toDate + ' not listed' + after + ', so ' + text + '. ' + EXPORT_AGAIN);
+      await c.problem(MEDICAL_FILE, 'medical file to ' + toDate + ' not listed' + after + ', so ' + text + '. ' + exportAgain(toDate));
       return { polls, ready: false, kept };
     }
     await c.sleep(everyMs);
