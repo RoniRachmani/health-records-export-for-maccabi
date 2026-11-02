@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { badPath, binResult, canon, iso, israelToday, jsonResult, jsonBytes, memberFirstName, retryAfterMs, safe, sessionFrom, shortHash, stem, title, titleOf } from '../src/core';
+import { badPath, binResult, canon, iso, israelTime, israelToday, jsonResult, jsonBytes, memberFirstName, retryAfterMs, safe, sessionFrom, shortHash, stem, title, titleOf } from '../src/core';
 
 describe('iso', () => {
   it('normalizes the portal date formats', () => {
@@ -93,6 +93,13 @@ describe('israelToday', () => {
   it('is a day ahead of UTC late at night', () => {
     expect(israelToday(Date.parse('2026-09-16T22:30:00Z'))).toBe('2026-09-17');
     expect(new Date(Date.parse('2026-09-16T22:30:00Z')).toISOString().slice(0, 10)).toBe('2026-09-16');
+  });
+});
+
+describe('israelTime', () => {
+  it('is the 24-hour time in Israel, summer or winter', () => {
+    expect(israelTime(Date.parse('2026-09-16T22:05:00Z'))).toBe('01:05');
+    expect(israelTime(Date.parse('2026-12-01T10:14:00Z'))).toBe('12:14');
   });
 });
 

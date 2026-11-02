@@ -1,5 +1,5 @@
 import { errMessage, LEGACY_STEPS, MEDICAL_FILE, type Ctx, type OrderResult, type Problem } from '../../core';
-import { israelToday } from '../../core/util';
+import { israelTime, israelToday } from '../../core/util';
 
 export const MACCABI_ORIGIN = 'https://online.maccabi4u.co.il';
 
@@ -160,8 +160,11 @@ export interface RunState {
   cancelling?: boolean;
   /** The member pressed Save now during the medical file's wait. Stored, so a restarted worker does not wait on. */
   saveNow?: boolean;
-  /** The run ended without the file it ordered: `kept` is the day of the file it has instead, if any. */
-  medicalFileLate?: { kept?: string };
+  /**
+   * The run ended without the file it ordered: `kept` is the day of the file it has instead, if any. `refused`: Maccabi
+   * refused the order, and `retryAt` (ISO) is when a new run may order once more, missing when the day's retry is used.
+   */
+  medicalFileLate?: { kept?: string; refused?: boolean; retryAt?: string };
 }
 
 /**
@@ -179,6 +182,8 @@ export interface LastOrder {
   confirmed: boolean;
   /** Its Success code, when an answer came. */
   code?: string;
+  /** It was the day's one retry after a refusal (placeOrder's REFUSAL_RETRY_MS), so no run orders again that day. */
+  retried?: boolean;
 }
 
 export const LAST_ORDER = 'lastOrder';
@@ -331,6 +336,13 @@ export const SESSION_ENDED_MESSAGE =
   'Your Maccabi Online session ended. Log in again, then click the extension’s icon on the Maccabi Online tab and press Resume. Files collected so far are kept.';
 
 /** Problems without the one about the late medical file, which the finished view and the notification say in full. */
+/** The "Export saved" notification's last sentence, when the export has no fresh medical file. */
+export function lateFileNotice(late: NonNullable<RunState['medicalFileLate']>): string {
+  if (!late.refused) return 'When Maccabi texts you today, export again.';
+  return 'Maccabi asked to try again later: export again when it texts you, or ' +
+    (late.retryAt ? 'from ' + israelTime(Date.parse(late.retryAt)) + ' if it doesn’t.' : 'tomorrow if it doesn’t.');
+}
+
 export function withoutLateFile<P extends Problem>(problems: P[], run: Pick<RunState, 'medicalFileLate'>): P[] {
   return run.medicalFileLate ? problems.filter((p) => p.where !== MEDICAL_FILE) : problems;
 }

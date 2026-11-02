@@ -5,7 +5,7 @@
 // What is real is runner.ts itself, PLAN and its resume rules (shared/state.ts), and core's errors and order rules.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FILE_LAYOUT, LAST_ORDER, PLAN, type LastOrder, type PlanStep, type RunState } from '../src/extension/shared/state';
-import { israelToday, RateLimitedError, SessionEndedError, type Collector, type EarlierOrder, type OrderResult, type Session } from '../src/core';
+import { israelToday, RateLimitedError, REFUSAL_RETRY_MS, SessionEndedError, type Collector, type EarlierOrder, type OrderResult, type Session } from '../src/core';
 
 const MEMBER: Session = { mid: '123456789', jwt: 'jwt', gender: 'F' };
 const TAB = 7;
@@ -68,14 +68,20 @@ vi.mock('../src/core', async (importOriginal) => {
       const attempt = world.ran.filter((s) => s === step).length;
       await world.step[step]?.(attempt, c);
     }),
-    placeOrder: vi.fn(async (c: Collector, opts?: { beforeSend?: () => Promise<void>; earlier?: EarlierOrder }) => {
+    placeOrder: vi.fn(async (c: Collector, opts?: { beforeSend?: (o: { retry: boolean }) => Promise<void>; earlier?: EarlierOrder }) => {
       world.earlier.push(opts?.earlier);
-      if (opts?.earlier) return { ordered: opts.earlier.confirmed, earlier_order: true } as OrderResult;
-      await opts?.beforeSend?.();
+      // Core's rule, as medicalFile.test.ts holds it: a refusal, not itself a retry, is retried once its hour is up.
+      const e = opts?.earlier;
+      const retryAt = e && e.code === '3' && !e.retried && e.at ? Date.parse(e.at) + REFUSAL_RETRY_MS : undefined;
+      const retry = retryAt !== undefined && Date.now() >= retryAt;
+      if (e && !retry) {
+        return { ordered: e.confirmed, earlier_order: true, success_code: e.code, ...(retryAt && { retry_at: new Date(retryAt).toISOString() }) } as OrderResult;
+      }
+      await opts?.beforeSend?.({ retry });
       world.ran.push('orderMedicalFile');
       world.orders++;
       await world.step.orderMedicalFile?.(world.orders, c);
-      return world.order;
+      return { ...world.order, ...(retry && { retry: true, retry_at: undefined }) };
     }),
     waitMedicalFile: vi.fn(async (_c: Collector, opts?: { giveUp?: () => boolean }) => {
       world.ran.push('waitMedicalFile');
@@ -403,8 +409,16 @@ describe('the medical file that does not come', () => {
   });
 
   it('counts as late when the order went out unconfirmed, and not when none was asked for', async () => {
-    world.order = { ordered: false, sent: true, success_code: '3' };
+    world.order = { ordered: false, sent: true, success_code: '3', retry_at: '2026-10-18T10:14:00.000Z' };
     let runner = await freshRunner();
+    await runner.start(TAB);
+    expect((await settled())?.medicalFileLate).toEqual({ kept: '2026-10-18', refused: true, retryAt: '2026-10-18T10:14:00.000Z' });
+
+    world.order = { ordered: false, sent: true };
+    world.local = {};
+    world.sessionStore = {};
+    vi.stubGlobal('chrome', fakeChrome());
+    runner = await freshRunner();
     await runner.start(TAB);
     expect((await settled())?.medicalFileLate).toEqual({ kept: '2026-10-18' });
 
@@ -482,13 +496,65 @@ describe('a new run the same day', () => {
   });
 
   it('is told of an order that was never confirmed, and keeps the listed file', async () => {
-    world.order = { ordered: false, sent: true, success_code: '3' };
+    world.order = { ordered: false, sent: true };
     const runner = await orderedThenCancelled();
-    expect(world.local[LAST_ORDER]).toMatchObject({ confirmed: false, code: '3' });
+    const last = world.local[LAST_ORDER] as LastOrder;
+    expect(last).toMatchObject({ confirmed: false });
+    expect(last.code).toBeUndefined();
+    // Hours later, an order with no answer is still not sent again: it most likely went through.
+    last.at = new Date(Date.now() - 5 * REFUSAL_RETRY_MS).toISOString();
     await runner.start(TAB);
-    await settled();
+    const run = await settled();
     expect(world.orders).toBe(1);
     expect(world.keptListed).toBe(true);
+    expect(run?.medicalFileLate).toEqual({ kept: '2026-10-18' });
+  });
+
+  it('after a refusal, orders nothing within the hour, and says from when a new run will', async () => {
+    world.order = { ordered: false, sent: true, success_code: '3' };
+    const runner = await orderedThenCancelled();
+    const last = world.local[LAST_ORDER] as LastOrder;
+    expect(last).toMatchObject({ confirmed: false, code: '3' });
+    expect(last.retried).toBeUndefined();
+    await runner.start(TAB);
+    const run = await settled();
+    expect(world.orders).toBe(1);
+    expect(world.earlier.at(-1)).toMatchObject({ confirmed: false, code: '3', at: last.at });
+    expect(world.keptListed).toBe(true);
+    expect(run?.medicalFileLate).toEqual({ kept: '2026-10-18', refused: true, retryAt: new Date(Date.parse(last.at) + REFUSAL_RETRY_MS).toISOString() });
+  });
+
+  it('after a refusal and its hour, orders once more, and never a third time that day', async () => {
+    world.order = { ordered: false, sent: true, success_code: '3' };
+    let runner = await orderedThenCancelled();
+    (world.local[LAST_ORDER] as LastOrder).at = new Date(Date.now() - REFUSAL_RETRY_MS).toISOString();
+    // Refused again.
+    await runner.start(TAB);
+    let run = await settled();
+    expect(world.orders).toBe(2);
+    expect(run?.order).toMatchObject({ retry: true, sent: true, success_code: '3' });
+    expect(world.local[LAST_ORDER]).toMatchObject({ confirmed: false, code: '3', retried: true });
+    expect(run?.medicalFileLate).toEqual({ kept: '2026-10-18', refused: true });
+
+    // However long after, a new run that day orders no more.
+    (world.local[LAST_ORDER] as LastOrder).at = new Date(Date.now() - 5 * REFUSAL_RETRY_MS).toISOString();
+    delete world.local.run;
+    runner = await freshRunner();
+    await runner.start(TAB);
+    run = await settled();
+    expect(world.orders).toBe(2);
+    expect(run?.medicalFileLate).toEqual({ kept: '2026-10-18', refused: true });
+  });
+
+  it('keeps the retry on record from before it goes out, so a worker killed there does not retry again', async () => {
+    world.order = { ordered: false, sent: true, success_code: '3' };
+    const runner = await orderedThenCancelled();
+    (world.local[LAST_ORDER] as LastOrder).at = new Date(Date.now() - REFUSAL_RETRY_MS).toISOString();
+    world.step.orderMedicalFile = () => die();
+    await runner.start(TAB);
+    await vi.waitFor(() => expect(world.dead).toBe(true), { timeout: 5000, interval: 5 });
+    expect(world.local[LAST_ORDER]).toMatchObject({ confirmed: false, retried: true });
+    expect((world.local[LAST_ORDER] as LastOrder).code).toBeUndefined();
   });
 
   it('orders on another day, and for another member', async () => {

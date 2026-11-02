@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { keepListedMedicalFile, letters, newCtx, orderRefused, orderSettled, placeOrder, waitMedicalFile } from '../src/core';
+import { keepListedMedicalFile, letters, newCtx, orderRefused, orderSettled, placeOrder, REFUSAL_RETRY_MS, waitMedicalFile } from '../src/core';
 import type { HttpRequest } from '../src/core/types';
 import { fakeMaccabi, fakeTransport, makeCollector, FakeClock, MemorySink, PDF, bytesResp } from './fakes';
 
@@ -63,7 +63,8 @@ describe('placeOrder', () => {
     const site = fakeMaccabi();
     const { c, sink } = makeCollector(fakeTransport(site.routes, { pagePath: SUMMARY, xhr: () => ok('3') }));
     const refused = await placeOrder(c);
-    expect(refused).toMatchObject({ ordered: false, sent: true, success_code: '3' });
+    // An hour after the answer (FakeClock's 12:00 in Israel, and the pacing since), a later run may order once more.
+    expect(refused).toEqual({ ordered: false, sent: true, success_code: '3', retry_at: expect.stringMatching(/^2026-09-17T10:00:0/) });
     // Reported at the wait, with the file the export keeps instead. Maccabi may still carry it out (2026-10-15: an SMS
     // 21 minutes after a refusal), so a resume does not order again.
     expect((sink as MemorySink).problems).toEqual([]);
@@ -78,6 +79,58 @@ describe('placeOrder', () => {
     expect(orderRefused(lost)).toBe(false);
     const { c: c3 } = makeCollector(fakeTransport(site.routes, { pagePath: SUMMARY, xhr: () => ({ status: 500, text: 'oops' }) }));
     expect(orderSettled(await placeOrder(c3))).toBe(true);
+  });
+
+  describe('after a refusal earlier today', () => {
+    const refusedAt = '2026-09-17T09:00:00.000Z'; // FakeClock's start, 12:00 in Israel
+    const refused = { confirmed: false, code: '3', at: refusedAt };
+    function at(t: string, xhr = vi.fn(() => ok('1')), site = fakeMaccabi()) {
+      const clock = new FakeClock();
+      clock.t = Date.parse(t);
+      return { xhr, ...makeCollector(fakeTransport(site.routes, { pagePath: SUMMARY, xhr }), new MemorySink(), clock) };
+    }
+
+    it('orders nothing before the cool-down, and says when a new run may', async () => {
+      const { c, xhr } = at('2026-09-17T09:59:00Z');
+      const r = await placeOrder(c, { earlier: refused });
+      expect(r).toMatchObject({ ordered: false, earlier_order: true, success_code: '3', retry_at: '2026-09-17T10:00:00.000Z' });
+      expect(orderRefused(r)).toBe(true);
+      expect(xhr).not.toHaveBeenCalled();
+    });
+
+    it('orders once more after it, as the day\'s retry', async () => {
+      expect(REFUSAL_RETRY_MS).toBe(60 * 60000);
+      const seen: { retry: boolean }[] = [];
+      const { c, xhr } = at('2026-09-17T10:00:00Z');
+      const r = await placeOrder(c, { earlier: refused, beforeSend: async (o) => void seen.push(o) });
+      expect(r).toMatchObject({ ordered: true, sent: true, retry: true, success_code: '1' });
+      expect(r.earlier_order).toBeUndefined();
+      expect(seen).toEqual([{ retry: true }]);
+      expect(xhr).toHaveBeenCalledOnce();
+
+      // Refused again: no retry is offered after the retry.
+      const { c: c2 } = at('2026-09-17T10:00:00Z', vi.fn(() => ok('3')));
+      const again = await placeOrder(c2, { earlier: refused });
+      expect(again).toEqual({ ordered: false, sent: true, success_code: '3', retry: true });
+      expect(orderRefused(again)).toBe(true);
+    });
+
+    it('still takes a ready file first: the refused order may have been carried out', async () => {
+      const ready = { letter_type: 2, status: 1, to_date: '2026-09-17', from_date: '1900-01-01T00:00:00', item_date: '2026-09-17T08:00:00', link: 'mf.pdf', timestamp: 'ts' };
+      const { c, xhr } = at('2026-09-17T15:00:00Z', vi.fn(() => ok('1')), fakeMaccabi({ medicalFile: ready }));
+      expect(await placeOrder(c, { earlier: refused })).toMatchObject({ skipped_ready_today: true });
+      expect(xhr).not.toHaveBeenCalled();
+    });
+
+    it('never retries a retry, an unanswered or unconfirmed order, or one with no time', async () => {
+      for (const earlier of [{ ...refused, retried: true }, { confirmed: false, at: refusedAt }, { confirmed: false, code: '0', at: refusedAt }, { confirmed: false, code: '3' }, { confirmed: false, code: '3', at: 'x' }]) {
+        const { c, xhr } = at('2026-09-17T20:00:00Z');
+        const r = await placeOrder(c, { earlier });
+        expect(r).toMatchObject({ ordered: false, earlier_order: true });
+        expect(r.retry_at).toBeUndefined();
+        expect(xhr).not.toHaveBeenCalled();
+      }
+    });
   });
 
   it('calls beforeSend just before the order goes out, and only when it does', async () => {
@@ -297,13 +350,24 @@ describe('keepListedMedicalFile', () => {
 
   it('keeps the listed file and names it when Maccabi refused the order', async () => {
     const { c, sink } = makeCollector(fakeTransport(fakeMaccabi({ medicalFile: earlier }).routes));
-    await keepListedMedicalFile(c, { ordered: false, sent: true, success_code: '3' });
+    await keepListedMedicalFile(c, { ordered: false, sent: true, success_code: '3', retry_at: '2026-10-15T09:14:00.000Z' });
     expect((sink as MemorySink).files.get('2026-10-14_medical-file.pdf')).toEqual(PDF);
     expect((sink as MemorySink).problems.map((p) => [p.where, p.what])).toEqual([[
       'medical-file',
-      "Maccabi Online asked to try again later, so this export has the earlier medical file, 2026-10-14_medical-file.pdf. " +
-      "Maccabi may still prepare today's and text you: export again after that text, the same day, and it takes that file without ordering again (Success 3)",
+      'Maccabi Online asked to try again later, so this export has the earlier medical file, 2026-10-14_medical-file.pdf. ' +
+      "If Maccabi texts you today, export again and it won't order. If not, an export from 12:14 orders once more (Success 3)",
     ]]);
+  });
+
+  it('says to try tomorrow once the day\'s retry is used, and fits a problem\'s 300 characters', async () => {
+    const narrow = { ...earlier, to_date: '2026-10-15', item_date: '2026-10-15T09:00:00', from_date: '2023-10-15T00:00:00' };
+    for (const retry_at of [undefined, '2026-10-15T09:14:00.000Z']) {
+      const { c, sink } = makeCollector(fakeTransport(fakeMaccabi({ medicalFile: narrow }).routes));
+      await keepListedMedicalFile(c, { ordered: false, earlier_order: true, success_code: '3', retry_at });
+      const what = (sink as MemorySink).problems[0].what;
+      expect(what).toMatch(/\(Success 3\)$/);
+      expect(what).toContain(retry_at ? 'an export from 12:14 orders once more' : 'If not, export again tomorrow');
+    }
   });
 
   it('says so when there is no earlier file, or the order was not taken for another reason', async () => {

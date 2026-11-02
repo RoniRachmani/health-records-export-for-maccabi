@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CancelledError, RateLimitedError, SessionEndedError, STEP_ORDER } from '../src/core';
 import {
-  abandoned, alignToPlan, canMove, FILE_LAYOUT, isDriven, isUnderway, LABELS, MAX_RECONNECTS, nextStatus, PLAN, resumeIndex, sameLayout, savingOutcome, SESSION_ENDED_MESSAGE, STAGING_TTL_MS, stepFailure, WEIGHTS,
+  abandoned, alignToPlan, canMove, FILE_LAYOUT, isDriven, isUnderway, LABELS, lateFileNotice, MAX_RECONNECTS, nextStatus, PLAN, resumeIndex, sameLayout, savingOutcome, SESSION_ENDED_MESSAGE, STAGING_TTL_MS, stepFailure, WEIGHTS,
   type RunStatus,
 } from '../src/extension/shared/state';
 
@@ -189,5 +189,13 @@ describe('stepFailure', () => {
       detail: 'boom',
     });
     expect(stepFailure('a string', at())).toMatchObject({ action: 'stop', detail: 'a string' });
+  });
+});
+
+describe('lateFileNotice', () => {
+  it('ends the notification with what to do, and after a refusal from when a new export orders once more', () => {
+    expect(lateFileNotice({ kept: '2026-10-29' })).toBe('When Maccabi texts you today, export again.');
+    expect(lateFileNotice({ refused: true, retryAt: '2026-11-02T10:14:00.000Z' })).toBe('Maccabi asked to try again later: export again when it texts you, or from 12:14 if it doesn’t.');
+    expect(lateFileNotice({ refused: true })).toBe('Maccabi asked to try again later: export again when it texts you, or tomorrow if it doesn’t.');
   });
 });

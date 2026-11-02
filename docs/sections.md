@@ -164,8 +164,8 @@ brought one text, at 11:40. On 2026-10-18 the day's first export on 0.8.12 (`--e
 had the PDF 3 min 1 s after the order, in 3 min 7 s and 257 requests (236 files, 16.1 MB, no problems), and exactly
 one text came, at 14:10. The bursts of two to four texts in the weeks before fit as many orders close together:
 test exports, `--reorder` and 0.8.11's second try at a refused order. A refusal (`Success 3`) is no proof that nothing
-was ordered: on 2026-10-15 one was followed by its text 21 minutes later, which is why 0.8.12 never asks again (see
-*How a run works* in `CONTRIBUTING.md`).
+was ordered: on 2026-10-15 one was followed by its text 21 minutes later, which is why 0.8.12 never asks again in the same run, and a later run asks
+once more only an hour after a refusal (see *How a run works* in `CONTRIBUTING.md`).
 
 What the text says, and the sign-in codes Maccabi texts from another sender, are in [sms.md](sms.md).
 

@@ -253,6 +253,12 @@ describe('popup', () => {
 
     await openPopup({ run: running({ status: 'done', next: PLAN.length, percent: 100, medicalFileLate: {}, problems: [problems[0]], problemCount: 1 }), tab });
     expect(document.querySelector('details.problems')).toBeNull();
+
+    // A refusal says so, and from when a new export orders once more.
+    const refused = { kept: '2026-10-29', refused: true, retryAt: '2026-11-02T10:14:00.000Z' };
+    await openPopup({ run: running({ status: 'done', next: PLAN.length, percent: 100, medicalFileLate: refused, problems: [problems[0]], problemCount: 1 }), tab });
+    expect(document.querySelector('.note.warn')?.textContent).toContain('Maccabi Online asked to try again later.');
+    expect(document.querySelector('.note.warn')?.textContent).toContain('an export from 12:14 orders once more.');
   });
 
   it('reports the full problem count when only the first problems are kept', async () => {

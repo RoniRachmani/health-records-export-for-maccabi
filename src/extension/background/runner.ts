@@ -4,11 +4,11 @@
    chrome.storage.session; exported files live in IndexedDB staging. */
 import {
   apiPath, CancelledError, Collector, countOf, israelToday, LEGACY_STEPS, MEDICAL_FILE, newCtx, orderSettled, placeOrder, runStep,
-  SessionEndedError, sha256Hex, waitMedicalFile, keepListedMedicalFile, type Session, type StepName, type Transport,
+  SessionEndedError, sha256Hex, waitMedicalFile, keepListedMedicalFile, orderRefused, type Session, type StepName, type Transport,
 } from '../../core';
 import {
   abandoned, alignToPlan, canMove, exportName, FILE_LAYOUT, isDriven, isUnderway, LABELS, LAST_ORDER, MACCABI_ORIGIN, nextStatus, OFFLINE_MESSAGE, percentOf, PLAN, resumeIndex, sameLayout, savingOutcome, SESSION_ENDED_MESSAGE, SONLINE_PAGE, STAGING_TTL_DAYS, STAGING_TTL_MS, stepFailure,
-  SUMMARY_PAGE, withoutLateFile, type LastOrder, type PlanStep, type RunEvent, type RunState,
+  SUMMARY_PAGE, lateFileNotice, withoutLateFile, type LastOrder, type PlanStep, type RunEvent, type RunState,
 } from '../shared/state';
 import {
   clearProblemsOfStep, clearStaging, listMeta, listProblems, putTextDirect, setCurrentPart, setCurrentStep, stagedTotals, stagingKey, stagingSink,
@@ -482,16 +482,16 @@ async function orderMedicalFile(run: RunState): Promise<void> {
   const reorder = __DEV_BRIDGE__ && !!(await chrome.storage.local.get('devReorder')).devReorder;
   const earlier = await orderedToday(run);
   // Until the answer is in, the run holds an order that went out with no answer, which orderSettled never repeats.
-  const beforeSend = async () => {
+  const beforeSend = async ({ retry }: { retry: boolean }) => {
     // Here, not in the request: a tab that is gone, or a Cancel, then leaves an order that was never sent as just that.
     await waitVisible();
-    run.order = { ordered: false, sent: true };
-    await rememberOrder(run, false);
+    run.order = { ordered: false, sent: true, ...(retry && { retry: true }) };
+    await rememberOrder(run, false, undefined, retry);
     await save();
   };
   run.order = await placeOrder(c, { reorder, beforeSend, earlier });
   if (run.order.ordered) run.orderedAt = (run.order.earlier_order && earlier?.at) || new Date().toISOString();
-  if (run.order.sent) await rememberOrder(run, !!run.order.ordered, run.order.success_code);
+  if (run.order.sent) await rememberOrder(run, !!run.order.ordered, run.order.success_code, !!run.order.retry);
   await save();
   if (run.order.error) await c.problem(MEDICAL_FILE, 'medical file not ordered: ' + run.order.error);
 }
@@ -502,9 +502,12 @@ async function orderedToday(run: RunState): Promise<LastOrder | undefined> {
   return last && last.memberHash === run.memberHash && last.day === israelToday(Date.now()) ? last : undefined;
 }
 
-async function rememberOrder(run: RunState, confirmed: boolean, code?: string): Promise<void> {
+async function rememberOrder(run: RunState, confirmed: boolean, code?: string, retried?: boolean): Promise<void> {
   if (!run.memberHash) return;
-  const last: LastOrder = { day: israelToday(Date.now()), memberHash: run.memberHash, at: run.orderedAt ?? new Date().toISOString(), confirmed, ...(code ? { code } : {}) };
+  const last: LastOrder = {
+    day: israelToday(Date.now()), memberHash: run.memberHash, at: run.orderedAt ?? new Date().toISOString(), confirmed,
+    ...(code ? { code } : {}), ...(retried ? { retried } : {}),
+  };
   await chrome.storage.local.set({ [LAST_ORDER]: last });
 }
 
@@ -555,7 +558,9 @@ async function runPlanStep(step: PlanStep): Promise<void> {
         // No new file was ordered: keep the one Maccabi already has, if any, and say which it is.
         const kept = await keepListedMedicalFile(c, run.order);
         // An order that went out, unconfirmed or refused, may still be carried out, with its text.
-        if (run.order?.sent || run.order?.earlier_order) run.medicalFileLate = { kept };
+        if (run.order?.sent || run.order?.earlier_order) {
+          run.medicalFileLate = { kept, ...(orderRefused(run.order) && { refused: true, ...(run.order.retry_at && { retryAt: run.order.retry_at }) }) };
+        }
       }
       return;
     }
@@ -686,7 +691,7 @@ export async function onDownloadChanged(delta: chrome.downloads.DownloadDelta): 
     const p = withoutLateFile(problems, run).length;
     const late = run.medicalFileLate;
     await notify('ready', late ? 'Export saved, without today’s medical file' : 'Export ready', run.zipName + ': ' + countOf(run.fileCount ?? 0, 'file', 'files') + '.' +
-      (p ? ' ' + countOf(p, 'item', 'items') + ' couldn’t be exported.' : '') + (late ? ' When Maccabi texts you today, export again.' : ''));
+      (p ? ' ' + countOf(p, 'item', 'items') + ' couldn’t be exported.' : '') + (late ? ' ' + lateFileNotice(late) : ''));
   } else if (delta.state?.current === 'interrupted') {
     await saveFailed(run, delta.error?.current || 'interrupted');
   }

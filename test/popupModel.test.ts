@@ -352,6 +352,17 @@ describe('lateFileText', () => {
     expect(lateFileText({ medicalFileLate: {} })?.what).toMatch(/^This ZIP has no medical file:/);
     expect(lateFileText({})).toBeNull();
   });
+
+  it('after a refusal, says when an export orders once more, or that the day has had its retry', () => {
+    expect(lateFileText({ medicalFileLate: { kept: '2026-10-29', refused: true, retryAt: '2026-11-02T10:14:00.000Z' } })).toEqual({
+      what: 'This ZIP has your medical file from 29 October 2026: Maccabi Online asked to try again later.',
+      next: 'If Maccabi texts you today, export again: it won’t order another. If not, an export from 12:14 orders once more.',
+    });
+    expect(lateFileText({ medicalFileLate: { refused: true } })).toEqual({
+      what: 'This ZIP has no medical file: Maccabi Online asked to try again later.',
+      next: 'If Maccabi texts you today, export again: it won’t order another. If not, export again tomorrow.',
+    });
+  });
 });
 
 describe('the done view', () => {

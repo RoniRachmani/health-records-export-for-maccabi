@@ -13,6 +13,11 @@ export function israelToday(now: number): string {
   return new Date(now).toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
 }
 
+/** The time of day in Israel, as a member reads it: 14:05. */
+export function israelTime(now: number): string {
+  return new Date(now).toLocaleTimeString('en-GB', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
 /** "1 file", "1,234 files": a count with its noun, for what the member reads. */
 export function countOf(n: number, one: string, many: string): string {
   return n.toLocaleString('en-US') + ' ' + (n === 1 ? one : many);

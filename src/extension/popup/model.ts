@@ -1,6 +1,6 @@
 /* What the popup shows, as pure functions of the run state (unit-tested, no DOM). */
 import type { Problem } from '../../core';
-import { countOf } from '../../core/util';
+import { countOf, israelTime } from '../../core/util';
 import { LABELS, PLAN, WEIGHTS, type PlanStep, type Request, type RunState, type StateReply } from '../shared/state';
 
 interface Stage {
@@ -378,9 +378,15 @@ function dayText(iso: string): string {
 export function lateFileText(run: Pick<RunState, 'medicalFileLate'>): { what: string; next: string } | null {
   const late = run.medicalFileLate;
   if (!late) return null;
+  const has = late.kept ? 'This ZIP has your medical file from ' + dayText(late.kept) : 'This ZIP has no medical file';
+  if (!late.refused) {
+    return { what: has + ': Maccabi hasn’t finished today’s yet.', next: 'When Maccabi texts you today, export again. It takes a few minutes and won’t order another.' };
+  }
+  // A refused order may still be built and texted for: the export after that text takes its file without ordering.
   return {
-    what: (late.kept ? 'This ZIP has your medical file from ' + dayText(late.kept) : 'This ZIP has no medical file') + ': Maccabi hasn’t finished today’s yet.',
-    next: 'When Maccabi texts you today, export again. It takes a few minutes and won’t order another.',
+    what: has + ': Maccabi Online asked to try again later.',
+    next: 'If Maccabi texts you today, export again: it won’t order another. If not, ' +
+      (late.retryAt ? 'an export from ' + israelTime(Date.parse(late.retryAt)) + ' orders once more.' : 'export again tomorrow.'),
   };
 }
 
