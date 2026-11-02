@@ -567,6 +567,32 @@ describe('a new run the same day', () => {
     expect((world.local[LAST_ORDER] as LastOrder).code).toBeUndefined();
   });
 
+  it('after a retry that was confirmed and collected, orders afresh the next day', async () => {
+    const today = israelToday(Date.now());
+    world.order = { ordered: false, sent: true, success_code: '3' };
+    let runner = await orderedThenCancelled();
+    (world.local[LAST_ORDER] as LastOrder).at = new Date(Date.now() - REFUSAL_RETRY_MS).toISOString();
+    world.order = { ordered: true, sent: true, success_code: '1', to_date: today, from_date: '1900-01-01' };
+    await runner.start(TAB);
+    let run = await settled();
+    expect(world.orders).toBe(2);
+    expect(run?.order).toMatchObject({ retry: true, ordered: true });
+    expect(run?.medicalFileLate).toBeUndefined();
+    expect(world.local[LAST_ORDER]).toMatchObject({ day: today, confirmed: true, code: '1', retried: true, collected: true });
+
+    // The next day: core is handed a collected order (medicalFile.test.ts orders afresh on it), and the run orders.
+    const yesterday = new Date(Date.parse(today + 'T00:00:00Z') - 86400000).toISOString().slice(0, 10);
+    world.local[LAST_ORDER] = { ...(world.local[LAST_ORDER] as LastOrder), day: yesterday };
+    delete world.local.run;
+    runner = await freshRunner();
+    await runner.start(TAB);
+    run = await settled();
+    expect(world.earlier.at(-1)).toMatchObject({ day: yesterday, retried: true, collected: true });
+    expect(world.orders).toBe(3);
+    expect(world.local[LAST_ORDER]).toMatchObject({ day: today, collected: true });
+    expect((world.local[LAST_ORDER] as LastOrder).retried).toBeUndefined();
+  });
+
   it('orders on another day, and for another member', async () => {
     const hash = (await orderedThenCancelled(), (world.local[LAST_ORDER] as LastOrder).memberHash);
     world.local[LAST_ORDER] = { day: '2020-01-01', memberHash: hash, at: 'x', confirmed: true };

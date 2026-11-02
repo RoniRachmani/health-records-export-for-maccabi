@@ -68,6 +68,40 @@ describe('placeOrder', () => {
       expect(await order(built('2026-09-16'), { day: '2026-09-16', confirmed: false, code: '3', collected: false }).result).toMatchObject({ skipped_ready_earlier: true });
     });
 
+    // Where the refusal's one retry (REFUSAL_RETRY_MS, same day only) meets the next-day rules.
+    const refusedYesterday = { day: '2026-09-16', confirmed: false, code: '3', at: '2026-09-16T17:00:00.000Z', collected: false };
+
+    it('takes a refused order Maccabi built overnight, retried or not, without ordering', async () => {
+      for (const earlier of [refusedYesterday, { ...refusedYesterday, retried: true }]) {
+        const o = order(built('2026-09-16'), earlier);
+        expect(await o.result).toEqual({ ordered: false, skipped_ready_earlier: true, from_date: '1900-01-01', to_date: '2026-09-16' });
+        expect(o.xhr).not.toHaveBeenCalled();
+      }
+    });
+
+    it('orders afresh, not as a retry, for a refused order never built, and says nothing of a retry', async () => {
+      for (const earlier of [refusedYesterday, { ...refusedYesterday, retried: true }]) {
+        const seen: { retry: boolean }[] = [];
+        const xhr = vi.fn(() => ok('1'));
+        const { c } = makeCollector(fakeTransport(fakeMaccabi({ medicalFile: built('2026-09-10') }).routes, { pagePath: SUMMARY, xhr }));
+        const r = await placeOrder(c, { earlier, beforeSend: async (o) => void seen.push(o) });
+        expect(r).toMatchObject({ ordered: true, sent: true, to_date: '2026-09-17' });
+        expect(r.retry).toBeUndefined();
+        expect(r.retry_at).toBeUndefined();
+        expect(seen).toEqual([{ retry: false }]);
+        expect(xhr).toHaveBeenCalledOnce();
+      }
+    });
+
+    it('orders afresh the day after a retry that was confirmed and collected, its file still listed', async () => {
+      const retried = { day: '2026-09-16', confirmed: true, code: '1', at: '2026-09-16T10:00:00.000Z', retried: true };
+      const o = order(built('2026-09-16'), { ...retried, collected: true });
+      expect(await o.result).toMatchObject({ ordered: true, sent: true, to_date: '2026-09-17' });
+      expect(o.xhr).toHaveBeenCalledOnce();
+      // Not yet collected, the same file is taken instead.
+      expect(await order(built('2026-09-16'), { ...retried, collected: false }).result).toMatchObject({ skipped_ready_earlier: true });
+    });
+
     it('orders when an export already has that file, or the listed one is another day\'s or range', async () => {
       for (const [listed, earlier] of [
         [built('2026-09-16'), { day: '2026-09-16', confirmed: true, collected: true }],

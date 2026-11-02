@@ -339,7 +339,6 @@ export const OFFLINE_MESSAGE =
 export const SESSION_ENDED_MESSAGE =
   'Your Maccabi Online session ended. Log in again, then click the extension’s icon on the Maccabi Online tab and press Resume. Files collected so far are kept.';
 
-/** Problems without the one about the late medical file, which the finished view and the notification say in full. */
 /** The "Export saved" notification's last sentence, when the export has no fresh medical file. */
 export function lateFileNotice(late: NonNullable<RunState['medicalFileLate']>): string {
   if (!late.refused) return 'When Maccabi texts you, export again.';
@@ -347,6 +346,7 @@ export function lateFileNotice(late: NonNullable<RunState['medicalFileLate']>): 
     (late.retryAt ? 'from ' + israelTime(Date.parse(late.retryAt)) + ' if it doesn’t.' : 'tomorrow if it doesn’t.');
 }
 
+/** Problems without the one about the late medical file, which the finished view and the notification say in full. */
 export function withoutLateFile<P extends Problem>(problems: P[], run: Pick<RunState, 'medicalFileLate'>): P[] {
   return run.medicalFileLate ? problems.filter((p) => p.where !== MEDICAL_FILE) : problems;
 }
