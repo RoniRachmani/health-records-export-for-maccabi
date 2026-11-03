@@ -396,7 +396,8 @@ async function runAndReport(page) {
     const end = run.finishedAt ? Date.parse(run.finishedAt) : Date.now();
     console.log(`  all steps: ${secs(ms)}, ${requests} requests; since the start: ${secs(end - Date.parse(run.startedAt))}`);
   }
-  console.log('  medical file: ' + orderOutcome(run.order));
+  console.log('  medical file: ' + (PRETEND_LATE ? 'not ordered: dev:pretendOrder recorded an order to ' + run.order?.to_date + ' that was never sent'
+    : orderOutcome(run.order)));
   if (run.medicalFileLate) console.log('  medical file late: ' + JSON.stringify(run.medicalFileLate));
   if (state.blockedOrder) console.log('  dev:noSend stopped an order: ' + JSON.stringify(state.blockedOrder));
   // Asked again: the notification goes out just after the run is marked done.
