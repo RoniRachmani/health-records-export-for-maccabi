@@ -47,6 +47,17 @@ read your whole file**.
    its first table was what the records asked for and whether it happened. That is not the app's list of open referrals
    (point 3): each row joined a referral, a visit note or a prescription's end date to the results, visits and
    purchases dated after it. Loose ends is connecting, and it was the most useful thing on the page.
+9. **In public, the first reaction is about privacy, not the benefit.** In the first two Facebook threads, in builders'
+   groups (29 October to 1 November 2026), three of the nine people who commented objected to giving an extension their
+   medical file, and one such comment drew the most likes in either thread. A thread needs more than the page's one
+   line (see *Objections and answers*); the page's rule that too much about privacy reads as suspicious hasn't been
+   tested by this, since these readers hadn't seen the page.
+10. **Some members already want the old file enough to phone for it.** One commenter had just done so, because the
+    site's file stopped at about 5 years. It is the first sign of the need behind *Wholeness* from someone who acted
+    on it, without an assistant in the picture.
+11. **A doctor is a second reader of what the assistant makes.** The one doctor who answered said they would be glad to
+    see a patient arrive with an organised summary they could rely on. That supports *Before a visit*, and "could rely
+    on" is why every answer names its record. One voice, so a direction and nothing to quote yet.
 
 ## Value, in order
 
@@ -150,7 +161,9 @@ artifact.
 | **Maccabi Online and the Maccabi app** | You can see your records, one page at a time and within date limits. Fine for "what's open now"; no way to see years together or ask about them. The app's AI representative, Aia, finds clinics, labs and doctors and books appointments. Her answers are general: Maccabi says she can't answer personal questions from your medical file. |
 | **Health in ChatGPT, Claude's health connectors** | They connect medical records from U.S. providers only, so they can't reach Maccabi. |
 | **Uploading files to a chat** | A chat takes a few dozen files at most, and an export has hundreds. The assistant needs the whole folder. |
-| **Ordering the medical file by hand** | Only from July 2020, one PDF, and nothing else from the rest of the site. |
+| **Ordering the medical file by hand** | On the site's form: only from July 2020, one PDF, and nothing else from the rest of the site. |
+| **Phoning Maccabi for the file** | A commenter got a file older than the site's this way. It takes a call, and leaves the rest of the site's records behind. The export gets the whole file, older years included, with one button. |
+| **The summary sheet in the app and on the site** | A summary from birth, with visits, calls and messages by day, as one PDF. It is the summary and not the whole document, and Maccabi's PDFs are hard for an assistant to read. The export has the full medical file, the history the site doesn't show by default, a text format that is easy for Claude to read, and the links between records: visit, referral, test, result, prescription. |
 | **Giving an assistant live access** ([maccabi-health](https://github.com/orenyomtov/maccabi-health): a command-line tool and connector) | The assistant reads your account live and fetches records as it needs them. It takes a terminal or a coding agent to set up. You log in with your ID number and an SMS code, in the terminal or a browser page; the assistant can also log in for you, and then both pass through the conversation. Maccabi ends each login after an hour, so every sitting starts with a new code. It reads what it asks for, not the whole history, and it doesn't order the medical file. It downloads a PDF when asked, but leaves no folder to keep. It reads two things the export doesn't: imaging studies and billing reports. |
 
 The last row is the closest alternative, and it serves a different person: someone at home in a terminal who wants today's
@@ -168,6 +181,10 @@ curious first question. It would still read what the app's screens show, and lea
 | Objection | Answer (one line, plain) |
 |---|---|
 | "Is my health data safe?" | It goes from Maccabi Online to your computer and nowhere else. You choose which assistant, if any, reads it. |
+| "Does the extension get access to my medical file?" | It's a very simple extension: it saves what your browser gets from the site, locally, somewhere you can reach it. The records never leave your computer, and the code is open for anyone to review. |
+| "Isn't a browser extension a risk in itself?" | It's in the Chrome Web Store, which meant passing Google's own checks. They aren't perfect, but they are one more stamp, and the code is public. |
+| "Why, when Maccabi gives me a summary?" | To reach what you otherwise can't: the whole document and not the summary, the history the site doesn't show by default, text that's easy for Claude to read, and the links from a visit to its referral, test, result and prescription. |
+| "Won't insurers now ask for the whole file?" | There's no equivalent of a credit score or the pension clearing house in health insurance that we know of. Your information should be yours. The extension won't be sold to anyone and costs nothing, and its design rules it out anyway: everything goes straight from Maccabi to your computer and doesn't leave it. |
 | "Does the AI log in to my Maccabi account?" | No. You log in yourself, in your own browser. The assistant only reads the folder on your computer, and never sees your ID number, a login code or the site. |
 | "Is this official?" | No. It's unofficial and says so everywhere. It uses your own logged-in session, like you would. |
 | "Will the AI give me medical advice?" | It explains and suggests, and names the record behind every answer. You and your doctor decide. |
@@ -286,7 +303,8 @@ Nothing shown comes from a real account.
 **Confirmed:**
 - **"Back before 2020":** the export orders the medical file for your whole history, wider than the site's form allows.
   A real export confirmed it: its medical file began in infancy, decades before July 2020. The page can say the file
-  goes back to the start of your records.
+  goes back to the start of your records. That includes what a member otherwise phones Maccabi for, from before the
+  site's 5 years.
 - **"Names the record behind every answer":** the 12 October dashboard gave a file, and a page of the medical file, for
   every row, and carried the README's cautions onto the page unprompted: that neither prescriptions nor purchases show
   what you take today, and that something missing doesn't mean it never happened. One gap: weights and blood pressures
@@ -310,3 +328,6 @@ The questions that answer these, and what each answer decides, are in [launch.md
   everything". The answer tells us which pillar leads.
 - How many visitors already have a paid Claude or ChatGPT desktop app. If few do, the "yours to keep" value needs more
   weight.
+- Whether members see the app's summary sheet as enough. If they do, *Wholeness* has to say why the whole file matters.
+- Whether privacy stops people who reach the page, or only those who read a post. If it stops them, the page's privacy
+  section moves up.
