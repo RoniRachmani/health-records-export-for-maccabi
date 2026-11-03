@@ -38,7 +38,7 @@ describe('exportReadme', () => {
       'for a measurement over time, `test-results/history/`',
       'for what changed since the last visit, whatever is dated after the newest file in `visit-summaries/`',
       'for an appointment, the medical file',
-      "for allergies, `allergies-sensitivity/` and the medical file's sensitivities",
+      "for allergies and sensitivities, `allergies-sensitivity/` and the medical file's list",
       'for preventive care due, age and sex in `profile/member.json`, `vaccinations/`',
       "judged by Israel's current guidance",
       'open `referrals/`',
@@ -77,7 +77,7 @@ describe('exportReadme', () => {
     expect(md).not.toMatch(/This export has no [^.]*`referrals\/`[^.]*: the site had nothing on record/);
     expect(md).toMatch(/This export has no [^.]*`appointments\/`[^.]*: the site had nothing on record/);
     const empty = readme({ ...PRESENT, 'allergies-sensitivity': 1 }).replace(/\s+/g, ' ');
-    expect(empty).toContain('An empty `intolerance` means Maccabi Healthcare Services has no sensitivity on record');
+    expect(empty).toContain('An empty `intolerance` means Maccabi Healthcare Services has no allergy or sensitivity on record');
   });
 
   it('says every request was answered when nothing failed', () => {

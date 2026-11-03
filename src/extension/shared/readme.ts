@@ -139,9 +139,9 @@ listed twice (count it once).`,
   },
   {
     name: 'allergies-sensitivity',
-    summary: 'recorded sensitivities and intolerances (`intolerance[]`)',
-    detail: `An empty \`intolerance\` means Maccabi Healthcare Services has no sensitivity on record, not that the
-member has none: check the medical file's sensitivities, and ask.`,
+    summary: 'recorded allergies, sensitivities and intolerances (`intolerance[]`)',
+    detail: `An empty \`intolerance\` means Maccabi Healthcare Services has no allergy or sensitivity on record, not that the
+member has none: check the medical file's list, and ask.`,
   },
   { name: 'appointments', summary: 'future appointments only — past ones are visits, in `visit-summaries/`', detail: '' },
   { name: 'requests-approvals', summary: 'requests and cases the member has open with Maccabi Healthcare Services', detail: '' },

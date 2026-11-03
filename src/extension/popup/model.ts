@@ -253,7 +253,7 @@ const FOLDER_LABELS: Record<string, string> = {
   'communication-with-doctor': 'Messages with your doctor',
   uploads: 'Your uploads',
   'hospital-stays': 'Hospital stays',
-  'allergies-sensitivity': 'Allergies',
+  'allergies-sensitivity': 'Allergies and sensitivities',
   appointments: 'Upcoming appointments',
   'requests-approvals': 'Your requests to Maccabi',
 };

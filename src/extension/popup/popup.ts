@@ -204,7 +204,7 @@ function noticeView(): Child[] {
 const INCLUDED = [
   'Test results', 'Lab histories', 'Visit summaries', 'Prescriptions', 'Medication purchases', 'Referrals',
   'Approvals', 'Information pages', 'Vaccinations', 'Letters', 'Full medical file', 'Messages with your doctor', 'Your uploads',
-  'Hospital stays', 'Allergies', 'Upcoming appointments', 'Your requests to Maccabi',
+  'Hospital stays', 'Allergies and sensitivities', 'Upcoming appointments', 'Your requests to Maccabi',
 ];
 
 function accountRow(st: StateReply): HTMLElement {

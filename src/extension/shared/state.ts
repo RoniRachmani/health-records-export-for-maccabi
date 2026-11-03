@@ -68,7 +68,7 @@ const STEP_ROWS = [
   { step: 'profileAndDoctors', weight: 2, label: 'Your details and doctor' },
   // Allergies, upcoming appointments and requests: three short requests, shown in the popup as part
   // of "Your details and doctor", which needs them right after it.
-  { step: 'emptySections', weight: 1, label: 'Allergies, appointments and requests' },
+  { step: 'emptySections', weight: 1, label: 'Allergies, sensitivities, appointments and requests' },
   { step: 'medications', weight: 6, label: 'Prescriptions' },
   { step: 'purchases', weight: 1, label: 'Medication purchases' },
   { step: 'hospitalStays', weight: 1, label: 'Hospital stays' },

@@ -39,9 +39,9 @@ back to `/sonline/`.
 Three shapes:
 
 - **Several steps, one line** (1, 2, 7): `openLegacyPage` and `returnToSonline` only move the tab between the two
-  sites, so they share the line of the step they serve. `emptySections` (allergies, upcoming appointments and
-  requests: three requests, usually empty) rides along on line 2, and keeps its own name in errors and the problems
-  list: "Allergies, appointments and requests". Its parts (`allergies`, `appointments`, `requests`) only pick the
+  sites, so they share the line of the step they serve. `emptySections` (allergies and sensitivities, upcoming
+  appointments and requests: three requests, usually empty) rides along on line 2, and keeps its own name in errors
+  and the problems list: "Allergies, sensitivities, appointments and requests". Its parts (`allergies`, `appointments`, `requests`) only pick the
   description under the line.
 - **One step, several lines** (7–8): a step split by the parts it reports. `LABELS` names the whole step, as errors
   and the problems list show it: "Test results".

@@ -150,7 +150,7 @@ One folder, `maccabi-export-YYYY-MM-DD/`:
 | `communication-with-doctor/` | Inquiries to doctors and attached forms, each pointing to the visit it was answered in |
 | `uploads/` | Documents you uploaded and their files |
 | `hospital-stays/` | Hospital visits: date, kind of visit, hospital and department, and discharge letters when the site has them. Only when the site lists any |
-| `allergies-sensitivity/` | Your recorded sensitivities. Kept even when there are none, so an empty list says none are on record |
+| `allergies-sensitivity/` | Your recorded allergies and sensitivities. Kept even when there are none, so an empty list says none are on record |
 | `appointments/` (future only), `requests-approvals/` | Only when the site has something in them |
 | `<date>_medical-file.pdf` | Your full medical file, freshly ordered for the widest range Maccabi allows: the document that reaches furthest back, and the place to start |
 | `README.md` | Instructions for an AI assistant, and the export's own data dictionary: what each folder holds, how a record is shaped, which fields carry no meaning, what the export does **not** contain, and which extension version and file layout made it |

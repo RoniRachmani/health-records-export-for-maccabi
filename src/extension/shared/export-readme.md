@@ -16,7 +16,7 @@ before them.
 - **Leave the export as it is.** Write what you make — notes, tables, summaries — into a new folder
   of your own, such as `notes/`; never edit, rename or delete the export's files.
 - **Keep what the member tells you.** The export cannot say what they take now, what care they had
-  elsewhere or what they are allergic to that was never recorded: when they tell you, note it in
+  elsewhere or what they are allergic or sensitive to that was never recorded: when they tell you, note it in
   your folder, dated and marked as their word rather than a record's, and read it before asking again.
   Where their word and a record disagree, show both, each with its date; don't choose between them.
   This export starts with no notes: if the member points you to an earlier export's, read them first
@@ -37,8 +37,8 @@ since the last visit, whatever is dated after the newest file in `visit-summarie
 prescriptions, referrals, letters; for an appointment, the medical file's known problems, the latest
 results, recent `visit-summaries/` and open `referrals/`; for what is still open, each referral,
 each request in a visit's notes and each prescription's `to_date` against what is dated after it
-(nothing there is not proof it wasn't done: ask); for allergies, `allergies-sensitivity/`
-and the medical file's sensitivities; for preventive care due, age and sex in
+(nothing there is not proof it wasn't done: ask); for allergies and sensitivities, `allergies-sensitivity/`
+and the medical file's list; for preventive care due, age and sex in
 `profile/member.json`, `vaccinations/` and the screenings in `test-results/`, judged by Israel's
 current guidance (the Ministry of Health's and Maccabi Healthcare Services's), which differs from
 other countries' and changes: look it up, don't recall it. What the member
