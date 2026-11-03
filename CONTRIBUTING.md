@@ -319,8 +319,8 @@ launchd runs it in your login session, which is what lets it show a notification
 the Mac slept through once it wakes. (cron does neither, and a Claude scheduled task would need the app open and put
 the run through a model for no gain.) Nobody is there to unlock 1Password, so give it the values: `npm run env`
 writes them into `.env`. With references there instead, a locked app makes `op` give up after two minutes, and the
-check reports that it could not read the credentials and sends nothing to Maccabi. Install it from a checkout that
-stays (the main one, not a worktree), with `main` holding this script.
+check reports that it could not read the credentials and sends nothing to Maccabi. Install it for a checkout that
+stays (the main one, not a worktree): `--repo DIR` installs it for another checkout than the one you run it from.
 
 ## Finding what the export could add
 

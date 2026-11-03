@@ -8,7 +8,8 @@
 //   npm run drift -- --notify              the same, and a macOS notification with the outcome
 //   npm run drift -- --steps visits,referrals   only those steps (and the steps they read from), to try it out
 //   npm run drift -- --no-scan             without the endpoint scan
-//   npm run drift -- --install --day tue --time 03:30   runs it weekly, with --notify, from this checkout (launchd)
+//   npm run drift -- --install --day tue --time 03:30   runs it weekly, with --notify, from this checkout (launchd);
+//                                          --repo DIR installs it for another checkout, such as the main one
 //   npm run drift -- --uninstall           stops that
 //
 // It exits 0 when nothing differs, 1 when something does, and 2 when it could not check (a sign-in that failed, the
@@ -22,9 +23,9 @@
 // so ends the member's other Maccabi sessions; every request goes through MaccabiSession.request's one queue, paced
 // core.PACE_MS apart, and the ones it sends itself are in docs/endpoints/scripts-endpoints.json.
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { loadCore } from './cli-core.mjs';
 import { LABEL, countingTransport, driftReport, launchAgent, memorySink, missingFields, pageScripts, problemKey, readScripts, runSteps, safeToWrite, scanFindings, sessionGet } from './drift-lib.mjs';
 import { credentials } from './maccabi-browser.mjs';
@@ -72,9 +73,13 @@ function schedule() {
   const day = option('--day');
   const time = option('--time');
   if (!day || !time) throw new Error('--install takes a day and a time: --install --day tue --time 03:30');
-  mkdirSync(OUT, { recursive: true });
+  // The checkout the agent runs in: this one, or one that lasts longer than a worktree (--repo, the main checkout).
+  const repo = resolve(option('--repo') || root);
+  if (!existsSync(join(repo, 'package.json'))) throw new Error('--repo takes a checkout of this repository: ' + repo + ' has no package.json.');
+  const out = join(repo, '.cache', 'drift');
+  mkdirSync(out, { recursive: true });
   const plist = launchAgent({
-    node: process.execPath, script: join(root, 'scripts', 'drift-check.mjs'), cwd: root, log: join(OUT, 'launchd.log'), day, time,
+    node: process.execPath, script: join(repo, 'scripts', 'drift-check.mjs'), cwd: repo, log: join(out, 'launchd.log'), day, time,
     path: ['/opt/homebrew/bin', '/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin'].join(':'),
   });
   mkdirSync(join(homedir(), 'Library', 'LaunchAgents'), { recursive: true });
@@ -83,8 +88,9 @@ function schedule() {
   } catch { /* not loaded yet */ }
   writeFileSync(PLIST, plist);
   execFileSync('launchctl', ['bootstrap', `gui/${process.getuid?.()}`, PLIST]);
-  console.log(`The drift check runs every ${day} at ${time} from ${root} (a Mac asleep then runs it on waking).`);
-  console.log('Its output goes to ' + join(OUT, 'launchd.log') + '; turn it off with npm run drift -- --uninstall.');
+  console.log(`The drift check runs every ${day} at ${time} from ${repo} (a Mac asleep then runs it on waking).`);
+  if (!existsSync(join(repo, 'scripts', 'drift-check.mjs'))) console.log('That checkout has no scripts/drift-check.mjs yet: the runs fail, in the log, until it does.');
+  console.log('Its output goes to ' + join(out, 'launchd.log') + '; turn it off with npm run drift -- --uninstall.');
 }
 
 async function check() {
