@@ -1,6 +1,6 @@
 # Chrome Web Store listing
 
-What to enter on the Chrome Web Store developer dashboard for each tab. The text below matches version 0.9.1. When
+What to enter on the Chrome Web Store developer dashboard for each tab. The text below matches version 0.9.2. When
 the extension changes, update this file along with it (see [Keeping it true](#keeping-it-true)).
 
 ## Before each upload
@@ -311,7 +311,7 @@ Saves the finished ZIP to the Downloads folder. When the member presses "Show in
 **storage:**
 
 ```
-Keeps the export's progress so that the popup can show it and a paused export can resume. Keeps the session token in memory-only session storage while an export runs. Also records which version of the Terms of Use and Privacy Policy the member accepted.
+Keeps the export's progress so that the popup can show it and a paused export can resume. Keeps the session token in memory-only session storage while an export runs. Also records when the medical file was last ordered, so that a new export does not order it again and make Maccabi text the member again, and which version of the Terms of Use and Privacy Policy the member accepted.
 ```
 
 **unlimitedStorage:**
