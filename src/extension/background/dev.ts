@@ -2,9 +2,11 @@
    Maccabi page through the dev bridge content script, so a run can be driven
    and inspected without clicking the popup. Compiled out of the store build.
    Replies carry statuses, sizes and counts -- never record contents. */
-import { jwtClaims, type Json } from '../../core';
+import { apiPath, END_DATE, israelToday, jwtClaims, type Json } from '../../core';
+import { canSaveNow } from '../popup/model';
+import { LAST_ORDER, type LastOrder } from '../shared/state';
 import { getFile, listMeta, listProblems } from '../shared/staging';
-import { cancel, dismiss, loadRun, resume, retrySave, start, writeRootFiles } from './runner';
+import { cancel, dismiss, loadRun, midHash, resume, retrySave, saveNow, start, writeRootFiles } from './runner';
 import { rawDumpOn, setRawDump } from './rawDump';
 import { mergeShapes, shapeDrift, sortedShapes, type Shapes } from '../shared/shapes';
 import { seenShapes, setShapes, shapesOn } from './shapeDump';
@@ -30,12 +32,17 @@ async function handleDevImpl(msg: DevMsg, sender: chrome.runtime.MessageSender):
       const s = sessionOf(await snapshot(tabId));
       const claims = jwtClaims(s.jwt);
       const run = await loadRun();
+      const dev = await chrome.storage.local.get(['devBlockedOrder', 'devLastNotice']);
       return {
         run: run && { ...run, problems: run.problems?.length },
         routes: await currentRoutes(),
         staged: { files: metas.length, bytes: metas.reduce((a, m) => a + m.size, 0), perFolder },
         problems: (await listProblems()).length,
         tab: { hasMid: !!s.mid, hasJwt: !!s.jwt, jwtExpiresInS: claims?.exp ? Math.round(claims.exp - Date.now() / 1000) : null },
+        // Whether the popup shows Save now; the order dev:noSend stopped; what the last "Export ..." notification said.
+        saveNowOffered: !!run && canSaveNow(run),
+        blockedOrder: dev.devBlockedOrder ?? null,
+        lastNotice: dev.devLastNotice ?? null,
       };
     }
     /* Which response fields hold a readable display string, so the *_TITLE candidate lists in
@@ -95,6 +102,7 @@ async function handleDevImpl(msg: DevMsg, sender: chrome.runtime.MessageSender):
       return problems.map((p) => p.step + ' | ' + p.where + ' | ' + p.what);
     }
     case 'dev:start':
+      await chrome.storage.local.remove(['devLastNotice', 'devBlockedOrder']); // what dev:state shows is this run's
       await start(tabId);
       return { ok: true };
     case 'dev:resume':
@@ -129,6 +137,69 @@ async function handleDevImpl(msg: DevMsg, sender: chrome.runtime.MessageSender):
       if (msg.on) await chrome.storage.local.set({ devSkipOrder: true });
       else await chrome.storage.local.remove('devSkipOrder');
       return { on: !!msg.on };
+    case 'dev:pretendOrder':
+      // The order step records an order to `toDate` (default today in Israel) as sent and confirmed, sending nothing
+      // and writing no LAST_ORDER, so the wait polls and offers Save now. Pick a day the list has no file for.
+      if (msg.on) await chrome.storage.local.set({ devPretendOrder: String(msg.toDate || israelToday(Date.now())) });
+      else await chrome.storage.local.remove('devPretendOrder');
+      return { on: !!msg.on, toDate: (await chrome.storage.local.get('devPretendOrder')).devPretendOrder ?? null };
+    case 'dev:noSend':
+      // The order step decides as a real run's would, even under dev:skipOrder, but its beforeSend throws before
+      // anything is sent or recorded as sent; the run files a problem and dev:state's blockedOrder says what it stopped.
+      await chrome.storage.local.remove('devBlockedOrder');
+      if (msg.on) await chrome.storage.local.set({ devNoSend: true });
+      else await chrome.storage.local.remove('devNoSend');
+      return { on: !!msg.on };
+    case 'dev:saveNow': {
+      // What the popup's Save now does, only while the popup would offer it.
+      const run = await loadRun();
+      const offered = !!run && canSaveNow(run);
+      if (offered) await saveNow();
+      return { offered };
+    }
+    case 'dev:medicalFileDates': {
+      // The medical file the site lists now: its status and dates, nothing else.
+      const s = sessionOf(await snapshot(tabId));
+      const r = await extensionFetch({
+        url: apiPath('DirectorshipAPI/v1/members/0/{mid}/letters_for_member?from_date=1900-01-01&to_date=' + END_DATE, s.mid),
+        method: 'GET', redirect: 'manual', headers: { Authorization: 'Bearer ' + s.jwt },
+      });
+      let listed: Json = null;
+      try {
+        const letters = JSON.parse(new TextDecoder().decode(r.bytes))?.letters;
+        const x = Array.isArray(letters) ? letters.find((l) => l && l.letter_type === 2) : undefined;
+        if (x) listed = { status: x.status ?? null, to_date: x.to_date ?? null, from_date: x.from_date ?? null, hasLink: !!x.link };
+      } catch {
+        /* not JSON: listed stays null, with the status beside it */
+      }
+      return { http: r.status, today: israelToday(Date.now()), listed };
+    }
+    /* LAST_ORDER, which decides whether a new run orders. `saved` is the stored value as it is, for the caller to hand
+       back to dev:setLastOrder {restore}; `shown` replaces its member hash with whose it is, for printing. */
+    case 'dev:getLastOrder': {
+      const last = (await chrome.storage.local.get(LAST_ORDER))[LAST_ORDER] as LastOrder | undefined;
+      const mine = !!last && last.memberHash === (await midHash(sessionOf(await snapshot(tabId)).mid));
+      return { saved: last ?? null, shown: last ? { ...last, memberHash: mine ? 'this member' : 'another member' } : null };
+    }
+    case 'dev:setLastOrder': {
+      // {restore}: put back what dev:getLastOrder saved (null removes it). {order, agoMinutes}: an order for the member
+      // logged in to this tab, on order.day (default today), sent agoMinutes ago.
+      if ('restore' in msg) {
+        if (msg.restore) await chrome.storage.local.set({ [LAST_ORDER]: msg.restore });
+        else await chrome.storage.local.remove(LAST_ORDER);
+        return { ok: true };
+      }
+      const o = (msg.order ?? {}) as Partial<LastOrder>;
+      const last: LastOrder = {
+        ...o,
+        day: o.day ?? israelToday(Date.now()),
+        memberHash: await midHash(sessionOf(await snapshot(tabId)).mid),
+        at: new Date(Date.now() - Number(msg.agoMinutes ?? 0) * 60000).toISOString(),
+        confirmed: !!o.confirmed,
+      };
+      await chrome.storage.local.set({ [LAST_ORDER]: last });
+      return { ok: true };
+    }
     case 'dev:reorder':
       // orderMedicalFile orders even when a file from today over the same range is ready, so a real order
       // can be timed on a day that already has one. It still orders only in a run the member started.

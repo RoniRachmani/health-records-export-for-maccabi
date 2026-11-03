@@ -114,7 +114,7 @@ async function setSession(s: Session): Promise<void> {
   await chrome.storage.session.set({ session: s });
 }
 
-async function midHash(mid: string | null): Promise<string> {
+export async function midHash(mid: string | null): Promise<string> {
   return sha256Hex(new TextEncoder().encode('hrem|' + (mid || '')));
 }
 
@@ -482,19 +482,37 @@ async function orderMedicalFile(run: RunState): Promise<void> {
   const c = await collector();
   const reorder = __DEV_BRIDGE__ && !!(await chrome.storage.local.get('devReorder')).devReorder;
   const earlier = await lastOrder(run);
+  const noSend = __DEV_BRIDGE__ && !!(await chrome.storage.local.get('devNoSend')).devNoSend;
   // Until the answer is in, the run holds an order that went out with no answer, which orderSettled never repeats.
   const beforeSend = async ({ retry }: { retry: boolean }) => {
+    // dev:noSend: first of all, before the run or LAST_ORDER records anything as sent, and before the request.
+    if (noSend) throw new DevNoSendError(retry);
     // Here, not in the request: a tab that is gone, or a Cancel, then leaves an order that was never sent as just that.
     await waitVisible();
     run.order = { ordered: false, sent: true, ...(retry && { retry: true }) };
     await rememberOrder(run, false, undefined, retry);
     await save();
   };
-  run.order = await placeOrder(c, { reorder, beforeSend, earlier });
+  try {
+    run.order = await placeOrder(c, { reorder, beforeSend, earlier });
+  } catch (e) {
+    if (!(__DEV_BRIDGE__ && e instanceof DevNoSendError)) throw e;
+    // Nothing was sent, so the run holds no order, as one that never went out; the script reads what was stopped.
+    await chrome.storage.local.set({ devBlockedOrder: { retry: e.retry, at: new Date().toISOString() } });
+    await c.problem(MEDICAL_FILE, 'dev:noSend stopped an order before it was sent' + (e.retry ? ' (the day’s retry after a refusal)' : ''));
+    return;
+  }
   if (run.order.ordered) run.orderedAt = (run.order.earlier_order && earlier?.at) || new Date().toISOString();
   if (run.order.sent) await rememberOrder(run, !!run.order.ordered, run.order.success_code, !!run.order.retry);
   await save();
   if (run.order.error) await c.problem(MEDICAL_FILE, 'medical file not ordered: ' + run.order.error);
+}
+
+/** Thrown by beforeSend under dev:noSend, so placeOrder never reaches its request. */
+class DevNoSendError extends Error {
+  constructor(readonly retry: boolean) {
+    super('dev:noSend');
+  }
 }
 
 /** The last order this member sent, from this run or one since discarded; placeOrder goes by its day. */
@@ -537,9 +555,20 @@ async function runPlanStep(step: PlanStep): Promise<void> {
       // through here: one order per run, or Maccabi would build the file again and text again. That holds for an
       // order whose answer was lost or unclear too, since Maccabi may have taken it.
       if (orderSettled(run.order)) return;
+      if (__DEV_BRIDGE__) {
+        // dev:pretendOrder: the run behaves as if an order to this day went out and Maccabi confirmed it, so the wait
+        // polls for a file that never comes. Nothing is sent, and LAST_ORDER is not written.
+        const pretend = (await chrome.storage.local.get('devPretendOrder')).devPretendOrder as string | undefined;
+        if (pretend) {
+          run.order = { ordered: true, sent: true, to_date: pretend, from_date: '1900-01-01' };
+          run.orderedAt = new Date().toISOString();
+          return;
+        }
+      }
       // dev:skipOrder: a test run collects everything else without ordering, and waitMedicalFile then keeps
       // the file Maccabi already has, as it does when an order fails.
-      if (__DEV_BRIDGE__ && (await chrome.storage.local.get('devSkipOrder')).devSkipOrder) return;
+      // dev:noSend lets the order step decide all the same, and stops any order before it goes out.
+      if (__DEV_BRIDGE__ && (await chrome.storage.local.get('devSkipOrder')).devSkipOrder && !(await chrome.storage.local.get('devNoSend')).devNoSend) return;
       await orderMedicalFile(run);
       return;
     }
@@ -708,8 +737,12 @@ export async function onDownloadChanged(delta: chrome.downloads.DownloadDelta): 
     await release();
     const p = withoutLateFile(problems, run).length;
     const late = run.medicalFileLate;
-    await notify('ready', late ? 'Export saved, without the new medical file' : 'Export ready', run.zipName + ': ' + countOf(run.fileCount ?? 0, 'file', 'files') + '.' +
-      (p ? ' ' + countOf(p, 'item', 'items') + ' couldn’t be exported.' : '') + (late ? ' ' + lateFileNotice(late) : ''));
+    const title = late ? 'Export saved, without the new medical file' : 'Export ready';
+    const message = run.zipName + ': ' + countOf(run.fileCount ?? 0, 'file', 'files') + '.' +
+      (p ? ' ' + countOf(p, 'item', 'items') + ' couldn’t be exported.' : '') + (late ? ' ' + lateFileNotice(late) : '');
+    // So a live test can read what the notification said (dev:state).
+    if (__DEV_BRIDGE__) await chrome.storage.local.set({ devLastNotice: { title, message } });
+    await notify('ready', title, message);
   } else if (delta.state?.current === 'interrupted') {
     await saveFailed(run, delta.error?.current || 'interrupted');
   }

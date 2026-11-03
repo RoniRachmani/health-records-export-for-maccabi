@@ -150,6 +150,11 @@ await dev({ type: 'dev:skipOrder', on: true });                  // test a full 
 | `dev:stopBefore` `{step}` | Pause before a plan step. Without `step`, clears it. |
 | `dev:skipOrder` `{on}` | `orderMedicalFile` does nothing while on, and `waitMedicalFile` keeps the file Maccabi already has. Stays set until turned off. |
 | `dev:reorder` `{on}` | `orderMedicalFile` orders even when a file from today over the same range is already ready (normally it uses that one), so a real order can be timed again the same day. Stays set until turned off. |
+| `dev:pretendOrder` `{on, toDate}` | The order step records an order to `toDate` (default today in Israel) as sent and confirmed, sending nothing and writing no `LAST_ORDER`, so the wait polls for a file that never comes and offers Save now. Pick a day the list has no file for. Stays set until turned off. |
+| `dev:noSend` `{on}` | The order step decides as a real run's would, even under `dev:skipOrder`, and its `beforeSend` throws before anything is sent or recorded as sent: the run files a problem, and `dev:state`'s `blockedOrder` says what was stopped (`retry` for the day's retry after a refusal). Stays set until turned off. |
+| `dev:saveNow` | What the popup's Save now does, only while the popup offers it (`dev:state`'s `saveNowOffered`); replies `{offered}`. |
+| `dev:medicalFileDates` | The medical file the site lists now: its status, `to_date` and `from_date`, and today in Israel. |
+| `dev:getLastOrder`, `dev:setLastOrder` `{order, agoMinutes}` or `{restore}` | Read `LAST_ORDER` (`saved` as stored, `shown` with the member hash replaced by whose it is); set one for the member logged in, on `order.day` (default today), sent `agoMinutes` ago, or put back what was read. |
 | `dev:breakSession` | Invalidate the stored token, to test reconnecting |
 | `dev:rawDump` `{on}` | Stage every response of the next run under `_raw/` in the ZIP, byte for byte, beside the export. Set it before `dev:start`. |
 | `dev:shapes` `{on}` | Keep the field names and types of every answer of the next run, never a value. Set it before `dev:start`. |
@@ -179,6 +184,10 @@ files collected per folder and the time and requests of each step and part (the 
 | `--root-files` | Also writes the ZIP's root files before discarding the run (`dev:rootFiles`), and prints the README's version line, what it says failed, its numbers section, and `export-errors.json` beside the popup's problem count. |
 | `--names` | Prints every staged file's path (`dev:names`), to check how files are named. |
 | `--shapes` | Records the field names and types of every answer, prints what [docs/endpoints/shapes.json](docs/endpoints/shapes.json) has not seen, and adds it there. See below. |
+| `--pretend-late` | Runs the export as if an order went out that Maccabi has not built (`dev:pretendOrder`, to a day with no listed file), presses Save now once the popup offers it, saves the ZIP, and prints the finish's problems (`dev:problems`, from the finished run), its late-file note and its notification. Nothing is ordered. |
+| `--no-send` | Lets the order step decide (`dev:noSend`): an order it would send is stopped before it goes out, and printed. |
+| `--last-order '{"order":{…},"agoMinutes":61}'` | Sets `LAST_ORDER` for this member first (`dev:setLastOrder`), to stage a refusal or an earlier day's order. Every test run prints `LAST_ORDER` before and after, without the member hash, and puts back the one it found. |
+| `--dates` | Prints the listed medical file's status and dates, and `LAST_ORDER`, and runs nothing. |
 | `--screenshots` | Photographs the popup before the start and at every step, into `.cache/live-screenshots/` (gitignored, since the problems it lists come from your records). It opens the toolbar popup itself, so leave the browser window in front while it runs. |
 
 The username and password come from 1Password through its CLI (`brew install 1password-cli`, then

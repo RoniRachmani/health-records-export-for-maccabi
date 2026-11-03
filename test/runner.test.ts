@@ -56,6 +56,8 @@ const world = {
   earlierDay: undefined as ((earlier: EarlierOrder) => OrderResult | undefined) | undefined,
   /** Alarms set, by name, with when they fire (periodic ones: 0). */
   alarms: {} as Record<string, number>,
+  /** Problems the runner filed itself, through the staging sink. */
+  filed: [] as { where: string; what: string }[],
 };
 
 /** Kills the service worker where it stands: what it has not written by now is lost, and it never goes on. */
@@ -137,7 +139,11 @@ vi.mock('../src/extension/shared/staging', () => ({
   setCurrentStep: () => {},
   stagedTotals: async () => ({ files: 0, bytes: 0, byKey: {} }),
   stagingKey: (step: string, part: string) => (part ? step + ':' + part : step),
-  stagingSink: {},
+  stagingSink: {
+    problem: async (p: { where: string; what: string }) => {
+      world.filed.push(p);
+    },
+  },
 }));
 
 vi.mock('../src/extension/background/offscreenClient', () => ({
@@ -210,7 +216,7 @@ beforeEach(() => {
   Object.assign(world, {
     ran: [], step: {}, orders: 0, order: { ordered: true, sent: true, to_date: '2026-10-26', from_date: '2016-10-26' }, session: MEMBER,
     visible: true, tabLook: undefined, sessionLookups: 0, navigations: [], path: '/sonline/', stagingCleared: 0, notices: [], downloads: 0, downloadItem: undefined, revoked: [],
-    local: {}, sessionStore: {}, dead: false, dieOn: undefined, keptListed: false, alarms: {}, problemsCleared: [], earlier: [], earlierDay: undefined, waited: { ready: true }, waiting: undefined,
+    local: {}, sessionStore: {}, dead: false, dieOn: undefined, keptListed: false, alarms: {}, problemsCleared: [], earlier: [], earlierDay: undefined, waited: { ready: true }, waiting: undefined, filed: [],
   });
   vi.stubGlobal('chrome', fakeChrome());
   vi.stubGlobal('__DEV_BRIDGE__', false);
@@ -1072,5 +1078,90 @@ describe('a run nobody comes back to', () => {
     await runner.resume(TAB);
     expect('hrem-expiry' in world.alarms).toBe(false);
     expect((await settled())?.status).toBe('saving');
+  });
+});
+
+describe("the dev build's order switches", () => {
+  beforeEach(() => {
+    vi.stubGlobal('__DEV_BRIDGE__', true);
+    world.local.devSkipOrder = true; // as npm run live always has it
+  });
+
+  it('dev:skipOrder alone skips the order step without asking placeOrder', async () => {
+    const runner = await freshRunner();
+    await runner.start(TAB);
+    const run = await settled();
+    expect(world.earlier).toEqual([]);
+    expect(world.orders).toBe(0);
+    expect(run?.order).toBeUndefined();
+    expect(world.local[LAST_ORDER]).toBeUndefined();
+  });
+
+  it('dev:noSend lets the step decide, and stops the order in beforeSend before it is sent or recorded', async () => {
+    world.local.devNoSend = true;
+    const runner = await freshRunner();
+    await runner.start(TAB);
+    const run = await settled();
+    expect(world.earlier).toHaveLength(1); // placeOrder decided
+    expect(world.orders).toBe(0); // and never got past beforeSend
+    expect(run?.order).toBeUndefined();
+    expect(world.local[LAST_ORDER]).toBeUndefined();
+    expect(world.local.devBlockedOrder).toMatchObject({ retry: false });
+    expect(world.filed).toEqual([expect.objectContaining({ where: 'medical-file', what: 'dev:noSend stopped an order before it was sent' })]);
+    expect(world.keptListed).toBe(true);
+    expect(run?.status).toBe('saving');
+  });
+
+  it("dev:noSend stops the day's retry after a refusal, and leaves LAST_ORDER as it was", async () => {
+    world.local.devNoSend = true;
+    const runner = await freshRunner();
+    const refused: LastOrder = {
+      day: israelToday(Date.now()), memberHash: await runner.midHash(MEMBER.mid), confirmed: false, code: '3', collected: false,
+      at: new Date(Date.now() - REFUSAL_RETRY_MS - 60000).toISOString(),
+    };
+    world.local[LAST_ORDER] = structuredClone(refused);
+    await runner.start(TAB);
+    const run = await settled();
+    expect(world.earlier.at(-1)).toMatchObject({ code: '3', confirmed: false });
+    expect(world.orders).toBe(0);
+    expect(world.local.devBlockedOrder).toMatchObject({ retry: true });
+    expect(world.filed[0].what).toMatch(/retry after a refusal/);
+    expect(world.local[LAST_ORDER]).toEqual(refused);
+    expect(run?.order).toBeUndefined();
+  });
+
+  it('dev:noSend passes an order step that decides not to send, as a real run would', async () => {
+    world.local.devNoSend = true;
+    const runner = await freshRunner();
+    const refused: LastOrder = {
+      day: israelToday(Date.now()), memberHash: await runner.midHash(MEMBER.mid), confirmed: false, code: '3', collected: false,
+      at: new Date(Date.now() - 10 * 60000).toISOString(),
+    };
+    world.local[LAST_ORDER] = structuredClone(refused);
+    await runner.start(TAB);
+    const run = await settled();
+    expect(world.orders).toBe(0);
+    expect(world.local.devBlockedOrder).toBeUndefined();
+    expect(run?.order).toMatchObject({ earlier_order: true, retry_at: new Date(Date.parse(refused.at) + REFUSAL_RETRY_MS).toISOString() });
+    expect(run?.medicalFileLate).toMatchObject({ refused: true });
+    expect(world.local[LAST_ORDER]).toEqual(refused);
+  });
+
+  it('dev:pretendOrder records a confirmed order without sending one or writing LAST_ORDER, and the late finish says so', async () => {
+    world.local.devPretendOrder = '2026-11-03';
+    world.waited = { ready: false, kept: '2026-10-18' };
+    const runner = await freshRunner();
+    await runner.start(TAB);
+    const run = await settled();
+    expect(world.earlier).toEqual([]);
+    expect(world.orders).toBe(0);
+    expect(run?.order).toEqual({ ordered: true, sent: true, to_date: '2026-11-03', from_date: '1900-01-01' });
+    expect(world.local[LAST_ORDER]).toBeUndefined();
+    expect(run?.medicalFileLate).toEqual({ kept: '2026-10-18', until: earlierFileUntil('2026-11-03') });
+    await runner.onDownloadChanged({ id: run!.downloadId!, state: { current: 'complete' } } as chrome.downloads.DownloadDelta);
+    expect(world.notices).toEqual(['Export saved, without the new medical file']);
+    expect(world.local.devLastNotice).toMatchObject({
+      title: 'Export saved, without the new medical file', message: expect.stringContaining('When Maccabi texts you, export again.'),
+    });
   });
 });
