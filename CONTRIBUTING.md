@@ -324,9 +324,11 @@ check reports that it could not read the credentials and sends nothing to Maccab
 
 Install it for a checkout kept only for the check, not a worktree and not the one you work in, which can hold
 half-finished work on the night it runs: clone the repository to `~/.hrem-drift`, give it a `.env` with the values,
-and install with `--repo ~/.hrem-drift --update`. Each run then first brings that checkout to GitHub's main (and runs
-`npm ci` when the lockfile changed), and refuses to run if the checkout has changes of its own. `--repo DIR` alone
-installs it for another checkout as it stands.
+and install with `--repo ~/.hrem-drift --update`. The agent then runs `scripts/drift-update.mjs`, which brings that
+checkout to GitHub's main (and runs `npm ci` when the lockfile changed, or `node_modules` is missing), refuses to run
+if the checkout has changes of its own, and then runs the check from what is now on disk. It imports nothing but Node's
+own modules, since it runs before the dependencies it installs. `--repo DIR` alone installs it for another checkout as
+it stands.
 
 ## Finding what the export could add
 

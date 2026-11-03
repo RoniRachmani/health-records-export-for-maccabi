@@ -209,9 +209,11 @@ describe('the weekly schedule', () => {
     expect(plist).toContain('<string>/repo &amp; co</string>');
   });
 
-  it('adds --update for a checkout kept only for the check, and only then', () => {
-    expect(launchAgent({ ...o, day: 'tue', time: '03:30', update: true })).toContain('<string>--notify</string><string>--update</string>');
-    expect(launchAgent({ ...o, day: 'tue', time: '03:30' })).not.toContain('--update');
+  // It runs before the dependencies it would install, so it may import nothing outside Node.
+  it('updates a checkout with an entry point that imports only Node', () => {
+    const imports = [...readFileSync('scripts/drift-update.mjs', 'utf8').matchAll(/^import .* from '([^']+)';$/gm)].map((m) => m[1]);
+    expect(imports.length).toBeGreaterThan(0);
+    expect(imports.filter((m) => !m.startsWith('node:'))).toEqual([]);
   });
 
   it('refuses a day or a time it cannot read', () => {
