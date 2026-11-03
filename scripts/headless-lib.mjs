@@ -184,14 +184,17 @@ export function folderSink(core, dir, version) {
       const counts = {};
       /** @type {string | null} */
       let medicalFile = null;
-      for (const [r] of files(dir)) {
+      const rels = files(dir).map(([r]) => r);
+      const docs = new Map(rels.filter(core.readForQuality).map((r) => [r, core.parseJson(read(r))]));
+      for (const r of rels) {
         if (r.includes('/')) counts[r.split('/')[0]] = (counts[r.split('/')[0]] || 0) + 1;
         else if (r.endsWith('_medical-file.pdf') && (!medicalFile || r > medicalFile)) medicalFile = r;
       }
       const errors = core.exportErrors(problems);
       write(core.EXPORT_ERRORS, Buffer.from(JSON.stringify(errors, null, 2) + '\n'));
       const made = { version: version + ' (headless-export)', layout: core.FILE_LAYOUT, startedAt, dev: false };
-      const readme = core.exportReadme(core.israelToday(Date.now()), counts, medicalFile, errors, made, core.notCollected(ran));
+      const quality = core.measureQuality(rels, docs);
+      const readme = core.exportReadme(core.israelToday(Date.now()), counts, medicalFile, errors, made, core.notCollected(ran), quality);
       write('README.md', Buffer.from(readme));
       for (const [name, text] of Object.entries(core.INSTRUCTION_POINTERS)) write(name, Buffer.from(text));
       return { files: counts, errors };

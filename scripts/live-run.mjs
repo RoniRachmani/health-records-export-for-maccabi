@@ -316,6 +316,7 @@ async function main() {
     } else {
       console.log('README: ' + root.made);
       console.log(root.failedSection.replace(/^/gm, '  '));
+      console.log(root.qualitySection.replace(/^/gm, '  '));
       console.log(`export-errors.json: ${root.errors.length} entries; the popup: ${problems.length} problems`);
       for (const e of root.errors) console.log('  ' + e);
     }

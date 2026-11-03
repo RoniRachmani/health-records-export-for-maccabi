@@ -11,6 +11,7 @@
    line, ask whether a record would be read wrongly without it; if not, leave it out. */
 import { countOf, israelToday } from '../../core/util';
 import { PRODUCT_NAME } from './name';
+import { NO_QUALITY, qualitySection, type Quality } from './quality';
 import { SITE_OPEN, type PlanStep } from './state';
 import template from './export-readme.md?raw';
 
@@ -309,11 +310,12 @@ const AI_PAGE = SITE_OPEN;
  * each holds, so nothing is described that is not there; medicalFile is the name of the full
  * medical file PDF at the root, or null when the export has none; errors is what the run failed to
  * collect (export-errors.json), and made names the extension and file layout that made it. skipped
- * is what this run did not ask for (notCollected), for a run that takes only some of the steps.
+ * is what this run did not ask for (notCollected), for a run that takes only some of the steps,
+ * and quality is what measureQuality counted in the records.
  */
 export function exportReadme(
   exportedOn: string, present: Record<string, number>, medicalFile: string | null, errors: ExportError[], made: MadeBy,
-  skipped: readonly string[] = [],
+  skipped: readonly string[] = [], quality: Quality = NO_QUALITY,
 ): string {
   const here = FOLDERS.filter((f) => present[f.name]);
   // A step writes its folder whenever the site answers, and files a problem when it does not: a
@@ -347,6 +349,7 @@ export function exportReadme(
     absent,
     folders,
     failed: failedSection(errors),
+    quality: qualitySection(quality),
   });
 }
 

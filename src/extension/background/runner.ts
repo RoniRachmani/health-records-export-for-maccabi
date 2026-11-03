@@ -3,16 +3,17 @@
    worker can pick it up); the member's session token lives only in
    chrome.storage.session; exported files live in IndexedDB staging. */
 import {
-  apiPath, CancelledError, Collector, countOf, earlierFileUntil, israelToday, LEGACY_STEPS, MEDICAL_FILE, newCtx, orderSettled, placeOrder, runStep,
-  SessionEndedError, sha256Hex, waitMedicalFile, keepListedMedicalFile, orderRefused, type Session, type StepName, type Transport,
+  apiPath, CancelledError, Collector, countOf, earlierFileUntil, israelToday, LEGACY_STEPS, MEDICAL_FILE, newCtx, orderSettled, parseJson, placeOrder, runStep,
+  SessionEndedError, sha256Hex, waitMedicalFile, keepListedMedicalFile, orderRefused, type Json, type Session, type StepName, type Transport,
 } from '../../core';
 import {
   abandoned, alignToPlan, canMove, exportName, FILE_LAYOUT, isDriven, isUnderway, LABELS, LAST_ORDER, MACCABI_ORIGIN, nextStatus, OFFLINE_MESSAGE, percentOf, PLAN, resumeIndex, sameLayout, savingOutcome, SESSION_ENDED_MESSAGE, SONLINE_PAGE, STAGING_TTL_DAYS, STAGING_TTL_MS, stepFailure,
   SUMMARY_PAGE, lateFileNotice, withoutLateFile, type LastOrder, type PlanStep, type RunEvent, type RunState,
 } from '../shared/state';
 import {
-  clearProblemsOfStep, clearStaging, listMeta, listProblems, putTextDirect, setCurrentPart, setCurrentStep, stagedTotals, stagingKey, stagingSink,
+  clearProblemsOfStep, clearStaging, getFile, listMeta, listProblems, putTextDirect, setCurrentPart, setCurrentStep, stagedTotals, stagingKey, stagingSink,
 } from '../shared/staging';
+import { measureQuality, readForQuality } from '../shared/quality';
 import { EXPORT_ERRORS, exportErrors, exportReadme, INSTRUCTION_POINTERS, type ExportError } from '../shared/readme';
 import { callOffscreen, closeOffscreen, offscreenHtml, revokeBlob } from './offscreenClient';
 import { capturingTransport, rawDumpOn } from './rawDump';
@@ -601,8 +602,11 @@ async function runPlanStep(step: PlanStep): Promise<void> {
 async function writeReadme(root: string, run: RunState): Promise<{ readme: string; errors: ExportError[] }> {
   const files: Record<string, number> = {};
   let medicalFile: string | null = null;
-  for (const m of await listMeta()) {
+  const metas = await listMeta();
+  const docs = new Map<string, Json | undefined>();
+  for (const m of metas) {
     const top = m.rel.split('/')[0];
+    if (readForQuality(m.rel)) docs.set(m.rel, parseJson(await getFile(m.rel)));
     if (m.rel.includes('/')) files[top] = (files[top] || 0) + 1;
     // Named by date, so the newest sorts last.
     else if (m.rel.endsWith('_medical-file.pdf') && (!medicalFile || m.rel > medicalFile)) medicalFile = m.rel;
@@ -611,7 +615,8 @@ async function writeReadme(root: string, run: RunState): Promise<{ readme: strin
   const errors = exportErrors(await listProblems());
   await putTextDirect(EXPORT_ERRORS, JSON.stringify(errors, null, 2) + '\n');
   const made = { version: chrome.runtime.getManifest().version, layout: FILE_LAYOUT, startedAt: run.startedAt, dev: __DEV_BRIDGE__ };
-  const readme = exportReadme(root.replace(/^maccabi-export-/, ''), files, medicalFile, errors, made);
+  const quality = measureQuality(metas.map((m) => m.rel), docs);
+  const readme = exportReadme(root.replace(/^maccabi-export-/, ''), files, medicalFile, errors, made, [], quality);
   await putTextDirect('README.md', readme);
   for (const [name, text] of Object.entries(INSTRUCTION_POINTERS)) await putTextDirect(name, text);
   return { readme, errors };

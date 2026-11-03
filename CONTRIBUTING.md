@@ -83,6 +83,10 @@ the answer has and never their values, when the list's key is missing or not a l
 "the site may have changed" in the popup, `export-errors.json` and the export's `README.md`, not as a section with
 nothing on record. A test walks every record a fake run writes and checks that each file it
 names (`file`, `same_as`, `visit`, `linked_from`) is in the export, with and without failures, and across a resume.
+What did arrive is counted too: `shared/quality.ts` reads the lab histories, the visit details and the file names as
+the root files are written, and the export's `README.md` says how many lab values are text only or have no range, how
+many visits name no diagnosis, and how far each folder reaches. It describes the records' form, never whether they are
+right.
 
 The tab visits a single legacy page, `/online/medicalfile/summary/`. The legacy services answer only after some
 `/online/` page has been loaded in the session, and the medical file order has to be sent from that one, so the four
@@ -140,7 +144,7 @@ await dev({ type: 'dev:skipOrder', on: true });                  // test a full 
 | `dev:state` | Run state, staged files per folder, token status |
 | `dev:start`, `dev:resume`, `dev:cancel`, `dev:dismiss`, `dev:retrySave` | What the popup's buttons do |
 | `dev:problems` | Items that failed so far |
-| `dev:rootFiles` | Write the ZIP's root files as `save` does, without the ZIP, and reply with the README's version line, its failed-to-collect section and `export-errors.json` |
+| `dev:rootFiles` | Write the ZIP's root files as `save` does, without the ZIP, and reply with the README's version line, its failed-to-collect and numbers sections and `export-errors.json` |
 | `dev:titleFields` | Which response fields hold a display string, and in which language. Field names only. |
 | `dev:names` | Every staged file's path, sorted, to check how files are named |
 | `dev:stopBefore` `{step}` | Pause before a plan step. Without `step`, clears it. |
@@ -172,7 +176,7 @@ files collected per folder and the time and requests of each step and part (the 
 | `--export` | Starts nothing: turns both test switches off, waits for you to press Start in the popup, then follows that export. It is a real one: it orders the medical file, so Maccabi sends an SMS, and downloads the ZIP. Prints its timings, what the order did (placed, or skipped because today's file was already ready), the time from the order to the file being ready, and the ZIP's size. |
 | `--export --reorder` | The same, ordering even when today's file is already ready, to time a real order again the same day (`dev:reorder`, turned off again at the end). |
 | `--keep` | Leaves the browser and the paused run in place, to look at them. |
-| `--root-files` | Also writes the ZIP's root files before discarding the run (`dev:rootFiles`), and prints the README's version line, what it says failed, and `export-errors.json` beside the popup's problem count. |
+| `--root-files` | Also writes the ZIP's root files before discarding the run (`dev:rootFiles`), and prints the README's version line, what it says failed, its numbers section, and `export-errors.json` beside the popup's problem count. |
 | `--names` | Prints every staged file's path (`dev:names`), to check how files are named. |
 | `--shapes` | Records the field names and types of every answer, prints what [docs/endpoints/shapes.json](docs/endpoints/shapes.json) has not seen, and adds it there. See below. |
 | `--screenshots` | Photographs the popup before the start and at every step, into `.cache/live-screenshots/` (gitignored, since the problems it lists come from your records). It opens the toolbar popup itself, so leave the browser window in front while it runs. |

@@ -6,7 +6,7 @@
 Exported {{exported}} from online.maccabi4u.co.il with the
 {{product}} browser extension, {{version}}; everything here belongs to one member. If you are an AI assistant working with
 these records, this file is your instructions and the records are your project files: read it
-before them. It says where to start, what the export lacks and which values mislead.
+before them.
 
 ## How to work with these records
 
@@ -77,6 +77,10 @@ has one, and documents in `files/`; a record's JSON and its PDF share a file nam
 ## What this export failed to collect
 
 {{failed}}
+
+## This export's records in numbers
+
+{{quality}}
 
 ## Lab values
 

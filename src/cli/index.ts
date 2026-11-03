@@ -9,6 +9,7 @@
    limits are kept. */
 export * from '../core';
 export { EXPORT_ERRORS, INSTRUCTION_POINTERS, exportErrors, exportReadme, notCollected } from '../extension/shared/readme';
+export { measureQuality, readForQuality } from '../extension/shared/quality';
 export { STALL_MS, TAB_FETCH_TIMEOUT_MS, TAB_MAX_BYTES, activityInPage, fetchInPage, snapshotInPage, xhrInPage } from '../extension/background/tab';
 export { FILE_LAYOUT, MACCABI_ORIGIN, SUMMARY_PAGE, exportName } from '../extension/shared/state';
 export { endpointKey, mergeShapes, shapeDrift, shapeTransport, sortedShapes } from '../extension/shared/shapes';

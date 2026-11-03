@@ -70,15 +70,16 @@ async function handleDevImpl(msg: DevMsg, sender: chrome.runtime.MessageSender):
     }
     case 'dev:rootFiles': {
       // What the save step would put at the ZIP's root, without the ZIP: the README's opening line (which
-      // extension made it) and its failed-to-collect section, and export-errors.json as problem lines.
+      // extension made it), its failed-to-collect and numbers sections, and export-errors.json as problem lines.
       const { readme, errors } = await writeRootFiles();
       const section = (heading: string) => {
         const from = readme.indexOf('## ' + heading);
         return from < 0 ? '' : readme.slice(from, readme.indexOf('\n## ', from + 1)).trim();
       };
       return {
-        made: readme.split('\n\n')[1].replace(/\s+/g, ' ').replace(/; everything here.*$/, ''),
+        made: (readme.split('\n\n').find((p) => p.startsWith('Exported')) ?? '').replace(/\s+/g, ' ').replace(/; everything here.*$/, ''),
         failedSection: section('What this export failed to collect'),
+        qualitySection: section("This export's records in numbers"),
         errors: errors.map((e) => e.folders.join(',') + ' | ' + e.step + ' | ' + e.where + ' | ' + e.what),
       };
     }
