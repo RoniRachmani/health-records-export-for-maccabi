@@ -270,8 +270,12 @@ Nothing shown comes from a real account.
 - **Say "insurance covered", not "Maccabi covered".**
 - **Advise, never decide.** Advice ends in "worth raising with your doctor", and plans say to check before big
   changes. Nothing reads as a diagnosis, and every insight shows its source.
-- **Privacy in one line.** The details belong in the Privacy Policy, not the pitch. The one addition is advice, not
-  detail: three settings to change in the assistant before it reads the records.
+- **Privacy in one line.** The details belong in the Privacy Policy, not the pitch. There are two additions, both in the
+  privacy section near the end of the page. One is a card of what the extension can and can't do, whose can-do list
+  names the one thing it changes (the medical file's order): in public, privacy is the first question (see *What we
+  learned*, point 9), and the card answers it with facts rather than reassurance. Whether it reads as too much is as
+  untested as the rule. The other is advice, not detail: three settings to change in the assistant before it reads
+  the records.
 - **Warm and confident, not hyped.** A genius friend, not a miracle.
 - **Don't mention that other AI health tools are U.S.-only.** That gap explains our positioning (see *Alternatives the
   customer has*), but customer-facing copy doesn't name it: not on the landing page, in the store listing or in the

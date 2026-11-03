@@ -3270,6 +3270,66 @@ h2 {
   }
 }
 
+/* ---- Privacy: what the extension can and can't do, a card of the same make as the three under it ---- */
+.scope {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px 40px;
+  margin-top: 26px;
+  padding: 22px 24px;
+  border-radius: 20px;
+  background: var(--bg);
+  border: 1px solid var(--line-soft);
+}
+.scope h3 {
+  margin: 0 0 12px;
+  font-size: 19px;
+}
+.scope ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.scope li {
+  position: relative;
+  margin: 0;
+  padding-left: 22px;
+}
+.scope li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 0.62em;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.scope-never li::before {
+  content: '×';
+  top: 0;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: none;
+  color: var(--heading);
+  font-weight: 500;
+}
+.scope li b {
+  font-weight: 500;
+  color: var(--heading);
+}
+.scope + .before {
+  margin-top: 16px;
+}
+@media (max-width: 760px) {
+  .scope {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* ---- Privacy: the settings to change in the assistant, a card of the same make as the two under it ---- */
 .before {
   display: grid;
