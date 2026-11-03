@@ -43,7 +43,7 @@
 // Nothing here prints a credential or a record: what it reports is what the dev bridge replies with,
 // statuses, counts and problem lines. The password is filled once per run and never re-submitted,
 // because a script retrying a wrong password is how an account gets locked.
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { ORIGIN, START, lit, openBrowser as openPlainBrowser, signIn } from './maccabi-browser.mjs';
@@ -191,13 +191,25 @@ function orderOutcome(order) {
   return 'order not confirmed' + retry + (order.success_code ? ' (Success ' + order.success_code + ')' : '') + '; see the problems';
 }
 
+/** The committed snapshot, or nothing when there is none yet: one read, not a check and then a read. */
+function readShapes() {
+  let text;
+  try {
+    text = readFileSync(SHAPES_FILE, 'utf8');
+  } catch (e) {
+    if (/** @type {NodeJS.ErrnoException} */ (e).code === 'ENOENT') return {};
+    throw e;
+  }
+  return JSON.parse(text);
+}
+
 /**
  * What this run's answers show that the committed snapshot has not, then the two merged into it. Added to, never
  * replaced: a field one account lacks has not left the site. The reply is names and types, and is checked all the
  * same, since this file goes into the repo.
  */
 async function writeShapes(page) {
-  const known = existsSync(SHAPES_FILE) ? JSON.parse(readFileSync(SHAPES_FILE, 'utf8')) : {};
+  const known = readShapes();
   const res = await page.dev({ type: 'dev:shapesSeen', known }, 30_000);
   if (!res?.merged) throw new Error('dev:shapesSeen: ' + (res?.error || 'no answer'));
   console.log(`Shapes: ${res.endpoints} endpoints, ${res.drift.length} differences from docs/endpoints/shapes.json`);
