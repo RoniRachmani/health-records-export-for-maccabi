@@ -209,6 +209,11 @@ describe('the weekly schedule', () => {
     expect(plist).toContain('<string>/repo &amp; co</string>');
   });
 
+  it('adds --update for a checkout kept only for the check, and only then', () => {
+    expect(launchAgent({ ...o, day: 'tue', time: '03:30', update: true })).toContain('<string>--notify</string><string>--update</string>');
+    expect(launchAgent({ ...o, day: 'tue', time: '03:30' })).not.toContain('--update');
+  });
+
   it('refuses a day or a time it cannot read', () => {
     expect(() => launchAgent({ ...o, day: 'someday', time: '03:30' })).toThrow(/day and a time/);
     expect(() => launchAgent({ ...o, day: 'tue', time: '25:00' })).toThrow(/day and a time/);

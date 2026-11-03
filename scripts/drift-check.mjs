@@ -9,7 +9,9 @@
 //   npm run drift -- --steps visits,referrals   only those steps (and the steps they read from), to try it out
 //   npm run drift -- --no-scan             without the endpoint scan
 //   npm run drift -- --install --day tue --time 03:30   runs it weekly, with --notify, from this checkout (launchd);
-//                                          --repo DIR installs it for another checkout, such as the main one
+//                                          --repo DIR installs it for another checkout; --update with it makes each run
+//                                          first bring that checkout to GitHub's main (one kept only for the check)
+//   npm run drift -- --update              the check, after bringing this checkout to GitHub's main
 //   npm run drift -- --uninstall           stops that
 //
 // It exits 0 when nothing differs, 1 when something does, and 2 when it could not check (a sign-in that failed, the
@@ -22,10 +24,10 @@
 // Like the no-browser export, it signs in once with the password from .env or 1Password, never resubmits it, and
 // so ends the member's other Maccabi sessions; every request goes through MaccabiSession.request's one queue, paced
 // core.PACE_MS apart, and the ones it sends itself are in docs/endpoints/scripts-endpoints.json.
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { loadCore } from './cli-core.mjs';
 import { LABEL, countingTransport, driftReport, launchAgent, memorySink, missingFields, pageScripts, problemKey, readScripts, runSteps, safeToWrite, scanFindings, sessionGet } from './drift-lib.mjs';
 import { credentials } from './maccabi-browser.mjs';
@@ -79,7 +81,7 @@ function schedule() {
   const out = join(repo, '.cache', 'drift');
   mkdirSync(out, { recursive: true });
   const plist = launchAgent({
-    node: process.execPath, script: join(repo, 'scripts', 'drift-check.mjs'), cwd: repo, log: join(out, 'launchd.log'), day, time,
+    node: process.execPath, script: join(repo, 'scripts', 'drift-check.mjs'), cwd: repo, log: join(out, 'launchd.log'), day, time, update: flag('--update'),
     path: ['/opt/homebrew/bin', '/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin'].join(':'),
   });
   mkdirSync(join(homedir(), 'Library', 'LaunchAgents'), { recursive: true });
@@ -88,7 +90,8 @@ function schedule() {
   } catch { /* not loaded yet */ }
   writeFileSync(PLIST, plist);
   execFileSync('launchctl', ['bootstrap', `gui/${process.getuid?.()}`, PLIST]);
-  console.log(`The drift check runs every ${day} at ${time} from ${repo} (a Mac asleep then runs it on waking).`);
+  console.log(`The drift check runs every ${day} at ${time} from ${repo} (a Mac asleep then runs it on waking)` +
+    (flag('--update') ? ', bringing it to GitHub\'s main first.' : '.'));
   if (!existsSync(join(repo, 'scripts', 'drift-check.mjs'))) console.log('That checkout has no scripts/drift-check.mjs yet: the runs fail, in the log, until it does.');
   console.log('Its output goes to ' + join(out, 'launchd.log') + '; turn it off with npm run drift -- --uninstall.');
 }
@@ -209,6 +212,24 @@ async function check() {
   return finish();
 }
 
+/**
+ * --update: brings this checkout to GitHub's main, and its dependencies with it when the lockfile changed, so a
+ * checkout kept only for the check runs what main has. It refuses a checkout with changes of its own (ignored files,
+ * such as .env and .cache, don't count): those are someone's work, not this script's to move.
+ */
+function update() {
+  const git = (/** @type {string[]} */ ...a) => execFileSync('git', ['-C', root, ...a], { encoding: 'utf8' }).trim();
+  if (git('status', '--porcelain')) throw new Error('--update runs only in a checkout with no changes of its own, and ' + root + ' has some.');
+  const lock = git('rev-parse', 'HEAD:package-lock.json');
+  git('fetch', '--quiet', 'origin', 'main');
+  git('checkout', '--quiet', '--detach', 'FETCH_HEAD');
+  if (git('rev-parse', 'HEAD:package-lock.json') !== lock || !existsSync(join(root, 'node_modules'))) {
+    // launchd's PATH may not reach the npm that came with this node.
+    const npm = join(dirname(process.execPath), 'npm');
+    execFileSync(existsSync(npm) ? npm : 'npm', ['ci', '--no-audit', '--no-fund'], { cwd: root, stdio: 'inherit' });
+  }
+}
+
 /** Every step, or the ones --steps names with what they read from, in the run's order. */
 function stepsFor(core) {
   const asked = option('--steps')?.split(',').map((s) => s.trim()).filter(Boolean);
@@ -218,7 +239,18 @@ function stepsFor(core) {
   return core.STEP_ORDER.filter((s) => asked.includes(s) || needed.includes(s));
 }
 
-if (flag('--install') || flag('--uninstall')) {
+if (flag('--update') && !flag('--install')) {
+  // The update can change this very script: the check runs as a new process, from what is now on disk.
+  try {
+    update();
+  } catch (e) {
+    console.error('Could not update the checkout: ' + e.message);
+    if (flag('--notify')) notify('Maccabi drift check', 'Could not update its checkout. See .cache/drift/launchd.log');
+    process.exit(2);
+  }
+  const run = spawnSync(process.execPath, [join(root, 'scripts', 'drift-check.mjs'), ...args.filter((a) => a !== '--update')], { stdio: 'inherit' });
+  process.exit(run.status ?? 2);
+} else if (flag('--install') || flag('--uninstall')) {
   try {
     schedule();
   } catch (e) {

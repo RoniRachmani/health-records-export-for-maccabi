@@ -284,6 +284,7 @@ npm run drift                                         # the check, into .cache/d
 npm run drift -- --notify                             # the same, and a macOS notification with the outcome
 npm run drift -- --steps visits,referrals             # only those steps, to try it out; --no-scan skips the scan
 npm run drift -- --install --day tue --time 03:30     # every week, with --notify, from this checkout (launchd)
+npm run drift -- --install --repo DIR --update ...    # the same for a checkout kept only for the check (below)
 npm run drift -- --uninstall                          # turns that off
 ```
 
@@ -319,8 +320,13 @@ launchd runs it in your login session, which is what lets it show a notification
 the Mac slept through once it wakes. (cron does neither, and a Claude scheduled task would need the app open and put
 the run through a model for no gain.) Nobody is there to unlock 1Password, so give it the values: `npm run env`
 writes them into `.env`. With references there instead, a locked app makes `op` give up after two minutes, and the
-check reports that it could not read the credentials and sends nothing to Maccabi. Install it for a checkout that
-stays (the main one, not a worktree): `--repo DIR` installs it for another checkout than the one you run it from.
+check reports that it could not read the credentials and sends nothing to Maccabi.
+
+Install it for a checkout kept only for the check, not a worktree and not the one you work in, which can hold
+half-finished work on the night it runs: clone the repository to `~/.hrem-drift`, give it a `.env` with the values,
+and install with `--repo ~/.hrem-drift --update`. Each run then first brings that checkout to GitHub's main (and runs
+`npm ci` when the lockfile changed), and refuses to run if the checkout has changes of its own. `--repo DIR` alone
+installs it for another checkout as it stands.
 
 ## Finding what the export could add
 
