@@ -66,8 +66,10 @@ export async function testResults(c: Collector, ctx: Ctx): Promise<void> {
       });
     });
     // The lobby's view button opens this link from the list item's own
-    // time_stamp/hash (hash already URL-encoded); no click is needed.
-    if (t.result_files && t.type !== 'imaging_study') {
+    // time_stamp/hash (hash already URL-encoded); no click is needed. A test with no PDF has
+    // result_files null (every lab result, measured 2026-11-03); an empty list would mean the same.
+    const hasPdf = Array.isArray(t.result_files) ? t.result_files.length > 0 : !!t.result_files;
+    if (hasPdf && t.type !== 'imaging_study') {
       const mid = c.session.mid;
       await c.pdfIfMissing('test-results/files/' + name + '.pdf',
         c.apiUrl('TestResultsAPI/pdf/openfile') + '?memberidcode=0&memberid=' + mid + '&data=' + encodeURIComponent(t.doc_id) +

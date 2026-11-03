@@ -480,6 +480,24 @@ describe('full run against the fake site', () => {
     ]);
   });
 
+  // The site marks a test with no PDF by result_files null, as it does every lab result; an empty list would mean the same.
+  it('asks for a test\'s PDF only when the list names one', async () => {
+    const site = fakeMaccabi();
+    const lab = { type: 'lab_result', test_name: ['מעבדה'], time_stamp: 'T', hash: 'h', execute_date: '2026-02-01T00:00:00' };
+    const tests: Route = (req, url) => (req.method === 'POST' && url.pathname.endsWith('/tests')
+      ? jsonResp({ tests: [
+        { ...lab, request_id: '701', doc_id: 'N1', result_files: null },
+        { ...lab, request_id: '702', doc_id: 'E1', result_files: [] },
+        { ...lab, request_id: '703', doc_id: 'P1', result_files: [{ result_file: 'r.pdf' }] },
+      ] })
+      : undefined);
+    const { c, sink } = makeCollector(fakeTransport([tests, ...site.routes]));
+    await runAll(c, newCtx(), ['testResults']);
+    expect(site.calls.filter((x) => x.includes('/pdf/openfile')).map((x) => /data=([^&]+)/.exec(x)?.[1])).toEqual(['P1']);
+    expect([...(sink as MemorySink).files.keys()].filter((k) => k.startsWith('test-results/files/'))).toEqual(['test-results/files/2026-02-01_703-lab-result.pdf']);
+    expect((sink as MemorySink).problems).toEqual([]);
+  });
+
   it('keeps both of two approvals that differ only in their PDF', async () => {
     const site = fakeMaccabi();
     const same = { approval_date: '2026-03-22T00:00:00', title_name: 'תשובת יועץ', practitioner_full_name: 'ד"ר כהן', timestamp: 't' };
