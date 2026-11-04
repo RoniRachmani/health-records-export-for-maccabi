@@ -73,7 +73,6 @@ h2 {
   width: 206px;
   height: auto;
 }
-
 /* ---- what people ask: the AI page's tabs on a soft panel ---- */
 .ask-band .tabs {
   padding: 28px;
@@ -725,6 +724,39 @@ h2 {
 }
 .watch:hover .play {
   background: color-mix(in srgb, var(--primary) 12%, var(--bg));
+}
+/* The source, after the film: open source matters to the few who know GitHub, so it is the quietest thing in the row, a
+   line of small text that wraps under the badge. GitHub's own white Invertocat (site/images/, its brand package's file
+   byte for byte, which allows it as a link to a project and forbids recolouring it) on black. */
+.gh {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  color: var(--muted);
+  font-size: 14px;
+  text-decoration: none;
+}
+.gh-mark {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #000000;
+}
+.gh-mark img {
+  width: 16px;
+  height: auto;
+}
+.gh:hover {
+  color: var(--heading);
+  text-decoration: underline;
+}
+.gh:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+  border-radius: 999px;
 }
 .watch:focus-visible {
   outline: 2px solid var(--focus);

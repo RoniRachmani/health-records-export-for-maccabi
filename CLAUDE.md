@@ -266,7 +266,10 @@ renamed is then a `kind: 'shape'` problem (the site may have changed), not a sec
   them: it is Google's own badge, committed byte for byte as it is served from
   [their branding page](https://developer.chrome.com/docs/webstore/branding), and their terms allow resizing
   it and nothing else. It has to keep linking to the listing. It is the bordered version, whose fill is opaque
-  white, because the borderless one is transparent and would be dark text on dark in GitHub's dark theme.
+  white, because the borderless one is transparent and would be dark text on dark in GitHub's dark theme. The hero's "Open source on GitHub" link under it is GitHub's own
+  `GitHub_Invertocat_White.svg` from [its brand package](https://brand.github.com/foundations/logo), committed byte for byte
+  as `site/images/github-invertocat-white.svg`, on black: GitHub's rules allow the mark as a link to a project and forbid
+  recolouring it. It stays the quietest thing in the row, since GitHub means nothing to most members.
 - **Re-run the store renders** when the listing images, the popup or the video's copy go stale (how and what to
   check: the `store-media` skill); a re-rendered video is re-uploaded to YouTube with its poster.
 - Builds are deliberately **not minified** so reviewers and users can read what ships.
