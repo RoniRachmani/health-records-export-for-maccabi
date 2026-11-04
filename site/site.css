@@ -726,8 +726,8 @@ h2 {
   background: color-mix(in srgb, var(--primary) 12%, var(--bg));
 }
 /* The source, after the film: open source matters to the few who know GitHub, so it is the quietest thing in the row, a
-   line of small text that wraps under the badge. GitHub's own white Invertocat (site/images/, its brand package's file
-   byte for byte, which allows it as a link to a project and forbids recolouring it) on black. */
+   line of small text that wraps under the badge. GitHub's own black Invertocat (site/images/, its brand package's file
+   byte for byte, which allows it as a link to a project and forbids recolouring it), with nothing behind it. */
 .gh {
   display: inline-flex;
   align-items: center;
@@ -737,16 +737,8 @@ h2 {
   font-size: 14px;
   text-decoration: none;
 }
-.gh-mark {
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: #000000;
-}
-.gh-mark img {
-  width: 16px;
+.gh img {
+  width: 20px;
   height: auto;
 }
 .gh:hover {
