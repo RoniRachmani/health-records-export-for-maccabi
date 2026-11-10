@@ -7,7 +7,7 @@
 //   node scripts/drift-update.mjs --notify     what the agent runs, after `npm run drift -- --install --repo DIR --update`
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { delimiter, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -24,9 +24,12 @@ function update() {
   git('fetch', '--quiet', 'origin', 'main');
   git('checkout', '--quiet', '--detach', 'FETCH_HEAD');
   if (git('rev-parse', 'HEAD:package-lock.json') !== lock || !existsSync(join(root, 'node_modules'))) {
-    // launchd's PATH may not reach the npm that came with this node.
-    const npm = join(dirname(process.execPath), 'npm');
-    execFileSync(existsSync(npm) ? npm : 'npm', ['ci', '--no-audit', '--no-fund'], { cwd: root, stdio: 'inherit' });
+    // launchd's PATH may not reach the npm that came with this node, nor the node that npm's `#!/usr/bin/env node`
+    // looks for: put this node's folder first on the PATH npm gets.
+    const bin = dirname(process.execPath);
+    const npm = join(bin, 'npm');
+    const PATH = [bin, process.env.PATH].filter(Boolean).join(delimiter);
+    execFileSync(existsSync(npm) ? npm : 'npm', ['ci', '--no-audit', '--no-fund'], { cwd: root, stdio: 'inherit', env: { ...process.env, PATH } });
   }
 }
 
