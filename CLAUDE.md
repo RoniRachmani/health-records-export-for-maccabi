@@ -66,7 +66,8 @@ on `main` first. It tags `v<version>`, uploads the packaged ZIP to a draft, then
 Repository admins can push straight to `main`: the `main` ruleset lets the admin role bypass it. Everyone
 else, Dependabot and the workflows included, branches from `main`, pushes the branch and opens a pull request,
 and the `check` CI job must pass against the latest `main` before merging. No second-person approval is required.
-Run `npm run typecheck` and `npm test` (or `npm run coverage`, which CI runs) before every push, and resolve review
+Pull requests merge by squash or rebase (no merge commits; the history is linear), and every workflow action is pinned
+to a full commit SHA. Run `npm run typecheck` and `npm test` (or `npm run coverage`, which CI runs) before every push, and resolve review
 conversations before merging. CONTRIBUTING.md's *Pull requests* says the same for contributors; keep the two in step.
 
 ## Architecture
@@ -162,7 +163,8 @@ renamed is then a `kind: 'shape'` problem (the site may have changed), not a sec
   `offscreenClient.ts`.
 - **The export's `README.md`** (its fixed text in `shared/export-readme.md`, filled in by `shared/readme.ts`) is written for an AI assistant: the ZIP is made to be
   opened in the Claude desktop app (formerly Claude Cowork), Claude Code, ChatGPT Work or Codex, with the README as the assistant's saved
-  instructions and the records as its project files. After one line for the member (the website's section on opening an
+  instructions and the records as its project files. ChatGPT Work is a real OpenAI product (chatgpt.com/work), newer than
+  a model's training, so don't question the name; and Cowork is now just Claude, so write "the Claude desktop app". After one line for the member (the website's section on opening an
   export, for whoever opens the export with no popup at hand), it opens with how to work with the records, then is
   their data dictionary, and it is kept short because it shares the assistant's context with them.
   `INSTRUCTION_POINTERS` writes a `CLAUDE.md` (which imports it) and an `AGENTS.md` (which points to it) beside
@@ -184,6 +186,9 @@ renamed is then a `kind: 'shape'` problem (the site may have changed), not a sec
   (`notice` and open `<details>` may scroll).
 - **Store images, the promo video and the mark** (`store/`, `scripts/store-*.mjs`, `scripts/make-icons.mjs`): how
   each is built, and what a frame must never do, is in the `store-media` skill.
+- **`.claude/`** holds tracked files (`settings.json`, `launch.json`, `hooks/session-start.sh`, the `store-media`
+  skill); only `settings.local.json` in it is ignored. Never delete the folder or anything in it to clean up: a
+  temporary preview server goes into `launch.json`, and `git restore .claude/launch.json` takes it out again.
 - **Dev bridge**: `__DEV_BRIDGE__` (a Vite `define`) and the `mode === 'development'` branch in
   `manifest.config.ts` keep `background/dev.ts` and the content script out of the store build.
 - **The product's name** is in `shared/name.ts` in its three forms (the store's, the everyday one, the short one): code

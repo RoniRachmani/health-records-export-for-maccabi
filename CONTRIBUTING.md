@@ -16,6 +16,9 @@ documents is for.
 
 Branch from `main` and open a pull request for changes. The `check` CI job must pass against the latest
 `main` before merging. No second-person approval is required. Resolve review conversations before merging.
+A pull request merges by squash or rebase: there are no merge commits, `main`'s history stays linear, and the branch
+is deleted on merge. A workflow may use GitHub's own actions and `dependabot/fetch-metadata` only, each pinned to a
+full commit SHA with its version in a comment, as the existing ones are; Dependabot keeps the pins current.
 Never include real medical records, account details, tokens, exports or HAR files in a pull request.
 
 ## Setup
@@ -209,6 +212,11 @@ script retrying a wrong password is how an account gets locked. The browser prof
 (`~/.hrem-live-profile`, or `LIVE_PROFILE`) and is kept between runs, so a session that is still alive is
 reused: every new sign-in ends your other sessions. Branded Chrome ignores `--load-extension`; there, load
 `dist-dev/` by hand once in that profile, and the script says so when it finds no extension answering.
+
+If Maccabi Online answers with its own *403 Forbidden* page and a Transaction ID, it is refusing your network's
+address, not your account: a clean browser on the same network gets the same page. Don't retry it and don't route
+around it (a VPN, another network). Stop, wait (one block lifted within a day), check the site in your everyday
+browser, and keep the Transaction ID in case you need to ask Maccabi about it.
 
 The tests only meet the fake site, so `--shapes` is what ties it to the real one. `docs/endpoints/shapes.json` holds,
 per endpoint, each field's path and types: a value never gets in (`src/extension/shared/shapes.ts`), a key that is not
