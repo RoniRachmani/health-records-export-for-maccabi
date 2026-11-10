@@ -8,6 +8,7 @@
 // statuses and counts. Never a value, a title, a file name or the member id. The one exception is the site's feature
 // flags (featureFlags), which are the site's settings and not the member's records: their names and true or false.
 import { createHash } from 'node:crypto';
+import { dirname } from 'node:path';
 import { candidates, chunkFiles, chunkUrl, coverage, knownFrom, mappedRequests } from '../tools/endpoint-scan/endpoint-scan-lib.mjs';
 
 /** @import { Problem, SaveReply, Session, Sink, Transport } from '../src/core' */
@@ -504,10 +505,12 @@ const DAYS = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
 
 /**
  * The launchd agent that runs the check weekly: `script` is drift-check.mjs, or drift-update.mjs for a checkout kept only
- * for the check. launchd runs a job missed while the Mac slept once it wakes.
+ * for the check. launchd runs a job missed while the Mac slept once it wakes. The PATH it gets starts with the folder
+ * of `node`, so what the job runs with `#!/usr/bin/env node` (npm, among others) finds the same node.
  * @param {{ node: string; script: string; cwd: string; log: string; day: string; time: string; path: string }} o
  */
 export function launchAgent(o) {
+  const path = [dirname(o.node), ...o.path.split(':').filter((p) => p && p !== dirname(o.node))].join(':');
   const day = DAYS[/** @type {keyof typeof DAYS} */ (o.day.slice(0, 3).toLowerCase())];
   const [hour, minute] = (o.time.match(/^(\d{1,2}):(\d{2})$/) || []).slice(1).map(Number);
   if (day === undefined || !(hour >= 0 && hour < 24) || !(minute >= 0 && minute < 60)) throw new Error('The schedule takes a day and a time: --day tue --time 03:30');
@@ -522,7 +525,7 @@ export function launchAgent(o) {
   <array>${str(o.node)}${str(o.script)}${str('--notify')}</array>
   <key>WorkingDirectory</key>${str(o.cwd)}
   <key>EnvironmentVariables</key>
-  <dict><key>PATH</key>${str(o.path)}</dict>
+  <dict><key>PATH</key>${str(path)}</dict>
   <key>StartCalendarInterval</key>
   <dict><key>Weekday</key><integer>${day}</integer><key>Hour</key><integer>${hour}</integer><key>Minute</key><integer>${minute}</integer></dict>
   <key>StandardOutPath</key>${str(o.log)}

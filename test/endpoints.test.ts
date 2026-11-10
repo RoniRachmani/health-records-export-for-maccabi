@@ -73,9 +73,11 @@ const IN_SCRIPT = /'(\/(?:infosec|saml|sonline|online)\/[^']+)'/g;
 
 describe('docs/endpoints/scripts-endpoints.json', () => {
   const map = JSON.parse(readFileSync('docs/endpoints/scripts-endpoints.json', 'utf8'));
-  // The portal's root (the sign-in's first GET) bares to '', which every path starts with: it lists nothing.
-  const known = [...documented(map)].map((u) => (/^https?:/.test(u) ? bare(new URL(u).pathname) : u)).filter(Boolean);
-  const listed = (path: string) => known.some((url) => path === url || path.startsWith(url) || url.startsWith(path));
+  // The portal's root (the sign-in's first GET) bares to '', which every path starts with: it lists nothing. A page
+  // (a path ending in '/', such as the portal's '/sonline/') lists itself alone, not every path under it; the
+  // pathname is decoded, so a documented '{mid}' stays '{mid}'.
+  const known = [...documented(map)].map((u) => (/^https?:/.test(u) ? bare(decodeURI(new URL(u).pathname)) : u)).filter(Boolean);
+  const listed = (path: string) => known.some((url) => path === url || (!url.endsWith('/') && (path.startsWith(url) || url.startsWith(path))));
 
   it('lists every request path in scripts/maccabi-session.mjs, and the legacy page it primes', () => {
     const source = readFileSync('scripts/maccabi-session.mjs', 'utf8');
@@ -93,8 +95,9 @@ describe('docs/endpoints/scripts-endpoints.json', () => {
     // The portal page the scan starts from is the bare '/sonline/', which IN_SCRIPT (a path past it) does not take.
     for (const [, url] of source.matchAll(/request\('(\/[^']*)'/g)) paths.add(bare(url));
     for (const [, url] of source.matchAll(IN_SCRIPT)) paths.add(bare(url));
-    expect(paths.size).toBeGreaterThan(0);
+    expect(paths.size).toBeGreaterThan(1); // the portal page and the feature flags, at least
     expect([...paths].filter((p) => !listed(p))).toEqual([]);
+    expect(listed('sonline/MainAppAPI/webapi/mac/v1/members/0/{mid}/notListed')).toBe(false); // so the check can fail
   });
 
   it('names no value: what each request sends and returns is shapes', () => {

@@ -23,8 +23,8 @@
     {
       "method": "GET",
       "url": "MainAppAPI/v1/members/0/{mid}/features",
-      "checked": "200 JSON array[56] of {feature_id, feature_enabled}",
-      "notes": "The site's feature flags. Two matter for downloads: isOpenPdfByLinkHandlerV2 (true: the site fetches a letter_type 2 file through MainAppAPI/v2/.../pdf, with a 202 first) and IshurMakdim (administrative case documents)."
+      "checked": "200 JSON array of {feature_id, feature_enabled}: 56 flags when first mapped, 42 on 2026-11-10, every one true then (a flag turned off may be left out rather than sent false)",
+      "notes": "The site's feature flags. Two matter for downloads: isOpenPdfByLinkHandlerV2 (true: the site fetches a letter_type 2 file through MainAppAPI/v2/.../pdf, with a 202 first) and IshurMakdim (administrative case documents). The drift check reads it every week and reports any flag that changed (docs/endpoints/scripts-endpoints.json)."
     },
     {
       "method": "GET",

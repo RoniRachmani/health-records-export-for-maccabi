@@ -250,6 +250,12 @@ describe('the weekly schedule', () => {
     expect(plist).toContain('<string>/repo &amp; co</string>');
   });
 
+  it('puts the folder of the node it runs first on its PATH, once, so npm finds that node', () => {
+    expect(launchAgent({ ...o, day: 'tue', time: '03:30' })).toContain('<key>PATH</key><string>/opt/homebrew/bin:/usr/bin:/bin</string>');
+    expect(launchAgent({ ...o, node: '/Users/a/.local/node/bin/node', path: '/opt/homebrew/bin:/Users/a/.local/node/bin:/bin', day: 'tue', time: '03:30' }))
+      .toContain('<key>PATH</key><string>/Users/a/.local/node/bin:/opt/homebrew/bin:/bin</string>');
+  });
+
   // It runs before the dependencies it would install, so it may import nothing outside Node.
   it('updates a checkout with an entry point that imports only Node', () => {
     const imports = [...readFileSync('scripts/drift-update.mjs', 'utf8').matchAll(/^import .* from '([^']+)';$/gm)].map((m) => m[1]);
