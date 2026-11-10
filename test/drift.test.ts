@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { newCtx, SessionEndedError, type HttpRequest, type Transport } from '../src/core';
 import * as core from '../src/cli/index';
 import {
-  countingTransport, driftReport, launchAgent, memorySink, missingFields, ours, pageScripts, problemKey, readScripts, runSteps, safeToWrite, scanFindings, sessionGet,
+  countingTransport, driftReport, featureFlags, flagChanges, launchAgent, memorySink, missingFields, ours, pageScripts, problemKey, readScripts, runSteps, safeToWrite, scanFindings, sessionGet,
 } from '../scripts/drift-lib.mjs';
 import { fakeMaccabi, fakeTransport, makeCollector, MID } from './fakes';
 
@@ -130,6 +130,47 @@ describe('what the report may name', () => {
     expect(safeToWrite('GET /sonline/X/{mid}/visits')).toBe(true);
     expect(safeToWrite('a ' + MID + '7')).toBe(false);
     expect(safeToWrite('רופא')).toBe(false);
+  });
+});
+
+describe('the site\'s feature flags', () => {
+  const answer = (body: unknown, status = 200) => ({ status, redirected: false, bytes: new TextEncoder().encode(JSON.stringify(body)) });
+  const flags = [{ feature_id: 'isOpenPdfByLinkHandlerV2', feature_enabled: true }, { feature_id: 'IshurMakdim', feature_enabled: true }, { feature_id: 'showWhatsNew', feature_enabled: false }];
+
+  it('reads each flag by name, and says why when it cannot', () => {
+    expect(featureFlags(answer(flags))).toEqual({ flags: { isOpenPdfByLinkHandlerV2: 'true', IshurMakdim: 'true', showWhatsNew: 'false' } });
+    expect(featureFlags(answer(flags, 502))).toEqual({ error: 'HTTP 502' });
+    expect(featureFlags({ status: 0, redirected: true, bytes: new Uint8Array() })).toEqual({ error: 'session ended' });
+    expect(featureFlags(answer({ features: flags }))).toEqual({ error: 'the answer is no longer a list of {feature_id, feature_enabled}' });
+    // A name that is not an identifier, or a value that is not a flag's, never reaches a report.
+    expect(featureFlags(answer([...flags, { feature_id: 'דגל', feature_enabled: true }]))).toHaveProperty('error');
+    expect(featureFlags(answer([...flags, { feature_id: 'x', feature_enabled: MID }]))).toHaveProperty('error');
+  });
+
+  it('names each flag that turned, appeared or went, and marks the ones the export depends on', () => {
+    expect(flagChanges({ isOpenPdfByLinkHandlerV2: 'true', old: 'true', same: 'false' }, { isOpenPdfByLinkHandlerV2: 'false', same: 'false', fresh: 'true' })).toEqual([
+      'fresh: new, true',
+      'isOpenPdfByLinkHandlerV2: now false, was true (the export\'s downloads depend on it)',
+      'old: gone, was true',
+    ]);
+  });
+
+  it('keeps the flags for the next check, and counts a change since then as a difference', () => {
+    const first = report({ flags: featureFlags(answer(flags)) });
+    expect(first.differs).toBe(false);
+    expect(first.state?.flags).toEqual({ isOpenPdfByLinkHandlerV2: 'true', IshurMakdim: 'true', showWhatsNew: 'false' });
+    expect(first.text).toContain('3 flags; kept for the next check to compare with.');
+    expect(first.text).toContain('isOpenPdfByLinkHandlerV2 true, IshurMakdim true');
+    expect(report({ flags: featureFlags(answer(flags)), before: first.state }).differs).toBe(false);
+    const turned = report({ flags: featureFlags(answer([{ ...flags[0], feature_enabled: false }, flags[1], flags[2]])), before: first.state });
+    expect(turned.differs).toBe(true);
+    expect(turned.text).toContain('- Feature flag: isOpenPdfByLinkHandlerV2: now false, was true (the export\'s downloads depend on it)');
+    expect(safeToWrite(turned.text)).toBe(true);
+    // Flags that could not be read are a difference, and the last ones stay for the next check.
+    const unread = report({ flags: { error: 'HTTP 502' }, before: first.state });
+    expect(unread.differs).toBe(true);
+    expect(unread.text).toContain('The feature flags could not be read: HTTP 502');
+    expect(unread.state?.flags).toEqual(first.state?.flags);
   });
 });
 

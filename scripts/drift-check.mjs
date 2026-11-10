@@ -1,8 +1,9 @@
 // The weekly drift check: has Maccabi Online changed in a way that could break the export? Signs in with no
 // browser, as `npm run export -- --no-browser` does, runs every section of the collector, never ordering, and keeps
 // nothing it collected; records the field names and types of every answer and compares them with
-// docs/endpoints/shapes.json; reads the site's front-end scripts, as `npm run endpoints` does, for the requests the
-// export makes; and writes a short report of what differs.
+// docs/endpoints/shapes.json; reads the site's feature flags and compares them with the last check's; reads the
+// site's front-end scripts, as `npm run endpoints` does, for the requests the export makes; and writes a short report
+// of what differs.
 //
 //   npm run drift                          the check: .cache/drift/latest.md and a dated copy beside it
 //   npm run drift -- --notify              the same, and a macOS notification with the outcome
@@ -29,7 +30,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { loadCore } from './cli-core.mjs';
-import { LABEL, countingTransport, driftReport, launchAgent, memorySink, missingFields, pageScripts, problemKey, readScripts, runSteps, safeToWrite, scanFindings, sessionGet } from './drift-lib.mjs';
+import { LABEL, countingTransport, driftReport, featureFlags, launchAgent, memorySink, missingFields, pageScripts, problemKey, readScripts, runSteps, safeToWrite, scanFindings, sessionGet } from './drift-lib.mjs';
 import { credentials } from './maccabi-browser.mjs';
 import { MaccabiSession } from './maccabi-session.mjs';
 import { root, sleep } from './stage.mjs';
@@ -42,6 +43,8 @@ const option = (/** @type {string} */ name) => {
 };
 const OUT = join(root, '.cache', 'drift');
 const PLIST = join(homedir(), 'Library', 'LaunchAgents', LABEL + '.plist');
+/** The site's feature flags (docs/endpoints/scripts-endpoints.json), {mid} filled in only when it is sent. */
+const FEATURES = '/sonline/MainAppAPI/webapi/mac/v1/members/0/{mid}/features';
 /** Past Maccabi's hour, a run is stuck rather than slow: it reports so and ends. */
 const WATCHDOG_MS = 80 * 60_000;
 
@@ -117,7 +120,7 @@ async function check() {
   /** @type {Parameters<typeof driftReport>[0]} */
   const r = {
     date, seconds: 0, requests: 0, stopped: null, signIn: null, drift: [], missing: [], endpoints: 0,
-    problems: [], before, statuses: {}, counts: {}, scan: null,
+    problems: [], before, statuses: {}, counts: {}, scan: null, flags: null,
   };
   const finish = () => {
     r.seconds = (Date.now() - started) / 1000;
@@ -169,6 +172,19 @@ async function check() {
   const seen = {};
   const counting = countingTransport(m.transport(), core, m.mid);
   const transport = core.shapeTransport(counting, m.mid, (s) => { core.mergeShapes(seen, s); });
+
+  // The site's feature flags, read once before the steps, past the shapes (whose shapes.json the collector's answers
+  // fill): which download routes the site's own page takes, compared flag by flag with the last completed check.
+  try {
+    r.flags = featureFlags(await counting.fetch({
+      url: FEATURES.split('{mid}').join(m.mid ?? ''),
+      method: 'GET',
+      redirect: 'manual',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + m.session?.jwt },
+    }));
+  } catch (e) {
+    r.flags = { error: e?.sessionEnded ? 'session ended' : 'no answer' };
+  }
   const sink = memorySink(core);
   const deps = {
     transport,

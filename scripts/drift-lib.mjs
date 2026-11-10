@@ -5,7 +5,8 @@
 //
 // The report is the one thing a drift check writes, and it is written to be safe to read anywhere: endpoint keys
 // (endpointKey in shared/shapes.ts: no host, no query, no id), field paths and types, step and folder names, HTTP
-// statuses and counts. Never a value, a title, a file name or the member id.
+// statuses and counts. Never a value, a title, a file name or the member id. The one exception is the site's feature
+// flags (featureFlags), which are the site's settings and not the member's records: their names and true or false.
 import { createHash } from 'node:crypto';
 import { candidates, chunkFiles, chunkUrl, coverage, knownFrom, mappedRequests } from '../tools/endpoint-scan/endpoint-scan-lib.mjs';
 
@@ -324,6 +325,58 @@ export function scanFindings(files, maps, before) {
   };
 }
 
+// ---- the site's feature flags --------------------------------------------------------------------------
+
+/**
+ * The flags the export's downloads depend on (docs/endpoints/other-endpoints.json says how): a change in one of them
+ * says so beside it.
+ */
+export const FLAGS_THE_EXPORT_READS = ['isOpenPdfByLinkHandlerV2', 'IshurMakdim'];
+/** A flag's name is the site's own identifier; anything else is not written into a report. */
+const FLAG_NAME = /^[A-Za-z][\w.-]{0,79}$/;
+
+/**
+ * The site's feature flags out of the features answer, by name, each value as a string ("true", "false"): or why
+ * they could not be read. They are the site's settings, not the member's records, so a report names them and their
+ * values, which it does for nothing else.
+ * @param {{ status: number; redirected: boolean; bytes: Uint8Array }} r
+ * @returns {{ flags: Record<string, string> } | { error: string }}
+ */
+export function featureFlags(r) {
+  if (r.redirected || r.status === 401) return { error: 'session ended' };
+  if (r.status !== 200) return { error: 'HTTP ' + r.status };
+  let data;
+  try {
+    data = JSON.parse(new TextDecoder().decode(r.bytes));
+  } catch {
+    return { error: 'the answer is not JSON' };
+  }
+  const shaped = (/** @type {any} */ f) => f && typeof f === 'object' && typeof f.feature_id === 'string' && FLAG_NAME.test(f.feature_id)
+    && ['boolean', 'number', 'string'].includes(typeof f.feature_enabled) && String(f.feature_enabled).length <= 5;
+  if (!Array.isArray(data) || !data.length || !data.every(shaped)) return { error: 'the answer is no longer a list of {feature_id, feature_enabled}' };
+  /** @type {Record<string, string>} */
+  const flags = {};
+  for (const f of data) flags[f.feature_id] = String(f.feature_enabled);
+  return { flags };
+}
+
+/**
+ * Each flag that changed since the last completed check: turned, new or gone, by name.
+ * @param {Record<string, string>} before
+ * @param {Record<string, string>} now
+ */
+export function flagChanges(before, now) {
+  const reads = (/** @type {string} */ name) => (FLAGS_THE_EXPORT_READS.includes(name) ? ' (the export\'s downloads depend on it)' : '');
+  /** @type {string[]} */
+  const out = [];
+  for (const name of [...new Set([...Object.keys(before), ...Object.keys(now)])].sort()) {
+    if (!(name in before)) out.push(`${name}: new, ${now[name]}${reads(name)}`);
+    else if (!(name in now)) out.push(`${name}: gone, was ${before[name]}${reads(name)}`);
+    else if (before[name] !== now[name]) out.push(`${name}: now ${now[name]}, was ${before[name]}${reads(name)}`);
+  }
+  return out;
+}
+
 // ---- the report ----------------------------------------------------------------------------------------
 
 /**
@@ -341,13 +394,14 @@ export function missingFields(known, seen) {
   return out;
 }
 
-/** The state a completed check leaves for the next one to compare against: problem lines and calls in the code. */
-/** @typedef {{ date: string; problems: string[]; calls: string[] | null }} DriftState */
+/** The state a completed check leaves for the next one to compare against: problem lines, calls in the code, flags. */
+/** @typedef {{ date: string; problems: string[]; calls: string[] | null; flags?: Record<string, string> | null }} DriftState */
 
 /**
  * The report, as Markdown, and whether anything in it is a difference. A difference: a shape drift line, a 'shape'
  * problem, a problem the last completed check did not have, a mapped request gone from the site's code or called
- * with another method, or a run that could not finish. The rest is said for reading, not counted.
+ * with another method, a feature flag that changed (or flags that could not be read), or a run that could not
+ * finish. The rest is said for reading, not counted.
  * @param {{
  *   date: string; seconds: number; requests: number;
  *   stopped: string | null; signIn: string | null;
@@ -356,6 +410,7 @@ export function missingFields(known, seen) {
  *   statuses: Record<string, Record<string, number>>;
  *   counts: Record<string, number>;
  *   scan: ReturnType<typeof scanFindings> & { read: number; failed: Record<string, number>; capped: boolean } | { error: string } | null;
+ *   flags?: ReturnType<typeof featureFlags> | null;
  * }} r
  * @returns {{ text: string; differs: boolean; failed: boolean; state: DriftState | null }}
  */
@@ -379,6 +434,11 @@ export function driftReport(r) {
   if (scan && scan.read === 0) differences.push('The endpoint scan read no script files.');
   for (const a of scan?.absent || []) differences.push('Gone from the site\'s code: ' + a);
   for (const m of scan?.method || []) differences.push('Another method in the site\'s code: ' + m);
+  const flags = r.flags && 'flags' in r.flags ? r.flags.flags : null;
+  const flagsBefore = r.before?.flags ?? null;
+  const turned = flags && flagsBefore ? flagChanges(flagsBefore, flags) : [];
+  if (r.flags && 'error' in r.flags) differences.push('The feature flags could not be read: ' + r.flags.error);
+  for (const t of turned) differences.push('Feature flag: ' + t);
 
   out.push(differences.length ? `**${differences.length} difference${differences.length > 1 ? 's' : ''}**` : '**No differences**', '');
   for (const d of differences) out.push('- ' + d);
@@ -403,6 +463,14 @@ export function driftReport(r) {
     out.push('');
     for (const l of problemLines) out.push('- ' + l + (r.before && freshProblems.includes(l) ? ' (new)' : ''));
   }
+  if (r.flags) {
+    out.push('', '## The feature flags', '');
+    if (flags) {
+      const n = Object.keys(flags).length;
+      out.push(`${n} flags; ` + (flagsBefore ? `${turned.length} changed since ${r.before?.date}.` : 'kept for the next check to compare with.'));
+      out.push('', 'The ones the export\'s downloads depend on: ' + FLAGS_THE_EXPORT_READS.map((f) => `${f} ${flags[f] ?? 'absent'}`).join(', ') + '.');
+    } else out.push('Not read.');
+  }
   out.push('', '## The endpoint scan', '');
   if (scan) {
     out.push(`Read ${scan.read} script files` + (Object.keys(scan.failed).length ? `; ${Object.entries(scan.failed).map(([w, n]) => `${n} ${w}`).join(', ')} would not load` : '')
@@ -416,7 +484,7 @@ export function driftReport(r) {
   out.push('', 'Accept a difference by fixing the fake site or the collector, and shapes.json by `npm run live -- --shapes`; the next check compares problems with this one.');
   const failed = !!r.stopped || !!(r.scan && 'error' in r.scan);
   /** @type {DriftState | null} */
-  const state = failed ? null : { date: r.date, problems: problemLines, calls: scan ? scan.calls : r.before?.calls ?? null };
+  const state = failed ? null : { date: r.date, problems: problemLines, calls: scan ? scan.calls : r.before?.calls ?? null, flags: flags ?? flagsBefore };
   return { text: out.join('\n') + '\n', differs: differences.length > 0, failed, state };
 }
 

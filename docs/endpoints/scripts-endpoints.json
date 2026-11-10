@@ -93,6 +93,13 @@
     },
     {
       "method": "GET",
+      "url": "https://online.maccabi4u.co.il/sonline/MainAppAPI/webapi/mac/v1/members/0/{mid}/features",
+      "sends": "Authorization: Bearer <the session's token>; Content-Type: application/json; redirects not followed",
+      "returns": "200 JSON array of {feature_id: string, feature_enabled: boolean}: the site's feature flags (42 on 2026-11-10, every one true: a flag turned off may be left out rather than sent false, which the report then names as gone)",
+      "notes": "Read once after sign-in, before the collector's steps, past the shape recording. Each flag's name and value go into .cache/drift/state.json, and the report names every flag that turned, appeared or went since the last completed check; isOpenPdfByLinkHandlerV2 and IshurMakdim are the two the export's downloads depend on (docs/endpoints/other-endpoints.json). They are the site's settings, not the member's records."
+    },
+    {
+      "method": "GET",
       "url": "https://online.maccabi4u.co.il/<script path>.js",
       "sends": "session cookies; redirects not followed",
       "returns": "the site's front-end scripts (application/javascript): code, no member's data",
