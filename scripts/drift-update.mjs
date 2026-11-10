@@ -1,17 +1,27 @@
 // The weekly drift check's entry for a checkout kept only for the check: brings that checkout to GitHub's main, and
 // its dependencies with it, then runs scripts/drift-check.mjs with the arguments it was given, as a new process from
-// what is now on disk. It imports nothing but Node's own modules, so it runs in a checkout whose node_modules is
-// missing or stale, which drift-check.mjs cannot. It refuses a checkout with changes of its own (ignored files, such as
-// .env and .cache, don't count): those are someone's work, not this script's to move.
+// what is now on disk. It imports nothing but Node's own modules (and drift-due.mjs, which imports only those), so it
+// runs in a checkout whose node_modules is missing or stale, which drift-check.mjs cannot. It refuses a checkout with
+// changes of its own (ignored files, such as .env and .cache, don't count): those are someone's work, not this
+// script's to move.
 //
-//   node scripts/drift-update.mjs --notify     what the agent runs, after `npm run drift -- --install --repo DIR --update`
+//   node scripts/drift-update.mjs --notify --due tue@03:30   what the agent runs, after `npm run drift -- --install --repo DIR --update`
+//   node scripts/drift-update.mjs --notify     the same, now, whether or not it is due
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { delimiter, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { whenDue, withoutDue } from './drift-due.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const args = process.argv.slice(2);
+
+// Started at login as well as weekly (drift-due.mjs): nothing to do, and nothing fetched, unless a check is due.
+const due = whenDue(args, root);
+if (!due.run) {
+  console.log(new Date().toISOString() + ' ' + due.why);
+  process.exit(0);
+}
 
 /** @param {string[]} a */
 function git(...a) {
@@ -44,5 +54,5 @@ try {
   }
   process.exit(2);
 }
-const run = spawnSync(process.execPath, [join(root, 'scripts', 'drift-check.mjs'), ...args], { stdio: 'inherit' });
+const run = spawnSync(process.execPath, [join(root, 'scripts', 'drift-check.mjs'), ...withoutDue(args)], { stdio: 'inherit' });
 process.exit(run.status ?? 2);

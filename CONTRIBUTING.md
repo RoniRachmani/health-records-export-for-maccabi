@@ -342,7 +342,13 @@ pages and scripts it reads itself listed in [scripts-endpoints.json](docs/endpoi
 The schedule is a launchd agent, `~/Library/LaunchAgents/com.ronirachmani.hrem.drift.plist`, running Node on
 `scripts/drift-check.mjs` in the checkout it was installed from, with its output in `.cache/drift/launchd.log`.
 launchd runs it in your login session, which is what lets it show a notification, and runs a week's check that
-the Mac slept through once it wakes. (cron does neither, and a Claude scheduled task would need the app open and put
+the Mac slept through once it wakes. A check whose time passed while the Mac was shut down it does not run, so the
+agent also starts at login (`RunAtLoad`), with `--due tue@03:30`: `scripts/drift-due.mjs` lets a run go ahead only
+when none has begun since the latest weekly time (kept in `.cache/drift/last-run.json`), so the first login after a
+missed week runs it once and every other login does nothing. A run counts from when it begins, so one Maccabi broke
+off is not tried again at each login, since each sign-in ends your other sessions. Installing starts it too, under
+the same rule. To run it now whatever the time, run the agent's command without `--due`, or `npm run drift`.
+(cron does neither, and a Claude scheduled task would need the app open and put
 the run through a model for no gain.) Nobody is there to unlock 1Password, so give it the values: `npm run env`
 writes them into `.env`. With references there instead, a locked app makes `op` give up after two minutes, and the
 check reports that it could not read the credentials and sends nothing to Maccabi.

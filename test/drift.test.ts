@@ -2,13 +2,16 @@
 // with the answers' shapes recorded and compared with docs/endpoints/shapes.json, the endpoint scan over the session's
 // own requests, and the report. Against the fake site, a run finds nothing; the site changed under it (a renamed list
 // key, a field gone from the code, an ended session) finds each, and the report names it without a value.
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { newCtx, SessionEndedError, type HttpRequest, type Transport } from '../src/core';
 import * as core from '../src/cli/index';
 import {
   countingTransport, driftReport, featureFlags, flagChanges, launchAgent, memorySink, missingFields, ours, pageScripts, problemKey, readScripts, runSteps, safeToWrite, scanFindings, sessionGet,
 } from '../scripts/drift-lib.mjs';
+import { lastRunFile, lastSlot, parseSchedule, whenDue, withoutDue } from '../scripts/drift-due.mjs';
 import { fakeMaccabi, fakeTransport, makeCollector, MID } from './fakes';
 
 const known = JSON.parse(readFileSync('docs/endpoints/shapes.json', 'utf8'));
@@ -240,6 +243,33 @@ describe('the endpoint scan over the session', () => {
   });
 });
 
+describe('when a check is due', () => {
+  const tue = parseSchedule('tue', '03:30');
+  // Local times, as launchd keeps the schedule. 2026-11-10 is a Tuesday.
+  const at = (s: string) => new Date(s);
+
+  it('is due from the weekly time until a check begins, whatever its outcome', () => {
+    expect(lastSlot(at('2026-11-10T03:30:00'), tue)).toEqual(at('2026-11-10T03:30:00'));
+    expect(lastSlot(at('2026-11-10T03:29:30'), tue)).toEqual(at('2026-11-10T03:30:00')); // a moment early is still this week's
+    expect(lastSlot(at('2026-11-10T02:00:00'), tue)).toEqual(at('2026-11-03T03:30:00'));
+    expect(lastSlot(at('2026-11-15T12:00:00'), tue)).toEqual(at('2026-11-10T03:30:00'));
+  });
+
+  it('runs a login after a missed week once, and not at the logins after it', () => {
+    const root = mkdtempSync(join(tmpdir(), 'drift-due-'));
+    const args = ['--notify', '--due', 'tue@03:30'];
+    expect(whenDue(args, root, at('2026-11-10T14:08:00'))).toEqual({ run: true }); // never run: due
+    expect(JSON.parse(readFileSync(lastRunFile(root), 'utf8'))).toEqual({ began: at('2026-11-10T14:08:00').toISOString() });
+    expect(whenDue(args, root, at('2026-11-10T18:00:00'))).toMatchObject({ run: false, why: expect.stringMatching(/^not due/) });
+    expect(whenDue(args, root, at('2026-11-16T09:00:00')).run).toBe(false);
+    expect(whenDue(args, root, at('2026-11-17T03:30:00')).run).toBe(true); // the next week's time
+    expect(whenDue(['--notify'], root, at('2026-11-17T03:31:00')).run).toBe(true); // from the terminal: always
+    expect(withoutDue(args)).toEqual(['--notify']);
+    expect(() => whenDue(['--due', 'someday@03:30'], root)).toThrow(/day and a time/);
+    rmSync(root, { recursive: true, force: true });
+  });
+});
+
 describe('the weekly schedule', () => {
   const o = { node: '/opt/homebrew/bin/node', script: '/repo/scripts/drift-check.mjs', cwd: '/repo & co', log: '/repo/.cache/drift/launchd.log', path: '/usr/bin:/bin' };
 
@@ -250,6 +280,12 @@ describe('the weekly schedule', () => {
     expect(plist).toContain('<string>/repo &amp; co</string>');
   });
 
+  it('also starts at login, and says which weekly time it keeps, so a login runs only a missed week', () => {
+    const plist = launchAgent({ ...o, day: 'Tuesday', time: '03:30' });
+    expect(plist).toContain('<string>--notify</string><string>--due</string><string>tue@03:30</string></array>');
+    expect(plist).toContain('<key>RunAtLoad</key><true/>');
+  });
+
   it('puts the folder of the node it runs first on its PATH, once, so npm finds that node', () => {
     expect(launchAgent({ ...o, day: 'tue', time: '03:30' })).toContain('<key>PATH</key><string>/opt/homebrew/bin:/usr/bin:/bin</string>');
     expect(launchAgent({ ...o, node: '/Users/a/.local/node/bin/node', path: '/opt/homebrew/bin:/Users/a/.local/node/bin:/bin', day: 'tue', time: '03:30' }))
@@ -258,9 +294,10 @@ describe('the weekly schedule', () => {
 
   // It runs before the dependencies it would install, so it may import nothing outside Node.
   it('updates a checkout with an entry point that imports only Node', () => {
-    const imports = [...readFileSync('scripts/drift-update.mjs', 'utf8').matchAll(/^import .* from '([^']+)';$/gm)].map((m) => m[1]);
-    expect(imports.length).toBeGreaterThan(0);
-    expect(imports.filter((m) => !m.startsWith('node:'))).toEqual([]);
+    const imports = (f: string) => [...readFileSync(f, 'utf8').matchAll(/^import .* from '([^']+)';$/gm)].map((m) => m[1]);
+    expect(imports('scripts/drift-update.mjs').length).toBeGreaterThan(0);
+    expect(imports('scripts/drift-update.mjs').filter((m) => !m.startsWith('node:'))).toEqual(['./drift-due.mjs']);
+    expect(imports('scripts/drift-due.mjs').filter((m) => !m.startsWith('node:'))).toEqual([]);
   });
 
   it('refuses a day or a time it cannot read', () => {

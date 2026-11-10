@@ -9,7 +9,8 @@
 //   npm run drift -- --notify              the same, and a macOS notification with the outcome
 //   npm run drift -- --steps visits,referrals   only those steps (and the steps they read from), to try it out
 //   npm run drift -- --no-scan             without the endpoint scan
-//   npm run drift -- --install --day tue --time 03:30   runs it weekly, with --notify, from this checkout (launchd);
+//   npm run drift -- --install --day tue --time 03:30   runs it weekly, with --notify, from this checkout (launchd), and
+//                                          at login when that week's run was missed (drift-due.mjs);
 //                                          --repo DIR installs it for another checkout; --update with it runs
 //                                          scripts/drift-update.mjs instead, which first brings that checkout to
 //                                          GitHub's main (for a checkout kept only for the check)
@@ -31,6 +32,7 @@ import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { loadCore } from './cli-core.mjs';
 import { LABEL, countingTransport, driftReport, featureFlags, launchAgent, memorySink, missingFields, pageScripts, problemKey, readScripts, runSteps, safeToWrite, scanFindings, sessionGet } from './drift-lib.mjs';
+import { whenDue } from './drift-due.mjs';
 import { credentials } from './maccabi-browser.mjs';
 import { MaccabiSession } from './maccabi-session.mjs';
 import { root, sleep } from './stage.mjs';
@@ -93,7 +95,7 @@ function schedule() {
   } catch { /* not loaded yet */ }
   writeFileSync(PLIST, plist);
   execFileSync('launchctl', ['bootstrap', `gui/${process.getuid?.()}`, PLIST]);
-  console.log(`The drift check runs every ${day} at ${time} from ${repo} (a Mac asleep then runs it on waking)` +
+  console.log(`The drift check runs every ${day} at ${time} from ${repo} (and at login when that week's run was missed)` +
     (flag('--update') ? ', bringing it to GitHub\'s main first.' : '.'));
   if (!existsSync(join(repo, 'scripts', 'drift-check.mjs'))) console.log('That checkout has no scripts/drift-check.mjs yet: the runs fail, in the log, until it does.');
   console.log('Its output goes to ' + join(out, 'launchd.log') + '; turn it off with npm run drift -- --uninstall.');
@@ -246,6 +248,12 @@ if (flag('--install') || flag('--uninstall')) {
     process.exit(1);
   }
 } else {
+  // The agent installed without --update starts here, at login as well as weekly (drift-due.mjs).
+  const due = whenDue(args, root);
+  if (!due.run) {
+    console.log(new Date().toISOString() + ' ' + due.why);
+    process.exit(0);
+  }
   setTimeout(() => {
     console.error('The drift check took longer than Maccabi\'s hour, and was stopped.');
     if (flag('--notify')) notify('Maccabi drift check', 'Could not check: it ran past the hour. See .cache/drift/launchd.log');
