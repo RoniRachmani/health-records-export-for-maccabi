@@ -1,6 +1,6 @@
 import { defineManifest } from '@crxjs/vite-plugin';
 import pkg from './package.json' with { type: 'json' };
-import { PRODUCT_NAME, STORE_NAME } from './src/extension/shared/name';
+import { PRODUCT_NAME, STORE_NAME } from './src/extension/shared/name.ts';
 
 export default defineManifest(({ mode }) => ({
   manifest_version: 3,

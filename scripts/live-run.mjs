@@ -173,6 +173,11 @@ async function ask(page, msg) {
   return undefined;
 }
 
+/** An ISO time as the extension says it to the member: the time of day in Israel. */
+function israelTime(/** @type {string} */ at) {
+  return new Date(at).toLocaleTimeString('en-GB', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' });
+}
+
 /** What the order did, from the run's OrderResult (core/sections/letters.ts); none when it did not run. */
 function orderOutcome(order) {
   if (!order) return 'not ordered (dev:skipOrder)';
@@ -181,7 +186,7 @@ function orderOutcome(order) {
   if (order.skipped_ready_earlier) return 'no order: the file of the order sent ' + order.to_date + ', which no export had collected, was ready, and the run used it';
   if (order.earlier_order) {
     return 'no order: an earlier run ordered ' + (order.to_date ? 'to ' + order.to_date : 'today') + (order.ordered ? ', and the run waited for that file'
-      : order.success_code === '3' ? ', refused' + (order.retry_at ? '; a run from ' + order.retry_at + ' orders once more' : ', with no retry left today') + '; see the problems'
+      : order.success_code === '3' ? ', refused' + (order.retry_at ? '; a run from ' + israelTime(order.retry_at) + ' orders once more' : ', with no retry left today') + '; see the problems'
       : ', unconfirmed; see the problems');
   }
   // The day's one retry after a refusal (placeOrder's REFUSAL_RETRY_MS).

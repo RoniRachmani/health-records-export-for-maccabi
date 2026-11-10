@@ -98,7 +98,8 @@ function schedule() {
 
 async function check() {
   const started = Date.now();
-  const date = new Date(started).toISOString().slice(0, 10);
+  // The day in Israel, as the export and the medical file are dated: a night run is still the day it began there.
+  const date = new Date(started).toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
   mkdirSync(OUT, { recursive: true });
   const read = (/** @type {string} */ f, /** @type {any} */ fallback) => {
     try {
