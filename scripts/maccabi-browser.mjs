@@ -231,7 +231,8 @@ export async function signIn(page) {
         console.log('Sign-in: chose to sign in with a password.');
       } else if (stage === 'password') {
         if (await page.probe(ID_BEFORE_PASSWORD_EMPTY, false)) await page.insertText(creds.username);
-        await page.probe(FOCUS_PASSWORD, false);
+        // As on the ID page: typed only into its own field, never into whatever happens to have the focus.
+        if (!(await page.probe(FOCUS_PASSWORD, false))) throw new Error('Found the password page but could not focus its field.');
         await page.insertText(creds.password);
         if (!(await page.probe(clickText(CONTINUE), false))) await page.pressEnter();
         console.log('Sign-in: entered the password; waiting for the site.');
