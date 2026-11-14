@@ -60,6 +60,7 @@ listing bundle): load the `store-media` skill (`.claude/skills/store-media/SKILL
 A GitHub release is published by the *Release* workflow
 (`.github/workflows/release.yml`, run with the version): it needs the version bump and `docs/releases/<version>.md`
 on `main` first. It tags `v<version>`, uploads the packaged ZIP to a draft, then publishes the immutable release.
+Its `package` job, which installs and runs the dependencies, can only read; `publish` alone can write, and runs none of them.
 
 ## Git
 

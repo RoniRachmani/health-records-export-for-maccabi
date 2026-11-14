@@ -4,6 +4,8 @@
 # which refuses a development build), and tags main's head v<version> as it publishes the release with that ZIP.
 # It refuses a version whose tag already exists, so a release is never replaced. The Chrome Web Store upload
 # stays by hand: download the ZIP from the release.
+# Two jobs: `package` installs the dependencies and runs their code, so it can only read; `publish`, the one that can
+# write, runs none of it, and only tags the commit `package` built and attaches the ZIP it handed over.
 name: Release
 
 on:
@@ -14,21 +16,25 @@ on:
         required: true
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: release
   cancel-in-progress: false
 
 jobs:
-  release:
+  package:
     runs-on: ubuntu-latest
     env:
       VERSION: ${{ inputs.version }}
+    outputs:
+      sha: ${{ steps.head.outputs.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main
+      - id: head
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
@@ -48,6 +54,30 @@ jobs:
       - run: npm run typecheck
       - run: npm run coverage
       - run: npm run package
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-zip
+          path: release/health-records-export-for-maccabi-${{ inputs.version }}.zip
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ inputs.version }}
+      SHA: ${{ needs.package.outputs.sha }}
+    steps:
+      # The notes, from the commit that was packaged: main may have moved on since.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.package.outputs.sha }}
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-zip
+          path: release
       - name: Tag and publish
         env:
           GH_TOKEN: ${{ github.token }}
@@ -56,5 +86,5 @@ jobs:
           title=$(head -n 1 "$notes" | sed 's/^# *//')
           tail -n +2 "$notes" > "$RUNNER_TEMP/notes.md"
           gh release create "v$VERSION" "release/health-records-export-for-maccabi-$VERSION.zip" \
-            --target "$(git rev-parse HEAD)" --title "$title" --notes-file "$RUNNER_TEMP/notes.md" --draft
+            --target "$SHA" --title "$title" --notes-file "$RUNNER_TEMP/notes.md" --draft
           gh release edit "v$VERSION" --draft=false --latest
