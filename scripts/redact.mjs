@@ -47,11 +47,37 @@ export function redactor({ username, password } = {}) {
         /* not JSON after all: the patterns below */
       }
     }
-    return replaceAll(text);
+    return replaceAll(blankPairs(text));
   };
 }
 
 const SECRET_FIELDS = new Set(['password', 'id', 'otp', 'code']);
+/** A form body's own secrets, beside those: the SAML handoff, which carries who signed in. */
+const FORM_SECRETS = new Set([...SECRET_FIELDS, 'samlresponse', 'relaystate']);
+const FORM = /^[^=&?\s]+=[^&\s]*(&[^=&\s]*(=[^&\s]*)?)*$/;
+/** Longer than any name or flag a form carries: a value this long is data, whatever its field is called. */
+const LONG_VALUE = 40;
+
+/**
+ * A form body or a query string (alone, or after a URL's `?`) with its secrets blanked by name, as blankFields does
+ * for JSON, and any long value reduced to its length. The patterns alone miss these: URL-encoding breaks a base64
+ * value at every `%2B` and `%2F`, into runs too short to look like a token, and a six-digit code looks like nothing.
+ * @param {string} text
+ * @returns {string}
+ */
+function blankPairs(text) {
+  const at = /\s/.test(text) ? -1 : text.indexOf('?');
+  const head = at >= 0 ? text.slice(0, at + 1) : '';
+  const pairs = at >= 0 ? text.slice(at + 1) : text;
+  if (!FORM.test(pairs)) return text;
+  return head + pairs.split('&').map((pair) => {
+    const eq = pair.indexOf('=');
+    if (eq <= 0) return pair;
+    const [k, v] = [pair.slice(0, eq), pair.slice(eq + 1)];
+    if (v && FORM_SECRETS.has(k.toLowerCase())) return k + '=<' + k.toUpperCase() + '>';
+    return v.length > LONG_VALUE ? k + '=<' + v.length + ' characters>' : pair;
+  }).join('&');
+}
 
 function blankFields(value) {
   if (Array.isArray(value)) return value.map(blankFields);
