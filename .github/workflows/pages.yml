@@ -18,10 +18,9 @@ on:
     paths: [public/**, site/**, store/src/**, store/design/**, src/extension/popup/**, scripts/stage.mjs, scripts/site-check.mjs, scripts/store-assets.mjs, scripts/store-listing.mjs, scripts/store-auxiliary.mjs, scripts/store-video.mjs, docs/images/chrome-web-store-badge.png, .github/workflows/pages.yml]
   workflow_dispatch:
 
+# The build job installs the dependencies and runs their code, so it only reads; the deploy job alone can publish.
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -32,6 +31,10 @@ jobs:
   # before it goes anywhere. Only main deploys.
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # configure-pages reads the site's settings.
+      pages: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -107,6 +110,9 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

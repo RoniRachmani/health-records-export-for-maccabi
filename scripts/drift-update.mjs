@@ -39,7 +39,9 @@ function update() {
     const bin = dirname(process.execPath);
     const npm = join(bin, 'npm');
     const PATH = [bin, process.env.PATH].filter(Boolean).join(delimiter);
-    execFileSync(existsSync(npm) ? npm : 'npm', ['ci', '--no-audit', '--no-fund'], { cwd: root, stdio: 'inherit', env: { ...process.env, PATH } });
+    // Nobody is at the machine, and .env beside it holds the sign-in: no package's install script runs here. None of
+    // the dependencies needs one (the tests and the bundle the check builds work without).
+    execFileSync(existsSync(npm) ? npm : 'npm', ['ci', '--ignore-scripts', '--no-audit', '--no-fund'], { cwd: root, stdio: 'inherit', env: { ...process.env, PATH } });
   }
 }
 
