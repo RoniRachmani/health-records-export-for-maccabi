@@ -418,7 +418,8 @@ npm run store-video    # store/assets/promo-video.mp4, the promo video (same bro
 npm run icons          # hand-tuned public/icons/; the store icon is `npm run store-assets -- icon`
 ```
 
-`package` builds `dist/` first, and refuses a development build. Everything about the store images, the video
+`package` builds `dist/` first, and refuses a development build. Every entry of its ZIP carries one fixed time, so the
+same `dist/` gives the same ZIP byte for byte: a release's ZIP can be checked against a build of its tag. Everything about the store images, the video
 poster and the link previews (rendering them on a Mac without Roboto, the outputs, the upload bundle, the *Store
 images* workflow, checking them) is in [the artwork guide](store/README.md); [docs/store-listing.md](docs/store-listing.md)
 has everything to fill in on the store dashboard.

@@ -22,5 +22,8 @@ const files = {};
 
 mkdirSync('release', { recursive: true });
 const out = join('release', `${pkg.name}-${pkg.version}.zip`);
-writeFileSync(out, zipSync(files, { level: 9 }));
+// One fixed time on every entry, not the minute it was packaged: the same dist/ then gives the same ZIP, byte for
+// byte, so a release's ZIP can be checked against a build of its tag. Midnight local time, which is what a ZIP
+// stores, so it is the same bytes in any time zone.
+writeFileSync(out, zipSync(files, { level: 9, mtime: new Date(2000, 0, 1) }));
 console.log(`wrote ${out} (${Object.keys(files).length} files)`);
