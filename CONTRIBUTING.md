@@ -42,7 +42,7 @@ Load `dist-dev/` (or `dist/`) unpacked at `chrome://extensions`. The development
 
 `test/runner.test.ts` drives the run loop with `chrome.*` faked: a whole run, reconnecting, a rewind that does not
 order again, a new run the same day, rate limits, going offline, Cancel, a worker restart at a checkpoint or while the
-medical file is being ordered, the heartbeat's `recover` of a running run, Save again, a run found `saving` after a
+medical file is being ordered, the heartbeat's `recover` of a running run (and two recoveries at once, as a browser start has), a disk that fills up, Save again, a run found `saving` after a
 restart (`settleSave`), and a hidden tab's pause (and Cancel during it). Some of it is not covered there: the real
 Chrome parts the test fakes (the tab's navigation and `executeScript`, the offscreen ZIP, the download). A change to any of these, or to `runner.ts`,
 needs a run of the development build as well (`npm run live`, and a pause and Resume from the console), and a test here when
@@ -61,7 +61,7 @@ through that step skips it, even when Maccabi Healthcare Services' answer was lo
 
 A step that continues is run again from its start, so every step is safe to repeat: JSON is rewritten only when
 its content changed, and a document already staged is not asked for again. Staging also keeps a SHA-256 index of the
-documents it holds: `Collector.pdfOnce` saves a form, an upload or a linked visit's summary only when no staged file
+documents it holds, written in the same transaction as the document, so a worker killed mid-write leaves both or neither: `Collector.pdfOnce` saves a form, an upload or a linked visit's summary only when no staged file
 has its bytes, and otherwise records it as a copy of that file, so a repeat makes no request for it either. The two
 longest steps, test results and the doctor messages, also mark each record they collect whole, with no problem filed,
 in the run's `ctx.marks` (`Collector.markDone`, a 12-digit digest of the record's file name): a step run again skips
@@ -77,7 +77,9 @@ profile. Any worker that loads the run checks, and an `hrem-expiry` alarm set fo
 starts sooner; the member gets an *Export deleted* notification.
 
 A request that fails inside a step is filed as a problem under that step (and cleared when the step runs again), with
-the member id written as `{mid}`. Every section writes its folder whenever the site answers, and files a problem when
+the member id written as `{mid}`. A file that cannot be staged is not one of those: when the sink itself fails (a full
+disk, IndexedDB giving up), every record after it would fail the same way, so the collector throws a `StorageError`,
+the run stops where it is with what it has, and the popup says the disk may be full; Try again goes on from that step. Every section writes its folder whenever the site answers, and files a problem when
 it doesn't, so when the ZIP is written the problems become `export-errors.json`, each put against the folder it is
 about (`STEP_FOLDERS` in `src/extension/shared/readme.ts`), and the export's `README.md` says of each missing folder
 whether it failed or had nothing on record. A section reads the list it collects from with `Collector.listIn`, which
@@ -356,7 +358,8 @@ check reports that it could not read the credentials and sends nothing to Maccab
 Install it for a checkout kept only for the check, not a worktree and not the one you work in, which can hold
 half-finished work on the night it runs: clone the repository to `~/.hrem-drift`, give it a `.env` with the values,
 and install with `--repo ~/.hrem-drift --update`. The agent then runs `scripts/drift-update.mjs`, which brings that
-checkout to GitHub's main (and runs `npm ci` when the lockfile changed, or `node_modules` is missing), refuses to run
+checkout to GitHub's main (and runs `npm ci --ignore-scripts` when the lockfile changed, or `node_modules` is missing: no
+package's install script runs unattended beside the `.env` that holds the sign-in), refuses to run
 if the checkout has changes of its own, and then runs the check from what is now on disk. It imports nothing but Node's
 own modules, since it runs before the dependencies it installs. `--repo DIR` alone installs it for another checkout as
 it stands.

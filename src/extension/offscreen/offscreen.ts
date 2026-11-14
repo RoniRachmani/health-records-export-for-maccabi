@@ -12,8 +12,10 @@ async function zipStaged(root: string): Promise<{ url: string; bytes: number; fi
   return { url: URL.createObjectURL(blob), bytes: blob.size, files };
 }
 
-chrome.runtime.onMessage.addListener((msg: OffscreenRequest & { target?: string }, _sender, reply) => {
+chrome.runtime.onMessage.addListener((msg: OffscreenRequest & { target?: string }, sender, reply) => {
   if (msg.target !== 'offscreen') return false;
+  // Only the service worker asks: never a tab, which is what the development build's bridge content script is.
+  if (sender.id !== chrome.runtime.id || sender.tab) return false;
   (async () => {
     switch (msg.type) {
       case 'purchaseTable':

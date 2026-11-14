@@ -254,6 +254,9 @@ export class MaccabiSession {
         headers.delete('content-length');
       }
       await response.arrayBuffer().catch(() => {});
+      // A 307 or 308 sends the body again, and a body here can be the password or the SAML response: never to
+      // another origin than the one it was written for, wherever the site points. Nothing in the chain asks for it.
+      if (body !== undefined && next.origin !== url.origin) throw new Error('a redirect would have sent the request body from ' + url.origin + ' to ' + next.origin);
       url = next;
     }
     throw new Error('too many redirects from ' + input);

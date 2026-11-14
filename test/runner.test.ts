@@ -5,7 +5,7 @@
 // What is real is runner.ts itself, PLAN and its resume rules (shared/state.ts), and core's errors and order rules.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FILE_LAYOUT, LAST_ORDER, PLAN, type LastOrder, type PlanStep, type RunState } from '../src/extension/shared/state';
-import { earlierFileUntil, israelToday, RateLimitedError, REFUSAL_RETRY_MS, SessionEndedError, type Collector, type EarlierOrder, type OrderResult, type Session } from '../src/core';
+import { earlierFileUntil, israelToday, RateLimitedError, REFUSAL_RETRY_MS, SessionEndedError, StorageError, type Collector, type EarlierOrder, type OrderResult, type Session } from '../src/core';
 
 const MEMBER: Session = { mid: '123456789', jwt: 'jwt', gender: 'F' };
 const TAB = 7;
@@ -364,6 +364,23 @@ describe('a run that cannot go on', () => {
     expect(run?.message).toMatch(/slow down/);
     expect(world.ran.at(-1)).toBe('referrals');
     expect(world.stagingCleared).toBe(1);
+  });
+
+  it('stops when the files cannot be stored, and Try again goes on from that step', async () => {
+    world.step.referrals = (attempt) => {
+      if (attempt === 1) throw new StorageError('The quota has been exceeded.');
+    };
+    const runner = await freshRunner();
+    await runner.start(TAB);
+    const run = await settled();
+    expect(run).toMatchObject({ status: 'error', next: PLAN.indexOf('referrals') });
+    expect(run?.message).toMatch(/could not store/);
+    expect(run?.errorDetail).toMatch(/quota/);
+    expect(world.stagingCleared).toBe(1);
+
+    await runner.resume(TAB);
+    expect((await settled())?.status).toBe('saving');
+    expect(world.orders).toBe(1);
   });
 
   it('stops on an unexpected error with what it was', async () => {
@@ -777,6 +794,44 @@ describe('a service worker that restarts', () => {
     runner = await freshRunner();
     await runner.recover('heartbeat');
     expect(stored()?.status).toBe('paused_session');
+  });
+
+  // A browser start runs both: the worker's own recovery as it loads, then onStartup's.
+  it('pauses once, and says so once, when the worker’s recovery and the start-up’s both find it running', async () => {
+    world.step.visits = () => {
+      throw new Error('stop here');
+    };
+    let runner = await freshRunner();
+    await runner.start(TAB);
+    await settled();
+    world.local.run = { ...stored()!, status: 'running', message: undefined, errorDetail: undefined };
+    world.sessionStore = {}; // a browser restart empties chrome.storage.session
+    world.notices = [];
+    world.ran = [];
+    vi.stubGlobal('chrome', fakeChrome());
+    runner = await freshRunner();
+    await Promise.all([runner.recover('heartbeat'), runner.recover('startup')]);
+    expect(stored()?.status).toBe('paused_session');
+    expect(world.notices).toEqual(['Export paused']);
+    expect(world.ran).toEqual([]);
+  });
+
+  // A worker that restarts as its heartbeat alarm fires gets two recoveries at once, with the session still there.
+  it('continues once when two recoveries find it running', async () => {
+    world.step.visits = () => {
+      throw new Error('stop here');
+    };
+    let runner = await freshRunner();
+    await runner.start(TAB);
+    await settled();
+    world.local.run = { ...stored()!, status: 'running', message: undefined, errorDetail: undefined };
+    delete world.step.visits;
+    world.ran = [];
+    runner = await freshRunner();
+    await Promise.all([runner.recover('heartbeat'), runner.recover('heartbeat')]);
+    expect((await settled())?.status).toBe('saving');
+    expect(world.ran).toEqual(collected(steps('visits')));
+    expect(world.downloads).toBe(1);
   });
 
   it('pauses a run it finds running, and Resume continues it from where it was', async () => {

@@ -89,10 +89,13 @@ interface StagedTotals {
 /** Files and bytes staged, for the popup. Loaded from the meta store once, then kept up to date by writes. */
 let totals: StagedTotals | null = null;
 
-/** Stages a file, and returns its SHA-256 (hex), which its meta records. */
-async function putFile(rel: string, bytes: Uint8Array, key?: string): Promise<string> {
+/**
+ * Stages a file, with its meta (which records its SHA-256) and, when `indexed`, its entry in the content index, in one
+ * transaction: a worker killed mid-write leaves all of them or none, never a document the index does not know.
+ */
+async function putFile(rel: string, bytes: Uint8Array, key?: string, indexed = false): Promise<void> {
   const meta: FileMeta = { rel, size: bytes.length, sha256: await sha256Hex(bytes) };
-  const tx = (await db()).transaction(['files', 'meta'], 'readwrite');
+  const tx = (await db()).transaction(indexed ? ['files', 'meta', 'shas'] : ['files', 'meta'], 'readwrite');
   const metaStore = tx.objectStore('meta');
   let prev: FileMeta | undefined;
   // The meta is put once the file it replaces has been read, in the same transaction: it keeps that one's key.
@@ -102,6 +105,7 @@ async function putFile(rel: string, bytes: Uint8Array, key?: string): Promise<st
     metaStore.put(k ? { ...meta, key: k } : meta);
   };
   tx.objectStore('files').put(bytes, rel);
+  if (indexed) tx.objectStore('shas').put(rel, meta.sha256);
   await done(tx);
   if (totals) {
     if (!prev) {
@@ -110,7 +114,6 @@ async function putFile(rel: string, bytes: Uint8Array, key?: string): Promise<st
     }
     totals.bytes += meta.size - (prev?.size ?? 0);
   }
-  return meta.sha256;
 }
 
 export async function listMeta(): Promise<FileMeta[]> {
@@ -194,12 +197,7 @@ export const stagingSink: Sink = {
     const bad = badPath(rel);
     if (bad) return { error: bad };
     const result = binResult(await getFile(rel), bytes, replace);
-    if (result === 'written' || result === 'updated') {
-      const sha = await putFile(rel, bytes, stagingKey(currentStep, currentPart));
-      const tx = (await db()).transaction('shas', 'readwrite');
-      tx.objectStore('shas').put(rel, sha);
-      await done(tx);
-    }
+    if (result === 'written' || result === 'updated') await putFile(rel, bytes, stagingKey(currentStep, currentPart), true);
     return { result };
   },
   async findBySha256(sha) {

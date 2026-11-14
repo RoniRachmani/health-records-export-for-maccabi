@@ -327,6 +327,23 @@ describe('session over fetch', () => {
     expect(r.status).toBe(403); // the collector decides what a 403 means; the session does not end on it
   });
 
+  it('never carries a request body across origins on a redirect, and still does within one', async () => {
+    const sent: { url: string; method: string; body?: string }[] = [];
+    const hop = (to: string) => new Response(null, { status: 307, headers: { location: to } });
+    const fake = (async (input: string | URL | Request, init: RequestInit = {}) => {
+      const url = String(input);
+      sent.push({ url, method: init.method || 'GET', body: init.body as string | undefined });
+      if (url === LOGIN_ORIGIN + '/infosec/auth') return hop('https://elsewhere.example/collect');
+      if (url === PORTAL_ORIGIN + '/a') return hop(PORTAL_ORIGIN + '/b');
+      return new Response('ok');
+    }) as typeof fetch;
+    const m = new MaccabiSession({ core, fetch: fake, sleep: async () => {} });
+    await expect(m.request(LOGIN_ORIGIN + '/infosec/auth', { method: 'POST', body: '{"password":"' + PASSWORD + '"}' })).rejects.toThrow(/would have sent the request body/);
+    expect(sent.map((c) => c.url)).toEqual([LOGIN_ORIGIN + '/infosec/auth']);
+    expect((await m.request(PORTAL_ORIGIN + '/a', { method: 'POST', body: 'x' })).finalUrl).toBe(PORTAL_ORIGIN + '/b');
+    expect(sent.at(-1)).toMatchObject({ url: PORTAL_ORIGIN + '/b', method: 'POST', body: 'x' });
+  });
+
   it('does not take a redirect to the login site before sign-in for an ended session', async () => {
     // The very first request of a sign-in bounces to the login page: that is the chain, not an ending.
     const site = fakeSite(fakeMaccabi().routes);

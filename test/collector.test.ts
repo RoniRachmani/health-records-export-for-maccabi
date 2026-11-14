@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canon, newCtx, sha256Hex, STEP_ORDER, type HttpResponse, type ProgressEvent } from '../src/core';
+import { canon, newCtx, runStep, sha256Hex, STEP_ORDER, type HttpResponse, type ProgressEvent } from '../src/core';
 import { bytesResp, danglingRefs, DICOM_ID, fakeMaccabi, fakeTransport, jsonResp, makeCollector, MemorySink, MID, PDF, pdfOf, PURCHASE_TABLE, runAll, win1255, type Route } from './fakes';
 
 describe('api()', () => {
@@ -688,16 +688,18 @@ describe('problems', () => {
 
   // The rule the whole run rests on: one bad record never ends an export.
   it('files a step that throws as a problem against it, and goes on to the next', async () => {
-    class BrokenSink extends MemorySink {
-      async putJson(rel: string, obj: Parameters<MemorySink['putJson']>[1]) {
-        if (rel === 'visit-summaries/list.json') throw new TypeError('disk full');
-        return super.putJson(rel, obj);
-      }
-    }
-    const { c } = makeCollector(fakeTransport(fakeMaccabi().routes), new BrokenSink());
+    // Anything a step does not expect: here, its first progress report throws. (A sink that fails is the one exception,
+    // and ends the run: see 'a sink that cannot write'.)
+    let thrown = false;
+    const progress = () => {
+      if (thrown) return;
+      thrown = true;
+      throw new TypeError('not what the step expected');
+    };
+    const { c } = makeCollector(fakeTransport(fakeMaccabi().routes), new MemorySink(), undefined, { progress });
     const s = await runAll(c, newCtx(), ['visits', 'letters']);
     expect(s.stoppedAt).toBeUndefined();
-    expect(s.problems).toEqual(['visits PROBLEM: disk full']);
+    expect(s.problems).toEqual(['visits PROBLEM: not what the step expected']);
     expect(c.log.some(([where]) => where.startsWith('letters/'))).toBe(true);
   });
 
@@ -772,5 +774,35 @@ describe('references between files', () => {
     await runAll(makeCollector(fakeTransport([broken, ...fakeMaccabi().routes]), sink).c, newCtx());
     expect([...sink.files.keys()].sort()).toEqual(before);
     expect(danglingRefs(sink)).toEqual([]);
+  });
+});
+
+describe('a sink that cannot write', () => {
+  /** Staging on a full disk: every file write fails, as IndexedDB's does, while a problem can still be filed. */
+  class FullSink extends MemorySink {
+    override async putJson(): Promise<never> {
+      throw new DOMException('The quota has been exceeded.', 'QuotaExceededError');
+    }
+  }
+
+  it('ends the step it is in, where a failed request would only be filed', async () => {
+    const { c, sink } = makeCollector(fakeTransport(fakeMaccabi().routes), new FullSink());
+    await expect(runStep(c, newCtx(), 'visits')).rejects.toMatchObject({ storageFailed: true, message: /STORAGE FAILED: The quota has been exceeded/ });
+    // Not a problem of some record, with the step going on to the next: nothing after it could be kept either.
+    expect((sink as MemorySink).problems).toEqual([]);
+  });
+
+  it('stops a run at its first step, so no later section is asked for', async () => {
+    const site = fakeMaccabi();
+    const { c } = makeCollector(fakeTransport(site.routes), new FullSink());
+    const { stoppedAt } = await runAll(c, newCtx());
+    expect(stoppedAt).toBe(STEP_ORDER[0]);
+    expect(site.calls.length).toBe(1);
+  });
+
+  it('leaves a path the sink refuses as that file’s problem', async () => {
+    const { c, sink } = makeCollector(fakeTransport([]));
+    expect(await c.save('../outside.json', {})).toBeUndefined();
+    expect((sink as MemorySink).problems).toMatchObject([{ where: '../outside.json', what: /bad path/ }]);
   });
 });
