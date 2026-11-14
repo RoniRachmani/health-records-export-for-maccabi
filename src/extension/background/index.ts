@@ -1,4 +1,5 @@
 import { errMessage } from '../../core';
+import { routeMessage } from '../shared/gate';
 import { MACCABI_ORIGIN, TERMS_EFFECTIVE, type Request, type StateReply } from '../shared/state';
 import { handleDev } from './dev';
 import { cancel, dismiss, EXPIRY, focusRunTab, loadRun, onDownloadChanged, recover, resume, retrySave, saveNow, showFile, start, UserError } from './runner';
@@ -71,11 +72,9 @@ async function handle(msg: Request & { tabId?: number }): Promise<unknown> {
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, reply) => {
-  if (!msg || msg.target === 'offscreen') return false;
-  // Only this extension's own pages (and, in the development build, its bridge content script).
-  if (sender.id !== chrome.runtime.id) return false;
-  const isDev = typeof msg.type === 'string' && msg.type.startsWith('dev:');
-  const work = isDev && handleDev ? handleDev(msg, sender) : isDev || sender.tab ? Promise.resolve({ error: 'not allowed' }) : handle(msg);
+  const route = routeMessage(msg, sender, chrome.runtime.id, !!handleDev);
+  if (route === 'ignore') return false;
+  const work = route === 'dev' && handleDev ? handleDev(msg, sender) : route === 'handle' ? handle(msg) : Promise.resolve({ error: 'not allowed' });
   work.then(reply, (e: unknown) => reply({ error: errMessage(e), user: e instanceof UserError }));
   return true;
 });
