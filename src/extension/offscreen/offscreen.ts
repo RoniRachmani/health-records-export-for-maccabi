@@ -1,4 +1,5 @@
 import { domHtmlParser } from '../../core';
+import { forOffscreen } from '../shared/gate';
 import type { OffscreenRequest } from '../shared/offscreenProtocol';
 import { getFile, listMeta } from '../shared/staging';
 import { zipChunks } from '../shared/zip';
@@ -13,9 +14,8 @@ async function zipStaged(root: string): Promise<{ url: string; bytes: number; fi
 }
 
 chrome.runtime.onMessage.addListener((msg: OffscreenRequest & { target?: string }, sender, reply) => {
-  if (msg.target !== 'offscreen') return false;
   // Only the service worker asks: never a tab, which is what the development build's bridge content script is.
-  if (sender.id !== chrome.runtime.id || sender.tab) return false;
+  if (!forOffscreen(msg, sender, chrome.runtime.id)) return false;
   (async () => {
     switch (msg.type) {
       case 'purchaseTable':

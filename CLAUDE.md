@@ -193,7 +193,9 @@ renamed is then a `kind: 'shape'` problem (the site may have changed), not a sec
   skill); only `settings.local.json` in it is ignored. Never delete the folder or anything in it to clean up: a
   temporary preview server goes into `launch.json`, and `git restore .claude/launch.json` takes it out again.
 - **Dev bridge**: `__DEV_BRIDGE__` (a Vite `define`) and the `mode === 'development'` branch in
-  `manifest.config.ts` keep `background/dev.ts` and the content script out of the store build.
+  `manifest.config.ts` keep `background/dev.ts` and the content script out of the store build. Which messages the
+  service worker and the offscreen document answer is decided in `shared/gate.ts` (`routeMessage`, `forOffscreen`),
+  the extension's one access check, tested apart from `chrome.*`: change it there, never in the listeners.
 - **The product's name** is in `shared/name.ts` in its three forms (the store's, the everyday one, the short one): code
   imports it, and HTML, Markdown and the scripts spell it out. `repoRules.test.ts` holds every spelling in the repo to
   one of them, so a rename starts there and the test lists the rest. The YouTube channel keeps the name it was opened with.
