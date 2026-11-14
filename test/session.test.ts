@@ -398,10 +398,22 @@ describe('redaction (scripts/redact.mjs, what discover-login prints through)', (
     expect(out).toContain('"password":"<PASSWORD>"');
     expect(out).toContain('"id":"<ID>"');
     // In a query string, the ID and the password are URL-encoded.
-    expect(redact('/infosec/otp/validate?otp=123456&id=0-12345678&p=ab%22cd%5C12')).toBe('/infosec/otp/validate?otp=123456&id=0-<ID>&p=<PASSWORD>');
+    expect(redact('/infosec/otp/validate?otp=123456&id=0-12345678&p=ab%22cd%5C12')).toBe('/infosec/otp/validate?otp=<OTP>&id=<ID>&p=<PASSWORD>');
+    expect(redact('?otp=123456&_=1700000000000')).toBe('?otp=<OTP>&_=1700000000000');
     // A form body uses + for a space.
     expect(redactor({ username: '12345678', password: 'two words' })('p=two+words&u=12345678')).toBe('p=<PASSWORD>&u=<ID>');
     expect(redact('Bearer ' + 'h'.repeat(12) + '.' + 'x'.repeat(20) + '.' + 'y'.repeat(20))).toBe('Bearer <jwt>');
+  });
+
+  // The SAML response is base64, and URL-encoding breaks it at every + and / into runs too short to look like a token.
+  it('blanks the SAML handoff a form body carries, and any long value, whatever breaks it up', () => {
+    const redact = redactor({ username: '12345678', password: 'pw' });
+    const saml = Array.from({ length: 30 }, (_, i) => 'PHNhbWxwOlJlc3BvbnNl' + i).join('%2B') + '%3D%3D';
+    const out = redact('RelayState=' + 'r'.repeat(20) + '%2Fhome&SAMLResponse=' + saml + '&lang=he');
+    expect(out).toBe('RelayState=<RELAYSTATE>&SAMLResponse=<SAMLRESPONSE>&lang=he');
+    expect(redact('state=' + 'abcdefghij%2F'.repeat(8) + '&n=1')).toBe('state=<104 characters>&n=1');
+    // Not a form: a sentence with an equals sign in it is left to the patterns.
+    expect(redact('status = ok & done')).toBe('status = ok & done');
   });
 
   it('leaves text alone when a credential is empty, instead of putting the label between every character', () => {
