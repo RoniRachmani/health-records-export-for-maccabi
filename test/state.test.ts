@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { CancelledError, RateLimitedError, SessionEndedError, STEP_ORDER } from '../src/core';
+import { CancelledError, RateLimitedError, SessionEndedError, STEP_ORDER, StorageError } from '../src/core';
 import {
-  abandoned, alignToPlan, canMove, FILE_LAYOUT, isDriven, isUnderway, LABELS, lateFileNotice, MAX_RECONNECTS, nextStatus, PLAN, resumeIndex, sameLayout, savingOutcome, SESSION_ENDED_MESSAGE, STAGING_TTL_MS, stepFailure, WEIGHTS,
+  abandoned, alignToPlan, canMove, FILE_LAYOUT, isDriven, isUnderway, LABELS, lateFileNotice, MAX_RECONNECTS, nextStatus, PLAN, resumeIndex, sameLayout, savingOutcome, SESSION_ENDED_MESSAGE, STAGING_TTL_MS, stepFailure, STORAGE_FAILED_MESSAGE, WEIGHTS,
   type RunStatus,
 } from '../src/extension/shared/state';
 
@@ -180,6 +180,13 @@ describe('stepFailure', () => {
     const f = stepFailure(new RateLimitedError(60), at());
     expect(f).toMatchObject({ action: 'stop' });
     expect(f.action === 'stop' && f.detail).toBeFalsy();
+  });
+
+  it('stops when the files cannot be stored, saying so and keeping the browser’s own words', () => {
+    expect(stepFailure(new StorageError('disk full'), at())).toEqual({ action: 'stop', message: STORAGE_FAILED_MESSAGE, detail: expect.stringMatching(/disk full/) });
+    // The runner's own writes (the root files) throw IndexedDB's error as it is.
+    const quota = Object.assign(new Error('The quota has been exceeded.'), { name: 'QuotaExceededError' });
+    expect(stepFailure(quota, at())).toMatchObject({ action: 'stop', message: STORAGE_FAILED_MESSAGE });
   });
 
   it('stops on anything else, naming the step and keeping the error for the details', () => {

@@ -1,4 +1,4 @@
-import type { Ctx, Deps, DocRef, HttpResponse, Json, Problem, SaveReply, SaveResult, Session } from './types';
+import type { Ctx, Deps, DocRef, HttpResponse, Json, Problem, SaveReply, SaveResult, Session, Sink } from './types';
 import { charset, isPdf, mimeType, retryAfterMs, sha256Hex } from './util';
 
 export const PACE_MS = 300;
@@ -75,9 +75,42 @@ export class RateLimitedError extends Error {
   }
 }
 
+/**
+ * The sink could not read or write: the disk is full, or the browser's storage failed. Nothing a step does next can be
+ * kept either, so it ends the run where it is. Filed as a problem instead, each record after it would fail the same
+ * way and the export would come out as a list of failures with nothing said about why.
+ */
+export class StorageError extends Error {
+  readonly storageFailed = true;
+  constructor(msg: string) {
+    super('STORAGE FAILED: ' + msg + ' -- the export stops here; finished files are kept');
+  }
+}
+
 /** Errors that end a step instead of being recorded as a problem inside it. */
 export function isControl(e: unknown): boolean {
-  return !!e && typeof e === 'object' && ('sessionEnded' in e || 'cancelled' in e || 'rateLimited' in e);
+  return !!e && typeof e === 'object' && ('sessionEnded' in e || 'cancelled' in e || 'rateLimited' in e || 'storageFailed' in e);
+}
+
+/** The sink with every failure of its own thrown as a StorageError. What it answers ({ error } for a bad path) is not one. */
+function guarded(sink: Sink): Sink {
+  const guard = <A extends unknown[], R>(op: (...args: A) => Promise<R>) => async (...args: A): Promise<R> => {
+    try {
+      return await op(...args);
+    } catch (e) {
+      throw isControl(e) ? e : new StorageError(errMessage(e));
+    }
+  };
+  return {
+    exists: guard((rel) => sink.exists(rel)),
+    readJson: guard((rel) => sink.readJson(rel)),
+    putJson: guard((rel, obj) => sink.putJson(rel, obj)),
+    putBin: guard((rel, bytes, replace) => sink.putBin(rel, bytes, replace)),
+    problem: guard((p) => sink.problem(p)),
+    findBySha256: guard((sha) => sink.findBySha256(sha)),
+    putAlias: guard((rel, existing) => sink.putAlias(rel, existing)),
+    aliasOf: guard((rel) => sink.aliasOf(rel)),
+  };
 }
 
 export function errMessage(e: unknown): string {
@@ -118,7 +151,11 @@ export class Collector {
   /** Problems filed so far, so a step can tell whether a record went through without one. */
   problemCount = 0;
 
-  constructor(readonly deps: Deps, public session: Session) {}
+  readonly deps: Deps;
+
+  constructor(deps: Deps, public session: Session) {
+    this.deps = { ...deps, sink: guarded(deps.sink) };
+  }
 
   now(): number {
     return this.deps.clock.now();

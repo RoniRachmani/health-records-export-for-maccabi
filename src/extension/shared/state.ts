@@ -339,6 +339,9 @@ export const OFFLINE_MESSAGE =
 export const SESSION_ENDED_MESSAGE =
   'Your Maccabi Online session ended. Log in again, then click the extension’s icon on the Maccabi Online tab and press Resume. Files collected so far are kept.';
 
+export const STORAGE_FAILED_MESSAGE =
+  'Chrome could not store the export’s files on this computer, so the export stopped. The disk may be full: free some space, then try again. Files collected so far are kept.';
+
 /** The "Export saved" notification's last sentence, when the export has no fresh medical file. */
 export function lateFileNotice(late: NonNullable<RunState['medicalFileLate']>): string {
   if (!late.refused) return 'When Maccabi texts you, export again.';
@@ -366,7 +369,7 @@ export function stepFailure(
   e: unknown,
   { step, cancelRequested, reconnects }: { step: PlanStep; cancelRequested: boolean; reconnects: number },
 ): StepFailure {
-  const flags = (e && typeof e === 'object' ? e : {}) as { cancelled?: boolean; sessionEnded?: boolean; rateLimited?: boolean };
+  const flags = (e && typeof e === 'object' ? e : {}) as { cancelled?: boolean; sessionEnded?: boolean; rateLimited?: boolean; storageFailed?: boolean; name?: string };
   if (cancelRequested || flags.cancelled) return { action: 'cancel' };
   // The member is often still logged in: a token is good for about 10 h (measured 2026-09-18), so a run never
   // outlives one and what ended is the site's session. Do what Resume does, then try again.
@@ -376,6 +379,10 @@ export function stepFailure(
       action: 'stop',
       message: 'Maccabi Online asked the extension to slow down, so the export stopped. Files collected so far are kept: wait a few minutes, then press “Try again”.',
     };
+  }
+  // The collector's sink, or the runner's own writes to staging (the root files), which throw the browser's error as it is.
+  if (flags.storageFailed || flags.name === 'QuotaExceededError') {
+    return { action: 'stop', message: STORAGE_FAILED_MESSAGE, detail: errMessage(e) };
   }
   return {
     action: 'stop',

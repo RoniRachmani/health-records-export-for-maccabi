@@ -48,7 +48,13 @@ function move(run: RunState, event: RunEvent): void {
 export async function loadRun(): Promise<RunState | null> {
   // Read once per worker, and shared: at a browser start the start-up and the heartbeat recovery both get here at once.
   await (loaded ??= (async () => {
-    state = ((await chrome.storage.local.get('run')).run as RunState | undefined) ?? null;
+    try {
+      state = ((await chrome.storage.local.get('run')).run as RunState | undefined) ?? null;
+    } catch (e) {
+      // Not kept as this worker's answer: the next caller reads again.
+      loaded = null;
+      throw e;
+    }
     // A run stored before this field existed has no name to check against, and keeps its index.
     if (state && (!alignToPlan(state) || !sameLayout(state))) {
       state.planMismatch = true;
@@ -226,8 +232,21 @@ export async function dismiss(): Promise<void> {
   if (run && (run.status === 'done' || run.status === 'error')) await discard();
 }
 
-/** Called on service-worker start-up and by the heartbeat: continue a run this worker instance isn't driving. */
-export async function recover(reason: 'startup' | 'heartbeat'): Promise<void> {
+/** The recoveries asked for so far, one after another. */
+let recovering: Promise<void> = Promise.resolve();
+
+/**
+ * Called on service-worker start-up and by the heartbeat: continue a run this worker instance isn't driving. One at a
+ * time: a browser start asks twice at once (the worker's own, as it loads, and onStartup's), and each decides from the
+ * run as the one before left it, so the member is told of a pause once.
+ */
+export function recover(reason: 'startup' | 'heartbeat'): Promise<void> {
+  const mine = recovering.then(() => recoverOnce(reason));
+  recovering = mine.catch(() => undefined);
+  return mine;
+}
+
+async function recoverOnce(reason: 'startup' | 'heartbeat'): Promise<void> {
   const run = await loadRun();
   if (!run || active) return;
   if (run.cancelling) {
