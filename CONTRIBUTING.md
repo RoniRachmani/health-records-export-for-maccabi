@@ -23,7 +23,7 @@ Never include real medical records, account details, tokens, exports or HAR file
 
 ## Setup
 
-You need Node.js 22 or newer and Chrome.
+You need Node.js 22.12 or newer (what Vite and Vitest ask for; CI runs 24) and Chrome.
 
 ```sh
 npm install
