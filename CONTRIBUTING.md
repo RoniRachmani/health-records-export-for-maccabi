@@ -310,6 +310,7 @@ npm run drift                                         # the check, into .cache/d
 npm run drift -- --notify                             # the same, and a macOS notification with the outcome
 npm run drift -- --steps visits,referrals             # only those steps, to try it out; --no-scan skips the scan
 npm run drift -- --install --day tue --time 03:30     # every week, with --notify, from this checkout (launchd)
+npm run drift -- --install --day daily --time 03:30   # the same, every day
 npm run drift -- --install --repo DIR --update ...    # the same for a checkout kept only for the check (below)
 npm run drift -- --uninstall                          # turns that off
 ```
@@ -348,9 +349,9 @@ The schedule is a launchd agent, `~/Library/LaunchAgents/com.ronirachmani.hrem.d
 `scripts/drift-check.mjs` in the checkout it was installed from, with its output in `.cache/drift/launchd.log`.
 launchd runs it in your login session, which is what lets it show a notification, and runs a week's check that
 the Mac slept through once it wakes. A check whose time passed while the Mac was shut down it does not run, so the
-agent also starts at login (`RunAtLoad`), with `--due tue@03:30`: `scripts/drift-due.mjs` lets a run go ahead only
-when none has begun since the latest weekly time (kept in `.cache/drift/last-run.json`), so the first login after a
-missed week runs it once and every other login does nothing. A run counts from when it begins, so one Maccabi broke
+agent also starts at login (`RunAtLoad`), with `--due tue@03:30` (or `daily@03:30`): `scripts/drift-due.mjs` lets a
+run go ahead only when none has begun since the latest scheduled time (kept in `.cache/drift/last-run.json`), so the
+first login after a missed one runs it once and every other login does nothing. A run counts from when it begins, so one Maccabi broke
 off is not tried again at each login, since each sign-in ends your other sessions. Installing starts it too, under
 the same rule. To run it now whatever the time, run the agent's command without `--due`, or `npm run drift`.
 (cron does neither, and a Claude scheduled task would need the app open and put

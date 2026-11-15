@@ -255,6 +255,19 @@ describe('when a check is due', () => {
     expect(lastSlot(at('2026-11-15T12:00:00'), tue)).toEqual(at('2026-11-10T03:30:00'));
   });
 
+  it('keeps a daily time too, every day', () => {
+    const daily = parseSchedule('daily', '03:30');
+    expect(lastSlot(at('2026-11-15T12:00:00'), daily)).toEqual(at('2026-11-15T03:30:00'));
+    expect(lastSlot(at('2026-11-15T03:29:30'), daily)).toEqual(at('2026-11-15T03:30:00'));
+    expect(lastSlot(at('2026-11-15T02:00:00'), daily)).toEqual(at('2026-11-14T03:30:00'));
+    const root = mkdtempSync(join(tmpdir(), 'drift-due-'));
+    const args = ['--due', 'daily@03:30'];
+    expect(whenDue(args, root, at('2026-11-15T09:00:00')).run).toBe(true);
+    expect(whenDue(args, root, at('2026-11-15T20:00:00')).run).toBe(false);
+    expect(whenDue(args, root, at('2026-11-16T03:30:00')).run).toBe(true);
+    rmSync(root, { recursive: true, force: true });
+  });
+
   it('runs a login after a missed week once, and not at the logins after it', () => {
     const root = mkdtempSync(join(tmpdir(), 'drift-due-'));
     const args = ['--notify', '--due', 'tue@03:30'];
@@ -284,6 +297,13 @@ describe('the weekly schedule', () => {
     const plist = launchAgent({ ...o, day: 'Tuesday', time: '03:30' });
     expect(plist).toContain('<string>--notify</string><string>--due</string><string>tue@03:30</string></array>');
     expect(plist).toContain('<key>RunAtLoad</key><true/>');
+  });
+
+  it('runs every day with --day daily: no Weekday key, and daily@ for --due', () => {
+    const plist = launchAgent({ ...o, day: 'daily', time: '03:30' });
+    expect(plist).toContain('<key>StartCalendarInterval</key>\n  <dict><key>Hour</key><integer>3</integer><key>Minute</key><integer>30</integer></dict>');
+    expect(plist).not.toContain('Weekday');
+    expect(plist).toContain('<string>--due</string><string>daily@03:30</string></array>');
   });
 
   it('puts the folder of the node it runs first on its PATH, once, so npm finds that node', () => {

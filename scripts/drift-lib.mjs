@@ -9,7 +9,7 @@
 // flags (featureFlags), which are the site's settings and not the member's records: their names and true or false.
 import { createHash } from 'node:crypto';
 import { dirname } from 'node:path';
-import { parseSchedule } from './drift-due.mjs';
+import { dueArg, parseSchedule } from './drift-due.mjs';
 import { candidates, chunkFiles, chunkUrl, coverage, knownFrom, mappedRequests } from '../tools/endpoint-scan/endpoint-scan-lib.mjs';
 
 /** @import { Problem, SaveReply, Session, Sink, Transport } from '../src/core' */
@@ -504,7 +504,7 @@ export function safeToWrite(text) {
 export const LABEL = 'com.ronirachmani.hrem.drift';
 
 /**
- * The launchd agent that runs the check weekly: `script` is drift-check.mjs, or drift-update.mjs for a checkout kept only
+ * The launchd agent that runs the check weekly, or daily with `day: 'daily'`: `script` is drift-check.mjs, or drift-update.mjs for a checkout kept only
  * for the check. launchd runs a job missed while the Mac slept once it wakes, but not one missed while it was shut
  * down: so it also starts the job at login (RunAtLoad), and `--due` (drift-due.mjs) lets that run only when this
  * week's check has not begun. The PATH it gets starts with the folder
@@ -513,8 +513,9 @@ export const LABEL = 'com.ronirachmani.hrem.drift';
  */
 export function launchAgent(o) {
   const path = [dirname(o.node), ...o.path.split(':').filter((p) => p && p !== dirname(o.node))].join(':');
-  const { weekday: day, hour, minute } = parseSchedule(o.day, o.time);
-  const due = o.day.slice(0, 3).toLowerCase() + '@' + o.time;
+  const { weekday, hour, minute } = parseSchedule(o.day, o.time);
+  const due = dueArg(o.day, o.time);
+  const day = weekday === null ? '' : `<key>Weekday</key><integer>${weekday}</integer>`;
   const esc = (/** @type {string} */ s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const str = (/** @type {string} */ s) => `<string>${esc(s)}</string>`;
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -528,7 +529,7 @@ export function launchAgent(o) {
   <key>EnvironmentVariables</key>
   <dict><key>PATH</key>${str(path)}</dict>
   <key>StartCalendarInterval</key>
-  <dict><key>Weekday</key><integer>${day}</integer><key>Hour</key><integer>${hour}</integer><key>Minute</key><integer>${minute}</integer></dict>
+  <dict>${day}<key>Hour</key><integer>${hour}</integer><key>Minute</key><integer>${minute}</integer></dict>
   <key>RunAtLoad</key><true/>
   <key>StandardOutPath</key>${str(o.log)}
   <key>StandardErrorPath</key>${str(o.log)}

@@ -9,7 +9,7 @@
 //   npm run drift -- --notify              the same, and a macOS notification with the outcome
 //   npm run drift -- --steps visits,referrals   only those steps (and the steps they read from), to try it out
 //   npm run drift -- --no-scan             without the endpoint scan
-//   npm run drift -- --install --day tue --time 03:30   runs it weekly, with --notify, from this checkout (launchd), and
+//   npm run drift -- --install --day tue --time 03:30   runs it weekly (--day daily: every day), with --notify, from this checkout (launchd), and
 //                                          at login when that week's run was missed (drift-due.mjs);
 //                                          --repo DIR installs it for another checkout; --update with it runs
 //                                          scripts/drift-update.mjs instead, which first brings that checkout to
@@ -74,12 +74,12 @@ function schedule() {
       execFileSync('launchctl', ['bootout', `gui/${process.getuid?.()}`, PLIST], { stdio: 'ignore' });
     } catch { /* not loaded */ }
     rmSync(PLIST, { force: true });
-    console.log('The weekly drift check is off (' + PLIST + ' removed).');
+    console.log('The scheduled drift check is off (' + PLIST + ' removed).');
     return;
   }
   const day = option('--day');
   const time = option('--time');
-  if (!day || !time) throw new Error('--install takes a day and a time: --install --day tue --time 03:30');
+  if (!day || !time) throw new Error('--install takes a day (or daily) and a time: --install --day tue --time 03:30');
   // The checkout the agent runs in: this one, or one that lasts longer than a worktree (--repo, the main checkout).
   const repo = resolve(option('--repo') || root);
   if (!existsSync(join(repo, 'package.json'))) throw new Error('--repo takes a checkout of this repository: ' + repo + ' has no package.json.');
@@ -95,7 +95,8 @@ function schedule() {
   } catch { /* not loaded yet */ }
   writeFileSync(PLIST, plist);
   execFileSync('launchctl', ['bootstrap', `gui/${process.getuid?.()}`, PLIST]);
-  console.log(`The drift check runs every ${day} at ${time} from ${repo} (and at login when that week's run was missed)` +
+  const every = day.toLowerCase() === 'daily' ? 'every day' : 'every ' + day;
+  console.log(`The drift check runs ${every} at ${time} from ${repo} (and at login when the last scheduled run was missed)` +
     (flag('--update') ? ', bringing it to GitHub\'s main first.' : '.'));
   if (!existsSync(join(repo, 'scripts', 'drift-check.mjs'))) console.log('That checkout has no scripts/drift-check.mjs yet: the runs fail, in the log, until it does.');
   console.log('Its output goes to ' + join(out, 'launchd.log') + '; turn it off with npm run drift -- --uninstall.');
