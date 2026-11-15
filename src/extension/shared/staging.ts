@@ -53,11 +53,30 @@ function db(): Promise<IDBDatabase> {
         add('shas'); // sha256 -> rel
         add('aliases'); // rel -> the rel holding its bytes
       };
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
+      req.onsuccess = () => {
+        const d = req.result;
+        // A connection the browser closes under us (its storage was cleared, the disk went away) or that another
+        // version of the extension needs closed is of no more use: the next call opens a new one, where keeping it
+        // would fail every write until the service worker happened to restart.
+        d.onclose = forget;
+        d.onversionchange = () => {
+          d.close();
+          forget();
+        };
+        resolve(d);
+      };
+      req.onerror = () => {
+        forget(); // not kept as the answer: the next call tries again
+        reject(req.error);
+      };
     });
   }
   return dbPromise;
+}
+
+function forget(): void {
+  dbPromise = null;
+  totals = null; // counted from the store again, which may not hold what it did
 }
 
 function done(tx: IDBTransaction): Promise<void> {

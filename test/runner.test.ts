@@ -5,7 +5,7 @@
 // What is real is runner.ts itself, PLAN and its resume rules (shared/state.ts), and core's errors and order rules.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FILE_LAYOUT, LAST_ORDER, PLAN, type LastOrder, type PlanStep, type RunState } from '../src/extension/shared/state';
-import { earlierFileUntil, israelToday, RateLimitedError, REFUSAL_RETRY_MS, SessionEndedError, StorageError, type Collector, type EarlierOrder, type OrderResult, type Session } from '../src/core';
+import { earlierFileUntil, israelToday, BlockedError, RateLimitedError, REFUSAL_RETRY_MS, SessionEndedError, StorageError, type Collector, type EarlierOrder, type OrderResult, type Session } from '../src/core';
 
 const MEMBER: Session = { mid: '123456789', jwt: 'jwt', gender: 'F' };
 const TAB = 7;
@@ -363,6 +363,20 @@ describe('a run that cannot go on', () => {
     expect(run).toMatchObject({ status: 'error', next: PLAN.indexOf('referrals') });
     expect(run?.message).toMatch(/slow down/);
     expect(world.ran.at(-1)).toBe('referrals');
+    expect(world.stagingCleared).toBe(1);
+  });
+
+  it('stops when Maccabi refuses the network, without reconnecting, and keeps what it has', async () => {
+    world.step.referrals = () => {
+      throw new BlockedError(403);
+    };
+    const runner = await freshRunner();
+    await runner.start(TAB);
+    const run = await settled();
+    expect(run).toMatchObject({ status: 'error', next: PLAN.indexOf('referrals') });
+    expect(run?.message).toMatch(/refusing this network/);
+    // Run once: a reconnect would reload the page into the block and ask again.
+    expect(world.ran.filter((s) => s === 'referrals')).toHaveLength(1);
     expect(world.stagingCleared).toBe(1);
   });
 

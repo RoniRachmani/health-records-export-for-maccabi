@@ -806,3 +806,38 @@ describe('a sink that cannot write', () => {
     expect((sink as MemorySink).problems).toMatchObject([{ where: '../outside.json', what: /bad path/ }]);
   });
 });
+
+describe('a network Maccabi refuses', () => {
+  const page = (status = 403): HttpResponse => ({ status, redirected: false, contentType: 'text/html; charset=utf-8', bytes: new TextEncoder().encode('<html>Forbidden</html>') });
+
+  it('stops the run at the second refusal in a row, with no third request', async () => {
+    let calls = 0;
+    const { c } = makeCollector(fakeTransport([() => (calls++, page())]));
+    expect((await c.api('GET', 'X/v1')).status).toBe(403);
+    await expect(c.fetchBin('/sonline/x.pdf')).rejects.toMatchObject({ blocked: true, message: /BLOCKED/ });
+    expect(calls).toBe(2);
+  });
+
+  it('ends the run at the step that meets the second refusal, so the sections after it ask nothing', async () => {
+    let calls = 0;
+    const { c } = makeCollector(fakeTransport([() => (calls++, page())]));
+    // Visits gives up on its refused list after one request; referrals' first request is the second refusal.
+    const { stoppedAt } = await runAll(c, newCtx(), ['visits', 'referrals', 'approvals', 'letters']);
+    expect(stoppedAt).toBe('referrals');
+    expect(calls).toBe(2);
+  });
+
+  it('leaves one refused document, or a refusal the API answers itself, to that record', async () => {
+    let n = 0;
+    const { c } = makeCollector(fakeTransport([() => (++n % 2 ? page() : jsonResp({ ok: true }))]));
+    for (let i = 0; i < 6; i++) await c.api('GET', 'X/v1'); // refused, answered, refused, ... never two in a row
+    const json = makeCollector(fakeTransport([() => jsonResp({ message: 'no' }, 403)])).c;
+    for (let i = 0; i < 4; i++) expect((await json.api('GET', 'X/v1')).status).toBe(403);
+  });
+
+  it('counts the legacy pages’ refusals too', async () => {
+    const { c } = makeCollector(fakeTransport([() => page()]));
+    await c.legacy('/online/a', 'POST', {});
+    await expect(c.legacy('/online/b', 'POST', {})).rejects.toMatchObject({ blocked: true });
+  });
+});

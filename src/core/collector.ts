@@ -76,6 +76,26 @@ export class RateLimitedError extends Error {
 }
 
 /**
+ * Maccabi's gateway is refusing this network's address: its own *403 Forbidden* web page, twice in a row. A block
+ * refuses every request, so sending the rest of the run would only knock on it ~250 times more, which can prolong it.
+ * One refused file is not a block: the site can refuse a single document, and that stays the document's problem.
+ */
+export class BlockedError extends Error {
+  readonly blocked = true;
+  constructor(status: number) {
+    super('BLOCKED: Maccabi Online answered HTTP ' + status + ' with its own web page to two requests in a row -- the export stops here; finished files are kept');
+  }
+}
+
+/** How many refusals in a row, each Maccabi's own web page, make a block. */
+const BLOCKED_AFTER = 2;
+
+/** A refusal as the gateway sends it: 403 with a web page, where the API and the documents answer otherwise. */
+function gatewayRefusal(r: HttpResponse): boolean {
+  return r.status === 403 && /html/i.test(r.contentType || '');
+}
+
+/**
  * The sink could not read or write: the disk is full, or the browser's storage failed. Nothing a step does next can be
  * kept either, so it ends the run where it is. Filed as a problem instead, each record after it would fail the same
  * way and the export would come out as a list of failures with nothing said about why.
@@ -89,7 +109,7 @@ export class StorageError extends Error {
 
 /** Errors that end a step instead of being recorded as a problem inside it. */
 export function isControl(e: unknown): boolean {
-  return !!e && typeof e === 'object' && ('sessionEnded' in e || 'cancelled' in e || 'rateLimited' in e || 'storageFailed' in e);
+  return !!e && typeof e === 'object' && ('sessionEnded' in e || 'cancelled' in e || 'rateLimited' in e || 'storageFailed' in e || 'blocked' in e);
 }
 
 /** The sink with every failure of its own thrown as a StorageError. What it answers ({ error } for a bad path) is not one. */
@@ -150,6 +170,8 @@ export class Collector {
   log: [string, string][] = [];
   /** Problems filed so far, so a step can tell whether a record went through without one. */
   problemCount = 0;
+  /** Gateway refusals in a row (gatewayRefusal); any other answer starts the count again. */
+  private refusals = 0;
 
   readonly deps: Deps;
 
@@ -171,6 +193,12 @@ export class Collector {
 
   private checkStop(): void {
     if (this.deps.shouldStop?.()) throw new CancelledError();
+  }
+
+  /** Counts a gateway refusal, and stops the run at the second in a row. */
+  private checkBlocked(r: HttpResponse): void {
+    this.refusals = gatewayRefusal(r) ? this.refusals + 1 : 0;
+    if (this.refusals >= BLOCKED_AFTER) throw new BlockedError(r.status);
   }
 
   // ---- sink -----------------------------------------------------------
@@ -277,6 +305,7 @@ export class Collector {
         if (await this.again(tries)) continue;
         throw new SessionEndedError('request failed (' + errMessage(e) + ')');
       }
+      this.checkBlocked(r);
       if (r.redirected || r.status === 401) throw new SessionEndedError('HTTP ' + (r.status || 'redirect to login'));
       // A 429 spends one of the tries, so the last one stops the run instead of waiting again.
       if (r.status === 429) {
@@ -379,6 +408,7 @@ export class Collector {
       }
       const out = signedOut(r);
       if (out) throw new SessionEndedError(out);
+      this.checkBlocked(r);
       if (r.status === 401 && !headers) throw new SessionEndedError('HTTP 401');
       if (r.tooLarge) {
         await this.sleep(PACE_MS);
@@ -452,6 +482,7 @@ export class Collector {
     const r = await this.deps.transport.fetch({ url, method, headers, body });
     const out = signedOut(r);
     if (out) throw new SessionEndedError(out);
+    this.checkBlocked(r);
     return r;
   }
 
