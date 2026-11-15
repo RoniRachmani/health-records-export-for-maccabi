@@ -79,7 +79,10 @@ starts sooner; the member gets an *Export deleted* notification.
 A request that fails inside a step is filed as a problem under that step (and cleared when the step runs again), with
 the member id written as `{mid}`. A file that cannot be staged is not one of those: when the sink itself fails (a full
 disk, IndexedDB giving up), every record after it would fail the same way, so the collector throws a `StorageError`,
-the run stops where it is with what it has, and the popup says the disk may be full; Try again goes on from that step. Every section writes its folder whenever the site answers, and files a problem when
+the run stops where it is with what it has, and the popup says the disk may be full; Try again goes on from that step.
+The same goes for a network Maccabi refuses: two answers in a row that are the gateway's own *403 Forbidden* web page
+stop the run (`BlockedError`) instead of sending the rest of it at the block, and it does not reconnect, which would
+reload the page into it. One refused document is still that document's problem. Every section writes its folder whenever the site answers, and files a problem when
 it doesn't, so when the ZIP is written the problems become `export-errors.json`, each put against the folder it is
 about (`STEP_FOLDERS` in `src/extension/shared/readme.ts`), and the export's `README.md` says of each missing folder
 whether it failed or had nothing on record. A section reads the list it collects from with `Collector.listIn`, which

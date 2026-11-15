@@ -120,7 +120,7 @@ Then load the `dist/` folder the same way.
 |---|---|
 | **Export paused** | Your session ended, and the extension couldn't reconnect by itself. Log in to Maccabi Online again, click the icon on that tab and press **Resume**. Also shown after Chrome restarts mid-export. |
 | **Waiting for the Maccabi Online tab** | Bring the tab back to the front. The export continues on its own. |
-| **Export stopped** | Press **Try again** on the Maccabi Online tab. It continues from the step that failed. If it says Chrome could not store the files, the disk is probably full: free some space first. |
+| **Export stopped** | Press **Try again** on the Maccabi Online tab. It continues from the step that failed. If it says Chrome could not store the files, the disk is probably full: free some space first. If it says Maccabi Online is refusing this network, wait until the site opens in a normal tab (a block has lifted within a day). |
 | **The ZIP was not saved** | Press **Save again**. Also shown when Chrome closed while the ZIP was downloading. |
 
 Resume refuses to continue if a different member is logged in. **Cancel export** ends the export and deletes the files

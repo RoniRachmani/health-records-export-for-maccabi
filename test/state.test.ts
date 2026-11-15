@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { CancelledError, RateLimitedError, SessionEndedError, STEP_ORDER, StorageError } from '../src/core';
+import { BlockedError, CancelledError, RateLimitedError, SessionEndedError, STEP_ORDER, StorageError } from '../src/core';
 import {
-  abandoned, alignToPlan, canMove, FILE_LAYOUT, isDriven, isUnderway, LABELS, lateFileNotice, MAX_RECONNECTS, nextStatus, PLAN, resumeIndex, sameLayout, savingOutcome, SESSION_ENDED_MESSAGE, STAGING_TTL_MS, stepFailure, STORAGE_FAILED_MESSAGE, WEIGHTS,
+  abandoned, alignToPlan, canMove, FILE_LAYOUT, isDriven, isUnderway, LABELS, lateFileNotice, MAX_RECONNECTS, nextStatus, PLAN, resumeIndex, sameLayout, savingOutcome, BLOCKED_MESSAGE, SESSION_ENDED_MESSAGE, STAGING_TTL_MS, stepFailure, STORAGE_FAILED_MESSAGE, WEIGHTS,
   type RunStatus,
 } from '../src/extension/shared/state';
 
@@ -180,6 +180,10 @@ describe('stepFailure', () => {
     const f = stepFailure(new RateLimitedError(60), at());
     expect(f).toMatchObject({ action: 'stop' });
     expect(f.action === 'stop' && f.detail).toBeFalsy();
+  });
+
+  it('stops when Maccabi refuses the network, rather than reconnecting into the block', () => {
+    expect(stepFailure(new BlockedError(403), at())).toMatchObject({ action: 'stop', message: BLOCKED_MESSAGE, detail: expect.stringMatching(/HTTP 403/) });
   });
 
   it('stops when the files cannot be stored, saying so and keeping the browser’s own words', () => {

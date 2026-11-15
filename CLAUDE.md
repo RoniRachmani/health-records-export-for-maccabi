@@ -146,13 +146,15 @@ comes back to for `STAGING_TTL_MS` (7 days) is discarded with its staging (`aban
 
 ### Errors
 
-`SessionEndedError`, `CancelledError`, `RateLimitedError` and `StorageError` are *control* errors (`isControl`): they
+`SessionEndedError`, `CancelledError`, `RateLimitedError`, `StorageError` and `BlockedError` are *control* errors (`isControl`): they
 propagate out of a step and the runner acts on `stepFailure` in `shared/state.ts`, which decides (reconnect
 twice, then pause; stop; discard) and is unit-tested apart from `chrome.*`. Anything
 else thrown inside a step is recorded as a problem against that step and the run continues — so a single
 bad record never ends an export. A sink that throws is the `StorageError` (the `Collector` wraps its sink, so a
 section never sees the browser's own error): a full disk stops the run with its files kept, where filing it would
-fail every record after it the same way; a path the sink refuses (`{ error }`) is still that file's problem. Problems are filed under the current step and cleared when that step
+fail every record after it the same way; a path the sink refuses (`{ error }`) is still that file's problem. Two
+answers in a row that are the gateway's own 403 web page are the `BlockedError`: Maccabi is refusing the network, so the
+run stops rather than send the rest at it (one refused document stays that document's problem). Problems are filed under the current step and cleared when that step
 re-runs. Legacy steps don't get a 401: an ended session answers them with a followed redirect to
 `/my.logout.php3` (a 200 web page), which `Collector.legacy` and `fetchBin` turn into `SessionEndedError`
 from the response's final URL, and `runner.ts` also treats "Failed to fetch" in them as a dead session.
