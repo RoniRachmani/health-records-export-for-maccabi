@@ -71,7 +71,7 @@ runs.
 Chrome doesn't update an unpacked extension. To move to a newer one, download it again over the same folder and press
 the reload arrow on `chrome://extensions`. Finish or stop an export first: a reload ends it.
 
-To build it yourself, you need Node.js 22 or newer:
+To build it yourself, you need Node.js 22.12 or newer:
 
 ```sh
 git clone https://github.com/RoniRachmani/health-records-export-for-maccabi.git
@@ -275,7 +275,7 @@ Read the full [Privacy Policy](docs/privacy.md) and [Terms of Use](docs/terms.md
 
 [![CI](https://github.com/RoniRachmani/health-records-export-for-maccabi/actions/workflows/ci.yml/badge.svg)](https://github.com/RoniRachmani/health-records-export-for-maccabi/actions/workflows/ci.yml)
 
-You need Node.js 22 or newer and Chrome.
+You need Node.js 22.12 or newer and Chrome.
 
 ```sh
 npm install
