@@ -6,7 +6,7 @@ import 'fake-indexeddb/auto';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sha256Hex, type Sink } from '../src/core';
 import * as core from '../src/cli/index';
 import {
@@ -170,5 +170,28 @@ describe('stagingSink, beyond the contract', () => {
     expect(await getFile('_raw/1.pdf')).toEqual(bytes(7, 8));
     expect(await stagedTotals()).toEqual({ files: 2, bytes: new TextEncoder().encode('# ב\n').length + 2, byKey: {} });
     expect(await stagingSink.findBySha256(await sha256Hex(bytes(7, 8)))).toBeNull();
+  });
+});
+
+describe('the staging database connection', () => {
+  it('is opened again after an open that failed, where keeping the failure would fail every write after it', async () => {
+    const real = indexedDB.open.bind(indexedDB);
+    let failed = 0;
+    // The first open fails as a full or locked disk makes it; the ones after it are the real thing.
+    indexedDB.open = ((name: string, version?: number) => {
+      if (failed++) return real(name, version);
+      const req = { error: new DOMException('disk', 'UnknownError') } as unknown as IDBOpenDBRequest;
+      queueMicrotask(() => req.onerror?.(new Event('error')));
+      return req;
+    }) as typeof indexedDB.open;
+    try {
+      vi.resetModules();
+      const staging = await import('../src/extension/shared/staging');
+      await expect(staging.listMeta()).rejects.toMatchObject({ name: 'UnknownError' });
+      expect(await staging.listMeta()).toEqual(expect.any(Array));
+      expect(await staging.stagingSink.putJson('visits/again.json', { a: 1 })).toEqual({ result: 'written' });
+    } finally {
+      indexedDB.open = real;
+    }
   });
 });
