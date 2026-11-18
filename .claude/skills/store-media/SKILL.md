@@ -56,6 +56,12 @@ must not get wrong:
   (`--script`) cut into lines by `--import <take>` (on its words, by ElevenLabs' forced alignment, when there is a key), or line by line with `ELEVENLABS_API_KEY` from `.env`, and
   cached in `.cache/narration/`. Retime a scene and the narration moves with it; a line that no longer fits stops
   the render before the first frame. The MP4 is gitignored, because the store's video field takes a YouTube link.
+  ElevenLabs' licence decides what the film may use: output made on a free plan must credit ElevenLabs in its title, and
+  anything from a Beta Service (alpha, beta, pilot, preview or a similar label, per their Beta Services Addendum) can't
+  be used commercially at all. The models are `eleven_v4` for the voice (`narration.mjs`; `ELEVENLABS_MODEL` overrides
+  it), `music_v2_5` and `eleven_text_to_sound_v3` (`eleven-sound.mjs`, which Before Thursday's audio goes through too).
+  On 2026-11-18 none of the three carried such a label on ElevenLabs' models page, and the audio is made on a paid plan:
+  before switching to another model, or to `eleven_v3` (once an alpha), check its label there first.
 - **Before Thursday** is a draft film beside the promo, not a replacement: a 56-second story about getting ready for
   a new doctor, drawn by `store/src/film-story.ts` (`film-story.css`, `film-story.html`) on the same stage, popup and
   narration pipeline. `npm run film:before-thursday` is `store-video --before-thursday`, and takes the same flags
