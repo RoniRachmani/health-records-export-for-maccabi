@@ -41,6 +41,8 @@ maccabi-export-*/
 *.har
 # The launch's own working log (docs/launch.md): who was written to and what they said, which is about real people.
 /launch-log.md
+# The outside sources the research drew on, gathered from the session transcripts: a private reading list.
+/docs/sources.md
 
 # Frames of the landing page's motion, by `npm run site-check -- frames`, and the styles `-- styles save` keeps.
 site-frames/
