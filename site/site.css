@@ -104,8 +104,10 @@ h2 {
   grid-row: 1;
   justify-content: center;
 }
+/* The chat sits straight on the soft panel: no second card between them. */
 .ask-band .panel {
-  background: rgb(255 255 255 / 0.72);
+  padding: 0;
+  background: none;
   display: grid;
   grid-column: 1;
   visibility: hidden;
@@ -625,6 +627,12 @@ h2 {
 #uc-visit:checked ~ #p-visit,
 #uc-find:checked ~ #p-find {
   visibility: visible;
+}
+/* Every Ask answer is a picture, so it stands in the chat as itself, without a reply bubble drawn around it. */
+.ask-band .msg.bot {
+  padding: 0;
+  border: 0;
+  background: none;
 }
 .ask-band .panel .chat {
   justify-content: flex-start;
@@ -1318,6 +1326,8 @@ h2 {
 @media (min-width: 861px) {
   .feature.flip:has(.finderwin) {
     grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+    /* The words start at the window's top: centred on its long list, they left the band empty above them. */
+    align-items: start;
   }
 }
 
@@ -3168,6 +3178,33 @@ h2 {
     margin-top: 32px;
   }
 }
+/* An install row: the store badge beside a line, as a card (under the apps, #where-get). */
+.get {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 24px;
+  margin-top: 16px;
+  padding: 22px 24px;
+  border-radius: 20px;
+  background: var(--bg);
+  border: 1px solid var(--line-soft);
+}
+.get-text h3 {
+  margin: 0 0 4px;
+  font-size: 19px;
+}
+/* The install row under the apps: on the white band, so the box is the page's card and not the closing strip's. */
+.where-get {
+  margin-top: 40px;
+  background: var(--surface-2);
+  border-color: var(--line-soft);
+}
+.get-text p {
+  margin: 0;
+  color: var(--fg);
+}
 /* The foot's links are a line of text tall: the padding makes each a 24px target without moving the line. */
 .foot a {
   padding: 4px 0;
@@ -3184,8 +3221,9 @@ h2 {
 }
 
 /* Round 10: what a second audit of the whole journey found. */
-/* The link a phone can use: the page, sent to where the extension installs. Not shown where it already is. */
-.send-self {
+/* The button a phone can use: the store link and the page, emailed to where the extension installs. Not shown where it
+   already is. */
+.send-btn {
   display: none;
 }
 /* A control in a drawn app window is one line, as in the app. */
@@ -3193,15 +3231,40 @@ h2 {
   white-space: nowrap;
 }
 @media (max-width: 640px) {
-  /* A phone cannot install it, so what it can do comes first: watch, then send the page to a computer. */
+  /* A finger's 44px to tap the GitHub link, without moving the line: the padding is taken back as margin. */
+  .gh {
+    padding-block: 11px;
+    margin-block: -11px;
+  }
+  /* A phone cannot install it, so what it can do comes first: email it to a computer, then watch. */
   .hero .cta .watch {
     order: -1;
   }
-  .send-self {
-    display: block;
-    margin-top: 6px;
-    padding: 4px 0;
-    color: var(--accent);
+  /* The phone's one action: a full-width pill in the actions' blue, before the badge it cannot use. */
+  .send-btn {
+    display: flex;
+    order: -2;
+    justify-content: center;
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 20px;
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--on-primary);
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .send-btn:hover {
+    background: var(--primary-hover);
+    color: var(--on-primary);
+  }
+  .send-btn:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+  }
+  /* In the install row the email button leads too, and the badge goes under it on the left, as the text does. */
+  .where-get .badge-link {
+    order: 1;
   }
   /* No room for every control beside the ringed one: the one after it goes. */
   .appwin.claude .under > span:nth-child(2) {
@@ -3269,6 +3332,10 @@ h2 {
 }
 
 /* ---- Check every answer: one answer with its source on the left, the four safeguards two by two on the right ---- */
+/* The picture starts level with the heading, rather than centred on the taller column of safeguards. */
+.feature.check {
+  align-items: start;
+}
 .check .guards {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 28px 24px;
@@ -3405,7 +3472,8 @@ h2 {
 .before + .oss {
   margin-top: 16px;
 }
-@media (max-width: 760px) {
+/* Stacked from where the page goes to one column: two columns at tablet width left the heading three words wide. */
+@media (max-width: 860px) {
   .before {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -3936,18 +4004,15 @@ html {
   .film-band {
     min-height: 100svh;
   }
-  /* The close and the footer under it make the last screen together. */
-  .close {
-    min-height: calc(100svh - 228px);
-  }
 }
 .hos-band,
 #check {
   background: var(--surface-2);
 }
-/* The close: the badge a last time, on the navy the footer carries on. */
+/* The close: the badge a last time, on the navy the footer carries on. As tall as what it holds, so the navy is never
+   an empty screen: the last screen shows the end of Privacy above it. */
 .close {
-  padding-block: 144px 120px;
+  padding-block: 128px 104px;
   background: #0e2e5e;
   color: #e3ebfc;
 }
