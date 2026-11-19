@@ -43,6 +43,9 @@ For anyone working in this repo, and for AI assistants especially:
   as data): Anthropic's healthcare plugin (`src/extension/shared/export-readme.md`, `readme.ts`).
 - **Caregivers are members here**: a caregiver's video on using AI with a parent's records (*Caregivers*) led to
   one account, one member ([positioning.md](positioning.md)) and to a caregiver's word in the export's README.
+- **A referral's `diagnosis_number` is no ICD code**: Israel still codes diagnoses in ICD-9-CM (the Ministry's
+  ICD9cm.IL catalogue), so the export's README says it is neither ICD-9 nor ICD-10 (`readme.ts`). That the number is
+  Maccabi's own came from a live run.
 - **Maccabi's texts**: the WICG spec explains their origin-bound last line ([sms.md](sms.md)).
 - **The store badge and the GitHub mark** may be used only as Google's and GitHub's brand pages allow (CLAUDE.md).
 
@@ -104,6 +107,23 @@ Portability Law takes effect. Checked 1 November 2026.
 - More from the Ministry: [שירותי בריאות](https://www.gov.il/he/pages/health-services-digital-health-guide),
   [סקירה קצרה אודות הרגולציה הקיימת והמתפתחת בתחומי הדאטה ואמצעים רפואיים דיגיטליים](https://www.gov.il/he/pages/ai-tech),
   [מדריך להערכה כלכלית של שירותי בריאות דיגיטלית](https://www.gov.il/he/pages/guide-economic-evaluation-digital-health-services).
+- [תחום רישום ומידע רפואי](https://www.gov.il/he/departments/units/medical_registration_unit/govil-landing-page), the
+  regulator for how medical records are recorded, coded, reported and kept. It links to its
+  [אמות מידה לניהול רשומה רפואית](https://www.gov.il/he/Departments/Guides/mk09-2019-instructions) and to the national
+  coding committee. Read 19 November 2026.
+- [הנחיות ICD9cm](https://www.gov.il/he/pages/icd9cm), the unit's coding guidelines: Israel codes diagnoses in its own
+  edition of ICD-9-CM, ICD9cm.IL, with five-digit extensions of its own. The whole catalogue is one XLSX (updated
+  20 August 2026), with yearly change files since 2020 and guidelines by topic (diabetes, malignancy, stroke, sepsis,
+  obstetrics). SNOMED CT, above, is what the portability law brings in. Checked 19 November 2026.
+
+### The Patient's Rights Act
+
+- [חוק זכויות החולה, תשנ"ו-1996](https://www.nevo.co.il/law_html/law00/71833.htm) on Nevo (text as of 6 April 2025),
+  the older ground for a member's own file. s.17 says what a record holds, and that a clinician's personal notes are
+  not part of it. s.18 gives the patient the information in their record, a copy included. It also lets a clinician
+  withhold what could seriously harm the patient, under the ethics committee's review, so an export may not hold
+  everything. s.20 limits disclosure to others to consent, a law that requires it and a few listed cases. s.32 lets the
+  Minister cap the fee for copies. The Act sets no deadline. Read 19 November 2026.
 
 ### The Medical Information Portability Law
 
@@ -139,7 +159,7 @@ Portability Law takes effect. Checked 1 November 2026.
 - [The Commonwealth Fund's profile of Israel's health system](https://www.commonwealthfund.org/international-health-policy-center/countries/israel)
   (data as of January 2026): the four funds under the 1995 law, and the portability law expected in July 2027. It
   says nothing on members downloading their own records.
-- [קבלת מידע מהרשומה הרפואית (הליך)](https://www.kolzchut.org.il/he/%D7%A7%D7%91%D7%9C%D7%AA_%D7%9E%D7%99%D7%93%D7%A2_%D7%9E%D7%94%D7%A8%D7%A9%D7%95%D7%9E%D7%94_%D7%94%D7%A8%D7%A4%D7%95%D7%90%D7%99%D7%AA), Kol Zchut
+- [קבלת מידע מהרשומה הרפואית (הליך)](https://www.kolzchut.org.il/he/קבלת_מידע_מהרשומה_הרפואית), Kol Zchut
 - [Chambers on data protection and privacy in Israel, 2026](https://chambers.com/practice-guides/guides/data-protection-privacy-2026/israel/law-and-practice)
 - [חברות בקופת חולים 2025 (PDF)](https://www.btl.gov.il/Publications/survey/Documents/pirsumhaverut2025.pdf), the
   National Insurance Institute (March 2026), for each fund's share of members
@@ -169,7 +189,7 @@ November 2026.
   - in English: the [home page](https://www.maccabi4u.co.il/en/46562/main_english/) and
     [About Maccabi](https://www.maccabi4u.co.il/en/46562/main_english/our-healthcare-system/about/)
 - Press on Maccabi's AI:
-  - [מכבי שירותי בריאות השיקה מערכת AI לחוויית מטופל](https://www.pc.co.il/news/%D7%91%D7%A8%D7%99%D7%90%D7%95%D7%AA-%D7%93%D7%99%D7%92%D7%99%D7%98%D7%9C%D7%99%D7%AA/441244/)
+  - [מכבי שירותי בריאות השיקה מערכת AI לחוויית מטופל](https://www.pc.co.il/news/בריאות-דיגיטלית/441244/)
     (25 November 2025: a WhatsApp companion for new members, built on Microsoft's Copilot Studio, with no access to
     the member's records) and [כך משתלבת הבינה המלאכותית היוצרת במכבי שירותי בריאות](https://www.pc.co.il/featured/422986/), People &
     Computers
@@ -392,8 +412,7 @@ prescriptions, pharmacy stock), not the whole of it.
   nearest in form to this extension: an extension, a portal, an export.
 - [jmandel/mychart-takeout](https://github.com/jmandel/mychart-takeout): all of your own data from an Epic MyChart portal, run in
   your browser with the data kept local, as a bookmarklet, a command line or a Chrome extension, with a
-  `PATIENT_SUMMARY.md` at the root (active). *Studied*, asked "what can we
-  learn from".
+  `PATIENT_SUMMARY.md` at the root (active). *Studied*, asked "what can we learn from".
 - Connecting an assistant to MyChart, all *from a search*:
   - [Fan-Pier-Labs/openrecord](https://github.com/Fan-Pier-Labs/openrecord): lets Claude read and manage MyChart records, and write
     (refills, messages), as a Claude Desktop extension, an iOS app and a command line (active), and its fork
@@ -407,8 +426,7 @@ prescriptions, pharmacy stock), not the whole of it.
   - [HealthcareBuddy/my-chart-helper](https://github.com/HealthcareBuddy/my-chart-helper): a Chrome side panel for MyPennMedicine
     that downloads visit documents and opens them in ChatGPT (last updated 2024)
 - [hugooc/OpenKP](https://github.com/hugooc/OpenKP): an MCP bridge between Claude and Kaiser Permanente's patient portal, with
-  read and write tools (2026).
-  *From a search*.
+  read and write tools (2026). *From a search*.
 
 Most connect an assistant to the portal live. The two studied ones, like this project, export once and keep the
 data on the member's computer.
@@ -453,8 +471,8 @@ Where records go after an export: an app that stores or shows them on your own c
 
 - [My Mom Has Cancer Again. Here's How I'm Using AI to Fight It](https://www.youtube.com/watch?v=Ddc5NFNnCfE), a
   caregiver's video on keeping a parent's records, a one-page family brief and appointment questions with an AI
-  assistant (its transcript read 19 November 2026; the skill it links was not found on GitHub). Asked "what can we
-  learn from".
+  assistant (its transcript read 19 November 2026; the skill it links was not found on GitHub). Asked
+  "what can we learn from".
 
 ### Health apps
 
@@ -469,10 +487,9 @@ Apps for a person's own health that don't export records, *studied* for how thei
 Exports and products in other fields, *studied* for what they do well.
 
 - How LinkedIn, Facebook and Instagram build the data exports they send a member, read from those files.
-- [Financy · חברו את ה-AI שלכם לכסף שלכם](https://financy.open-finance.ai/). Asked "what can we learn
-  from".
-- [better-rail/app](https://github.com/better-rail/app): an alternative app for Israel Railways (AGPL-3.0, active). Asked "what can
-  we learn from".
+- [Financy · חברו את ה-AI שלכם לכסף שלכם](https://financy.open-finance.ai/). Asked "what can we learn from".
+- [better-rail/app](https://github.com/better-rail/app): an alternative app for Israel Railways (AGPL-3.0, active). Asked
+  "what can we learn from".
 
 ## Rules the project is held to
 

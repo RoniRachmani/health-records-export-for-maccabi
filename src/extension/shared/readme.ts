@@ -77,7 +77,7 @@ of monthly prescriptions, often all dispensed on one day, the last starting afte
 JSON names a diagnosis, though some are a purpose, not a condition (\`CHRONIC MEDICATION REFILL\`,
 \`TEST LABORATORY\`, \`PERIODIC COMPREHENSIVE HEALTH ASSESSMENT\`), or a risk (\`FAMILY HISTORY OF COLON CANCER\`); what was ordered is \`lab_tests[]\`, or \`actions[]\`, or when both are empty only
 \`displaying_name\` (\`title_name\` is just the kind, such as a specialist consultation).
-\`diagnosis_number\` is Maccabi's own code, not ICD-10.
+\`diagnosis_number\` is Maccabi's own code, not an ICD code (ICD-9 or ICD-10).
 \`chronic_medications[]\` is the member's chronic drug list on the referral's day.`,
   },
   {
