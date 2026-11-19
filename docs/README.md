@@ -26,6 +26,7 @@ and [CONTRIBUTING.md](../CONTRIBUTING.md), for contributors.
 | [positioning.md](positioning.md) | Who it is for, what it promises and how to say it, the use cases and the demo member. The landing page, the store listing and the film follow it | You write anything a member reads |
 | [healthhq-use-cases.md](healthhq-use-cases.md) | Each use case's picture, made-up data, rules and copy, for the chart-gallery artifact | You draw a use case |
 | [launch.md](launch.md) | The plan to 50 installs: the calendar, what to measure, the weekly log and the posts | You post, or fill in the log |
+| [sources.md](sources.md) | The outside sources the project learned from (the Ministry of Health, Health in ChatGPT, Maccabi's own pages and the rest), and which ones decided something | You cite a source, or want to know where a fact came from |
 
 [images/](images/) holds the README's screenshot and Google's store badge; CLAUDE.md says what each may and may not
 show.
