@@ -33,9 +33,22 @@
   <body class="ai" itemscope itemtype="https://schema.org/WebSite">
     <meta itemprop="name" content="Maccabi Health Records Takeout - Ready for AI" />
     <link itemprop="url" href="https://maccabi.ronirachmani.com/" />
+    <!-- The page's one bar, on every screen: the name, the Unofficial chip (always in view, as in the popup) and the
+         sections a visitor looks for. Plain anchors; nothing in it runs. -->
+    <nav class="topbar" aria-label="On this page">
+      <a class="brand" href="#hero"><svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true"><g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M2.75 7A2.75 2.75 0 0 1 5.5 4.25L9.031 4.25A0.8 0.8 0 0 1 9.64 4.53L11.51 6.72A0.8 0.8 0 0 0 12.119 7L18.5 7A2.75 2.75 0 0 1 21.25 9.75L21.25 18.25A2.75 2.75 0 0 1 18.5 21L5.5 21A2.75 2.75 0 0 1 2.75 18.25Z" transform="translate(-1.1 -1.1)" stroke="#f1c1cd" stroke-width="2.55" /><path d="M2.75 7A2.75 2.75 0 0 1 5.5 4.25L9.031 4.25A0.8 0.8 0 0 1 9.64 4.53L11.51 6.72A0.8 0.8 0 0 0 12.119 7L18.5 7A2.75 2.75 0 0 1 21.25 9.75L21.25 18.25A2.75 2.75 0 0 1 18.5 21L5.5 21A2.75 2.75 0 0 1 2.75 18.25Z" fill="#ffffff" stroke="#083f92" stroke-width="1.6" /><path d="M12 11.25v5.5M9.4 14.15L12 16.75l2.6-2.6" stroke="#083f92" stroke-width="1.6" /></g></svg><span><span class="nm-long">Maccabi </span>Health Records Takeout</span></a>
+      <span class="chip" title="Not affiliated with, endorsed by or sponsored by Maccabi Healthcare Services">Unofficial</span>
+      <ul class="nav-links">
+        <li><a href="#ask">Ask</a></li>
+        <li><a href="#collect">How it works</a></li>
+        <li><a href="#where">Open it</a></li>
+        <li><a href="#faq">Questions</a></li>
+        <li><a href="#private">Privacy</a></li>
+      </ul>
+    </nav>
     <header class="hero" id="hero" itemscope itemtype="https://schema.org/SoftwareApplication">
       <div class="hero-text">
-        <p class="eyebrow"><svg viewBox="0 0 24 24" width="40" height="40" aria-hidden="true"><g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M2.75 7A2.75 2.75 0 0 1 5.5 4.25L9.031 4.25A0.8 0.8 0 0 1 9.64 4.53L11.51 6.72A0.8 0.8 0 0 0 12.119 7L18.5 7A2.75 2.75 0 0 1 21.25 9.75L21.25 18.25A2.75 2.75 0 0 1 18.5 21L5.5 21A2.75 2.75 0 0 1 2.75 18.25Z" transform="translate(-1.1 -1.1)" stroke="#f1c1cd" stroke-width="2.55" /><path d="M2.75 7A2.75 2.75 0 0 1 5.5 4.25L9.031 4.25A0.8 0.8 0 0 1 9.64 4.53L11.51 6.72A0.8 0.8 0 0 0 12.119 7L18.5 7A2.75 2.75 0 0 1 21.25 9.75L21.25 18.25A2.75 2.75 0 0 1 18.5 21L5.5 21A2.75 2.75 0 0 1 2.75 18.25Z" fill="#ffffff" stroke="#083f92" stroke-width="1.6" /><path d="M12 11.25v5.5M9.4 14.15L12 16.75l2.6-2.6" stroke="#083f92" stroke-width="1.6" /></g></svg> <span itemprop="name">Maccabi Health Records Takeout</span> <span class="chip">Unofficial</span></p>
+        <meta itemprop="name" content="Maccabi Health Records Takeout" />
         <h1>Your whole Maccabi history, and <em>a genius friend who's read all of it</em></h1>
         <p class="lede" itemprop="description">Save everything from Maccabi Online to your computer, then ask anything: what changed, what stands out, what to do next.</p>
         <div class="cta"><a class="badge-link" itemprop="installUrl" href="https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp?utm_source=site&amp;utm_medium=landing&amp;utm_campaign=hero"><img src="images/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="206" height="58" /></a><a class="watch" href="https://youtu.be/ypmsdEyAXS8"><span class="play"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 1l11 6-11 6z" /></svg></span><span>Watch an export<small>1 minute, narrated</small></span></a><a class="gh" href="https://github.com/RoniRachmani/health-records-export-for-maccabi"><img src="images/github-invertocat-black.svg" alt="" width="20" height="20" />Open source on GitHub</a></div>
@@ -726,13 +739,13 @@
           </div>
           <a class="oss-btn" href="https://github.com/RoniRachmani/health-records-export-for-maccabi"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z" /></svg>View the source on GitHub</a>
         </div>
-        <div class="get" id="get">
-          <div class="get-text">
-            <h3>Get the Chrome extension</h3>
-            <p>Free, for Chrome on a computer. Your records stay on that computer.</p>
-          </div>
-          <a class="badge-link" href="https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp?utm_source=site&amp;utm_medium=landing&amp;utm_campaign=get"><img src="images/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="206" height="58" /></a>
-        </div>
+      </section>
+
+      <!-- The page ends on the way in: the store badge a last time, on the film's navy, with the footer under it. -->
+      <section class="band close" id="get">
+        <h2>Get the Chrome extension</h2>
+        <p class="sub">Free, for Chrome on a computer. Your records stay on that computer.</p>
+        <div class="cta"><a class="badge-link" href="https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp?utm_source=site&amp;utm_medium=landing&amp;utm_campaign=get"><img src="images/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="206" height="58" /></a></div>
       </section>
 
     </main>

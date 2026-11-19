@@ -18,7 +18,9 @@
   --shadow-lift: 0 14px 32px rgb(8 63 146 / 0.1);
   --accent-tint: #fbeef5;
   --on-primary: #ffffff;
-  --wide: 68rem;
+  --wide: 74rem;
+  /* Each band runs edge to edge, its ground changing at the seam; its content keeps the column. */
+  --gutter: max(24px, calc((100% - var(--wide)) / 2 + 24px));
 }
 * {
   box-sizing: border-box;
@@ -30,18 +32,16 @@ body.ai {
 }
 .hero,
 .band {
-  max-width: var(--wide);
-  margin: 0 auto;
-  padding-inline: 24px;
+  max-width: none;
+  margin: 0;
+  padding-inline: var(--gutter);
 }
 .band {
-  padding-block: 56px;
+  padding-block: 112px;
 }
-/* A tinted band runs edge to edge; its content keeps the column. */
+/* A tinted band: the pale blue ground, so the seam with its neighbours is a change of ground and not a line. */
 .band.tinted {
-  max-width: none;
   background: var(--surface-2);
-  padding-inline: max(24px, calc((100% - var(--wide)) / 2 + 24px));
 }
 h2 {
   font-size: 28px;
@@ -418,13 +418,12 @@ code {
   font-size: 15px;
 }
 
-/* ---- footer ---- */
+/* ---- footer: under the last section, on its navy ---- */
 .foot {
-  max-width: var(--wide);
-  margin: 0 auto;
-  padding: 28px 24px 48px;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
+  padding: 32px var(--gutter) 56px;
+  background: #0e2e5e;
+  border-top: 1px solid rgb(255 255 255 / 0.12);
+  color: #b9c7e6;
   font-size: 14px;
 }
 .foot p {
@@ -456,11 +455,8 @@ code {
   .band {
     padding-inline: 16px;
   }
-  .band.tinted {
-    padding-inline: 16px;
-  }
   .band {
-    padding-block: 40px;
+    padding-block: 64px;
   }
   .hero-art {
     padding-left: 16px;
@@ -475,4 +471,5 @@ code {
 /* The foot's links are a line of text tall: the padding makes each a 24px target without moving the line. */
 .foot a {
   padding: 4px 0;
+  color: var(--on-primary);
 }
