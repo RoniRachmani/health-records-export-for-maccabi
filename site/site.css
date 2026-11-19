@@ -3208,6 +3208,11 @@ h2 {
   white-space: nowrap;
 }
 @media (max-width: 640px) {
+  /* A finger's 44px to tap the GitHub link, without moving the line: the padding is taken back as margin. */
+  .gh {
+    padding-block: 11px;
+    margin-block: -11px;
+  }
   /* A phone cannot install it, so what it can do comes first: email it to a computer, then watch. */
   .hero .cta .watch {
     order: -1;
@@ -3444,7 +3449,8 @@ h2 {
 .before + .oss {
   margin-top: 16px;
 }
-@media (max-width: 760px) {
+/* Stacked from where the page goes to one column: two columns at tablet width left the heading three words wide. */
+@media (max-width: 860px) {
   .before {
     grid-template-columns: minmax(0, 1fr);
   }
