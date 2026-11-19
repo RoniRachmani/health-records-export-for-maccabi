@@ -439,6 +439,16 @@ Where records go after an export: an app that stores or shows them on your own c
   assistant (its transcript read 19 November 2026; the skill it links was not found on GitHub). Asked "what can we
   learn from".
 
+### Health apps
+
+Apps for a person's own health that don't export records, *studied* for how their pages sell them.
+
+- [Juno](https://junocompanion.com/): a phone app (iOS and Android) for chronic illness. You tell it how you feel by
+  text or voice, and it logs symptoms by day, points out patterns after a few weeks, and writes a PDF report for your
+  doctor. It is free, with a paid Pro tier, and keeps data on its servers in the U.S. Its page shows no way to import
+  medical records. Asked "what can we learn from". Its landing page was read on 19 November 2026, and not its other
+  pages. What it suggested is in [positioning.md](positioning.md#ideas-from-other-products).
+
 ### Outside health
 
 Exports and products in other fields, *studied* for what they do well.

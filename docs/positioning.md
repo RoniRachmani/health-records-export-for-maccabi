@@ -305,6 +305,27 @@ Nothing shown comes from a real account.
 - **Look:** navy headings, one blue for actions, magenta for links, and the mark's pale pink in the soft panels. Never
   Maccabi's logo or brand assets, and the *Unofficial* label is always visible.
 
+## Ideas from other products
+
+Ideas from other products' pages, not yet decided. Each one says where it would go. The products are in
+[sources.md](sources.md#health-apps).
+
+- **An example to open, and not just a claim** (Juno, 19 November 2026). The doctor's report is one of Juno's four
+  steps, and the page links to "See an example report". Ours would be a one-page visit summary made from the demo
+  persona's records, with every line naming its record. It would show *Before a visit* and "Built so you can check
+  every answer" (*What we learned*, point 11).
+- **Name the chore it takes away.** Juno repeats "No forms involved". Ours is "one page at a time, within date limits"
+  (*Positioning statement*), which the page says only in passing.
+- **Privacy as a few short facts.** Juno's "Private by design" is four short lines: never sold, encrypted, no AI
+  training on your data, and where the servers are. None of them reads as suspicious. Ours are stronger, because there
+  is no server at all. This bears on point 9 of *What we learned* and on the privacy question in *To validate*.
+- **A named reviewer.** Juno names a medical advisory board. One doctor willing to be named as a reviewer would answer
+  the trust objections better than copy can. This is a task for the real world, not a change to the page.
+- **A page per question** (Juno has about 25 pages, one per condition). Static pages such as "Ask about years of HbA1c"
+  would serve the returning audience and search, with no script. That is a larger decision, for later.
+- **What not to copy:** user counts that disagree (Juno's meta description says "10,000+ users" and its page says
+  "350k"), "Always free" beside a paid tier, and a mascot's warmth, which isn't our voice.
+
 ## Claims
 
 **Confirmed:**
