@@ -28,9 +28,10 @@ For anyone working in this repo, and for AI assistants especially:
 
 ## What a source decided
 
-- **"Allergies and sensitivities"**, the Ministry of Health's term, names that list in the popup and in the export's
-  README ([0.9.2](releases/0.9.2.md)), since not every sensitivity is an allergy. The Ministry page it was read on
-  was not recorded: add it here when it is found.
+- **"Allergies and sensitivities"** names that list in the popup and in the export's README
+  ([0.9.2](releases/0.9.2.md)), since not every sensitivity is an allergy: the Ministry of Health's national
+  terminology calls the whole area רגישויות, sensitivities, and splits it into drug sensitivities and the rest
+  (מערך הטרמינולוגיה הלאומי, under *Israel*).
 - **Preventive care**: the export's README sends the assistant to look up the Ministry of Health's and Maccabi's
   current guidance rather than recall it (`src/extension/shared/export-readme.md`). It names no page on purpose,
   since the guidance changes.
@@ -88,7 +89,9 @@ Portability Law takes effect. Checked 1 November 2026.
 - [נוהל להגשת בקשה לקבלת היתר לניוד מידע רפואי עבור מקבל מידע לפי סעיף 4(א) לחוק ניוד מידע רפואי (PDF)](https://www.gov.il/BlobFolder/guide/data-portability-certification-program/he/units_digital-health_data-portability-certification-program_PDFUA-draft.pdf),
   a draft put out for public comment until 31 May 2026. It covers a provider or public body asking for a permit, not
   a person asking for their own file.
-- [מערך הטרמינולוגיה הלאומי](https://www.gov.il/he/pages/medical-terminology-set): the national codes the funds will use, and its
+- [מערך הטרמינולוגיה הלאומי](https://www.gov.il/he/pages/medical-terminology-set): the national codes the funds will use.
+  Its content areas include רגישויות (sensitivities), planned for the certification program in 2026: drug
+  sensitivities coded from the drug catalogue, the rest from a SNOMED CT subset (checked 20 November 2026). Its
   documents (PDFs):
   - [קידוד אבחנות במסגרת תכנית הסרטיפיקציה לחוק ניוד מידע](https://www.gov.il/BlobFolder/guide/medical-terminology-set/he/units_digital-health_data-portability-law-coding-diagnoses-certification-program-framework.pdf)
     (15 December 2024)
