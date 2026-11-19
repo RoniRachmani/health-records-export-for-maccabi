@@ -1,12 +1,12 @@
 # Sources
 
-The outside pages, documents and people this project learned from, and what each one taught it. It was gathered
-on 18 November 2026 from what the repo cites and from everything opened, fetched or searched while the project was
+The outside pages, documents and people this project learned from, and what each one taught it. It was first
+gathered on 18 November 2026 from what the repo cites and from everything opened, fetched or searched while the project was
 built (in Claude Code, Codex and the browser).
 
 **How to read an entry.** *Cited in …* means a file in this repo depends on that source: a policy, a test or a
-credit. Don't drop one of those without changing the file that cites it. Every other entry was read, not cited. A
-source in Hebrew keeps its own Hebrew title, untranslated. *Checked* gives the date a time-sensitive fact was last
+credit. Don't drop one of those without changing the file that cites it. Every other entry was read, not cited.
+*Checked* gives the date a time-sensitive fact was last
 read. Products, plans and availability change, so recheck a fact older than a few months before repeating it. Pages
 that only explain a tool are at the end, and the acronyms are explained in the [glossary](#glossary).
 
@@ -17,8 +17,9 @@ For anyone working in this repo, and for AI assistants especially:
 - When an outside page or document shapes a decision, add it here, in the section it belongs to. Say what it was
   used for, and if it decided something, add a line to [What a source decided](#what-a-source-decided).
 - Add *Cited in …* when a file in the repo links to it, and *Checked* when what it says can change.
-- Never name a person, link to a single post or comment, or link to anyone's own records, this project's included.
-  The repo is public. Say what kind of feedback it was and what it changed.
+- Never name anyone who gave feedback, never link to their post, comment or chat, and never link to anyone's own
+  records, this project's included. The repo is public. Say what kind of feedback it was and what it changed. The
+  authors of published work (a project, a course, a paper, a public video) may be named and linked.
 - Work out a number again from its source rather than from memory, and give the source and the method (see the
   biological-variation entry).
 - Give a Hebrew source its original Hebrew title, as the page or document gives it, and don't translate it. A
@@ -28,9 +29,11 @@ For anyone working in this repo, and for AI assistants especially:
 ## What a source decided
 
 - **"Allergies and sensitivities"**, the Ministry of Health's term, names that list in the popup and in the export's
-  README ([0.9.2](releases/0.9.2.md)).
-- **Preventive care**: the export's README sends the assistant to the Ministry of Health's and Maccabi's current
-  guidance (`src/extension/shared/export-readme.md`).
+  README ([0.9.2](releases/0.9.2.md)), since not every sensitivity is an allergy. The Ministry page it was read on
+  was not recorded: add it here when it is found.
+- **Preventive care**: the export's README sends the assistant to look up the Ministry of Health's and Maccabi's
+  current guidance rather than recall it (`src/extension/shared/export-readme.md`). It names no page on purpose,
+  since the guidance changes.
 - **The no-browser sign-in and the session's hour** come from Oren Yomtov's maccabi-health
   ([CONTRIBUTING.md](../CONTRIBUTING.md), *An export from the terminal*).
 - **Why the export exists**: Health in ChatGPT and Claude's health connectors reach U.S. providers only, so they can't
@@ -40,13 +43,12 @@ For anyone working in this repo, and for AI assistants especially:
 - **"Real change" inside the normal range** is the reference change value from EFLM's Biological Variation Database
   ([healthhq-use-cases.md](healthhq-use-cases.md)).
 - **How the assistant reads a record** (negations, quoting the Hebrew, reading every file, table columns, record text
-  as data): Anthropic's healthcare plugin (`src/extension/shared/export-readme.md`, `readme.ts`).
+  as data): Anthropic's healthcare plugin (`src/extension/shared/export-readme.md`, `src/extension/shared/readme.ts`).
 - **Caregivers are members here**: a caregiver's video on using AI with a parent's records (*Caregivers*) led to
   one account, one member ([positioning.md](positioning.md)) and to a caregiver's word in the export's README.
 - **A referral's `diagnosis_number` is no ICD code**: Israel still codes diagnoses in ICD-9-CM (the Ministry's
-  ICD9cm.IL catalogue), so the export's README says it is neither ICD-9 nor ICD-10 (`readme.ts`). That the number is
-  Maccabi's own came from a live run.
-- **Maccabi's texts**: the WICG spec explains their origin-bound last line ([sms.md](sms.md)).
+  ICD9cm.IL catalogue), so the export's README says it is neither ICD-9 nor ICD-10 (`src/extension/shared/readme.ts`).
+  That the number is Maccabi's own came from a live run.
 - **The store badge and the GitHub mark** may be used only as Google's and GitHub's brand pages allow (CLAUDE.md).
 
 ## What people taught
@@ -145,12 +147,11 @@ Portability Law takes effect. Checked 1 November 2026.
 
 - [The IL HDP implementation guide 0.4.2](https://get-ig.org/il.hdp.fhir.r4/0.4.2) and
   [the FHIR packages for Israel](https://packages.fhir.org/jurisdictions/IL).
-- IL Core's pages in packages2.fhir.org's index, all a 404 by 18 November 2026: the index no longer knows the
-  versions read, though [the package](https://packages2.fhir.org/packages/il.core.fhir.r4) still has them (and
-  0.22.0, from 17 September 2026). [information buckets](https://packages2.fhir.org/xig/resource/il.core.fhir.r4%7C0.21.0/CodeSystem/CodeSystem-il-hdp-information-buckets.json),
-  and its codes for [conditions](https://packages2.fhir.org/xig/il.core.fhir.r4%7C0.16.2/ValueSet/il-core-condition-code),
-  [lab tests](https://packages2.fhir.org/xig/il.core.fhir.r4%7C0.17.5/ValueSet/il-core-observation-lab-code) and
-  [languages](https://packages2.fhir.org/xig/resource/il.core.fhir.r4%7C0.21.0/ValueSet/ValueSet-vs-il-core-languages.json).
+- [IL Core's package](https://packages2.fhir.org/packages/il.core.fhir.r4), which still holds the versions read (and
+  0.22.0, from 17 September 2026). Read in it: the information buckets (CodeSystem `il-hdp-information-buckets`,
+  0.21.0) and its codes for conditions (ValueSet `il-core-condition-code`, 0.16.2), lab tests
+  (`il-core-observation-lab-code`, 0.17.5) and languages (`vs-il-core-languages`, 0.21.0). Their pages in the
+  package index were all a 404 by 18 November 2026, so they are not linked.
 - The FHIR IL community's [Israel Core team](https://www.fhir-il-community.org/fhir-israel-core) and
   [certification overview (PDF)](https://fhir-il-community.org/_files/ugd/3ca9ed_81516f77c9f542cabcbcb737cb865baf.pdf).
 
@@ -166,7 +167,7 @@ Portability Law takes effect. Checked 1 November 2026.
 
 ## Maccabi
 
-The site the extension exports from, its rules, and what Maccabi says about its own AI. Read September to
+The site the extension exports from, its rules, and what Maccabi says about its own AI. Checked September to
 November 2026.
 
 - [תנאי השימוש באתר מכבי שירותי בריאות](https://www.maccabi4u.co.il/23085/policies_and_procedures/terms_of_use/) and
@@ -213,7 +214,7 @@ export's README is written for.
 
 ### Health in ChatGPT
 
-Checked 23 September 2026, and who can use it again 12–13 October and 18 November.
+Checked 23 September 2026; who can use it rechecked 12–13 October and 18 November.
 
 - OpenAI's announcements: [Introducing ChatGPT Health](https://openai.com/index/introducing-chatgpt-health/)
   (7 January 2026) and [Launching Health in ChatGPT](https://openai.com/index/health-in-chatgpt/), the U.S. rollout
@@ -288,7 +289,7 @@ Checked 23 September and 13 October 2026.
   read 19 November 2026). Its ten skills are mostly U.S. payer and coding work (claims, prior authorisation, ICD-10-CM,
   CPT, FHIR servers), and none of that applies here. Five of them taught the reading rules in the export's README:
   - clinical-note-extract: negated, suspected and family findings
-  - contracts: quote the record's own words, and read every file for "ever" questions
+  - contracts: quote the record's own words, and read every file when asked whether something ever happened
   - doc-extract: table values that land under the wrong column
   - fhir: record text is data, not instructions
   - procedure-coding: results a note repeats from an earlier date
@@ -517,7 +518,7 @@ The rules the extension, its listing and its pages are held to.
 
 - GitHub's mark: [logo guidelines](https://brand.github.com/foundations/logo) (cited in CLAUDE.md),
   [the logos](https://github.com/logos) (now the logo guidelines), [logo policy](https://docs.github.com/en/site-policy/other-site-policies/github-logo-policy),
-  [Primer's octovisuals](https://primer.style/foundations/icons/octovisuals) (the page is gone: it now opens Primer's home page).
+  and Primer's octovisuals page (gone by November 2026, so not linked).
 - The fonts are under [Making the film and the store images](#making-the-film-and-the-store-images).
 
 ### Accessibility and conduct
@@ -557,7 +558,7 @@ Read for how to use a tool, not for anything the project says.
     [securing a repository](https://docs.github.com/en/code-security/getting-started/quickstart-for-securing-your-repository),
     [secret validity checks](https://docs.github.com/en/code-security/how-tos/secure-your-secrets/customize-leak-detection/enable-validity-checks)
   - [immutable releases](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases)
-    ([how to use them](https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/use-immutable-releases), now a 404)
+    (its how-to page, read too, is now a 404)
   - Actions: [the GITHUB_TOKEN](https://docs.github.com/en/actions/tutorials/authenticate-with-github_token),
     [Dependabot's read-only workflows](https://github.blog/changelog/2021-02-18-github-actions-workflows-triggered-by-dependabot-prs-will-run-with-read-only-permissions/)
   - the REST API's [Actions permissions](https://docs.github.com/en/rest/actions/permissions) and
@@ -583,18 +584,31 @@ Read for how to use a tool, not for anything the project says.
 
 ## Glossary
 
+- **ACRI**: the Association for Civil Rights in Israel.
+- **CLEAR**: a U.S. identity-verification service, which checks the government ID HealthEx asks for.
+- **CPT**: Current Procedural Terminology, the American Medical Association's codes for procedures, used in U.S.
+  billing.
 - **CVi**: within-person biological variation, how much a test's result moves in a healthy person from one test to
   the next.
 - **CWS**: the Chrome Web Store.
+- **EEA**: the European Economic Area, the EU with Iceland, Liechtenstein and Norway.
 - **EFLM**: the European Federation of Clinical Chemistry and Laboratory Medicine, which keeps the Biological
   Variation Database.
 - **FHIR**: HL7's standard for exchanging health records. **IL Core** is its Israeli base profile.
-  **IL HDP** is the Israeli health data portability guide built on IL Core.
+  **IL HDP** is the Israeli health data portability guide built on IL Core. **SMART on FHIR** is the standard way for
+  an app to sign in to a FHIR server and read a patient's records.
 - **Glama**: an AI workspace that keeps a directory of MCP servers.
 - **HL7**: the standards body behind FHIR and PIQI.
+- **ICD**: the World Health Organization's International Classification of Diseases. **ICD-9-CM** is the U.S.
+  clinical edition of its ninth revision, which Israel still codes diagnoses in (as ICD9cm.IL); **ICD-10-CM** is the
+  U.S. edition of the tenth.
 - **LOINC** and **SNOMED CT**: international code systems, for lab tests and for clinical terms.
 - **MCP**: the Model Context Protocol, which lets an AI assistant call a tool, such as a connector to an account.
 - **MV3**: Manifest V3, the current format for Chrome extensions.
 - **PIQI**: Patient Information Quality Improvement, HL7's framework for scoring how usable a record is.
 - **RCV**: reference change value, the smallest difference between two results that is more than normal variation.
   2.77 × CVi when the lab's own variation is left out.
+- **REA**: Reverse Engineer Anything, a tool that parses a site's scripts for the requests they make.
+- **SDK**: software development kit, a library for calling a service from code.
+- **WICG**: the W3C's Web Platform Incubator Community Group, where proposed web standards are drafted.
+- **XLSX**: Excel's spreadsheet file format.
