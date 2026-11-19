@@ -419,11 +419,13 @@ code {
 }
 
 /* ---- footer ---- */
+/* The rule above the footer spans its text, so it ends on the same edges as the sections above it. */
 .foot {
+  --foot-pad: 24px;
   max-width: var(--wide);
   margin: 0 auto;
-  padding: 28px 24px 48px;
-  border-top: 1px solid var(--line);
+  padding: 28px var(--foot-pad) 48px;
+  background: linear-gradient(var(--line), var(--line)) center top / calc(100% - 2 * var(--foot-pad)) 1px no-repeat;
   color: var(--muted);
   font-size: 14px;
 }
@@ -458,6 +460,9 @@ code {
   }
   .band.tinted {
     padding-inline: 16px;
+  }
+  .foot {
+    --foot-pad: 16px;
   }
   .band {
     padding-block: 40px;

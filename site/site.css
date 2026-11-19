@@ -90,8 +90,10 @@ h2 {
   grid-row: 1;
   justify-content: center;
 }
+/* The chat sits straight on the soft panel: no second card between them. */
 .ask-band .panel {
-  background: rgb(255 255 255 / 0.72);
+  padding: 0;
+  background: none;
   display: grid;
   grid-column: 1;
   visibility: hidden;
@@ -628,6 +630,12 @@ h2 {
 #uc-visit:checked ~ #p-visit,
 #uc-find:checked ~ #p-find {
   visibility: visible;
+}
+/* Every Ask answer is a picture, so it stands in the chat as itself, without a reply bubble drawn around it. */
+.ask-band .msg.bot {
+  padding: 0;
+  border: 0;
+  background: none;
 }
 .ask-band .panel .chat {
   justify-content: flex-start;
@@ -1323,6 +1331,8 @@ h2 {
 @media (min-width: 861px) {
   .feature.flip:has(.finderwin) {
     grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+    /* The words start at the window's top: centred on its long list, they left the band empty above them. */
+    align-items: start;
   }
 }
 
@@ -3267,6 +3277,10 @@ h2 {
 }
 
 /* ---- Check every answer: one answer with its source on the left, the four safeguards two by two on the right ---- */
+/* The picture starts level with the heading, rather than centred on the taller column of safeguards. */
+.feature.check {
+  align-items: start;
+}
 .check .guards {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 28px 24px;
