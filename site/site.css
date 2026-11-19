@@ -4005,6 +4005,25 @@ html {
     min-height: 100svh;
   }
 }
+/* A laptop under 880px tall (1366x768, 1280x800) has too little room for the hero's dashboard and the strip under it:
+   the strip tightens to its dots, and the dashboard, which sets the hero's height, is drawn a little smaller. */
+@media (min-width: 981px) and (min-height: 720px) and (max-height: 880px) {
+  .hero {
+    min-height: calc(100svh - 64px - 120px);
+  }
+  .band.hl {
+    min-height: 120px;
+    padding-block: 8px 14px;
+  }
+  .dash-stage {
+    zoom: 0.94;
+  }
+}
+@media (min-width: 981px) and (min-height: 720px) and (max-height: 820px) {
+  .dash-stage {
+    zoom: 0.85;
+  }
+}
 .hos-band,
 #check {
   background: var(--surface-2);
