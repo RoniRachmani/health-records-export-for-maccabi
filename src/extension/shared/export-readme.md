@@ -21,7 +21,8 @@ before them.
   of your own, such as `notes/`; never edit, rename or delete the export's files.
 - **Keep what the member tells you.** The export cannot say what they take now, what care they had
   elsewhere or what they are allergic or sensitive to that was never recorded: when they tell you, note it in
-  your folder, dated and marked as their word rather than a record's, and read it before asking again.
+  your folder, dated and marked as their word rather than a record's (or a caregiver's, if one is telling
+  you), and read it before asking again.
   Where their word and a record disagree, show both, each with its date; don't choose between them.
   This export starts with no notes: if the member points you to an earlier export's, read them first
   and copy them into this export's folder.

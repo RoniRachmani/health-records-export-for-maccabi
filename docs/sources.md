@@ -41,6 +41,8 @@ For anyone working in this repo, and for AI assistants especially:
   ([healthhq-use-cases.md](healthhq-use-cases.md)).
 - **How the assistant reads a record** (negations, quoting the Hebrew, reading every file, table columns, record text
   as data): Anthropic's healthcare plugin (`src/extension/shared/export-readme.md`, `readme.ts`).
+- **Caregivers are members here**: a caregiver's video on using AI with a parent's records (*Caregivers*) led to
+  one account, one member ([positioning.md](positioning.md)) and to a caregiver's word in the export's README.
 - **Maccabi's texts**: the WICG spec explains their origin-bound last line ([sms.md](sms.md)).
 - **The store badge and the GitHub mark** may be used only as Google's and GitHub's brand pages allow (CLAUDE.md).
 
@@ -429,6 +431,13 @@ Where records go after an export: an app that stores or shows them on your own c
   [Apple's health features with Apple Intelligence](https://www.apple.com/newsroom/2026/09/apple-advances-health-and-fitness-capabilities-using-apple-intelligence/).
 - More: [awesome-healthcare-mcp-servers](https://github.com/rdmgator12/awesome-healthcare-mcp-servers), a curated list of
   healthcare MCP servers (CC0).
+
+### Caregivers
+
+- [My Mom Has Cancer Again. Here's How I'm Using AI to Fight It](https://www.youtube.com/watch?v=Ddc5NFNnCfE), a
+  caregiver's video on keeping a parent's records, a one-page family brief and appointment questions with an AI
+  assistant (its transcript read 19 November 2026; the skill it links was not found on GitHub). Asked "what can we
+  learn from".
 
 ### Outside health
 

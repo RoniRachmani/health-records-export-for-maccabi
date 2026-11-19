@@ -23,7 +23,8 @@ read your whole file**.
   like charts.
 - They come back for trends, dashboards and plans, and they keep adding to what they have.
 
-**Out of scope:** managing a parent's or a child's records.
+**One account, one member.** The extension exports the account that's signed in; it doesn't switch between family
+members. A caregiver signed in as the person they care for is a member here.
 
 ## What we learned about them
 
