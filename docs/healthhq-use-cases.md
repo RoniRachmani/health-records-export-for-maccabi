@@ -76,13 +76,14 @@ const BY_MONTH = {
 };
 
 // Changes no test flags: one value per test date, with the typical variation (%) a real change has to pass
+// (the reference change value, 2.77 × CVi, from EFLM's Biological Variation Database as of August 2026; see sources.md)
 const DRIFT_DATES = ['2016-03-08', '2018-04-17', '2020-06-09', '2022-05-24', '2024-05-20', '2026-01-12'];
 const DRIFT = [
-  { n: 'Liver enzyme (ALT)', u: 'U/L', r: 'normal up to 40', v: [18, 21, 24, 27, 31, 34], rcv: 54 }, // +89%: mention
-  { n: 'Good cholesterol', u: 'mg/dL', r: 'healthy above 40', v: [58, 55, 53, 50, 47, 44], rcv: 20 }, // −24%: mention
-  { n: 'Blood sugar', u: 'mg/dL', r: 'normal 70 to 100', v: [88, 90, 92, 95, 97, 99], rcv: 16 }, // +12.5%, up every time: mention
-  { n: 'Platelets', u: '×1000/µL', r: 'normal 150 to 450', v: [262, 248, 270, 255, 259, 251], rcv: 26 }, // −4%: leave it
-  { n: 'Potassium', u: 'mmol/L', r: 'normal 3.5 to 5.1', v: [4.3, 4.1, 4.4, 4.2, 4.0, 4.3], rcv: 13 }, // 0%: leave it
+  { n: 'Liver enzyme (ALT)', u: 'U/L', r: 'normal up to 40', v: [18, 21, 24, 27, 31, 34], rcv: 34 }, // +89%: mention
+  { n: 'Good cholesterol', u: 'mg/dL', r: 'healthy above 40', v: [58, 55, 53, 50, 47, 44], rcv: 16 }, // −24%: mention
+  { n: 'Blood sugar', u: 'mg/dL', r: 'normal 70 to 100', v: [88, 90, 92, 95, 97, 99], rcv: 14 }, // +12.5%, up every time: mention
+  { n: 'Platelets', u: '×1000/µL', r: 'normal 150 to 450', v: [262, 248, 270, 255, 259, 251], rcv: 20 }, // −4%: leave it
+  { n: 'Potassium', u: 'mmol/L', r: 'normal 3.5 to 5.1', v: [4.3, 4.1, 4.4, 4.2, 4.0, 4.3], rcv: 11 }, // 0%: leave it
 ];
 
 // The same six dates, read from visit notes. Weight has no normal range to draw.

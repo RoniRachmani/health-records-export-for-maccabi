@@ -114,6 +114,11 @@ describe('public/third-party-notices.txt', () => {
       .filter((line) => !notices.includes(line));
     expect(missing).toEqual([]);
   });
+
+  it("names Vite, whose module preload polyfill the build adds, at the version that builds it", () => {
+    const vite = (pkg.devDependencies as Record<string, string>).vite.replace(/^[\^~]/, '');
+    expect(read('public/third-party-notices.txt')).toContain('Vite ' + vite + ' (module preload polyfill');
+  });
 });
 
 // ---- the terminal scripts' origin -----------------------------------------------------------------

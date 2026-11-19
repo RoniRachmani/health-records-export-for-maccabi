@@ -6,7 +6,8 @@ Chrome MV3 extension (TypeScript, Vite, no framework) that exports a member's Ma
 records as one ZIP. `README.md` is the user-facing document and `CONTRIBUTING.md` the contributor-facing one, and
 both are kept current: read `CONTRIBUTING.md`'s *How a run works* before changing the run, and update them when
 behaviour changes. `docs/README.md` says what each file in `docs/` is for; `tools/endpoint-scan/README.md` describes the
-endpoint scan.
+endpoint scan. Outside facts and where they came from are in `docs/sources.md`: add a source there when you learn from
+one, following its *How to keep this file*.
 
 ## Commands
 
