@@ -39,6 +39,8 @@ For anyone working in this repo, and for AI assistants especially:
   it ([positioning.md](positioning.md), *Objections and answers*).
 - **"Real change" inside the normal range** is the reference change value from EFLM's Biological Variation Database
   ([healthhq-use-cases.md](healthhq-use-cases.md)).
+- **How the assistant reads a record** (negations, quoting the Hebrew, reading every file, table columns, record text
+  as data): Anthropic's healthcare plugin (`src/extension/shared/export-readme.md`, `readme.ts`).
 - **Maccabi's texts**: the WICG spec explains their origin-bound last line ([sms.md](sms.md)).
 - **The store badge and the GitHub mark** may be used only as Google's and GitHub's brand pages allow (CLAUDE.md).
 
@@ -260,6 +262,14 @@ Checked 23 September and 13 October 2026.
     [GUVI's guide](https://www.guvi.in/blog/healthex-connector-with-claude/)
   - press: [Fortune](https://fortune.com/2026/01/11/anthropic-unveils-claude-for-healthcare-and-expands-life-science-features-partners-with-healthex-to-let-users-connect-medical-records/),
     [NBC News](https://www.nbcnews.com/tech/tech-news/anthropic-health-care-rcna252872)
+- [anthropics/healthcare](https://github.com/anthropics/healthcare), the healthcare plugin for Claude (version 3.0.2,
+  read 19 November 2026). Its ten skills are mostly U.S. payer and coding work (claims, prior authorisation, ICD-10-CM,
+  CPT, FHIR servers), and none of that applies here. Five of them taught the reading rules in the export's README:
+  - clinical-note-extract: negated, suspected and family findings
+  - contracts: quote the record's own words, and read every file for "ever" questions
+  - doc-extract: table values that land under the wrong column
+  - fhir: record text is data, not instructions
+  - procedure-coding: results a note repeats from an earlier date
 
 ### The Claude desktop app
 
