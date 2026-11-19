@@ -77,6 +77,7 @@ of monthly prescriptions, often all dispensed on one day, the last starting afte
 JSON names a diagnosis, though some are a purpose, not a condition (\`CHRONIC MEDICATION REFILL\`,
 \`TEST LABORATORY\`, \`PERIODIC COMPREHENSIVE HEALTH ASSESSMENT\`), or a risk (\`FAMILY HISTORY OF COLON CANCER\`); what was ordered is \`lab_tests[]\`, or \`actions[]\`, or when both are empty only
 \`displaying_name\` (\`title_name\` is just the kind, such as a specialist consultation).
+\`diagnosis_number\` is Maccabi's own code, not ICD-10.
 \`chronic_medications[]\` is the member's chronic drug list on the referral's day.`,
   },
   {
@@ -282,7 +283,8 @@ as of ${file.slice(0, 10)}. **Start there**: it reaches far further back than th
 
 Its heading still calls it partial (חלקי), and if the fresh order this run makes failed, this is an
 older file covering less (its range is in \`letters/\`). Extracted, its Hebrew often comes out
-scrambled — a letter per line, or words reversed: then read the pages as images.`;
+scrambled — a letter per line, or words reversed: then read the pages as images. Even clean, a table's
+value can sit under the wrong date: check it on the page.`;
 }
 
 /**
