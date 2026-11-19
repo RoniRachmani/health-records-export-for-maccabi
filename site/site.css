@@ -4004,18 +4004,15 @@ html {
   .film-band {
     min-height: 100svh;
   }
-  /* The close and the footer under it make the last screen together. */
-  .close {
-    min-height: calc(100svh - 228px);
-  }
 }
 .hos-band,
 #check {
   background: var(--surface-2);
 }
-/* The close: the badge a last time, on the navy the footer carries on. */
+/* The close: the badge a last time, on the navy the footer carries on. As tall as what it holds, so the navy is never
+   an empty screen: the last screen shows the end of Privacy above it. */
 .close {
-  padding-block: 144px 120px;
+  padding-block: 128px 104px;
   background: #0e2e5e;
   color: #e3ebfc;
 }
