@@ -297,6 +297,23 @@ Checked 28 September to 13 October 2026.
   [XDA on Cowork](https://www.xda-developers.com/claude-cowork-handles-admin-work-so-well-stopped-doing-it-myself/).
 - [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins), read for the skills the
   launch plan uses.
+
+## Google
+
+What Google's health AI is for, read to see whether it reaches a member's own records.
+
+### Gemini for healthcare
+
+Checked 19 November 2026.
+
+- Google's announcement: [Gemini for healthcare](https://blog.google/innovation-and-ai/infrastructure-and-cloud/google-cloud/gemini-for-healthcare/)
+  (10 November 2026). It is a Google Cloud product for hospitals and insurers, in preview with three U.S. launch
+  partners. It connects to their records, billing and Medicare data, and its example tasks are summarising a patient's
+  records and reviewing prior authorisations, with a person checking each result. The post mentions nothing for
+  patients: no access to their own records and no export. So, like the OpenAI and Claude features above, it can't
+  reach Maccabi, and it changes nothing in [positioning.md](positioning.md). Its pairing of data connectors with
+  skills is the same shape as the export, where the records are the data and the README holds the instructions.
+
 ## Clinical data quality
 
 How good a record has to be before an assistant can lean on it, and when a change in a result is real.
@@ -443,11 +460,9 @@ Where records go after an export: an app that stores or shows them on your own c
 
 Apps for a person's own health that don't export records, *studied* for how their pages sell them.
 
-- [Juno](https://junocompanion.com/): a phone app (iOS and Android) for chronic illness. You tell it how you feel by
-  text or voice, and it logs symptoms by day, points out patterns after a few weeks, and writes a PDF report for your
-  doctor. It is free, with a paid Pro tier, and keeps data on its servers in the U.S. Its page shows no way to import
-  medical records. Asked "what can we learn from". Its landing page was read on 19 November 2026, and not its other
-  pages. What it suggested is in [positioning.md](positioning.md#ideas-from-other-products).
+- [Juno](https://junocompanion.com/): a chronic-illness app that logs symptoms you tell it and writes a report for your
+  doctor. It doesn't import records. Asked "what can we learn from"; landing page read 19 November 2026. Takeaways in
+  [positioning.md](positioning.md#ideas-from-other-products).
 
 ### Outside health
 
