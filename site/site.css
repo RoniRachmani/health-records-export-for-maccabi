@@ -3172,6 +3172,12 @@ h2 {
   margin: 0 0 4px;
   font-size: 19px;
 }
+/* The install row under the apps: on the white band, so the box is the page's card and not the closing strip's. */
+.where-get {
+  margin-top: 40px;
+  background: var(--surface-2);
+  border-color: var(--line-soft);
+}
 .private-strip .get-text p {
   margin: 0;
   color: var(--fg);
@@ -3192,8 +3198,9 @@ h2 {
 }
 
 /* Round 10: what a second audit of the whole journey found. */
-/* The link a phone can use: the page, sent to where the extension installs. Not shown where it already is. */
-.send-self {
+/* The button a phone can use: the store link and the page, emailed to where the extension installs. Not shown where it
+   already is. */
+.send-btn {
   display: none;
 }
 /* A control in a drawn app window is one line, as in the app. */
@@ -3201,15 +3208,35 @@ h2 {
   white-space: nowrap;
 }
 @media (max-width: 640px) {
-  /* A phone cannot install it, so what it can do comes first: watch, then send the page to a computer. */
+  /* A phone cannot install it, so what it can do comes first: email it to a computer, then watch. */
   .hero .cta .watch {
     order: -1;
   }
-  .send-self {
-    display: block;
-    margin-top: 6px;
-    padding: 4px 0;
-    color: var(--accent);
+  /* The phone's one action: a full-width pill in the actions' blue, before the badge it cannot use. */
+  .send-btn {
+    display: flex;
+    order: -2;
+    justify-content: center;
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 20px;
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--on-primary);
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .send-btn:hover {
+    background: var(--primary-hover);
+    color: var(--on-primary);
+  }
+  .send-btn:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+  }
+  /* In the install row the email button leads too, and the badge goes under it on the left, as the text does. */
+  .where-get .badge-link {
+    order: 1;
   }
   /* No room for every control beside the ringed one: the one after it goes. */
   .appwin.claude .under > span:nth-child(2) {

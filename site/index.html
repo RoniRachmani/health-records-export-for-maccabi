@@ -38,8 +38,8 @@
         <p class="eyebrow"><svg viewBox="0 0 24 24" width="40" height="40" aria-hidden="true"><g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M2.75 7A2.75 2.75 0 0 1 5.5 4.25L9.031 4.25A0.8 0.8 0 0 1 9.64 4.53L11.51 6.72A0.8 0.8 0 0 0 12.119 7L18.5 7A2.75 2.75 0 0 1 21.25 9.75L21.25 18.25A2.75 2.75 0 0 1 18.5 21L5.5 21A2.75 2.75 0 0 1 2.75 18.25Z" transform="translate(-1.1 -1.1)" stroke="#f1c1cd" stroke-width="2.55" /><path d="M2.75 7A2.75 2.75 0 0 1 5.5 4.25L9.031 4.25A0.8 0.8 0 0 1 9.64 4.53L11.51 6.72A0.8 0.8 0 0 0 12.119 7L18.5 7A2.75 2.75 0 0 1 21.25 9.75L21.25 18.25A2.75 2.75 0 0 1 18.5 21L5.5 21A2.75 2.75 0 0 1 2.75 18.25Z" fill="#ffffff" stroke="#083f92" stroke-width="1.6" /><path d="M12 11.25v5.5M9.4 14.15L12 16.75l2.6-2.6" stroke="#083f92" stroke-width="1.6" /></g></svg> <span itemprop="name">Maccabi Health Records Takeout</span> <span class="chip">Unofficial</span></p>
         <h1>Your whole Maccabi history, and <em>a genius friend who's read all of it</em></h1>
         <p class="lede" itemprop="description">Save everything from Maccabi Online to your computer, then ask anything: what changed, what stands out, what to do next.</p>
-        <div class="cta"><a class="badge-link" itemprop="installUrl" href="https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp?utm_source=site&amp;utm_medium=landing&amp;utm_campaign=hero"><img src="images/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="206" height="58" /></a><a class="watch" href="https://youtu.be/ypmsdEyAXS8"><span class="play"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 1l11 6-11 6z" /></svg></span><span>Watch an export<small>1 minute, narrated</small></span></a><a class="gh" href="https://github.com/RoniRachmani/health-records-export-for-maccabi"><img src="images/github-invertocat-black.svg" alt="" width="20" height="20" />Open source on GitHub</a></div>
-        <p class="cta-note">It installs in Chrome on a computer, not on a phone. <a class="send-self" href="mailto:?subject=Health%20Records%20Export%20for%20Maccabi&amp;body=Open%20this%20on%20your%20computer%2C%20in%20Chrome%3A%20https%3A%2F%2Fmaccabi.ronirachmani.com%2F">Email yourself the link</a></p>
+        <div class="cta"><a class="send-btn" href="mailto:?subject=Maccabi%20Health%20Records%20Takeout%2C%20to%20open%20on%20my%20computer&amp;body=Save%20your%20whole%20Maccabi%20history%20to%20this%20computer%2C%20then%20ask%20Claude%20or%20ChatGPT%20about%20it.%20Free%2C%20in%20Chrome.%0A%0AInstall%20it%3A%20https%3A%2F%2Fchromewebstore.google.com%2Fdetail%2Flmjcbhajlnbpldofejcglcdclceampjp%3Futm_source%3Demail%26utm_medium%3Dlanding%26utm_campaign%3Dsend-self%0A%0AWhat%20it%20does%3A%20https%3A%2F%2Fmaccabi.ronirachmani.com%2F">Email it to my computer</a><a class="badge-link" itemprop="installUrl" href="https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp?utm_source=site&amp;utm_medium=landing&amp;utm_campaign=hero"><img src="images/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="206" height="58" /></a><a class="watch" href="https://youtu.be/ypmsdEyAXS8"><span class="play"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 1l11 6-11 6z" /></svg></span><span>Watch an export<small>1 minute, narrated</small></span></a><a class="gh" href="https://github.com/RoniRachmani/health-records-export-for-maccabi"><img src="images/github-invertocat-black.svg" alt="" width="20" height="20" />Open source on GitHub</a></div>
+        <p class="cta-note">It installs in Chrome on a computer, not on a phone.</p>
         <meta itemprop="applicationCategory" content="BrowserApplication" />
         <meta itemprop="operatingSystem" content="Chrome" />
         <link itemprop="url" href="https://maccabi.ronirachmani.com/" />
@@ -585,6 +585,16 @@
               <p>A chat takes a few dozen files at most. Your export has hundreds, and the assistant finds its way through them with the folder's own layout and <code>README.md</code>. The desktop apps read the folder as it is.</p>
             </div>
           </aside>
+        </div>
+        <!-- The install button again where a reader has just seen the last step is easy. On a phone, which cannot install
+             it, the email button comes first. -->
+        <div class="get where-get" id="where-get">
+          <div class="get-text">
+            <h3>Install it, then press Start export</h3>
+            <p>Free, in Chrome on a computer.</p>
+          </div>
+          <a class="badge-link" href="https://chromewebstore.google.com/detail/lmjcbhajlnbpldofejcglcdclceampjp?utm_source=site&amp;utm_medium=landing&amp;utm_campaign=where"><img src="images/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="206" height="58" loading="lazy" /></a>
+          <a class="send-btn" href="mailto:?subject=Maccabi%20Health%20Records%20Takeout%2C%20to%20open%20on%20my%20computer&amp;body=Save%20your%20whole%20Maccabi%20history%20to%20this%20computer%2C%20then%20ask%20Claude%20or%20ChatGPT%20about%20it.%20Free%2C%20in%20Chrome.%0A%0AInstall%20it%3A%20https%3A%2F%2Fchromewebstore.google.com%2Fdetail%2Flmjcbhajlnbpldofejcglcdclceampjp%3Futm_source%3Demail%26utm_medium%3Dlanding%26utm_campaign%3Dsend-self%0A%0AWhat%20it%20does%3A%20https%3A%2F%2Fmaccabi.ronirachmani.com%2F">Email it to my computer</a>
         </div>
       </section>
 

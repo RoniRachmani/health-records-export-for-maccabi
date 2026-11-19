@@ -69,7 +69,9 @@ read your whole file**.
 
 **Conditions, not benefits:** it stays on your computer, and it's free. The landing page's hero leaves both out and
 ends on the install button and the film. The button comes again under the three steps of "One button", where a
-reader has just seen what Start does. The privacy section further down says where the records go, and the store
+reader has just seen what Start does, and under "Open it in Claude or ChatGPT", where they have just seen the last step
+is easy. On a phone, which cannot install it, each of the hero and that row leads with a button that emails the store
+link to the member's computer. The privacy section further down says where the records go, and the store
 listing says it's free. Too much about privacy reads as suspicious.
 
 ## Messaging

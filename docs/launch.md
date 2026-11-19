@@ -31,7 +31,8 @@ readers in four are with another fund and can't use the extension at all. The ca
 - Links to the landing page, `https://maccabi.ronirachmani.com/`, not to the store: the page does the persuading, and
   its visits are counted.
 - Says "on a computer, in Chrome". Most clicks from a social post are on a phone, where it cannot install; the page's
-  "Email yourself the link" is for them.
+  "Email it to my computer" button, which leads the hero and the install row under *Open it in Claude or ChatGPT* on a
+  phone, is for them.
 - Says *Unofficial*, and never tags Maccabi or uses its logo or name as a brand.
 - Shows the made-up member, or a real screen that identifies no one: the page's pictures, the store's screenshots, the
   film, or the popup partway through a run on the site, like the README's screenshot. Never a name, a member number, a
@@ -85,6 +86,8 @@ in the store:
 |---|---|
 | The page's badge in the hero | `utm_source=site&utm_medium=landing&utm_campaign=hero` |
 | The page's badge under *One button*, beside the film | `utm_source=site&utm_medium=landing&utm_campaign=collect` |
+| The page's badge under *Open it in Claude or ChatGPT* | `utm_source=site&utm_medium=landing&utm_campaign=where` |
+| The store link in the email a phone sends itself (*Email it to my computer*) | `utm_source=email&utm_medium=landing&utm_campaign=send-self` |
 | The page's badge under *Get the extension* | `utm_source=site&utm_medium=landing&utm_campaign=get` |
 | The page's footer | `utm_source=site&utm_medium=landing&utm_campaign=footer` |
 | The README's badge and install link | `utm_source=github&utm_medium=readme` |
