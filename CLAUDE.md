@@ -73,6 +73,17 @@ Pull requests merge by squash or rebase (no merge commits; the history is linear
 to a full commit SHA. Run `npm run typecheck` and `npm test` (or `npm run coverage`, which CI runs) before every push, and resolve review
 conversations before merging. CONTRIBUTING.md's *Pull requests* says the same for contributors; keep the two in step.
 
+## 1Password
+
+The secrets the scripts use (the Maccabi username and password, the ElevenLabs key) live in 1Password; `.env.tpl` holds only
+`op://` references, `npm run env:refs` copies them into `.env`, and the scripts read them through `op`. For agents, the
+1Password setup from `https://www.1password.dev/agent-setup/prompt.md` is done at user level on the owner's Mac: the
+`op` CLI, signed in through the 1Password desktop app, and the `1password@anthropic-plugin-directory` Claude Code plugin
+(an MCP server for 1Password Environments and the `1password:1password-environments` skill). Don't reinstall them, and
+never read, print or write a secret's value to disk (`npm run env` is for the unattended drift checkout only). If `op`
+or the plugin's `authenticate` fails, ask the owner to unlock 1Password and turn on Settings → Developer → "Integrate
+with 1Password CLI" and "Integrate with MCP clients"; don't change 1Password settings yourself.
+
 ## Architecture
 
 Three layers, and the boundary between the first two is the point of the design:
