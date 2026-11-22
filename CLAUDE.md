@@ -31,7 +31,8 @@ npm run endpoints                 # the site's own calls that docs/endpoints/end
 npm run endpoints -- --from DIR   # the same on scripts a --save DIR kept, with no sign-in; --rea adds REA's parser
 npm run drift                     # the weekly drift check: no-browser sign-in, every section kept nowhere, shapes and scan against docs/endpoints/, report in .cache/drift/ (exit 1 differs, 2 could not check)
 npm run drift -- --install --day tue --time 03:30   # run it weekly (--day daily: every day) from this checkout with a notification (launchd); --uninstall stops it
-npm run env                       # write .env from 1Password, by the references in .env.tpl (op inject)
+npm run env:refs                  # copy the 1Password references in .env.tpl to .env (no values on disk; use this one)
+npm run env                       # write .env with the values (op inject), only for the unattended drift checkout
 npm run clean                     # remove dist/, dist-dev/, dist-store/, dist-cli/, release/, coverage/
 npm run release:zip               # clean, test, build:dev, package
 npm run release                   # release:zip, then store-assets, store-video
