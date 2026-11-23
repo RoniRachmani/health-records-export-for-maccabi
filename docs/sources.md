@@ -522,7 +522,14 @@ The rules the extension, its listing and its pages are held to.
   [user data](https://developer.chrome.com/docs/webstore/user_data) (now the user data FAQ),
   [troubleshooting](https://developer.chrome.com/docs/webstore/troubleshooting), [the API](https://developer.chrome.com/docs/webstore/using-api)
   and its [service accounts](https://developer.chrome.com/docs/webstore/service-accounts) (checked 23 November 2026: V2
-  takes one service account per publisher, and it uploads, publishes and reports status, with no analytics).
+  takes one service account per publisher), and its reference for
+  [queryMetrics](https://developer.chrome.com/docs/webstore/api/reference/rest/v2/publishers.items/queryMetrics),
+  [getRatingSummary](https://developer.chrome.com/docs/webstore/api/reference/rest/v2/publishers.items/getRatingSummary)
+  and [fetchReviews](https://developer.chrome.com/docs/webstore/api/reference/rest/v2/publishers.items/fetchReviews)
+  (checked 23 November 2026: the dashboard's own numbers, which the weekly log in [launch.md](launch.md) reads).
+  Its [Google Analytics opt-in](https://developer.chrome.com/docs/webstore/google-analytics) (checked 23 November 2026:
+  a property the store makes, the Marketer role only, two months kept) and the
+  [Analytics Data API](https://developers.google.com/analytics/devguides/reporting/data/v1) read it for [launch.md](launch.md).
 
 ### Brands
 

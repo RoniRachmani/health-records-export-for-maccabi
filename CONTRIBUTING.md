@@ -403,7 +403,7 @@ A release, in order:
    If `git diff v<last> -- docs/store-listing.md store/assets/` shows anything, update the listing from them: paste the
    whole description block rather than editing the dashboard's copy line by line, so the two can't drift (and upload a
    re-rendered video, its captions and its thumbnail on YouTube). Then submit for review. A listing change can slow review.
-   The store's API can report what it serves (*The store's API* in [docs/launch.md](docs/launch.md)), but the upload
+   The store's API can report what it serves (*Reading the numbers* in [docs/launch.md](docs/launch.md)), but the upload
    stays by hand.
 6. **After.** Check the website and its policy pages. Once the store approves the update, install it from the store
    and run one export.

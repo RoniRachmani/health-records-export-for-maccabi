@@ -73,8 +73,8 @@ What each place says:
 | Where | What it shows |
 |---|---|
 | GoatCounter (`maccabi-export.goatcounter.com`) | Visits to the landing page, by day |
-| Chrome Web Store dashboard, *Installs & uninstalls* | Installs and uninstalls, by day and by region |
-| Chrome Web Store dashboard, *Impressions* | Views of the listing, split by the `utm_source`, `utm_medium` and `utm_campaign` on the link that led there |
+| Chrome Web Store API (the dashboard's *Analytics*) | Installs and uninstalls by day, region and install type; views of the listing, split by the `utm_source`, `utm_medium` and `utm_campaign` on the link that led there; weekly users; ratings and reviews |
+| Google Analytics, the store's property (from 23 Nov) | Listing views by source and country, and installs made from the listing, with two months' history |
 | Google Search Console | The searches that find the page |
 | YouTube Studio | The film's views and how long people watch |
 | GitHub, *Insights → Traffic* | The repo's views and referrers, for the last 14 days only: copy them here weekly |
@@ -93,7 +93,8 @@ in the store:
 | The README's badge and install link | `utm_source=github&utm_medium=readme` |
 | The review link sent to someone who ran an export | `utm_source=friends` |
 
-Not used: the dashboard's Google Analytics opt-in, and any counting inside the extension.
+Not used: any counting inside the extension. The dashboard's Google Analytics opt-in was turned on on 23 November; it
+covers the store's listing page only, which is Google's, so the Privacy Policy is unchanged.
 
 **Targets**, to be replaced with the log's own ratios after week 2. They assume one visit in five reaches the listing
 and one listing view in four installs, which is a guess:
@@ -145,48 +146,52 @@ gh api repos/$R/traffic/views --jq '.views[] | "\(.timestamp[:10]) \(.count) vie
 gh api repos/$R/traffic/popular/referrers --jq '.[] | "\(.referrer) \(.count)/\(.uniques)"'
 ```
 
-**The Chrome Web Store dashboard**, signed in as the publisher. It opens in the Claude desktop app's browser pane as
-well as in Chrome. Its Analytics pages are `…/devconsole/<publisher id>/lmjcbhajlnbpldofejcglcdclceampjp/analytics/`
-followed by `installs`, `impressions` or `users`, and each shows the last 30 days, up to the day before yesterday. Its
-charts draw on data the page carries in `AF_initDataCallback` scripts, one per chart, which the console lists with:
-
-```js
-[...document.scripts].map(s => s.textContent)
-  .filter(t => /AF_initDataCallback\(\{key: 'ds:/.test(t) && /"\d{4}-\d\d-\d\d"/.test(t))
-  .map(t => t.replace(/^AF_initDataCallback\(\{key: '(ds:\d+)'.*?data:/, '$1 '))
-```
-
-Each is a list of `["<date>", …]` entries, and days with nothing are left out. Find the chart by the name in it, not by
-its `ds:` number, which differs from page to page:
-
-| Column | Page | The entries that hold it |
-|---|---|---|
-| Installs, uninstalls | `installs` | `INSTALLS`, `UNINSTALLS`; the regions are the `COUNTRY` entries on the same page |
-| Listing views | `impressions` | `DETAIL_PAGEVIEWS`, split by the `UTM_SOURCE` entries. `IMPRESSIONS` is something else: the item shown in the store's lists and searches |
-| Users | `users` | `WEEKLY_USERS` on the row's Saturday, with `COUNTRY` and `LANGUAGE` beside it |
-
-Listing views tagged with a source that isn't one of [the links above](#measuring) (`chatgpt.com`, so far) count as
-untagged, and the note says how many. The installs' regions come from each user's account and can be wrong, but read
-them every week all the same: an install from abroad that never shows in *Users* is not a member.
-
-**The store's API** can't fill a column: it uploads, publishes and reports which version the store serves, and has
-no installs, users or listing views. It signs in as the service account
+**The store**, through the Chrome Web Store API (V2), which returns the dashboard's own numbers: it gave the 18 and
+25 October rows exactly. It signs in as the service account
 `cws-publisher@hrem-chrome-web-store.iam.gserviceaccount.com` (Google Cloud project `hrem-chrome-web-store`, added on the
-dashboard's *Account* page), which the maintainer's gcloud sign-in impersonates, so there is no key to keep. Name the
-publisher in the path: `publishers/-` is refused.
+dashboard's *Account* page), which the maintainer's gcloud sign-in impersonates, so there is no key to keep and nothing
+to open in a browser. Name the publisher in the path (`publishers/-` is refused), and keep the URL in braces: in zsh,
+`$I:queryMetrics` reads `:q` as a modifier and the call answers 404.
 
 ```sh
-T=$(gcloud auth print-access-token --scopes=https://www.googleapis.com/auth/chromewebstore \
+T=$(gcloud auth print-access-token --scopes=https://www.googleapis.com/auth/chromewebstore.readonly \
   --impersonate-service-account=cws-publisher@hrem-chrome-web-store.iam.gserviceaccount.com)
-curl -s -H "Authorization: Bearer $T" "https://chromewebstore.googleapis.com/v2/publishers/e24b428f-1d4b-49ad-99fc-9c4b6e03eda8/items/lmjcbhajlnbpldofejcglcdclceampjp:fetchStatus" \
-  | jq '.publishedItemRevisionStatus'
+I=https://chromewebstore.googleapis.com/v2/publishers/e24b428f-1d4b-49ad-99fc-9c4b6e03eda8/items/lmjcbhajlnbpldofejcglcdclceampjp
+R='timeSpec.firstDate.year=2026&timeSpec.firstDate.month=10&timeSpec.firstDate.day=14&timeSpec.lastDate.year=2026&timeSpec.lastDate.month=<m>&timeSpec.lastDate.day=<Saturday>&pageSize=1000'
+m() { curl -s -H "Authorization: Bearer $T" "${I}:queryMetrics?${R}&$1" \
+  | jq -r '.metricRows[]? | "\(.date.month)-\(.date.day) \(.dimensionValues | join(",")) \([.metricValues[] | "\(.metric)=\(.value)"] | join(" "))"'; }
+m 'metrics=page-views&dimensions=utm-source'          # listing views by source; the rest are untagged
+m 'metrics=page-views'                                 # all listing views, by day
+m 'metrics=installs&metrics=uninstalls&dimensions=install-type'
+m 'metrics=installs&dimensions=country'
+m 'metrics=users-7d'                                   # read the row's Saturday
+curl -s -H "Authorization: Bearer $T" "${I}/ratingSummary"; curl -s -H "Authorization: Bearer $T" "${I}:fetchReviews"
 ```
 
-**Reviews.** The listing's own page, in Chrome: the browser pane won't open the public store.
+Each call returns days, not totals, and leaves out days with nothing, so add them up from 14 October. One dimension per
+call; the others are `country`, `language`, `os`, `install-source`, `utm-medium` and `utm-campaign`. *Untagged* listing
+views are all of them less `site` and `github`, so they include the other sources (`chatgpt.com`, so far), which the
+note names. Installs are split by `install-type`: `from_webstore` is someone pressing *Add to Chrome*, and `other` is
+everything else. Since 30 October about 24 `other` installs a day come from Romania, which no member would be, so the
+column gives the two apart (`store / other`), and the 18 and 25 October rows' 10 and 23 were 5 + 5 and 11 + 12. The
+regions come from each user's account and can be wrong, but read them every week: an install from abroad that never
+shows in *Users* is not a member. `users-7d` is the dashboard's *Weekly users*, and may count the `other` installs too.
+
+The API also uploads and publishes, but the upload stays by hand ([CONTRIBUTING.md](../CONTRIBUTING.md)'s *Releasing*).
+The dashboard's Analytics pages show the same numbers for the last 30 days, if the API is ever down.
+
+**Google Analytics** (the store's property, `properties/558851850`) adds nothing the log needs: it sees only installs
+made from the listing page, and the API above already splits listing views by source. It is readable from here through
+gcloud's application-default sign-in with the "gcloud analytics" Desktop client in `hrem-chrome-web-store`
+(`~/.config/gcloud/hrem-analytics-client.json`, outside the repo; gcloud's own client is refused the Analytics scope),
+and it keeps two months.
+
+**Reviews** come from the same API: `ratingSummary` gives the count and the stars, and `fetchReviews` any written ones.
 
 ### Log
 
-Fill a row each Sunday. Visits, listing views, installs and uninstalls are totals since 14 October. *Asked for
+Fill a row each Sunday. Visits, listing views, installs and uninstalls are totals since 14 October; installs are
+`store / other` from 1 November (see *The store* above). *Asked for
 another fund* counts the people who answer "I'm with Clalit, Meuhedet or Leumit: is there one for us?", which is the
 only measure this launch gives of what the other three quarters would want.
 
@@ -195,10 +200,10 @@ only measure this launch gives of what the other three quarters would want.
 | 14 Oct | Nothing yet | 0 | 0 / 0 / 0 | 0 | 0 | 3 | 0 | 1 | 0 | Baseline. GitHub: 115 views from 18 people in the 14 days before |
 | 18 Oct | Nothing | 9 | 0 / 0 / 7 | 10 | 2 | 2 | 0 | 1 | | Visits 14–17 Oct: 5, 3, 1, 0, which may include my own visits. Installs by region: 6 US, 2 Germany, 1 Japan, 1 Israel. 4 listing views on 17 Oct came tagged `utm_source=chatgpt.com`. GitHub 15–17 Oct: 5 views, at most 2 people a day |
 | 25 Oct | One WhatsApp group message, 18 Oct | 25 | 3 / 1 / 11 | 23 | 2 | 1 | 0 | 1 | | 16 visits 18–24 Oct; 2 in the hour after the message, 3 that day. All 13 installs 18–24 Oct were outside Israel (11 US, 2 Japan), and weekly users fell to 1: no install that week came from Israel. GitHub 18–24 Oct: 24 views, 18 of them by one person on 18 Oct |
-| 1 Nov | | | | | | | | | | |
-| 8 Nov | | | | | | | | | | |
-| 15 Nov | | | | | | | | | | |
-| 22 Nov | | | | | | | | | | |
+| 1 Nov | 29 Oct: three Facebook groups for AI builders, a WhatsApp chat and a note to a group's admin | 79 | 13 / 2 / 51 | 17 / 67 | 2 | 6 | | 2 | | 55 visits 25–31 Oct, 38 of them on 29 Oct, the day of the posts. 51 listing views (10 from the page, 1 from GitHub, 40 untagged, 4 of those from ChatGPT and shares). 6 store installs. The `other` installs from Romania start: 40 on 30–31 Oct. Weekly users rose from 1 to 6. The second GitHub star came on 30 Oct |
+| 8 Nov | Nothing logged | 91 | 16 / 7 / 66 | 28 / 247 | 4 | 16 | | 2 | | 12 visits 1–7 Nov. 23 listing views (3 from the page, 5 from GitHub, 15 untagged). 11 store installs, 2 uninstalls. 180 `other` installs, 169 of them from Romania |
+| 15 Nov | Nothing logged | 97 | 18 / 11 / 82 | 38 / 423 | 4 | 21 | | 2 | | 6 visits 8–14 Nov. 22 listing views (2 from the page, 4 from GitHub, 16 untagged). 10 store installs. 176 `other` installs, 168 of them from Romania |
+| 22 Nov | Nothing logged | 107 | 19 / 11 / 89 | 46 / 596 | 7 | 26 | 1 | 2 | | 10 visits 15–21 Nov (2, 1, 1, 1, 5, 0, 0). 8 listing views (1 from the page, 7 untagged, 1 of those from ChatGPT). 8 store installs, 3 uninstalls. 173 `other` installs, 167 of them from Romania. The one rating is 5 stars, with no written review. GitHub 15–21 Nov: 11 views, at most 2 people a day; its 14-day referrers were mostly Facebook (16) and GitHub (8) |
 | 29 Nov | | | | | | | | | | |
 | 6 Dec | | | | | | | | | | |
 | 13 Dec | | | | | | | | | | |

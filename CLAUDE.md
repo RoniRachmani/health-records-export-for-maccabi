@@ -83,7 +83,7 @@ The secrets the scripts use (the Maccabi username and password, the ElevenLabs k
 never read, print or write a secret's value to disk (`npm run env` is for the unattended drift checkout only). If `op`
 or the plugin's `authenticate` fails, ask the owner to unlock 1Password and turn on Settings → Developer → "Integrate
 with 1Password CLI" and "Integrate with MCP clients"; don't change 1Password settings yourself.
-The Chrome Web Store API needs no secret: gcloud impersonates a service account (*The store's API* in `docs/launch.md`).
+The Chrome Web Store API needs no secret: gcloud impersonates a service account (*Reading the numbers* in `docs/launch.md`).
 
 ## Architecture
 
