@@ -175,7 +175,8 @@ note names. Installs are split by `install-type`: `from_webstore` is someone pre
 everything else. Since 30 October about 24 `other` installs a day come from Romania, which no member would be, so the
 column gives the two apart (`store / other`), and the 18 and 25 October rows' 10 and 23 were 5 + 5 and 11 + 12. The
 regions come from each user's account and can be wrong, but read them every week: an install from abroad that never
-shows in *Users* is not a member. `users-7d` is the dashboard's *Weekly users*, and may count the `other` installs too.
+shows in *Users* is not a member. `users-7d` is the dashboard's *Weekly users*; with `dimensions=country` it showed none of the Romanian installs on
+21 November (23 in Israel, 3 in the US), so they are not users.
 
 The API also uploads and publishes, but the upload stays by hand ([CONTRIBUTING.md](../CONTRIBUTING.md)'s *Releasing*).
 The dashboard's Analytics pages show the same numbers for the last 30 days, if the API is ever down.
@@ -203,7 +204,7 @@ only measure this launch gives of what the other three quarters would want.
 | 1 Nov | 29 Oct: three Facebook groups for AI builders, a WhatsApp chat and a note to a group's admin | 79 | 13 / 2 / 51 | 17 / 67 | 2 | 6 | | 2 | | 55 visits 25–31 Oct, 38 of them on 29 Oct, the day of the posts. 51 listing views (10 from the page, 1 from GitHub, 40 untagged, 4 of those from ChatGPT and shares). 6 store installs. The `other` installs from Romania start: 40 on 30–31 Oct. Weekly users rose from 1 to 6. The second GitHub star came on 30 Oct |
 | 8 Nov | Nothing logged | 91 | 16 / 7 / 66 | 28 / 247 | 4 | 16 | | 2 | | 12 visits 1–7 Nov. 23 listing views (3 from the page, 5 from GitHub, 15 untagged). 11 store installs, 2 uninstalls. 180 `other` installs, 169 of them from Romania |
 | 15 Nov | Nothing logged | 97 | 18 / 11 / 82 | 38 / 423 | 4 | 21 | | 2 | | 6 visits 8–14 Nov. 22 listing views (2 from the page, 4 from GitHub, 16 untagged). 10 store installs. 176 `other` installs, 168 of them from Romania |
-| 22 Nov | Nothing logged | 107 | 19 / 11 / 89 | 46 / 596 | 7 | 26 | 1 | 2 | | 10 visits 15–21 Nov (2, 1, 1, 1, 5, 0, 0). 8 listing views (1 from the page, 7 untagged, 1 of those from ChatGPT). 8 store installs, 3 uninstalls. 173 `other` installs, 167 of them from Romania. The one rating is 5 stars, with no written review. GitHub 15–21 Nov: 11 views, at most 2 people a day; its 14-day referrers were mostly Facebook (16) and GitHub (8) |
+| 22 Nov | Nothing logged | 107 | 19 / 11 / 89 | 46 / 596 | 7 | 26 | 1 | 2 | | 10 visits 15–21 Nov (2, 1, 1, 1, 5, 0, 0). 8 listing views (1 from the page, 7 untagged, 1 of those from ChatGPT). 8 store installs, 3 uninstalls. 173 `other` installs, 167 of them from Romania, none of them among the users (23 in Israel, 3 in the US). The one rating is 5 stars, with no written review. GitHub 15–21 Nov: 11 views, at most 2 people a day; its 14-day referrers were mostly Facebook (16) and GitHub (8) |
 | 29 Nov | | | | | | | | | | |
 | 6 Dec | | | | | | | | | | |
 | 13 Dec | | | | | | | | | | |
