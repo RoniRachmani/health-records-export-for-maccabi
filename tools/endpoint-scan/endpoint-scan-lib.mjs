@@ -2,7 +2,7 @@
 // its lazy chunks, what its calls are, what rea's analysis says of it, and which of all that
 // docs/endpoints/endpoints.json already maps. Pure, so endpoint-scan.test.ts runs it on made-up scripts.
 
-/** @typedef {{ paths: string[]; services: Set<string> }} Known */
+/** @typedef {{ paths: string[]; writes: string[]; services: Set<string> }} Known */
 /** @typedef {{ path: string; method: string; offset: number; via: string }} Call */
 /**
  * @typedef {{
@@ -75,22 +75,31 @@ function kind(path) {
 }
 
 /**
- * Every path and service docs/endpoints/endpoints.json names, wherever in it they are written.
+ * Every path and service docs/endpoints/endpoints.json names, wherever in it they are written. `writes` leaves
+ * out what read_not_collected names after a GET: those are reads left out, and a write on the same path is not
+ * known by them (a read the site sends as a POST, written there as one, still counts).
  * @param {unknown} endpoints
  * @returns {Known}
  */
 export function knownFrom(endpoints) {
   const paths = new Set();
+  const writes = new Set();
   const services = new Set();
-  const walk = (x) => {
+  const walk = (x, readOnly = false) => {
     if (typeof x === 'string') {
-      for (const m of x.matchAll(/[\w/{}<>.\-]*(?:[A-Za-z]API\/|webapi|\.asmx|\.ashx|\.aspx|\/online\/)[\w/{}<>.\-]*/g)) paths.add(shape(m[0]));
+      for (const m of x.matchAll(/[\w/{}<>.\-]*(?:[A-Za-z]API\/|webapi|\.asmx|\.ashx|\.aspx|\/online\/)[\w/{}<>.\-]*/g)) {
+        paths.add(shape(m[0]));
+        if (!readOnly || /\b(?:POST|PUT|PATCH|DELETE)\s+$/.test(x.slice(0, m.index))) writes.add(shape(m[0]));
+      }
       for (const m of x.matchAll(/\b([A-Z][A-Za-z]+API)\b/g)) services.add(m[1]);
-    } else if (x && typeof x === 'object') Object.values(x).forEach(walk);
+    } else if (x && typeof x === 'object') {
+      for (const [k, v] of Object.entries(x)) walk(v, readOnly || k === 'read_not_collected');
+    }
   };
   walk(endpoints);
   // Only shapes with a route in them: the bases' templates (<Service>/.../...) and lone names say nothing.
-  return { paths: [...paths].filter((p) => p.includes('/') && !p.includes('...')), services };
+  const routes = (set) => [...set].filter((p) => p.includes('/') && !p.includes('...'));
+  return { paths: routes(paths), writes: routes(writes), services };
 }
 
 /** A legacy service or popup whole: the code writes them from /online/ down (/Ajax/…, root + '/Pages/…'), the maps from /online/. */
@@ -358,9 +367,11 @@ export function readCalls(source) {
     const args = argsAt(text, m.index + m[0].length - 1);
     if (!args || !args.length) continue;
     if (name === 'remove') {
-      for (const base of args.length > 1 ? valuesAt(text, args[0], m.index) : []) {
-        if (!BASE.test(base)) continue;
-        for (const rest of valuesAt(text, args[1], m.index)) calls.push({ path: base + rest.replace(/^\//, ''), method: 'DELETE', offset: m.index + 1, via: name });
+      const push = (path) => calls.push({ path, method: 'DELETE', offset: m.index + 1, via: name });
+      for (const first of valuesAt(text, args[0], m.index)) {
+        // remove(base, path), or remove(url) with the whole address already in it.
+        if (args.length > 1 && BASE.test(first)) for (const rest of valuesAt(text, args[1], m.index)) push(first + rest.replace(/^\//, ''));
+        else if (args.length === 1 && /(?:[A-Za-z]API|webapi)\/./i.test(first)) push(first);
       }
       continue;
     }
@@ -644,7 +655,9 @@ export function candidates(files, evidence, known) {
     const key = shape(path) + '\0' + (k === 'api' ? method || '' : '');
     const had = byKey.get(key);
     if (!had) {
-      byKey.set(key, { path, method: k === 'api' ? method : null, proof, where, kind: k, known: isKnown(path, known) });
+      // A write is known only by a part of the map that is not reads left out.
+      const write = k === 'api' && !!method && method !== 'GET';
+      byKey.set(key, { path, method: k === 'api' ? method : null, proof, where, kind: k, known: isKnown(path, write ? { ...known, paths: known.writes } : known) });
     } else if (PROOF.indexOf(proof) < PROOF.indexOf(had.proof)) Object.assign(had, { path, proof, where });
   };
 

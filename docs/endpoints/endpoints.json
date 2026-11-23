@@ -1,5 +1,5 @@
 {
-  "_note": "Endpoint map: every request the extension makes, the collector's (src/core) and its own (src/extension: the keep-alive under sections.extension), and the file each one produces. Verified live 2026-09-27; entries checked later give their own date. No medical data. {mid} = member id (cookie cookie_sessionId_0_<id>, or mem_id in the sessionStorage token when that cookie is absent, seen 2026-09-17); it never appears in export paths or stored endpoint strings.",
+  "_note": "Endpoint map: every request the extension makes, the collector's (src/core) and its own (src/extension: the keep-alive under sections.extension, and the popup's lookup of the member, the profile request profile/member.json comes from), and the file each one produces. Verified live 2026-09-27; entries checked later give their own date. No medical data. {mid} = member id (cookie cookie_sessionId_0_<id>, or mem_id in the sessionStorage token when that cookie is absent, seen 2026-09-17); it never appears in export paths or stored endpoint strings.",
   "bases": {
     "rest": "https://online.maccabi4u.co.il/sonline/<Service>/webapi/mac/<version>/...",
     "legacy": "https://online.maccabi4u.co.il/online/..."
@@ -17,7 +17,7 @@
     "pacing": "300 ms between requests; 500/503 and requests without a response retried up to 3 times after 2.5 s.",
     "binary_files": "Existing PDFs/images are kept; regenerated reports (purchase report, vaccination booklet) are replaced only when their source data changed. A document that can also be saved elsewhere (an inquiry's form, an upload, a linked visit's summary) is written only if no file already in the export has its bytes (SHA-256); otherwise its record's files[] says {same_as: <that file>} and nothing is written.",
     "file_names": "<date>_<id>_<title> for record files and their JSON, so a record's JSON in details/ and its document in files/ share one stem. <date> is YYYY-MM-DD; <id> is the API's own record id (a hash of stable fields where the API has none, and the member id is never used); <title> is a display string from the record, kept as the API sends it (Hebrew included, NFC-normalised, an abbreviation's ASCII quote turned into the Hebrew ״ or ׳ (and ד'ר into ד״ר), every other run of punctuation into one '-', cut at 40 characters) and left out when the record has none. '_' separates the three parts and nothing else produces one, so a name always reads as date_id_title. Section lists are always list.json.",
-    "end_date": "Date ranges end at 2099-12-31, not today: the collector's today() is the UTC date (a day behind in Israel until 03:00), and a far end date returns the same records (checked 2026-09-17). Two exceptions: the medical-file order uses the Israel date (Asia/Jerusalem), and uploads' SearchByDate asks up to 1/1/2050 in its own M/D/YYYY form.",
+    "end_date": "Date ranges end at 2099-12-31, not today: the collector's today() is the UTC date (a day behind in Israel until 03:00), and a far end date returns the same records (checked 2026-09-17). Two exceptions: the medical-file order uses the Israel date (Asia/Jerusalem), and uploads' SearchByDate asks up to 1/1/2050.",
     "signed_links": "PDF links carry per-session timestamp/hash from the list or details response that describes the file. The site's view buttons build the same links from those fields, so no UI click is needed (verified 2026-09-17: test reports and visit summaries matched the saved PDFs byte for byte in size).",
     "legacy_charsets": "Legacy responses are decoded in the charset their Content-Type declares, strictly: bytes that are not valid in it are reported as a problem, never saved as U+FFFD. Measured 2026-09-27, every one declares it: the .asmx services (PHR, purchases) and the pages send windows-1255, /online/webapi/MailingsFromHospitals utf-8. Without a declaration each call falls back to what its service sends (windows-1255 for PHR, utf-8 for hospital stays), and uploads/details/*.json records the charset used in decoded_from."
   },
@@ -450,8 +450,8 @@
       "reason": "The route the site uses for the medical file when its isOpenPdfByLinkHandlerV2 feature is off. Checked 2026-09-26: 200 on the first request, byte-identical (same size and SHA-256) to what the v2 route served after one 202. The v2 route is what the site uses today, and its 202 is already waited out."
     },
     "patient_approvals": {
-      "request": "GET MainAppAPI/v1/members/0/{mid}/patient/approvals/<n>?pathJson=",
-      "reason": "Checked live 2026-11-23: each of the five pages opened asked one or more, with its own number (3, 4, 10 and 14 seen). The answer is {patient_approval_id, creation_date, update_date, is_success}: the state of a consent or prompt, not a medical approval (those are approvals/)."
+      "request": "GET MainAppAPI/v1/members/0/{mid}/patient/approvals/<n>",
+      "reason": "Checked live 2026-11-23: each of the five pages opened asked one or more, with its own number (3, 4, 10 and 14 seen; 10 and 14 with an empty ?pathJson=). The answer is {patient_approval_id, creation_date, update_date, is_success}: the state of a consent or prompt, not a medical approval (those are approvals/)."
     },
     "lab_result_file": {
       "request": "GET TestResultsAPI/pdf/showresult?data=<result_file>&t=<time_stamp>&hash&testDes=<test_desc>&labDate=<lab_date>",

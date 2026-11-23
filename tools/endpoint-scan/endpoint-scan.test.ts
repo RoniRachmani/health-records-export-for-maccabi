@@ -76,8 +76,9 @@ describe('readCalls', () => {
 
   it('reads the client\'s remove as a DELETE, and only when it takes a service\'s base', () => {
     const text = 'function a(e){let t=tt()("v1/members/{0}/{1}/files/{2}",e.c,e.i,e.u);return sM.remove("/sonline/ReqAPI/webapi/mac/",t,{})}'
-      + 'el.classList.remove("open","shut");list.remove(item)';
-    expect(methods(text)).toEqual(['DELETE /sonline/ReqAPI/webapi/mac/v1/members/{0}/{1}/files/{2}']);
+      + 'el.classList.remove("open","shut");el.classList.remove("open");list.remove(item);'
+      + 'let u="/sonline/ReqAPI/webapi/mac/v1/members/"+m+"/drafts";W.A.remove(u)';
+    expect(methods(text)).toEqual(['DELETE /sonline/ReqAPI/webapi/mac/v1/members/{0}/{1}/files/{2}', 'DELETE /sonline/ReqAPI/webapi/mac/v1/members/{}/drafts']);
   });
 
   it('reads a call once for each side of a conditional address', () => {
@@ -207,6 +208,17 @@ describe('candidates', () => {
     expect(line('cell')).toBeUndefined();
     expect(line('/sonline/LabsAPI/webapi/mac/')).toBeUndefined();
     expect(line('LabsAPI/v1/members/')).toBeUndefined();
+  });
+
+  it('knows a write on a path only from a part of the map that is not reads left out', () => {
+    const map = knownFrom({
+      sections: { a: [{ url: 'ReqAPI/v1/members/0/{mid}/cases' }] },
+      read_not_collected: { b: { request: 'GET ReqAPI/v1/members/0/{mid}/files/<id>' }, c: { request: 'POST ReqAPI/v1/members/0/{mid}/all/letters' } },
+    });
+    const code = 'let b="/sonline/ReqAPI/webapi/mac/",f="v1/members/{0}/{1}/files/{2}";r.get(b,f);r.remove(b,f);r.post(b,"v1/members/{0}/{1}/cases");'
+      + 'r.post(b,"v1/members/{0}/{1}/all/letters")';
+    const found = candidates(new Map([['a.js', code]]), readEvidence({}), map).map((c) => `${c.method} ${c.path.split('/').pop()} ${c.known}`).sort();
+    expect(found).toEqual(['DELETE {2} false', 'GET {2} true', 'POST cases true', 'POST letters true']);
   });
 
   it('leaves out a piece cut inside the service base', () => {
