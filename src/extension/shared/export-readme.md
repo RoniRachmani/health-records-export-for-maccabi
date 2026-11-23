@@ -68,8 +68,8 @@ site returns, which is less than Maccabi Healthcare Services holds, which is les
 - Images: no DICOM, ever — the site opens studies only in its own viewer.
 - Values for anything but lab tests: imaging, cardiology and external findings are only in a PDF,
   and blood pressure, weight and BMI only in the medical file.
-- Care outside Maccabi Healthcare Services, except what was filed with it: external results, documents copied into
-  the medical file, the member's own uploads.
+- Care outside Maccabi Healthcare Services, its own companies included (Maccabident, Maccabi Tivei, Assuta), except
+  what was filed with it: external results, documents copied into the medical file, the member's own uploads.
 - Sections the site had nothing for. A folder exists only when the site returned something, so a
   missing folder that did not fail means "nothing on record", not "this was not checked".{{absent}}
 

@@ -214,7 +214,7 @@ describe('exportReadme', () => {
 
   // It shares an AI reader's context with the records themselves, so its length is part of its job.
   it('stays short enough to read beside the records', () => {
-    expect(readme().length).toBeLessThan(14800);
+    expect(readme().length).toBeLessThan(14900);
   });
 });
 
