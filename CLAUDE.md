@@ -111,6 +111,8 @@ differently and the difference drives most of the run's shape:
   `world: 'MAIN'`), after some `/online/` page has been loaded in the session.
 
 `DEFAULT_ROUTES` in `background/tab.ts` encodes this; `routedTransport` picks per request path.
+Whose records the site shows (signed-in vs on-screen member), its call-centre host and its family-member switcher:
+`docs/members-and-hosts.md`.
 Functions passed to `executeScript` run in the page and must be self-contained (no closures, no imports);
 `test/inPage.test.ts` runs each from its own source alone.
 
