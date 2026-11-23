@@ -188,6 +188,11 @@ November 2026.
 - Maccabi's other pages:
   - [שירותים דיגיטליים](https://www.maccabi4u.co.il/31276/digital-services/)
   - [צפייה והדפסה של התיק הרפואי באתר מכבי Online – תנאי הזכאות](https://www.maccabi4u.co.il/eligibilites/21602/)
+  - [מסירת מידע רפואי לחברי מכבי](https://www.maccabi4u.co.il/eligibilites/3235/?id=1617): what a copy of the file
+    costs by hand under the Patients' Rights Law (10 NIS for the last five years, 142 NIS from 2011, per file before
+    2011, 525 NIS at most), with a form, an ID check at a medical centre and a call back within 14 days. Online, the
+    copy of the medical record starts on 15.07.2020 and visit summaries on 12.02.2018, and visits at Maccabi's
+    subsidiaries (Maccabident, Maccabi Tivei, Assuta) aren't there. Checked 23 November 2026.
   - [הפקת דו"ח רפואי מרכז בשפה האנגלית](https://www.maccabi4u.co.il/31276/digital-services/info/english_report/)
   - [איתור רופאים/ות](https://serguide.maccabi4u.co.il/heb/doctors/)
   - in English: the [home page](https://www.maccabi4u.co.il/en/46562/main_english/) and
