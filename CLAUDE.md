@@ -75,7 +75,7 @@ conversations before merging. CONTRIBUTING.md's *Pull requests* says the same fo
 
 ## 1Password
 
-The secrets the scripts use (the Maccabi username and password, the ElevenLabs key) live in 1Password; `.env.tpl` holds only
+The secrets the scripts use (the Maccabi username and password, the ElevenLabs key, the GoatCounter API token) live in 1Password; `.env.tpl` holds only
 `op://` references, `npm run env:refs` copies them into `.env`, and the scripts read them through `op`. For agents, the
 1Password setup from `https://www.1password.dev/agent-setup/prompt.md` is done at user level on the owner's Mac: the
 `op` CLI, signed in through the 1Password desktop app, and the `1password@anthropic-plugin-directory` Claude Code plugin
@@ -83,6 +83,7 @@ The secrets the scripts use (the Maccabi username and password, the ElevenLabs k
 never read, print or write a secret's value to disk (`npm run env` is for the unattended drift checkout only). If `op`
 or the plugin's `authenticate` fails, ask the owner to unlock 1Password and turn on Settings → Developer → "Integrate
 with 1Password CLI" and "Integrate with MCP clients"; don't change 1Password settings yourself.
+The Chrome Web Store API needs no secret: gcloud impersonates a service account (*The store's API* in `docs/launch.md`).
 
 ## Architecture
 

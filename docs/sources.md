@@ -520,7 +520,9 @@ The rules the extension, its listing and its pages are held to.
   [publish](https://developer.chrome.com/docs/webstore/publish), [metrics](https://developer.chrome.com/docs/webstore/metrics)
   and [the analytics revamp](https://developer.chrome.com/blog/cws-analytics-revamp),
   [user data](https://developer.chrome.com/docs/webstore/user_data) (now the user data FAQ),
-  [troubleshooting](https://developer.chrome.com/docs/webstore/troubleshooting), [the API](https://developer.chrome.com/docs/webstore/using-api).
+  [troubleshooting](https://developer.chrome.com/docs/webstore/troubleshooting), [the API](https://developer.chrome.com/docs/webstore/using-api)
+  and its [service accounts](https://developer.chrome.com/docs/webstore/service-accounts) (checked 23 November 2026: V2
+  takes one service account per publisher, and it uploads, publishes and reports status, with no analytics).
 
 ### Brands
 
@@ -574,7 +576,8 @@ Read for how to use a tool, not for anything the project says.
 - [1Password CLI](https://www.1password.dev/cli/get-started),
   [GoatCounter's pixel](https://www.goatcounter.com/help/pixel) (the landing page's counter, named in the
   [Privacy Policy](privacy.md)) and its [privacy policy](https://www.goatcounter.com/help/privacy) (no cookies, and the
-  IP address and User-Agent are never stored), [Vercel's production checklist](https://vercel.com/docs/production-checklist),
+  IP address and User-Agent are never stored), [GoatCounter's API](https://www.goatcounter.com/help/api) (read for
+  [launch.md](launch.md)'s visit counts), [Vercel's production checklist](https://vercel.com/docs/production-checklist),
   read for the landing page.
 
 ### Making the film and the store images

@@ -8,3 +8,6 @@ MACCABI_PASSWORD=op://Private/uz4qprhqnzswrwqrdbxcab42oe/password
 
 # The "ElevenLabs API" item in Private, for `store-video` (narration, word-timed captions, --eleven sound).
 ELEVENLABS_API_KEY=op://Private/nxf7kdnp6vh5g2ixgmj3wamseu/credential
+
+# The "GoatCounter API" item in Private: reads the landing page's visits (maccabi-export.goatcounter.com/api/v0).
+GOATCOUNTER_API_KEY=op://Private/c45bi4yffafbi2buq7f3mlkgyi/credential

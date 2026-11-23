@@ -126,6 +126,15 @@ JSON.parse(document.querySelector('.widget-loaded[data-stats]').dataset.stats)
 Its hours are UTC: a post at 17:18 in Israel lands in the 14h slot (15h in winter time). Every referrer shows as
 "(unknown)", as [Measuring](#measuring) expects.
 
+The API gives the same counts without the browser. Its token is the "GoatCounter API" item in 1Password
+(`GOATCOUNTER_API_KEY` in `.env.tpl`), and the dates must be full timestamps (a bare date is refused with an error page):
+
+```sh
+op run --env-file=.env.tpl -- sh -c 'curl -s -H "Authorization: Bearer $GOATCOUNTER_API_KEY" \
+  "https://maccabi-export.goatcounter.com/api/v0/stats/total?start=2026-10-14T00:00:00Z&end=<Saturday>T23:59:59Z"' \
+  | jq -r '"total \(.total)", (.stats[] | "\(.day) \(.daily)")'
+```
+
 **GitHub**, with `gh` (the traffic needs push access, and keeps 14 days only):
 
 ```sh
@@ -159,6 +168,19 @@ its `ds:` number, which differs from page to page:
 Listing views tagged with a source that isn't one of [the links above](#measuring) (`chatgpt.com`, so far) count as
 untagged, and the note says how many. The installs' regions come from each user's account and can be wrong, but read
 them every week all the same: an install from abroad that never shows in *Users* is not a member.
+
+**The store's API** can't fill a column: it uploads, publishes and reports which version the store serves, and has
+no installs, users or listing views. It signs in as the service account
+`cws-publisher@hrem-chrome-web-store.iam.gserviceaccount.com` (Google Cloud project `hrem-chrome-web-store`, added on the
+dashboard's *Account* page), which the maintainer's gcloud sign-in impersonates, so there is no key to keep. Name the
+publisher in the path: `publishers/-` is refused.
+
+```sh
+T=$(gcloud auth print-access-token --scopes=https://www.googleapis.com/auth/chromewebstore \
+  --impersonate-service-account=cws-publisher@hrem-chrome-web-store.iam.gserviceaccount.com)
+curl -s -H "Authorization: Bearer $T" "https://chromewebstore.googleapis.com/v2/publishers/e24b428f-1d4b-49ad-99fc-9c4b6e03eda8/items/lmjcbhajlnbpldofejcglcdclceampjp:fetchStatus" \
+  | jq '.publishedItemRevisionStatus'
+```
 
 **Reviews.** The listing's own page, in Chrome: the browser pane won't open the public store.
 

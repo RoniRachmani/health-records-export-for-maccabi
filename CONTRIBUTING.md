@@ -208,7 +208,7 @@ MACCABI_PASSWORD=op://<vault>/<item>/password
 ```
 
 (`op item get <item> --format json` lists each field's `reference`; IDs in place of names survive a rename).
-The maintainer's references, and the ElevenLabs key's, are kept in `.env.tpl`, and `npm run env:refs` copies them
+The maintainer's references, and those of the ElevenLabs and GoatCounter keys, are kept in `.env.tpl`, and `npm run env:refs` copies them
 to `.env`. `store-video` resolves no reference, so its npm scripts run it under `op run --env-file=.env.tpl`, which
 hands it the key for that run only and writes nothing to disk. `npm run env` writes `.env` with the values themselves
 (`op inject`): keep that for the unattended drift checkout below. Keep every key the scripts read in 1Password and
@@ -403,6 +403,8 @@ A release, in order:
    If `git diff v<last> -- docs/store-listing.md store/assets/` shows anything, update the listing from them: paste the
    whole description block rather than editing the dashboard's copy line by line, so the two can't drift (and upload a
    re-rendered video, its captions and its thumbnail on YouTube). Then submit for review. A listing change can slow review.
+   The store's API can report what it serves (*The store's API* in [docs/launch.md](docs/launch.md)), but the upload
+   stays by hand.
 6. **After.** Check the website and its policy pages. Once the store approves the update, install it from the store
    and run one export.
 
