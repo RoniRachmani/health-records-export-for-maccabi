@@ -336,11 +336,13 @@ const WRITTEN_NAME = /^(?=[\w$.]{5,}$)[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)?$/;
 const BASE = /(?:[A-Za-z]API|webapi)\/(?:[\w/]*\/)?$/i;
 
 const VERB = /^(get|post|put|patch|delete|head)$/i;
-const CALL = /(?<![\w$.])(fetch|axios|\$http)\s*\(|\.(get|post|put|patch|delete|head|request|ajax|open)\s*\(|(?<![\w$.])webApi\.(Call)\s*\(/g;
+const CALL = /(?<![\w$.])(fetch|axios|\$http)\s*\(|\.(get|post|put|patch|delete|remove|head|request|ajax|open)\s*\(|(?<![\w$.])webApi\.(Call)\s*\(/g;
 
 /**
  * The requests a script writes out: fetch, an HTTP client's get/post/put/patch/delete/head/request (axios and
- * the like, and the site's own rest.get(base, path)), jQuery's ajax and XMLHttpRequest's open, each with its
+ * the like, and the site's own rest.get(base, path), whose DELETE is rest.remove(base, path): read only when it
+ * takes a service's base first, since everything else that is removed is not a request), jQuery's ajax and
+ * XMLHttpRequest's open, each with its
  * method and the address as far as the call and the values just above it spell it. A call whose address
  * cannot be read that way is left out. The legacy site's Angular pages go through a client of their own,
  * webApi.Call(controller, action, data, …, { method }), a GET unless told otherwise, to /online/webapi/<controller>/<action>/.
@@ -355,6 +357,13 @@ export function readCalls(source) {
     const name = (m[1] || m[2] || m[3]).toLowerCase();
     const args = argsAt(text, m.index + m[0].length - 1);
     if (!args || !args.length) continue;
+    if (name === 'remove') {
+      for (const base of args.length > 1 ? valuesAt(text, args[0], m.index) : []) {
+        if (!BASE.test(base)) continue;
+        for (const rest of valuesAt(text, args[1], m.index)) calls.push({ path: base + rest.replace(/^\//, ''), method: 'DELETE', offset: m.index + 1, via: name });
+      }
+      continue;
+    }
     if (m[3]) {
       const said = builtString(args.map((a) => field(a, 'method')).find((v) => v !== undefined) ?? '');
       for (const controller of valuesAt(text, args[0], m.index)) {

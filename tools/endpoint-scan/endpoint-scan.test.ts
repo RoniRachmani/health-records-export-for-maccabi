@@ -74,6 +74,12 @@ describe('readCalls', () => {
     ]);
   });
 
+  it('reads the client\'s remove as a DELETE, and only when it takes a service\'s base', () => {
+    const text = 'function a(e){let t=tt()("v1/members/{0}/{1}/files/{2}",e.c,e.i,e.u);return sM.remove("/sonline/ReqAPI/webapi/mac/",t,{})}'
+      + 'el.classList.remove("open","shut");list.remove(item)';
+    expect(methods(text)).toEqual(['DELETE /sonline/ReqAPI/webapi/mac/v1/members/{0}/{1}/files/{2}']);
+  });
+
   it('reads a call once for each side of a conditional address', () => {
     const text = 'let b="/sonline/DocAPI/webapi/mac/";function a(e){let s=eu()((null==e?void 0:e.isV2)?"v2/members/{0}/{1}/drugs":"v1/members/{0}/{1}/drugs",e.c,e.i);return r.get(b,s,{})}'
       + 'function p(e,i){let a=i?"v3/members/{0}/{1}?checksum={2}":"v2/members/{0}/{1}?checksum={2}",s=eu()(a,e.c,e.i,e.k);return r.post(b,s,{})}';
