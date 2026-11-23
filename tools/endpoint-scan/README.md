@@ -18,6 +18,7 @@ documents the site opens in a tab). A call that is not a `GET` is marked, since 
 site picks an address by a condition (`isV2 ? "v2/…" : "v1/…"`), the call is given once for each side. A call is found
 whatever its path looks like: `DirectorshipAPI`'s `eligibilities` has no version and no `members/` in it. A legacy
 service (`.asmx`, `.ashx`) whose call could not be read is marked too, as method not read: most of those are `POST`s.
+The client's `DELETE` is `rest.remove(base, path)`, read as one only when it takes a service's base first.
 
 The legacy site's scripts are written by hand, and the scan reads their habits too: a service's address kept at the
 top with the method's name added at each call (`ajaxUrl + "GetAllPurchasedPrescription"`), the Angular pages' own
