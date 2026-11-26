@@ -113,6 +113,9 @@
     "$.drugs[].permanent_drug": [
       "number"
     ],
+    "$.drugs[].prescriptionIs_digital": [
+      "number"
+    ],
     "$.drugs[].prescription_cancellation_status": [
       "number"
     ],
@@ -316,6 +319,9 @@
       "string"
     ],
     "$.drugs[].permanent_drug": [
+      "number"
+    ],
+    "$.drugs[].prescriptionIs_digital": [
       "number"
     ],
     "$.drugs[].prescription_cancellation_status": [
@@ -1824,7 +1830,8 @@
       "boolean"
     ],
     "$.is_customer_abroad": [
-      "boolean"
+      "boolean",
+      "null"
     ],
     "$.is_customer_active": [
       "boolean"
@@ -1839,7 +1846,8 @@
       "string"
     ],
     "$.permanent_ascription_indication": [
-      "boolean"
+      "boolean",
+      "null"
     ],
     "$.position_id": [
       "number"
