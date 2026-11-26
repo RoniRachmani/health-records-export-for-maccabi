@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { newCtx, SessionEndedError, type HttpRequest, type Transport } from '../src/core';
 import * as core from '../src/cli/index';
 import {
-  countingTransport, driftReport, featureFlags, flagChanges, launchAgent, memorySink, missingFields, ours, pageScripts, problemKey, readScripts, runSteps, safeToWrite, scanFindings, sessionGet,
+  countingTransport, driftReport, featureFlags, flagChanges, launchAgent, memorySink, missingFields, ours, pageScripts, problemKey, readScripts, runSteps, safeToWrite, scanFindings, sessionGet, withoutUnsafeLines,
 } from '../scripts/drift-lib.mjs';
 import { lastRunFile, lastSlot, parseSchedule, whenDue, withoutDue } from '../scripts/drift-due.mjs';
 import { fakeMaccabi, fakeTransport, makeCollector, MID } from './fakes';
@@ -133,6 +133,13 @@ describe('what the report may name', () => {
     expect(safeToWrite('GET /sonline/X/{mid}/visits')).toBe(true);
     expect(safeToWrite('a ' + MID + '7')).toBe(false);
     expect(safeToWrite('רופא')).toBe(false);
+  });
+
+  it('leaves out only the lines that hold Hebrew or a long number', () => {
+    const r = withoutUnsafeLines('# Report\n\n- GET /sonline/X/{mid}\n- GET /sonline/X/' + MID + '7\nרופא\n');
+    expect(r.left).toBe(2);
+    expect(r.text).toBe('# Report\n\n- GET /sonline/X/{mid}\n- (a line left out here: it held Hebrew or a long number)\n(a line left out here: it held Hebrew or a long number)\n');
+    expect(safeToWrite(r.text)).toBe(true);
   });
 });
 

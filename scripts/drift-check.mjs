@@ -21,7 +21,7 @@
 // never writes shapes.json: what moved is for a person to read, then accept with `npm run live -- --shapes` and a
 // change to the fake site or the collector. It keeps no record: the run's sink holds JSON in memory and documents
 // as digests, and the scan's scripts are held in memory too. The report names endpoints, fields, steps, folders,
-// statuses and counts, never a value, and a report with Hebrew or a long number in it is not written.
+// statuses and counts, never a value, and a line of the report with Hebrew or a long number in it is left out.
 //
 // Like the no-browser export, it signs in once with the password from .env or 1Password, never resubmits it, and
 // so ends the member's other Maccabi sessions; every request goes through MaccabiSession.request's one queue, paced
@@ -31,7 +31,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { loadCore } from './cli-core.mjs';
-import { LABEL, countingTransport, driftReport, featureFlags, launchAgent, memorySink, missingFields, pageScripts, problemKey, readScripts, runSteps, safeToWrite, scanFindings, sessionGet } from './drift-lib.mjs';
+import { LABEL, countingTransport, driftReport, featureFlags, launchAgent, memorySink, missingFields, pageScripts, problemKey, readScripts, runSteps, safeToWrite, scanFindings, sessionGet, withoutUnsafeLines } from './drift-lib.mjs';
 import { whenDue } from './drift-due.mjs';
 import { credentials } from './maccabi-browser.mjs';
 import { MaccabiSession } from './maccabi-session.mjs';
@@ -128,7 +128,9 @@ async function check() {
   const finish = () => {
     r.seconds = (Date.now() - started) / 1000;
     const report = driftReport(r);
-    if (!safeToWrite(report.text)) throw new Error('The report held Hebrew or a long number, so it was not written.');
+    const safe = withoutUnsafeLines(report.text);
+    if (safe.left) console.log(`${safe.left} line${safe.left > 1 ? 's' : ''} of the report held Hebrew or a long number, and ${safe.left > 1 ? 'were' : 'was'} left out.`);
+    report.text = safe.text;
     writeFileSync(join(OUT, 'latest.md'), report.text);
     writeFileSync(join(OUT, date + '.md'), report.text);
     if (report.state) writeFileSync(join(OUT, 'state.json'), JSON.stringify(report.state, null, 2) + '\n');
@@ -152,7 +154,11 @@ async function check() {
     await m.beginSignIn(creds.username);
     await m.finishSignInWithPassword(creds.password);
   } catch (e) {
-    r.signIn = 'the sign-in failed: ' + (SIGN_IN_SAYS[e.code] || e.code || 'no answer from Maccabi') + (e.status ? ` (HTTP ${e.status})` : '');
+    // A request past its timeout rejects with the DOMException TimeoutError, whose legacy `code` is the number 23.
+    const why = e?.name === 'TimeoutError'
+      ? `Maccabi did not answer within ${Math.round(core.TAB_FETCH_TIMEOUT_MS / 60_000)} minutes. Nothing was resent; the next run signs in again.`
+      : SIGN_IN_SAYS[e.code] || e.code || 'no answer from Maccabi';
+    r.signIn = 'the sign-in failed: ' + why + (e.status ? ` (HTTP ${e.status})` : '');
     return finish();
   }
   console.log('Signed in. The session ends on its own within the hour.');

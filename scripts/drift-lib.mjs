@@ -499,6 +499,21 @@ export function safeToWrite(text) {
   return !/[֐-׿]|\d{6,}/.test(text);
 }
 
+/**
+ * The report with every line that fails `safeToWrite` replaced by a note saying one was left out, and how many were:
+ * the rest of the report is still written, and the differences it counts still count.
+ * @param {string} text
+ */
+export function withoutUnsafeLines(text) {
+  let left = 0;
+  const lines = text.split('\n').map((l) => {
+    if (safeToWrite(l)) return l;
+    left++;
+    return (l.startsWith('- ') ? '- ' : '') + '(a line left out here: it held Hebrew or a long number)';
+  });
+  return { text: lines.join('\n'), left };
+}
+
 // ---- the schedule --------------------------------------------------------------------------------------
 
 export const LABEL = 'com.ronirachmani.hrem.drift';
