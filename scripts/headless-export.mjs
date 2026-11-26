@@ -295,7 +295,8 @@ const SIGN_IN_SAYS = {
 main().then(
   () => process.exit(),
   (e) => {
-    console.error(SIGN_IN_SAYS[e.code] || e.message);
+    // A request past its timeout rejects with the DOMException TimeoutError, whose legacy `code` is the number 23.
+    console.error(e?.name === 'TimeoutError' ? 'Maccabi did not answer in time. Nothing was resent; try again later.' : SIGN_IN_SAYS[e.code] || e.message);
     process.exit(1);
   },
 );

@@ -483,7 +483,7 @@
     },
     "delegation_permissions": {
       "request": "GET /online/webapi/PersonalRemindersESB/GetReminders/",
-      "reason": "Read from the menu, not opened (2026-11-23): its link is ניהול הרשאות (managing permissions) despite the service's name, so account settings, not reminders of care."
+      "reason": "Read from the menu, not opened (2026-11-23): its link is ניהול הרשאות (managing permissions) despite the service's name, so account settings, not reminders of care. Gone from the site's code by the drift check of 2026-11-26."
     }
   },
   "not_called_by_design": "Only the requests listed in sections are made. Nothing that creates, changes or deletes data (apart from the medical-file order), marks items as read or viewed, returns session credentials, or touches payment or bank details."

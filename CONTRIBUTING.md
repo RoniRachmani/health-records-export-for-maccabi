@@ -336,10 +336,11 @@ It writes `.cache/drift/latest.md`, a dated copy beside it, `shapes-seen.json` (
 only) and `state.json`, the problem kinds, the calls in the code and the flags that the next check compares against, so a
 problem that comes back every week is said once. It exits 0 when nothing differs, 1 when something does (a shape
 drift line, a shape problem, a problem the last completed check did not have, a request gone from the site's code, a
-feature flag that changed or could not be read, or a run that stopped), and 2 when it could not check (the sign-in, the credentials, a run past the hour). The report
-names endpoints, field paths, steps, folders, statuses and counts, never a value (but the site's own flags, which are
-its settings), a title or a file name, and is not
-written if it holds Hebrew or a long number. It never writes `shapes.json`: a difference is for you to read, then
+feature flag that changed or could not be read, or a run that stopped), and 2 when it could not check (the sign-in, the credentials, a run past the hour). A
+sign-in Maccabi gives no answer to within the request timeout (`TAB_FETCH_TIMEOUT_MS`) is said as that, and never
+resent. The report names endpoints, field paths, steps, folders, statuses and counts, never a value (but the site's
+own flags, which are its settings), a title or a file name, and a line of it that holds Hebrew or a long number (a
+flag named after a ticket number, say) is left out, with a note where it was, so the rest is still written. It never writes `shapes.json`: a difference is for you to read, then
 fix the fake site or the collector and record the shapes with `npm run live -- --shapes`.
 
 Its rules are the no-browser export's: one sign-in, never resubmitted, which ends your other Maccabi sessions (so the
