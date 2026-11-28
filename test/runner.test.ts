@@ -4,7 +4,7 @@
 // around it replaced: the tab, the staging, the offscreen document, and the collector's steps, scripted per test.
 // What is real is runner.ts itself, PLAN and its resume rules (shared/state.ts), and core's errors and order rules.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { FILE_LAYOUT, LAST_ORDER, PLAN, type LastOrder, type PlanStep, type RunState } from '../src/extension/shared/state';
+import { FILE_LAYOUT, LAST_ORDER, PLAN, SONLINE_PAGE, type LastOrder, type PlanStep, type RunState } from '../src/extension/shared/state';
 import { earlierFileUntil, israelToday, BlockedError, RateLimitedError, REFUSAL_RETRY_MS, SessionEndedError, StorageError, type Collector, type EarlierOrder, type OrderResult, type Session } from '../src/core';
 
 const MEMBER: Session = { mid: '123456789', jwt: 'jwt', gender: 'F' };
@@ -25,6 +25,10 @@ const world = {
   /** Whether the tab is there and in front, when a test needs more than `visible` says. */
   tabLook: undefined as (() => boolean) | undefined,
   sessionLookups: 0,
+  /** URLs passed to currentSession, in order (Start, returnToSonline, reconnects). */
+  sessionUrls: [] as string[],
+  /** The tab's current URL, as chrome.tabs.get reports it. */
+  tabUrl: 'https://online.maccabi4u.co.il/sonline/dashboard',
   navigations: [] as string[],
   /** The tab's page: where it was last sent, or /sonline/ once a session was taken from it. */
   path: '/sonline/',
@@ -109,8 +113,9 @@ vi.mock('../src/core', async (importOriginal) => {
 
 vi.mock('../src/extension/background/tab', () => ({
   currentRoutes: async () => ({ sonline: 'extension', online: 'tab' }),
-  currentSession: async () => {
+  currentSession: async (_tab: number, url: string) => {
     world.sessionLookups++;
+    world.sessionUrls.push(url);
     world.path = '/sonline/';
     return world.session;
   },
@@ -186,7 +191,7 @@ function fakeChrome() {
       search: async () => (world.downloadItem ? [world.downloadItem] : []),
       show: () => {},
     },
-    tabs: { get: async () => ({ id: TAB, url: 'https://online.maccabi4u.co.il/sonline/dashboard' }) },
+    tabs: { get: async () => ({ id: TAB, url: world.tabUrl }) },
   };
 }
 
@@ -215,7 +220,7 @@ const collected = (list: readonly PlanStep[]) => list.filter((s) => !['openLegac
 beforeEach(() => {
   Object.assign(world, {
     ran: [], step: {}, orders: 0, order: { ordered: true, sent: true, to_date: '2026-10-26', from_date: '2016-10-26' }, session: MEMBER,
-    visible: true, tabLook: undefined, sessionLookups: 0, navigations: [], path: '/sonline/', stagingCleared: 0, notices: [], downloads: 0, downloadItem: undefined, revoked: [],
+    visible: true, tabLook: undefined, sessionLookups: 0, sessionUrls: [], tabUrl: 'https://online.maccabi4u.co.il/sonline/dashboard', navigations: [], path: '/sonline/', stagingCleared: 0, notices: [], downloads: 0, downloadItem: undefined, revoked: [],
     local: {}, sessionStore: {}, dead: false, dieOn: undefined, keptListed: false, alarms: {}, problemsCleared: [], earlier: [], earlierDay: undefined, waited: { ready: true }, waiting: undefined, filed: [],
   });
   vi.stubGlobal('chrome', fakeChrome());
@@ -276,6 +281,32 @@ describe('a run', () => {
     const runner = await freshRunner();
     await expect(runner.start(TAB)).rejects.toThrow(/already in progress/);
     expect(world.ran).toEqual([]);
+  });
+
+  it('returns to the member’s /sonline/ subpage (without query or hash) on returnToSonline and reconnect', async () => {
+    const startUrl = 'https://online.maccabi4u.co.il/sonline/homepage/NotificationAndUpdates/?foo=bar#top';
+    const cleanUrl = 'https://online.maccabi4u.co.il/sonline/homepage/NotificationAndUpdates/';
+    world.tabUrl = startUrl;
+    world.step.visits = (attempt) => {
+      if (attempt === 1) throw new SessionEndedError('gone');
+    };
+    const runner = await freshRunner();
+    await runner.start(TAB);
+    const run = await settled();
+    expect(run?.status).toBe('saving');
+    expect(run?.returnUrl).toBe(cleanUrl);
+    // Start keeps the open tab URL; returnToSonline and reconnect use the sanitized returnUrl.
+    expect(world.sessionUrls).toEqual([startUrl, cleanUrl, cleanUrl]);
+  });
+
+  it('leaves returnUrl unset and falls back to SONLINE_PAGE when started on a legacy /online/ page', async () => {
+    world.tabUrl = 'https://online.maccabi4u.co.il/online/medicalfile/summary/';
+    const runner = await freshRunner();
+    await runner.start(TAB);
+    const run = await settled();
+    expect(run?.status).toBe('saving');
+    expect(run?.returnUrl).toBeUndefined();
+    expect(world.sessionUrls).toEqual([SONLINE_PAGE, SONLINE_PAGE]);
   });
 });
 

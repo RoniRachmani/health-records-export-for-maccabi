@@ -20,6 +20,19 @@ async function activeTab(tabId?: number): Promise<chrome.tabs.Tab | undefined> {
   return tab;
 }
 
+/** Active dev switches from storage, for the dev build's popup banner; compiled out of the store build. */
+async function activeDevFlags(): Promise<string[]> {
+  if (!__DEV_BRIDGE__) return [];
+  const s = await chrome.storage.local.get(['devSkipOrder', 'devStopBefore', 'devReorder', 'devPretendOrder', 'devNoSend']);
+  const flags: string[] = [];
+  if (s.devSkipOrder) flags.push('skipOrder');
+  if (s.devStopBefore) flags.push('stopBefore=' + String(s.devStopBefore));
+  if (s.devReorder) flags.push('reorder');
+  if (s.devPretendOrder) flags.push('pretendOrder=' + String(s.devPretendOrder));
+  if (s.devNoSend) flags.push('noSend');
+  return flags;
+}
+
 async function handle(msg: Request & { tabId?: number }): Promise<unknown> {
   switch (msg.type) {
     case 'getState': {
@@ -28,6 +41,10 @@ async function handle(msg: Request & { tabId?: number }): Promise<unknown> {
       // Nothing is read from the tab until the notice is accepted. The name is shown only on the idle view.
       const tab = run || accepted ? await tabInfo(await activeTab(msg.tabId), !run) : { onMaccabi: false, loggedIn: false };
       const reply: StateReply = { run, noticeAccepted: accepted, tab };
+      if (__DEV_BRIDGE__) {
+        const flags = await activeDevFlags();
+        if (flags.length) reply.devFlags = flags;
+      }
       return reply;
     }
     case 'acceptNotice':

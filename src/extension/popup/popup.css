@@ -638,14 +638,14 @@ details.more summary:hover {
 }
 /* The running view: a pale-blue panel holds everything that moves (status, what the current section is doing and its
    count, the bar, the totals) and the one thing to do meanwhile, then the list of sections, then Cancel. Every line
-   here is kept to one line: a second would take the view past Chrome's 600px cap. One rhythm: 12px around and inside
-   the panel (11px padding and its border), 8px between its parts. */
+   here is kept to one line: a second would take the view past Chrome's 600px cap. Tight rhythm inside the panel
+   (9px top/bottom, 11px sides, 7px between its parts) leaves headroom under the cap. */
 .panel {
   display: grid;
   /* One column no wider than the panel: its one-line rows end in an ellipsis instead of widening it. */
   grid-template-columns: minmax(0, 1fr);
-  gap: 8px;
-  padding: 11px;
+  gap: 7px;
+  padding: 9px 11px;
   border: 1px solid var(--line-soft);
   border-radius: 14px;
   background: var(--surface-2);
@@ -726,7 +726,7 @@ details.more summary:hover {
 }
 /* The head of the finished lines' file counts, over their column: said once, small, like a table's. */
 .files-head {
-  margin: 10px 0 1px;
+  margin: 7px 0 1px;
   text-align: right;
   color: var(--muted);
   font-size: 11px;
@@ -747,9 +747,9 @@ details.more summary:hover {
   align-items: flex-start;
   gap: 9px;
   color: var(--muted);
-  /* 16px a line, back to back: the sections keep the popup under Chrome's 600px cap without crowding the 15px marks. */
+  /* 15px a line, back to back: the sections keep the popup under Chrome's 600px cap without crowding the 14px marks. */
   font-size: 12.5px;
-  line-height: 16px;
+  line-height: 15px;
 }
 .stages .name {
   flex: 1;
@@ -762,16 +762,17 @@ details.more summary:hover {
   font-weight: 400;
   font-variant-numeric: tabular-nums;
 }
-/* 15px with its border: the rule at the top of the file does not reach pseudo-elements, and a border outside the 15px
-   made each line 17px (18px on a high-density screen). */
+/* 14px with its border, nudged 0.5px down to centre optically in the 15px line: the rule at the top of the file does
+   not reach pseudo-elements, and a border outside the box would push the line taller. */
 .stages li::before {
   content: '';
   flex: none;
   display: grid;
   place-items: center;
   box-sizing: border-box;
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
+  margin-top: 0.5px;
   border: 1.5px solid var(--line-soft);
   border-radius: 50%;
   font-size: 9px;
@@ -918,6 +919,21 @@ details.problems p {
   color: var(--muted);
   font-size: 12px;
   word-break: break-all;
+}
+
+/* ---- dev ---- */
+/* Dev-only build strip shown on the ready and paused screens when dev switches are active. */
+.dev-flags {
+  margin: 0 0 10px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px dashed var(--warn-rule);
+  background: var(--warn-bg);
+  color: var(--warn);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 @media (prefers-reduced-motion: reduce) {

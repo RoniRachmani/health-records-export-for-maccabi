@@ -1,10 +1,14 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  announcement, bandSpan, canSaveNow, doneSummary, keptConfirm, lateFileText, nextAction, problemCount, progressTexts,
+  announcement, bandSpan, canSaveNow, devFlagsText, doneSummary, keptConfirm, lateFileText, nextAction, pausedProgressText, problemCount, progressTexts,
   countText, currentStage, DESCRIPTIONS, formatBytes, formatDuration, groupProblems, hintText, problemText, STAGES, stageFileCounts, stageSpan, stageStates, statsText,
   stepText, viewKey, waitingForFile, type UiFlags,
 } from '../src/extension/popup/model';
 import { LABELS, PLAN, percentOf, WEIGHTS, type RunState, type StateReply } from '../src/extension/shared/state';
+
+beforeEach(() => {
+  vi.stubGlobal('__DEV_BRIDGE__', false);
+});
 
 describe('STAGES', () => {
   it('covers every plan step, in plan order, each step’s lines together', () => {
@@ -265,6 +269,28 @@ describe('viewKey', () => {
     const idle = { ...st, run: null };
     expect(viewKey({ ...idle, noticeAccepted: false }, ui)).not.toBe(viewKey(idle, ui));
   });
+
+  it('ignores devFlags in store builds and tracks them in dev builds', () => {
+    expect(viewKey({ ...st, devFlags: ['skipOrder'] }, ui)).toBe(viewKey(st, ui));
+    vi.stubGlobal('__DEV_BRIDGE__', true);
+    const baseKey = viewKey(st, ui);
+    expect(viewKey({ ...st, devFlags: [] }, ui)).toBe(baseKey);
+    expect(viewKey({ ...st, devFlags: ['skipOrder'] }, ui)).not.toBe(baseKey);
+    expect(viewKey({ ...st, devFlags: ['skipOrder', 'stopBefore=save'] }, ui)).not.toBe(viewKey({ ...st, devFlags: ['skipOrder'] }, ui));
+  });
+});
+
+describe('devFlagsText', () => {
+  it('returns empty string in store builds even when flags are passed', () => {
+    expect(devFlagsText(['skipOrder', 'stopBefore=save'])).toBe('');
+  });
+
+  it('formats active flags in dev builds and returns empty string when none are set', () => {
+    vi.stubGlobal('__DEV_BRIDGE__', true);
+    expect(devFlagsText(undefined)).toBe('');
+    expect(devFlagsText([])).toBe('');
+    expect(devFlagsText(['skipOrder', 'stopBefore=save'])).toBe('Dev flags active: skipOrder · stopBefore=save');
+  });
 });
 
 describe('problemText', () => {
@@ -304,6 +330,11 @@ describe('what the paused and error views offer', () => {
     expect(keptConfirm('discard', run('error'))).toBe('discard');
     expect(keptConfirm('discard', run('done'))).toBeNull();
     expect(keptConfirm(null, run('running'))).toBeNull();
+  });
+
+  it('describes paused progress with the current stage label when one exists', () => {
+    expect(pausedProgressText(run('paused_session', { next: PLAN.indexOf('save'), percent: 99 }))).toBe('99%, Saving the ZIP (paused)');
+    expect(pausedProgressText(run('paused_hidden', { next: PLAN.length, percent: 100 }))).toBe('100% (paused)');
   });
 });
 

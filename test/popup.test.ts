@@ -43,6 +43,7 @@ function buttonNamed(name: string): HTMLButtonElement {
 }
 
 beforeEach(() => {
+  vi.stubGlobal('__DEV_BRIDGE__', false);
   sent = [];
   listeners = [];
   windows = [];
@@ -303,11 +304,32 @@ describe('popup', () => {
     await openPopup({ run: paused, tab });
     expect(document.querySelector('.status')).toBeNull();
     expect(document.querySelector('.detail')?.textContent).toMatch(/^Section: .+ · 55% done$/);
+    expect(document.querySelector('[role=progressbar]')?.getAttribute('aria-valuetext')).toBe('55%, Lab histories (paused)');
     expect(buttonNamed('Resume').className).toBe('primary block');
     expect(buttonNamed('Cancel export').className).toBe('quiet');
     buttonNamed('Cancel export').click();
     await flush();
     expect(buttonNamed('Delete and stop')).toBeTruthy();
+  });
+
+  it('shows active dev flags on ready and paused views only in dev builds, and refreshes on storage changes', async () => {
+    // Store build: devFlags never renders.
+    await openPopup({ run: null, tab, devFlags: ['skipOrder', 'stopBefore=save'] });
+    expect(document.querySelector('.dev-flags')).toBeNull();
+
+    // Dev build: renders on ready and paused views, and refreshes when a dev switch changes.
+    vi.stubGlobal('__DEV_BRIDGE__', true);
+    await openPopup({ run: null, tab, devFlags: ['skipOrder', 'stopBefore=save'] });
+    expect(document.querySelector('.dev-flags')?.textContent).toBe('Dev flags active: skipOrder · stopBefore=save');
+
+    reply = { ...reply, devFlags: ['skipOrder'] };
+    for (const l of listeners) l({ devStopBefore: { newValue: undefined } }, 'local');
+    await flush();
+    expect(document.querySelector('.dev-flags')?.textContent).toBe('Dev flags active: skipOrder');
+
+    const paused = running({ status: 'paused_session', percent: 99, next: PLAN.indexOf('save'), detail: 'Saving the ZIP' });
+    await openPopup({ run: paused, tab, devFlags: ['stopBefore=save'] });
+    expect(document.querySelector('.dev-flags')?.textContent).toBe('Dev flags active: stopBefore=save');
   });
 
   it('pairs the done buttons, and ends on the caution about what the ZIP holds', async () => {

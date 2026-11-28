@@ -22,8 +22,8 @@ interface Stage {
  * only serves another shares its label; a step that collects something of its own keeps its own name there, and a
  * step split into parts is named as a whole.
  *
- * Room is the constraint: Chrome caps the popup at 600px, and today's 17 lines (16px each) under the file counts' column
- * head take the running view to 589px. Merge before adding an eighteenth.
+ * Room is the constraint: Chrome caps the popup at 600px, and today's 17 lines under the file counts' column head stay
+ * comfortably under that cap (`npm run site-check -- popup` measures it). Merge before adding an eighteenth.
  */
 export const STAGES: Stage[] = [
   // Ordering comes first so Maccabi can build the file while everything else is collected; collecting it is the
@@ -313,7 +313,13 @@ export function viewKey(st: StateReply, ui: UiFlags): string {
   const base = r
     ? ['run', r.id, r.status, r.message ?? '', r.status === 'error' ? r.next : '', st.tab.onMaccabi, canSaveNow(r)]
     : ['idle', st.noticeAccepted, st.tab.onMaccabi, st.tab.loggedIn, st.tab.name ?? ''];
-  return [...base, ui.busy ?? '', ui.confirm ?? '', ui.stopping, ui.error].join('|');
+  return [...base, ui.busy ?? '', ui.confirm ?? '', ui.stopping, ui.error, ...(__DEV_BRIDGE__ ? [(st.devFlags ?? []).join(',')] : [])].join('|');
+}
+
+/** Dev-only footer line listing active dev switches (dead-code eliminated in store builds). */
+export function devFlagsText(flags: string[] | undefined): string {
+  if (!__DEV_BRIDGE__ || !flags?.length) return '';
+  return 'Dev flags active: ' + flags.join(' · ');
 }
 
 /**
@@ -359,6 +365,12 @@ export function progressTexts(run: RunState): { pill: string; valueText: string 
     pill: run.status === 'saving' ? 'Saving' : 'Exporting · ' + run.percent + '%',
     valueText: run.percent + '%' + (title ? ', ' + title : '') + (detail ? ': ' + detail : '') + (count ? ', ' + count : ''),
   };
+}
+
+/** What a screen reader hears as the paused view's progress bar value. */
+export function pausedProgressText(run: RunState): string {
+  const stage = STAGES[stageStates(run).indexOf('current')]?.label;
+  return run.percent + '%' + (stage ? ', ' + stage : '') + ' (paused)';
 }
 
 /** The finished export's line under its name: files, size, how long it took, where it is. */

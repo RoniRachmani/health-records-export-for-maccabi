@@ -106,6 +106,8 @@ export interface RunState {
   id: string;
   status: RunStatus;
   tabId: number;
+  /** Sanitized starting /sonline/ URL (origin + pathname, no query/hash), so returnToSonline and reconnect land back where the member started. */
+  returnUrl?: string;
   startedAt: string;
   finishedAt?: string;
   /** Index into PLAN of the step to run next. */
@@ -218,6 +220,8 @@ export interface StateReply {
   /** The first-use notice (what an export does, with the Terms of Use and Privacy Policy) was accepted, in its current version. */
   noticeAccepted: boolean;
   tab: TabInfo;
+  /** Active dev switches in development builds only (compiled out of the store build). */
+  devFlags?: string[];
 }
 
 /**

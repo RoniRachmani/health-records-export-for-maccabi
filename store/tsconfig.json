@@ -3,5 +3,5 @@
 // against it here. `npm run typecheck` runs this after the root and the scripts.
 {
   "extends": "../tsconfig.json",
-  "include": ["src", "vite.config.ts", "design/*.mjs"]
+  "include": ["src", "vite.config.ts", "design/*.mjs", "../src/env.d.ts"]
 }

@@ -174,5 +174,5 @@ What the text says, and the sign-in codes Maccabi texts from another sender, are
 A live test without `--export` never orders (`dev:skipOrder`) and stops before `save`: its line 1 is only the page
 change, and its line 16 collects whatever medical file Maccabi already has.
 
-There are seventeen lines, and the running view is 589px of Chrome's 600px popup cap (`npm run site-check -- popup`
+There are seventeen lines, and the running view is 561px of Chrome's 600px popup cap (`npm run site-check -- popup`
 measures it): merge lines before adding one. Keep this table in step with `STAGES` and the collectors.

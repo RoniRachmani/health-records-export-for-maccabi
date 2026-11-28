@@ -96,7 +96,10 @@ Then load the `dist/` folder the same way.
    [Hand it to an AI assistant](#hand-it-to-an-ai-assistant).
 
 <p align="center">
-  <img src="docs/images/screenshot.png" alt="The extension's popup on Maccabi Online, partway through an export, with the progress badge on the toolbar icon" width="720">
+  <a href="docs/images/screenshot.png">
+    <img src="docs/images/screenshot.png" alt="Maccabi Online with the extension showing a demo export at 20%, processing test result 5 of 22" width="720">
+  </a><br>
+  <sub>Demo export shown. Click the screenshot for the full-size image.</sub>
 </p>
 
 ### Before you start

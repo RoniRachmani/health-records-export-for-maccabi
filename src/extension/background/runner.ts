@@ -132,12 +132,24 @@ async function sameMember(run: RunState, s: Session): Promise<boolean> {
 // ---- entry points (popup / dev bridge) ---------------------------------
 export class UserError extends Error {}
 
-async function loggedInSession(tabId: number): Promise<Session> {
+/** Keeps a starting /sonline/ page as origin + pathname (dropping query and hash so nothing sensitive is stored). */
+function sonlineReturnUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    const u = new URL(url);
+    return u.origin === MACCABI_ORIGIN && /^\/sonline\//i.test(u.pathname) ? MACCABI_ORIGIN + u.pathname : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+async function loggedInSession(tabId: number): Promise<{ session: Session; returnUrl?: string }> {
   const tab = await chrome.tabs.get(tabId).catch(() => undefined);
   if (!tab || !tab.url || !tab.url.startsWith(MACCABI_ORIGIN + '/')) throw new UserError('Open Maccabi Online in this tab first.');
-  const s = await currentSession(tabId, new URL(tab.url).pathname.startsWith('/sonline/') ? tab.url : SONLINE_PAGE, true);
-  if (!s) throw new UserError('Log in to Maccabi Online in this tab first.');
-  return s;
+  const returnUrl = sonlineReturnUrl(tab.url);
+  const session = await currentSession(tabId, returnUrl ? tab.url : SONLINE_PAGE, true);
+  if (!session) throw new UserError('Log in to Maccabi Online in this tab first.');
+  return { session, returnUrl };
 }
 
 export async function start(tabId: number): Promise<void> {
@@ -145,7 +157,7 @@ export async function start(tabId: number): Promise<void> {
   if (run && isUnderway(run.status)) {
     throw new UserError('An export is already in progress. Resume or cancel it first.');
   }
-  const s = await loggedInSession(tabId);
+  const { session: s, returnUrl } = await loggedInSession(tabId);
   await clearStaging();
   await setSession(s);
   cancelRequested = false;
@@ -153,6 +165,7 @@ export async function start(tabId: number): Promise<void> {
     id: crypto.randomUUID(),
     status: 'running',
     tabId,
+    ...(returnUrl ? { returnUrl } : {}),
     startedAt: new Date().toISOString(),
     next: 0,
     ctx: { ...newCtx(), skipExistingMedicalFile: true },
@@ -171,7 +184,7 @@ export async function resume(tabId: number): Promise<void> {
   const run = await loadRun();
   if (!run || !canMove(run.status, 'resume')) throw new UserError('There is no paused export to resume.');
   if (run.planMismatch) throw new UserError(OLD_VERSION_MESSAGE);
-  const s = await loggedInSession(tabId);
+  const { session: s } = await loggedInSession(tabId);
   if (!(await sameMember(run, s))) {
     throw new UserError('This export belongs to a different member. Log in as them to resume it, or cancel it to start a new one.');
   }
@@ -363,7 +376,7 @@ async function reconnect(): Promise<boolean> {
   try {
     await waitVisible();
     if (!state) return false;
-    const s = await currentSession(state.tabId, SONLINE_PAGE);
+    const s = await currentSession(state.tabId, state.returnUrl || SONLINE_PAGE);
     if (!s || !state || !(await sameMember(state, s))) return false;
     await setSession(s);
     // The tab is on /sonline/ now: a step that needs another page opens it again.
@@ -558,7 +571,7 @@ async function rememberOrder(run: RunState, confirmed: boolean, code?: string, r
 
 /** Takes the tab back to /sonline/ and its fresh token, refusing another member's session. */
 async function backToSonline(run: RunState, ended: string): Promise<void> {
-  const s = await currentSession(run.tabId, SONLINE_PAGE);
+  const s = await currentSession(run.tabId, run.returnUrl || SONLINE_PAGE);
   if (!s || !(await sameMember(run, s))) throw new SessionEndedError(ended);
   await setSession(s);
 }

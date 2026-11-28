@@ -1,7 +1,7 @@
 import { countOf } from '../../core/util';
 import { SITE_ASK, SITE_OPEN, withoutLateFile, type Request, type RunState, type StateReply } from '../shared/state';
 import {
-  announcement, bandSpan, canSaveNow, countText, doneSummary, groupProblems, hintText, keptConfirm, lateFileText, nextAction, problemCount, problemText, progressTexts, STAGES,
+  announcement, bandSpan, canSaveNow, countText, devFlagsText, doneSummary, groupProblems, hintText, keptConfirm, lateFileText, nextAction, pausedProgressText, problemCount, problemText, progressTexts, STAGES,
   stageFileCounts, stageStates, statsText, stepText, viewKey, waitingForFile, type Announced, type Confirm, type UiFlags,
 } from './model';
 
@@ -151,13 +151,14 @@ function cancelConfirm(): HTMLElement {
 }
 
 /** With a band, the bar also marks the rest of the current section, behind the fill: the fill eats it as the count rises. */
-function progressBar(percent: number, active: boolean, withBand = false): { bar: HTMLElement; fill: HTMLElement; band?: HTMLElement } {
+function progressBar(percent: number, active: boolean, withBand = false, valueText?: string): { bar: HTMLElement; fill: HTMLElement; band?: HTMLElement } {
   const fill = h('div', { class: 'fill' });
   fill.style.width = percent + '%';
   const band = withBand ? h('div', { class: 'band' }) : undefined;
   const bar = h('div', {
     class: 'bar' + (active ? ' active' : ''), role: 'progressbar', 'aria-label': 'Export progress',
     'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(percent),
+    ...(valueText ? { 'aria-valuetext': valueText } : {}),
   }, band, fill);
   return { bar, fill, band };
 }
@@ -229,6 +230,12 @@ function includedDetails(): HTMLElement {
         h('li', {}, 'While it works, your Maccabi Online tab moves to the medical-file page and back, and your session is kept from timing out.'))));
 }
 
+function devBanner(st: StateReply): Child {
+  if (!__DEV_BRIDGE__) return null;
+  const text = devFlagsText(st.devFlags);
+  return text ? h('p', { class: 'dev-flags', role: 'note' }, text) : null;
+}
+
 function idleView(st: StateReply): Child[] {
   if (!st.tab.onMaccabi || !st.tab.loggedIn) {
     return [
@@ -245,6 +252,7 @@ function idleView(st: StateReply): Child[] {
   // The account line's green dot says it is ready: no pill between it and the heading.
   return [
     accountRow(st),
+    devBanner(st),
     h('h2', {}, 'Your records, one ZIP'),
     h('p', { class: 'lead' }, 'Tests, visits, prescriptions, letters, your full medical file and more. Usually a few minutes; up to 35 if the medical file is slow to arrive.'),
     actions(actionButton('Start export', { type: 'start' }, 'primary block', 'Checking your login…')),
@@ -263,7 +271,7 @@ function idleView(st: StateReply): Child[] {
  */
 function progressView(run: RunState): Child[] {
   const pill = status('');
-  const { bar, fill, band } = progressBar(run.percent, true, true);
+  const { bar, fill, band } = progressBar(run.percent, true, true, progressTexts(run).valueText);
   const activity = h('span', { class: 'what' });
   const count = h('span', { class: 'count' });
   const stats = h('p', { class: 'stats' });
@@ -304,9 +312,10 @@ function pausedView(run: RunState, st: StateReply): Child[] {
   const primary = actionButton(next.label, next.req, 'primary block', next.busyLabel);
   const done = run.percent + '% done';
   return [
+    devBanner(st),
     h('h2', {}, hidden ? 'Waiting for the Maccabi Online tab' : 'Export paused'),
     h('p', { class: 'detail' }, stage ? 'Section: ' + stage + ' · ' + done : done),
-    progressBar(run.percent, false).bar,
+    progressBar(run.percent, false, false, pausedProgressText(run)).bar,
     note('warn', run.message || (hidden ? 'Bring the Maccabi Online tab back to the front to continue.' : 'The export is paused.')),
     ...(ui.confirm === 'cancel' ? [cancelConfirm()] : [actions(primary), h('p', { class: 'dismiss' }, cancelButton('quiet'))]),
   ];
@@ -339,7 +348,7 @@ const REPORT = 'https://github.com/RoniRachmani/health-records-export-for-maccab
  * that one in the background, and the run waits for it to come back to the front.
  */
 function askLink(): HTMLElement {
-  const a = h('a', { href: SITE_ASK, target: '_blank', title: 'Opens in a new window' }, 'what to ask your AI assistant');
+  const a = h('a', { href: SITE_ASK, target: '_blank', rel: 'noreferrer', title: 'Opens in a new window' }, 'what to ask your AI assistant');
   a.addEventListener('click', (e) => {
     e.preventDefault();
     void chrome.windows.create({ url: SITE_ASK, width: 1100, height: 860, focused: true });
@@ -361,7 +370,7 @@ function doneView(run: RunState): Child[] {
   const clear = h('p', { class: 'dismiss' }, actionButton(late ? 'Clear this to export again (the ZIP stays)' : 'Clear this summary (the ZIP stays)', { type: 'dismiss' }, 'quiet'));
   // It opens a page on the website, not an AI: the mark after its name says it leaves the popup, and a screen reader
   // hears where to. Its name is the notification's too, so the mark is said, not the name lengthened.
-  const ai = button('Open it in an AI', () => void window.open(SITE_OPEN, '_blank'), 'opens');
+  const ai = button('Open it in an AI', () => void chrome.tabs.create({ url: SITE_OPEN }), 'opens');
   ai.insertAdjacentHTML('beforeend', OPENS_ICON);
   ai.append(h('span', { class: 'visually-hidden' }, ' (opens in a new tab)'));
   return [
@@ -526,7 +535,12 @@ function render(): void {
 }
 
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area !== 'local' || !last || !changes.run) return;
+  if (area !== 'local' || !last) return;
+  if (__DEV_BRIDGE__ && ['devSkipOrder', 'devStopBefore', 'devReorder', 'devPretendOrder', 'devNoSend'].some((k) => k in changes)) {
+    void refresh();
+    return;
+  }
+  if (!changes.run) return;
   const next = (changes.run.newValue as RunState | undefined) ?? null;
   const wasRun = !!last.run;
   last = { ...last, run: next };

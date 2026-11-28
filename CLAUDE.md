@@ -130,7 +130,7 @@ worker or a Chrome restart continues from there. When you touch `PLAN`:
   run: stages are **in `PLAN` order**, one line per thing the member gets (a long step may take a line per part,
   with `parts`), and the first stage holding a step is labelled with its `LABELS` entry. A step that only
   serves another (a page change, a wait) shares that one's line and label and says what it does in
-  `DESCRIPTIONS`, which the panel above the list shows while that line is current. The running view is 589px of the 600px cap
+  `DESCRIPTIONS`, which the panel above the list shows while that line is current. The running view is 561px of the 600px cap
   (`npm run site-check -- popup` measures it): merge lines before adding one. `docs/sections.md` maps each line to its
   steps, parts and files: update it with `STAGES` (`repoRules.test.ts` checks the lines, steps and parts);
 - add an entry to `OPENED_BY` if the step only works on a page an earlier step opened (`resumeIndex`
